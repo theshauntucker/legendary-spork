@@ -177,23 +177,9 @@ struct DashboardView: View {
     }
 
     private var contactCTACard: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Image(systemName: "phone.circle.fill")
-                    .font(.title)
-                    .foregroundStyle(AppColors.solarGreen)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Ready to Go Solar?")
-                        .font(.headline)
-                    Text("Get a free personalized quote today")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .foregroundStyle(.tertiary)
-            }
-        }
-        .cardStyle()
+        SolarCompanyCTACard(
+            solarScore: latestProfile?.solarScore,
+            estimatedSavings: latestBill.map { $0.totalAmount * 12 * 0.7 }
+        )
     }
 }
