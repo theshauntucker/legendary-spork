@@ -1,9 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Play, ArrowRight, Users, Star } from "lucide-react";
+import { Play, ArrowRight, Users, Star, Mail } from "lucide-react";
+import WaitlistModal from "./WaitlistModal";
 
 export default function Hero() {
+  const [modalOpen, setModalOpen] = useState(false);
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
       {/* Background effects */}
@@ -70,12 +74,28 @@ export default function Hero() {
             Join the Beta — $9.99
             <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </a>
-          <a
-            href="#sample-analysis"
+          <button
+            onClick={() => setModalOpen(true)}
             className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-4 text-base font-medium text-white hover:bg-white/5 transition-colors"
           >
-            <Play className="h-5 w-5 text-primary-400" />
-            See Sample Analysis
+            <Mail className="h-5 w-5 text-primary-400" />
+            Free Waitlist — No Card Needed
+          </button>
+        </motion.div>
+
+        {/* See Sample link */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-4"
+        >
+          <a
+            href="#sample-analysis"
+            className="inline-flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors"
+          >
+            <Play className="h-4 w-4 text-primary-400" />
+            See a sample analysis first
           </a>
         </motion.div>
 
@@ -173,6 +193,9 @@ export default function Hero() {
           </div>
         </motion.div>
       </div>
+
+      {/* Waitlist Modal */}
+      <WaitlistModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
     </section>
   );
 }

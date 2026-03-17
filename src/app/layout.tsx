@@ -24,6 +24,17 @@ export const metadata: Metadata = {
     description:
       "Competition-standard scoring and feedback for every routine. Join 500 beta testers getting early access.",
     type: "website",
+    siteName: "RoutineX",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RoutineX — Your Dancer's Secret Weapon",
+    description:
+      "AI-powered video analysis for competitive dancers & cheer teams. Get competition-standard scoring for $2.99/video.",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
