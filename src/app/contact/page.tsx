@@ -8,6 +8,7 @@ export default function ContactPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,14 +21,22 @@ export default function ContactPage() {
         body: JSON.stringify({ name, email, message }),
       });
 
-      if (!res.ok) throw new Error("Failed to send");
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Failed to send");
+      }
 
       setStatus("sent");
       setName("");
       setEmail("");
       setMessage("");
-    } catch {
+    } catch (err) {
       setStatus("error");
+      setErrorMsg(
+        err instanceof Error && err.message === "Email service not configured"
+          ? "Our email service is being set up. Please email us directly at 22tucker22@comcast.net in the meantime."
+          : "Something went wrong. Please try again, or email us at 22tucker22@comcast.net."
+      );
     }
   };
 
@@ -112,7 +121,7 @@ export default function ContactPage() {
 
               {status === "error" && (
                 <p className="text-sm text-red-400">
-                  Something went wrong. Please try again.
+                  {errorMsg}
                 </p>
               )}
 

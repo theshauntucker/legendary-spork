@@ -1,43 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
+import { Play, Sparkles } from "lucide-react";
 
 export default function VideoDemo() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const [showControls, setShowControls] = useState(true);
-
-  const togglePlay = () => {
-    if (!videoRef.current) return;
-    if (isPlaying) {
-      videoRef.current.pause();
-    } else {
-      videoRef.current.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  const toggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!videoRef.current) return;
-    videoRef.current.muted = !isMuted;
-    setIsMuted(!isMuted);
-  };
-
-  const handleFullscreen = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!videoRef.current) return;
-    if (videoRef.current.requestFullscreen) {
-      videoRef.current.requestFullscreen();
-    } else if ((videoRef.current as HTMLVideoElement & { webkitEnterFullscreen?: () => void }).webkitEnterFullscreen) {
-      // iOS Safari fullscreen support
-      (videoRef.current as HTMLVideoElement & { webkitEnterFullscreen: () => void }).webkitEnterFullscreen();
-    }
-  };
-
   return (
     <section id="demo-video" className="relative py-24 sm:py-32">
       <div className="absolute inset-0">
@@ -64,105 +30,38 @@ export default function VideoDemo() {
           </p>
         </motion.div>
 
-        {/* Video Player */}
+        {/* Video Placeholder */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
           className="relative rounded-3xl overflow-hidden glass"
-          onMouseEnter={() => setShowControls(true)}
-          onMouseLeave={() => isPlaying && setShowControls(false)}
-          onTouchStart={() => setShowControls(true)}
         >
-          {/*
-            Video element with mobile-critical attributes:
-            - playsInline: prevents iOS Safari from forcing fullscreen
-            - muted: required for autoplay on mobile browsers
-            - webkit-playsinline: legacy iOS support
-            - preload="metadata": loads dimensions/duration without full download
-
-            Replace the poster and source URLs with your actual video assets.
-          */}
-          <video
-            ref={videoRef}
-            className="w-full aspect-video bg-surface-900 object-cover"
-            playsInline
-            muted={isMuted}
-            preload="metadata"
-            poster="/demo-poster.svg"
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onEnded={() => setIsPlaying(false)}
-            {...{ "webkit-playsinline": "true" } as React.HTMLAttributes<HTMLVideoElement>}
-          >
-            {/* MP4 with H.264 codec — works on all mobile browsers */}
-            <source src="/demo-video.mp4" type="video/mp4" />
-            {/* WebM fallback for browsers that prefer it */}
-            <source src="/demo-video.webm" type="video/webm" />
-            Your browser does not support video playback.
-          </video>
-
-          {/* Play/Pause Overlay */}
-          <div
-            className={`absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity duration-300 cursor-pointer ${
-              showControls || !isPlaying ? "opacity-100" : "opacity-0"
-            }`}
-            onClick={togglePlay}
-          >
-            {!isPlaying && (
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary-600 to-accent-500 shadow-2xl shadow-primary-600/40"
-              >
-                <Play className="h-8 w-8 text-white ml-1" />
-              </motion.div>
-            )}
-          </div>
-
-          {/* Bottom Controls */}
-          <div
-            className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex items-center justify-between transition-opacity duration-300 ${
-              showControls || !isPlaying ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <button
-              onClick={togglePlay}
-              className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-              aria-label={isPlaying ? "Pause video" : "Play video"}
-            >
-              {isPlaying ? (
-                <Pause className="h-5 w-5 text-white" />
-              ) : (
-                <Play className="h-5 w-5 text-white" />
-              )}
-            </button>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={toggleMute}
-                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-                aria-label={isMuted ? "Unmute video" : "Mute video"}
-              >
-                {isMuted ? (
-                  <VolumeX className="h-5 w-5 text-white" />
-                ) : (
-                  <Volume2 className="h-5 w-5 text-white" />
-                )}
-              </button>
-              <button
-                onClick={handleFullscreen}
-                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-                aria-label="Fullscreen"
-              >
-                <Maximize className="h-5 w-5 text-white" />
-              </button>
+          <div className="aspect-video flex flex-col items-center justify-center bg-gradient-to-br from-surface-900 via-primary-950/30 to-surface-900 relative">
+            {/* Decorative background elements */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary-600/10 rounded-full blur-2xl" />
+              <div className="absolute bottom-1/3 right-1/4 w-40 h-40 bg-accent-500/10 rounded-full blur-2xl" />
             </div>
+
+            {/* Play button visual */}
+            <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary-600/40 to-accent-500/40 border border-white/10 mb-5">
+              <Play className="h-8 w-8 text-white/60 ml-1" />
+            </div>
+
+            <div className="relative flex items-center gap-2 mb-2">
+              <Sparkles className="h-4 w-4 text-primary-400" />
+              <p className="text-sm font-semibold text-white">Demo Video Coming Soon</p>
+            </div>
+            <p className="relative text-xs text-surface-200 max-w-xs text-center px-4">
+              We&apos;re putting the finishing touches on a full walkthrough of the AI analysis experience.
+            </p>
           </div>
         </motion.div>
 
         <p className="mt-4 text-xs text-center text-surface-200">
-          Demo video showing a sample AI analysis walkthrough
+          Full video walkthrough of the AI scoring process
         </p>
       </div>
     </section>
