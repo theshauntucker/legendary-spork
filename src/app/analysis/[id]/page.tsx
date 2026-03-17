@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Trophy,
@@ -16,84 +17,10 @@ import {
   Download,
   Share2,
   ArrowLeft,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
-
-// Simulated AI analysis data — in production this would come from the API
-function generateAnalysis(id: string) {
-  // Use the ID to create slight variations in scores for realism
-  const seed = id.charCodeAt(0) + (id.charCodeAt(1) || 0);
-  const variation = (base: number, range: number) =>
-    Math.round((base + ((seed % range) - range / 2) * 0.1) * 10) / 10;
-
-  return {
-    id,
-    routineName: "Uploaded Routine",
-    dancerName: "Dancer",
-    ageGroup: "Teen (12-15)",
-    style: "Jazz",
-    entryType: "Solo",
-    duration: "2:45",
-    totalScore: variation(274, 20),
-    awardLevel: "Platinum" as const,
-    judgeScores: [
-      {
-        category: "Technique",
-        max: 35,
-        judges: [variation(32.5, 10), variation(31.0, 10), variation(33.0, 10)],
-        avg: variation(32.2, 10),
-        feedback:
-          "Solid foundational technique with good body placement and alignment throughout. Extension in leaps shows strong flexibility. Pirouette sequence shows promise — focus on consistent spotting to maintain clean rotations. Footwork in jazz isolations is sharp and precise. Recommend targeted work on landing control after aerial skills.",
-      },
-      {
-        category: "Performance",
-        max: 35,
-        judges: [variation(33.0, 10), variation(32.5, 10), variation(34.0, 10)],
-        avg: variation(33.2, 10),
-        feedback:
-          "Strong stage presence with genuine connection to the music. Facial expressions are authentic and engaging — this is a standout quality. Energy is mostly consistent but watch for slight drops during transitional phrases. Eye focus is intentional and draws the audience in. Work on maintaining peak performance energy in the final 30 seconds when fatigue may set in.",
-      },
-      {
-        category: "Choreography",
-        max: 20,
-        judges: [variation(18.5, 8), variation(17.5, 8), variation(19.0, 8)],
-        avg: variation(18.3, 8),
-        feedback:
-          "Well-constructed routine with a clear narrative arc. Effective use of space and levels. Formation changes (if group) are smooth and purposeful. Music interpretation is strong — choreography matches the dynamics of the track. Consider adding more contrast between high-energy sections and lyrical moments for greater impact. The ending is strong and memorable.",
-      },
-      {
-        category: "Overall Impression",
-        max: 10,
-        judges: [variation(9.0, 4), variation(8.5, 4), variation(9.5, 4)],
-        avg: variation(9.0, 4),
-        feedback:
-          "A polished, competition-ready routine that demonstrates strong training and preparation. The dancer shows maturity and artistry beyond their age division. Costuming and music selection complement the choreography well. This routine has strong potential for advancement at regional and national level competitions.",
-      },
-    ],
-    timelineNotes: [
-      { time: "0:00–0:12", note: "Strong opening — immediate energy and audience engagement", type: "positive" as const },
-      { time: "0:25", note: "Leap combination: good height and split, watch back foot on landing", type: "improvement" as const },
-      { time: "0:45", note: "Jazz isolations: sharp, clean, and well-timed with the music", type: "positive" as const },
-      { time: "1:05", note: "Turn sequence: good preparation, focus on spotting consistency", type: "improvement" as const },
-      { time: "1:30", note: "Floor work section: creative and well-executed", type: "positive" as const },
-      { time: "1:55", note: "Transitional phrase: energy dipped slightly — maintain intensity", type: "improvement" as const },
-      { time: "2:10", note: "Acro/trick element: clean execution with solid landing", type: "positive" as const },
-      { time: "2:30–2:45", note: "Finale: powerful ending pose, strong audience impact", type: "positive" as const },
-    ],
-    improvementPriorities: [
-      { priority: 1, item: "Landing control after leaps and jumps", impact: "High", timeToFix: "2–3 weeks" },
-      { priority: 2, item: "Spotting consistency in turn sequences", impact: "High", timeToFix: "1–2 weeks" },
-      { priority: 3, item: "Energy maintenance in transitional phrases", impact: "Medium", timeToFix: "2–3 rehearsals" },
-      { priority: 4, item: "Dynamic contrast between sections", impact: "Medium", timeToFix: "1 rehearsal" },
-      { priority: 5, item: "Final 30-second stamina and peak energy", impact: "Medium", timeToFix: "Conditioning focus" },
-    ],
-    competitionComparison: {
-      yourScore: variation(274, 20),
-      avgRegional: 261,
-      top10Threshold: 282,
-      top5Threshold: 288,
-    },
-  };
-}
+import type { AnalysisResult } from "@/lib/types";
 
 const awardLevels = [
   { label: "Gold", min: 100, max: 249, color: "bg-yellow-600" },
@@ -114,7 +41,129 @@ function getAwardLevel(score: number) {
 export default function AnalysisPage() {
   const params = useParams();
   const id = params.id as string;
-  const analysis = generateAnalysis(id);
+  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
+
+  const triggerAnalysis = useCallback(async () => {
+    setAnalyzing(true);
+    setError("");
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ analysisId: id }),
+      });
+      const data = await res.json();
+      if (res.ok && data.analysis) {
+        setAnalysis(data.analysis);
+      } else {
+        setError(data.error || "Analysis failed. Please try again.");
+      }
+    } catch {
+      setError("Failed to connect. Please check your connection and try again.");
+    } finally {
+      setAnalyzing(false);
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    async function checkAnalysis() {
+      try {
+        const res = await fetch(`/api/analyze?id=${id}`);
+        const data = await res.json();
+        if (data.status === "analyzed" && data.analysis) {
+          setAnalysis(data.analysis);
+          setLoading(false);
+        } else {
+          // No analysis yet — trigger it
+          triggerAnalysis();
+        }
+      } catch {
+        // No existing analysis — trigger it
+        triggerAnalysis();
+      }
+    }
+    checkAnalysis();
+  }, [id, triggerAnalysis]);
+
+  if (loading || analyzing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="fixed inset-0 -z-10">
+          <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
+        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass rounded-3xl p-10 text-center max-w-md"
+        >
+          <Loader2 className="h-12 w-12 text-primary-400 animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Analyzing Your Routine</h2>
+          <p className="text-sm text-surface-200 mb-4">
+            Our AI judges are reviewing your performance frame by frame. This usually takes 30-60 seconds.
+          </p>
+          <div className="flex items-center justify-center gap-3 text-xs text-surface-200">
+            <div className="flex items-center gap-1">
+              <Sparkles className="h-3 w-3 text-primary-400" />
+              <span>3 Expert Judges</span>
+            </div>
+            <span>&bull;</span>
+            <div className="flex items-center gap-1">
+              <BarChart3 className="h-3 w-3 text-accent-400" />
+              <span>4 Scoring Categories</span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (error || !analysis) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="fixed inset-0 -z-10">
+          <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
+        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass rounded-3xl p-10 text-center max-w-md"
+        >
+          <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Analysis Failed</h2>
+          <p className="text-sm text-surface-200 mb-6">
+            {error || "Something went wrong. Please try again."}
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => {
+                setLoading(true);
+                setError("");
+                triggerAnalysis();
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-6 py-3 font-semibold text-white hover:opacity-90 transition-opacity"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Retry Analysis
+            </button>
+            <a
+              href="/upload"
+              className="inline-flex items-center justify-center gap-2 text-sm text-surface-200 hover:text-white transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Re-upload Video
+            </a>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   const awardLevel = getAwardLevel(analysis.totalScore);
 
   return (

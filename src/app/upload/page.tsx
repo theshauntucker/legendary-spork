@@ -12,7 +12,10 @@ import {
   Loader2,
   Music,
   Users,
+  Film,
 } from "lucide-react";
+import { extractFrames } from "@/lib/extractFrames";
+import type { ExtractedFrame } from "@/lib/types";
 
 const ageGroups = ["Mini (5-6)", "Petite (6-9)", "Junior (9-12)", "Teen (12-15)", "Senior (15-19)"];
 const danceStyles = [
@@ -40,6 +43,9 @@ export default function UploadPage() {
   const [studioName, setStudioName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStage, setUploadStage] = useState<"extracting" | "uploading" | "done">("extracting");
+  const [extractedFrames, setExtractedFrames] = useState<{ frames: ExtractedFrame[]; duration: number } | null>(null);
+  const [extracting, setExtracting] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,14 +59,34 @@ export default function UploadPage() {
     }
   };
 
+  const processFile = async (videoFile: File) => {
+    setFile(videoFile);
+    setError("");
+    setExtracting(true);
+    setExtractedFrames(null);
+    try {
+      const result = await extractFrames(videoFile);
+      setExtractedFrames(result);
+    } catch (err) {
+      console.error("Frame extraction failed:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to process video. Please try MP4 format."
+      );
+      setFile(null);
+    } finally {
+      setExtracting(false);
+    }
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile && droppedFile.type.startsWith("video/")) {
-      setFile(droppedFile);
-      setError("");
+      processFile(droppedFile);
     } else {
       setError("Please upload a video file (MP4, MOV, AVI, WebM).");
     }
@@ -69,8 +95,7 @@ export default function UploadPage() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile && selectedFile.type.startsWith("video/")) {
-      setFile(selectedFile);
-      setError("");
+      processFile(selectedFile);
     } else {
       setError("Please upload a video file (MP4, MOV, AVI, WebM).");
     }
@@ -83,7 +108,13 @@ export default function UploadPage() {
       return;
     }
 
+    if (!extractedFrames) {
+      setError("Video is still being processed. Please wait a moment.");
+      return;
+    }
+
     setUploading(true);
+    setUploadStage("uploading");
     setError("");
 
     const formData = new FormData();
@@ -94,6 +125,14 @@ export default function UploadPage() {
     formData.append("entryType", entryType);
     formData.append("dancerName", dancerName);
     formData.append("studioName", studioName);
+    formData.append(
+      "frames",
+      JSON.stringify({
+        frames: extractedFrames.frames,
+        duration: extractedFrames.duration,
+      })
+    );
+    formData.append("duration", String(extractedFrames.duration));
 
     // Simulate upload progress
     const progressInterval = setInterval(() => {
@@ -114,6 +153,7 @@ export default function UploadPage() {
 
       clearInterval(progressInterval);
       setUploadProgress(100);
+      setUploadStage("done");
 
       const data = await res.json();
 
@@ -208,11 +248,20 @@ export default function UploadPage() {
                     exit={{ opacity: 0 }}
                     className="flex items-center justify-center gap-3"
                   >
-                    <Video className="h-8 w-8 text-green-400" />
+                    {extracting ? (
+                      <Loader2 className="h-8 w-8 text-primary-400 animate-spin" />
+                    ) : extractedFrames ? (
+                      <Film className="h-8 w-8 text-green-400" />
+                    ) : (
+                      <Video className="h-8 w-8 text-green-400" />
+                    )}
                     <div className="text-left">
                       <p className="font-medium text-sm">{file.name}</p>
                       <p className="text-xs text-surface-200">
                         {formatFileSize(file.size)}
+                        {extracting && " — Preparing video..."}
+                        {extractedFrames &&
+                          ` — ${extractedFrames.frames.length} frames extracted`}
                       </p>
                     </div>
                     <button
@@ -220,6 +269,7 @@ export default function UploadPage() {
                       onClick={(e) => {
                         e.stopPropagation();
                         setFile(null);
+                        setExtractedFrames(null);
                       }}
                       className="ml-2 p-1 rounded-full hover:bg-white/10"
                     >
@@ -378,15 +428,15 @@ export default function UploadPage() {
                   />
                 </div>
                 <p className="text-xs text-surface-200 mt-2 text-center">
-                  {uploadProgress < 100 ? (
+                  {uploadStage === "uploading" && uploadProgress < 100 ? (
                     <>
                       <Loader2 className="inline h-3 w-3 animate-spin mr-1" />
-                      Uploading & analyzing... {Math.round(uploadProgress)}%
+                      Uploading video... {Math.round(uploadProgress)}%
                     </>
                   ) : (
                     <>
                       <CheckCircle className="inline h-3 w-3 text-green-400 mr-1" />
-                      Analysis complete! Redirecting...
+                      Upload complete! Redirecting to analysis...
                     </>
                   )}
                 </p>
@@ -397,13 +447,18 @@ export default function UploadPage() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={uploading}
+            disabled={uploading || extracting}
             className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-6 py-4 text-lg font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {uploading ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
-                Analyzing...
+                Uploading...
+              </>
+            ) : extracting ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Preparing Video...
               </>
             ) : (
               <>

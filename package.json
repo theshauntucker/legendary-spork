@@ -16,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.79.0",
     "@stripe/stripe-js": "^8.10.0",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/node": "^25.5.0",

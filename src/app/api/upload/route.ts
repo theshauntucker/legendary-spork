@@ -68,6 +68,16 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
     await writeFile(join(uploadsDir, filename), buffer);
 
+    // Save extracted frames if provided
+    const framesJson = formData.get("frames") as string | null;
+    const duration = formData.get("duration") as string | null;
+    if (framesJson) {
+      await writeFile(
+        join(uploadsDir, `${analysisId}-frames.json`),
+        framesJson
+      );
+    }
+
     // Save metadata
     const metadata = {
       analysisId,
@@ -80,7 +90,8 @@ export async function POST(request: NextRequest) {
       studioName: studioName || "Independent",
       fileSize: video.size,
       uploadedAt: new Date().toISOString(),
-      status: "complete",
+      status: "processing",
+      ...(duration ? { duration } : {}),
     };
 
     await writeFile(
@@ -91,7 +102,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       analysisId,
-      message: "Video uploaded and analysis complete",
+      message: "Video uploaded — analysis starting",
     });
   } catch (err) {
     console.error("Upload error:", err);
