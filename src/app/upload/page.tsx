@@ -181,7 +181,7 @@ export default function UploadPage() {
 
       // ── Step 3: Send to analysis API ───────────────────────────────
       setProgress(45);
-      setStatusMessage("Sending to AI for analysis...");
+      setStatusMessage("Uploading for analysis...");
 
       const response = await fetch("/api/analyze", {
         method: "POST",
@@ -225,7 +225,7 @@ export default function UploadPage() {
         }
 
         throw new Error(
-          data.error || `Analysis failed (${response.status})`
+          data.error || `Upload failed (${response.status})`
         );
       }
 
@@ -233,21 +233,13 @@ export default function UploadPage() {
 
       if (abortRef.current) return;
 
-      // ── Step 4: Done ───────────────────────────────────────────────
-      setStage("analyzing");
-      setProgress(90);
-      setStatusMessage("Generating your scorecard...");
-
-      // Brief pause so the user sees the final stage
-      await new Promise((r) => setTimeout(r, 1500));
-
-      setProgress(100);
+      // ── Step 4: Redirect to processing page ────────────────────────
       setStage("done");
-      setStatusMessage("Analysis complete! Redirecting...");
+      setProgress(100);
+      setStatusMessage("Uploaded! Redirecting to analysis...");
 
-      setTimeout(() => {
-        window.location.href = `/analysis/${result.videoId}`;
-      }, 1000);
+      // Redirect to the processing page — AI analysis runs in background
+      window.location.href = `/processing/${result.videoId}`;
     } catch (err) {
       if (abortRef.current) return;
       console.error("Upload/analysis error:", err);
