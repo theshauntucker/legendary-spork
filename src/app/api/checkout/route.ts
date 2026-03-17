@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export async function POST() {
   try {
     const stripe = getStripe();
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
 
     // Try to get the authenticated user's email for Stripe
     let customerEmail: string | undefined;

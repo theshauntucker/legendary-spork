@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       .eq("id", videoId);
 
     // Kick off preprocessing in the background (fire-and-forget)
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
     fetch(`${baseUrl}/api/preprocess`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
