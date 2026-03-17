@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -8,9 +9,22 @@ export async function POST() {
     const stripe = getStripe();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
+    // Try to get the authenticated user's email for Stripe
+    let customerEmail: string | undefined;
+    try {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        customerEmail = user.email;
+      }
+    } catch {
+      // Not logged in — that's fine, checkout still works
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
+      ...(customerEmail && { customer_email: customerEmail }),
       line_items: [
         {
           price_data: {

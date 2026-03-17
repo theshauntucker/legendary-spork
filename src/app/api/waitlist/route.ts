@@ -1,25 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, readFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { createServiceClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
-
-const WAITLIST_FILE = join(process.cwd(), "data", "waitlist.json");
-
-async function getWaitlist(): Promise<Array<{ email: string; name: string; role: string; joinedAt: string }>> {
-  try {
-    const data = await readFile(WAITLIST_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-}
-
-async function saveWaitlist(entries: Array<{ email: string; name: string; role: string; joinedAt: string }>) {
-  const dir = join(process.cwd(), "data");
-  await mkdir(dir, { recursive: true });
-  await writeFile(WAITLIST_FILE, JSON.stringify(entries, null, 2));
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,29 +15,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const waitlist = await getWaitlist();
+    const supabase = await createServiceClient();
 
-    // Check for duplicates
-    if (waitlist.some((entry) => entry.email.toLowerCase() === email.toLowerCase())) {
-      return NextResponse.json(
-        { error: "This email is already on the waitlist!", alreadyJoined: true },
-        { status: 409 }
-      );
+    const { data, error } = await supabase
+      .from("waitlist")
+      .insert({
+        email: email.toLowerCase().trim(),
+        name: name || "",
+        role: role || "parent",
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      // Unique constraint violation = already on waitlist
+      if (error.code === "23505") {
+        return NextResponse.json(
+          { error: "This email is already on the waitlist!", alreadyJoined: true },
+          { status: 409 }
+        );
+      }
+      throw error;
     }
 
-    waitlist.push({
-      email: email.toLowerCase().trim(),
-      name: name || "",
-      role: role || "parent",
-      joinedAt: new Date().toISOString(),
-    });
-
-    await saveWaitlist(waitlist);
+    // Get total count for position
+    const { count } = await supabase
+      .from("waitlist")
+      .select("*", { count: "exact", head: true });
 
     return NextResponse.json({
       success: true,
-      position: waitlist.length,
-      message: `You're #${waitlist.length} on the waitlist!`,
+      position: count ?? 1,
+      message: `You're #${count} on the waitlist!`,
+      id: data.id,
     });
   } catch (err) {
     console.error("Waitlist error:", err);
@@ -68,8 +60,12 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const waitlist = await getWaitlist();
-    return NextResponse.json({ count: waitlist.length });
+    const supabase = await createServiceClient();
+    const { count } = await supabase
+      .from("waitlist")
+      .select("*", { count: "exact", head: true });
+
+    return NextResponse.json({ count: count ?? 0 });
   } catch {
     return NextResponse.json({ count: 0 });
   }

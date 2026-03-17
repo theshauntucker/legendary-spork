@@ -13,6 +13,7 @@ import {
   Music,
   Users,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 const ageGroups = ["Mini (5-6)", "Petite (6-9)", "Junior (9-12)", "Teen (12-15)", "Senior (15-19)"];
 const danceStyles = [
@@ -40,6 +41,7 @@ export default function UploadPage() {
   const [studioName, setStudioName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStage, setUploadStage] = useState<"uploading" | "processing" | "done">("uploading");
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -85,51 +87,93 @@ export default function UploadPage() {
 
     setUploading(true);
     setError("");
-
-    const formData = new FormData();
-    formData.append("video", file);
-    formData.append("routineName", routineName);
-    formData.append("ageGroup", ageGroup);
-    formData.append("style", style);
-    formData.append("entryType", entryType);
-    formData.append("dancerName", dancerName);
-    formData.append("studioName", studioName);
-
-    // Simulate upload progress
-    const progressInterval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(progressInterval);
-          return 90;
-        }
-        return prev + Math.random() * 15;
-      });
-    }, 500);
+    setUploadStage("uploading");
+    setUploadProgress(0);
 
     try {
-      const res = await fetch("/api/upload", {
+      // Step 1: Get a signed upload URL
+      const signedUrlRes = await fetch("/api/upload/signed-url", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type,
+          fileSize: file.size,
+          routineName,
+          ageGroup,
+          style,
+          entryType,
+          dancerName,
+          studioName,
+        }),
       });
 
-      clearInterval(progressInterval);
-      setUploadProgress(100);
+      const signedUrlData = await signedUrlRes.json();
 
-      const data = await res.json();
-
-      if (res.ok && data.analysisId) {
-        // Redirect to analysis page after short delay
-        setTimeout(() => {
-          window.location.href = `/analysis/${data.analysisId}`;
-        }, 1000);
-      } else {
-        setError(data.error || "Upload failed. Please try again.");
-        setUploading(false);
-        setUploadProgress(0);
+      if (!signedUrlRes.ok || !signedUrlData.signedUrl) {
+        throw new Error(signedUrlData.error || "Failed to prepare upload");
       }
-    } catch {
-      clearInterval(progressInterval);
-      setError("Upload failed. Please check your connection and try again.");
+
+      const { videoId, storagePath, token } = signedUrlData;
+
+      // Step 2: Upload directly to Supabase Storage with progress tracking
+      const supabase = createClient();
+
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 80); // 0-80% for upload
+            setUploadProgress(percent);
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            reject(new Error("Upload failed"));
+          }
+        });
+
+        xhr.addEventListener("error", () => reject(new Error("Upload failed")));
+
+        // Upload to the signed URL
+        const uploadUrl = signedUrlData.signedUrl;
+        xhr.open("PUT", uploadUrl);
+        xhr.setRequestHeader("Content-Type", file.type);
+        xhr.send(file);
+      });
+
+      setUploadProgress(85);
+      setUploadStage("processing");
+
+      // Step 3: Notify the server that upload is complete, trigger preprocessing
+      const completeRes = await fetch("/api/upload/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ videoId }),
+      });
+
+      if (!completeRes.ok) {
+        throw new Error("Failed to start processing");
+      }
+
+      setUploadProgress(100);
+      setUploadStage("done");
+
+      // Redirect to processing page
+      setTimeout(() => {
+        window.location.href = `/processing/${videoId}`;
+      }, 1500);
+    } catch (err) {
+      console.error("Upload error:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Upload failed. Please try again."
+      );
       setUploading(false);
       setUploadProgress(0);
     }
@@ -378,15 +422,22 @@ export default function UploadPage() {
                   />
                 </div>
                 <p className="text-xs text-surface-200 mt-2 text-center">
-                  {uploadProgress < 100 ? (
+                  {uploadStage === "uploading" && (
                     <>
                       <Loader2 className="inline h-3 w-3 animate-spin mr-1" />
-                      Uploading & analyzing... {Math.round(uploadProgress)}%
+                      Uploading to cloud... {Math.round(uploadProgress)}%
                     </>
-                  ) : (
+                  )}
+                  {uploadStage === "processing" && (
+                    <>
+                      <Loader2 className="inline h-3 w-3 animate-spin mr-1" />
+                      Processing video...
+                    </>
+                  )}
+                  {uploadStage === "done" && (
                     <>
                       <CheckCircle className="inline h-3 w-3 text-green-400 mr-1" />
-                      Analysis complete! Redirecting...
+                      Upload complete! Redirecting...
                     </>
                   )}
                 </p>
@@ -403,7 +454,7 @@ export default function UploadPage() {
             {uploading ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
-                Analyzing...
+                {uploadStage === "uploading" ? "Uploading..." : "Processing..."}
               </>
             ) : (
               <>
