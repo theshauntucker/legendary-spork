@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CheckCircle, Sparkles, ArrowRight, Gift, Star } from "lucide-react";
+import { CheckCircle, Sparkles, ArrowRight, Gift, Star, Upload } from "lucide-react";
 
 export default function SuccessPage() {
   return (
@@ -30,18 +30,26 @@ export default function SuccessPage() {
         </h1>
 
         <p className="mt-4 text-surface-200">
-          Welcome to the RoutineX beta. You&apos;re officially a founding member
-          — one of only 500 with early access.
+          Welcome to RoutineX! Your account is set up and ready to go.
         </p>
 
         <div className="mt-8 space-y-3 text-left">
           <div className="flex items-start gap-3 rounded-xl bg-white/5 p-4">
             <Gift className="h-5 w-5 text-primary-400 mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium text-sm">3 Free Analyses</p>
+              <p className="font-medium text-sm">3 Analyses Included</p>
               <p className="text-xs text-surface-200">
-                You&apos;ll get 3 free video analyses when we launch — no
-                additional charge.
+                Your membership includes 3 video analyses — upload your first routine now.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 rounded-xl bg-white/5 p-4">
+            <Upload className="h-5 w-5 text-accent-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-medium text-sm">Upload & Analyze</p>
+              <p className="text-xs text-surface-200">
+                Head to your dashboard to upload a routine and get your detailed AI scoring report.
               </p>
             </div>
           </div>
@@ -49,20 +57,9 @@ export default function SuccessPage() {
           <div className="flex items-start gap-3 rounded-xl bg-white/5 p-4">
             <Star className="h-5 w-5 text-gold-400 mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium text-sm">Founding Member Status</p>
+              <p className="font-medium text-sm">Founding Member</p>
               <p className="text-xs text-surface-200">
-                Your profile will carry a founding member badge permanently.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3 rounded-xl bg-white/5 p-4">
-            <Sparkles className="h-5 w-5 text-accent-400 mt-0.5 shrink-0" />
-            <div>
-              <p className="font-medium text-sm">Early Access</p>
-              <p className="text-xs text-surface-200">
-                You&apos;ll get access 2-4 weeks before the public launch. We&apos;ll
-                email you.
+                You joined at our launch price — your profile carries a founding member badge.
               </p>
             </div>
           </div>
@@ -71,17 +68,16 @@ export default function SuccessPage() {
         <div className="mt-8 rounded-xl bg-gradient-to-r from-primary-700/30 to-accent-600/30 p-4">
           <p className="text-sm font-medium">Share with your dance fam</p>
           <p className="text-xs text-surface-200 mt-1">
-            Know a dance parent or coach who&apos;d love this? Spread the word
-            before beta spots run out.
+            Know a dance parent or coach who&apos;d love this? Spread the word!
           </p>
         </div>
 
         <a
-          href="/"
-          className="mt-6 inline-flex items-center gap-2 text-sm text-primary-400 hover:text-primary-300 transition-colors"
+          href="/dashboard"
+          className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
         >
-          <ArrowRight className="h-4 w-4 rotate-180" />
-          Back to RoutineX
+          Go to Dashboard
+          <ArrowRight className="h-4 w-4" />
         </a>
       </motion.div>
     </div>

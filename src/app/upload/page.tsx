@@ -669,7 +669,7 @@ export default function UploadPage() {
           </button>
 
           <p className="text-xs text-surface-200 text-center">
-            Beta members: Your first 3 analyses are free.
+            Members: Your first 3 analyses are included with signup.
           </p>
         </motion.form>
       </div>

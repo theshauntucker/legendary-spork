@@ -46,13 +46,13 @@ export default function Testimonials() {
           className="text-center mb-12"
         >
           <p className="text-sm font-semibold uppercase tracking-wider text-primary-400">
-            Beta Tester Results
+            What Our Users Say
           </p>
           <h2 className="mt-3 text-4xl sm:text-5xl font-bold font-[family-name:var(--font-display)]">
             Parents & Coaches Love RoutineX
           </h2>
           <p className="mt-4 text-lg text-surface-200">
-            Real feedback from our early beta testing group.
+            Real feedback from parents and coaches using RoutineX.
           </p>
         </motion.div>
 

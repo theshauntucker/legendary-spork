@@ -430,13 +430,13 @@ export default function SampleAnalysis() {
               Want this for your dancer&apos;s routine?
             </p>
             <p className="text-sm text-surface-200 mt-1 mb-4">
-              Join the beta — first 500 members get early access to sample the full platform.
+              Sign up and upload your first routine to get this level of detail.
             </p>
             <a
-              href="#pricing"
+              href="/signup"
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-6 py-3 font-semibold text-white hover:opacity-90 transition-opacity"
             >
-              Join the Beta — $9.99
+              Get Started — $9.99
               <ChevronRight className="h-4 w-4" />
             </a>
           </div>

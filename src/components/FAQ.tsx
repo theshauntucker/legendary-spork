@@ -15,7 +15,7 @@ const faqs = [
   },
   {
     q: "How accurate is the scoring compared to real judges?",
-    a: "Our AI is trained on thousands of real competition scores and judging rubrics. While no AI replaces the nuance of a live judge, RoutineX provides consistent, unbiased feedback that closely mirrors competition scoring. Beta testers report their RoutineX scores typically fall within 5-8 points of their actual competition scores.",
+    a: "Our AI is trained on thousands of real competition scores and judging rubrics. While no AI replaces the nuance of a live judge, RoutineX provides consistent, unbiased feedback that closely mirrors competition scoring. Users report their RoutineX scores typically fall within 5-8 points of their actual competition scores.",
   },
   {
     q: "Is this a replacement for judges or coaching?",
@@ -30,12 +30,12 @@ const faqs = [
     a: "Yes! RoutineX analyzes cheer routines with the same level of detail, evaluating tumbling, stunts, formations, synchronization, and overall performance quality. It works for both All-Star and school cheer programs.",
   },
   {
-    q: "What do I get as a beta member?",
-    a: "Beta members ($9.99 one-time) get priority access when we launch, 3 free video analyses to sample the full platform, founding member status with a profile badge, and a direct feedback channel to shape the product. Only 500 beta spots are available.",
+    q: "What do I get when I sign up?",
+    a: "Members ($9.99 one-time) get full platform access, 3 video analyses included, founding member status with a profile badge, and a direct feedback channel to our team. Additional analyses are $2.99 each.",
   },
   {
-    q: "When will the full platform launch?",
-    a: "We're targeting Q2 2026 for our full public launch. Beta members will get access 2-4 weeks before the public launch to test everything and provide feedback. Join the waitlist to stay updated.",
+    q: "Can I get a refund?",
+    a: "If you're not satisfied with your experience, reach out to us through the Contact page and we'll work with you. We want every dancer to get real value from RoutineX.",
   },
 ];
 

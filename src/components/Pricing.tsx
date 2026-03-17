@@ -53,7 +53,7 @@ export default function Pricing() {
           >
             <div className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-3 py-1 text-xs font-bold">
               <Gift className="h-3 w-3" />
-              LAUNCH SPECIAL — 1,000 SPOTS
+              LAUNCH PRICE — LIMITED TIME
             </div>
 
             <div className="mt-4">
@@ -92,7 +92,7 @@ export default function Pricing() {
             </a>
 
             <p className="mt-3 text-center text-xs text-surface-200">
-              Only 487 spots remaining. Secure checkout via Stripe.
+              Secure checkout via Stripe.
             </p>
           </motion.div>
 
@@ -131,9 +131,9 @@ export default function Pricing() {
 
             <div className="mt-8 rounded-2xl bg-white/5 p-4 text-center">
               <Zap className="h-6 w-6 text-gold-400 mx-auto mb-2" />
-              <p className="text-sm font-medium">Available at launch</p>
+              <p className="text-sm font-medium">Pay as you go</p>
               <p className="text-xs text-surface-200 mt-1">
-                Launch members get 3 free analyses to try before paying
+                Members get 3 analyses included, then $2.99 each after
               </p>
             </div>
           </motion.div>
