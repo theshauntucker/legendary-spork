@@ -115,8 +115,8 @@ function findClosestFrame(
       best = f;
     }
   }
-  // Only match if within 3 seconds
-  return bestDist <= 3 ? best : undefined;
+  // Match if within 10 seconds
+  return bestDist <= 10 ? best : undefined;
 }
 
 export default function AnalysisReport({ analysis }: { analysis: AnalysisData }) {
