@@ -14,6 +14,18 @@ export default function Hero() {
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 text-center">
+        {/* Brand name */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-6"
+        >
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight font-[family-name:var(--font-display)]">
+            Routine<span className="gradient-text">X</span>
+          </h2>
+        </motion.div>
+
         {/* Launch badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
