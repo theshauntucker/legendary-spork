@@ -1,18 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Zap, ArrowRight, Gift } from "lucide-react";
+import { Check, Zap, ArrowRight, Gift, Loader2 } from "lucide-react";
 
 export default function Pricing() {
+  const [loading, setLoading] = useState(false);
+
   const handleCheckout = async () => {
+    setLoading(true);
     try {
       const res = await fetch("/api/checkout", { method: "POST" });
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        alert(data.error || "Checkout failed. Please try again.");
+        setLoading(false);
       }
-    } catch {
-      alert("Something went wrong. Please try again.");
+    } catch (err) {
+      alert("Connection error. Please check your internet and try again.");
+      setLoading(false);
     }
   };
 
@@ -85,10 +93,20 @@ export default function Pricing() {
 
             <button
               onClick={handleCheckout}
-              className="mt-8 w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-6 py-4 text-lg font-bold text-white hover:opacity-90 transition-opacity animate-pulse-glow"
+              disabled={loading}
+              className="mt-8 w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-6 py-4 text-lg font-bold text-white hover:opacity-90 transition-opacity animate-pulse-glow disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Claim Your Spot — $9.99
-              <ArrowRight className="h-5 w-5" />
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Connecting to Stripe...
+                </>
+              ) : (
+                <>
+                  Claim Your Spot — $9.99
+                  <ArrowRight className="h-5 w-5" />
+                </>
+              )}
             </button>
 
             <p className="mt-3 text-center text-xs text-surface-200">
