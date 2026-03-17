@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     images: [
       {
-        url: "/og-image.png",
+        url: "/opengraph-image",
         width: 1200,
         height: 630,
         alt: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     title: "RoutineX — Your Dancer's Secret Weapon",
     description:
       "AI-powered video analysis for competitive dancers & cheer teams. Get competition-standard scoring for $2.99/video.",
-    images: ["/og-image.png"],
+    images: ["/opengraph-image"],
   },
   robots: {
     index: true,
@@ -129,7 +129,7 @@ const jsonLd = {
       "@type": "Organization",
       name: "RoutineX",
       url: BASE_URL,
-      logo: `${BASE_URL}/logo.png`,
+      logo: `${BASE_URL}/logo.svg`,
       sameAs: [],
     },
   ],
@@ -143,6 +143,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="antialiased">
       <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"

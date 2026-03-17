@@ -90,7 +90,7 @@ export default function VideoDemo() {
             playsInline
             muted={isMuted}
             preload="metadata"
-            poster="/demo-poster.jpg"
+            poster="/demo-poster.svg"
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
             onEnded={() => setIsPlaying(false)}
