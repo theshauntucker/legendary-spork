@@ -24,14 +24,14 @@ export default function ContactPage() {
 
         <div className="space-y-4">
           <a
-            href="mailto:hello@routinex.org"
+            href="mailto:22tucker22@comcast.net"
             className="flex items-start gap-4 glass rounded-2xl p-6 hover:bg-white/10 transition-colors"
           >
             <Mail className="h-6 w-6 text-primary-400 mt-0.5 shrink-0" />
             <div>
               <p className="font-medium">Email</p>
               <p className="text-sm text-surface-200 mt-1">
-                hello@routinex.org
+                22tucker22@comcast.net
               </p>
               <p className="text-xs text-surface-200/60 mt-1">
                 We typically respond within 24 hours.

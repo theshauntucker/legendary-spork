@@ -321,30 +321,29 @@ Return ONLY the JSON object, no other text.`,
       throw new Error("Invalid analysis structure from Claude");
     }
 
-    // Apply scoring boost — add 5-6% to each score, capped at category max
-    // This ensures scores lean favorable (e.g., 278 → ~293)
+    // Apply scoring boost — add 5.5% to each category score AND totalScore
+    // totalScore is on its own 260-300 scale, NOT a sum of category averages
+    const boostPct = 0.055;
+
     if (analysis.judgeScores && Array.isArray(analysis.judgeScores)) {
-      let boostedTotal = 0;
       for (const category of analysis.judgeScores) {
         const max = category.max || 35;
-        const boostPct = 0.055; // 5.5% boost
 
         if (Array.isArray(category.judges)) {
           category.judges = category.judges.map((score: number) => {
-            const boosted = Math.min(max, score * (1 + boostPct));
-            return Math.round(boosted * 10) / 10;
+            return Math.round(Math.min(max, score * (1 + boostPct)) * 10) / 10;
           });
         }
 
         category.avg = Math.round(Math.min(max, category.avg * (1 + boostPct)) * 10) / 10;
-        boostedTotal += category.avg;
       }
-      analysis.totalScore = Math.round(boostedTotal);
+    }
 
-      // Update competition comparison to match
-      if (analysis.competitionComparison) {
-        analysis.competitionComparison.yourScore = analysis.totalScore;
-      }
+    // Boost the totalScore separately (it's on 260-300 scale)
+    analysis.totalScore = Math.min(300, Math.round(analysis.totalScore * (1 + boostPct)));
+
+    if (analysis.competitionComparison) {
+      analysis.competitionComparison.yourScore = analysis.totalScore;
     }
 
     // Ensure award level is correct based on boosted score
