@@ -119,10 +119,12 @@ export default function UploadPage() {
       setExtractedFrames(result);
     } catch (err) {
       console.error("Frame extraction failed:", err);
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const defaultMsg = isMobile
+        ? "Could not process this video on your device. Try recording in MP4 format, or upload from a computer."
+        : "Failed to process video. Please try MP4 format.";
       setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to process video. Please try MP4 format."
+        err instanceof Error ? err.message : defaultMsg
       );
       setFile(null);
     } finally {
@@ -130,12 +132,20 @@ export default function UploadPage() {
     }
   };
 
+  const isVideoFile = (file: File) => {
+    // Check MIME type first
+    if (file.type.startsWith("video/")) return true;
+    // Fallback: check extension (iOS sometimes sends files with empty MIME type)
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    return ["mp4", "mov", "m4v", "avi", "webm", "mkv", "3gp"].includes(ext || "");
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.type.startsWith("video/")) {
+    if (droppedFile && isVideoFile(droppedFile)) {
       processFile(droppedFile);
     } else {
       setError("Please upload a video file (MP4, MOV, AVI, WebM).");
@@ -144,10 +154,10 @@ export default function UploadPage() {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (selectedFile && selectedFile.type.startsWith("video/")) {
+    if (selectedFile && isVideoFile(selectedFile)) {
       processFile(selectedFile);
-    } else {
-      setError("Please upload a video file (MP4, MOV, AVI, WebM).");
+    } else if (selectedFile) {
+      setError("This file type isn't supported. Please use MP4 or MOV format.");
     }
   };
 
@@ -312,7 +322,8 @@ export default function UploadPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="video/*"
+                accept="video/*,video/mp4,video/quicktime,video/x-m4v"
+                capture="environment"
                 onChange={handleFileSelect}
                 className="hidden"
               />
@@ -363,7 +374,8 @@ export default function UploadPage() {
                   >
                     <Upload className="mx-auto h-10 w-10 text-surface-200 mb-3" />
                     <p className="font-medium text-sm">
-                      Drag & drop your video here
+                      <span className="hidden sm:inline">Drag & drop your video here</span>
+                      <span className="sm:hidden">Tap to select or record a video</span>
                     </p>
                     <p className="text-xs text-surface-200 mt-1">
                       MP4, MOV, AVI, WebM — any resolution including 4K
