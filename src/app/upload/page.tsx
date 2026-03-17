@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
@@ -13,6 +13,7 @@ import {
   Music,
   Users,
   Film,
+  Lock,
 } from "lucide-react";
 import { extractFrames } from "@/lib/extractFrames";
 import type { ExtractedFrame, AnalysisResult } from "@/lib/types";
@@ -68,6 +69,31 @@ export default function UploadPage() {
   const [error, setError] = useState("");
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [paymentVerified, setPaymentVerified] = useState<boolean | null>(null); // null = loading
+  const [analysesRemaining, setAnalysesRemaining] = useState(0);
+
+  useEffect(() => {
+    const sessionId = localStorage.getItem("routinex_session_id");
+    if (!sessionId) {
+      setPaymentVerified(false);
+      return;
+    }
+
+    fetch("/api/verify-payment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setPaymentVerified(data.verified === true);
+        if (data.analysesRemaining != null) {
+          setAnalysesRemaining(data.analysesRemaining);
+        }
+      })
+      .catch(() => setPaymentVerified(false));
+  }, []);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -178,6 +204,50 @@ export default function UploadPage() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  // Loading state
+  if (paymentVerified === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-primary-400 animate-spin" />
+      </div>
+    );
+  }
+
+  // Payment gate
+  if (!paymentVerified) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="fixed inset-0 -z-10">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
+        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass rounded-3xl p-8 sm:p-12 max-w-md w-full text-center"
+        >
+          <Lock className="mx-auto h-12 w-12 text-surface-200 mb-4" />
+          <h1 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-display)]">
+            Members Only
+          </h1>
+          <p className="mt-3 text-surface-200 text-sm">
+            Upload access is available to beta members. Grab your Early Access Pass to start analyzing routines.
+          </p>
+          <a
+            href="/#pricing"
+            className="mt-6 inline-flex items-center justify-center gap-2 w-full rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-6 py-4 text-lg font-bold text-white hover:opacity-90 transition-opacity"
+          >
+            Get Early Access — $9.99
+            <ArrowRight className="h-5 w-5" />
+          </a>
+          <p className="mt-3 text-xs text-surface-200">
+            Includes 3 free video analyses
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen py-20 px-4">
       {/* Background */}
@@ -200,6 +270,11 @@ export default function UploadPage() {
           </h1>
           <p className="mt-3 text-surface-200">
             Upload your video and get a full AI analysis in under 2 minutes.
+            {analysesRemaining > 0 && (
+              <span className="block mt-1 text-primary-400 font-medium">
+                {analysesRemaining} free {analysesRemaining === 1 ? "analysis" : "analyses"} remaining
+              </span>
+            )}
           </p>
         </div>
 
@@ -286,7 +361,7 @@ export default function UploadPage() {
                       Drag & drop your video here
                     </p>
                     <p className="text-xs text-surface-200 mt-1">
-                      MP4, MOV, AVI, WebM — up to 500MB
+                      MP4, MOV, AVI, WebM — any resolution including 4K
                     </p>
                   </motion.div>
                 )}

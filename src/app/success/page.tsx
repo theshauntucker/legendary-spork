@@ -1,11 +1,30 @@
 "use client";
 
+import { Suspense, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { CheckCircle, Sparkles, ArrowRight, Gift, Star } from "lucide-react";
+import { CheckCircle, Sparkles, ArrowRight, Gift, Star, Loader2 } from "lucide-react";
+
+function SessionCapture() {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const sessionId = searchParams.get("session_id");
+    if (sessionId) {
+      localStorage.setItem("routinex_session_id", sessionId);
+    }
+  }, [searchParams]);
+
+  return null;
+}
 
 export default function SuccessPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
+      <Suspense fallback={<Loader2 className="h-8 w-8 text-primary-400 animate-spin" />}>
+        <SessionCapture />
+      </Suspense>
+
       <div className="absolute inset-0">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary-600/20 rounded-full blur-3xl" />
         <div className="absolute bottom-1/3 left-1/2 -translate-x-1/2 w-64 h-64 bg-gold-500/10 rounded-full blur-3xl" />
@@ -77,8 +96,16 @@ export default function SuccessPage() {
         </div>
 
         <a
+          href="/upload"
+          className="mt-6 inline-flex items-center justify-center gap-2 w-full rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-6 py-4 text-lg font-bold text-white hover:opacity-90 transition-opacity"
+        >
+          Upload Your First Routine
+          <ArrowRight className="h-5 w-5" />
+        </a>
+
+        <a
           href="/"
-          className="mt-6 inline-flex items-center gap-2 text-sm text-primary-400 hover:text-primary-300 transition-colors"
+          className="mt-4 inline-flex items-center gap-2 text-sm text-primary-400 hover:text-primary-300 transition-colors"
         >
           <ArrowRight className="h-4 w-4 rotate-180" />
           Back to RoutineX
