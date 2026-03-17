@@ -45,45 +45,55 @@ export default async function AnalysisPage({
 
   if (!user) redirect("/login");
 
-  // Try to fetch the video and its analysis from the database
+  // Fetch the video record
   const { data: video } = await supabase
     .from("videos")
-    .select("*, analyses(*)")
+    .select("*")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
 
   let analysisData;
 
-  if (video && video.analyses && video.analyses.length > 0) {
-    // Real data from database
-    const analysis = video.analyses[0];
-    // Get duration from preprocessing metadata, or calculate from timeline notes
-    const preprocessMeta = video.preprocessing_metadata as Record<string, unknown> | null;
-    const durationFormatted =
-      (preprocessMeta?.durationFormatted as string) ||
-      formatDurationFromSeconds(preprocessMeta?.duration as number | undefined);
+  if (video) {
+    if (video.status !== "analyzed") {
+      redirect(`/processing/${id}`);
+    }
 
-    analysisData = {
-      id: video.id,
-      routineName: video.routine_name,
-      dancerName: video.dancer_name || "Dancer",
-      ageGroup: video.age_group,
-      style: video.style,
-      entryType: video.entry_type,
-      duration: durationFormatted,
-      totalScore: analysis.total_score,
-      awardLevel: analysis.award_level,
-      judgeScores: analysis.judge_scores,
-      timelineNotes: analysis.timeline_notes,
-      improvementPriorities: analysis.improvement_priorities,
-      competitionComparison: analysis.competition_comparison,
-    };
-  } else if (video && video.status !== "analyzed") {
-    // Video exists but analysis isn't ready yet — redirect to processing
-    redirect(`/processing/${id}`);
+    // Fetch analysis separately (more reliable than join)
+    const { data: analysis } = await supabase
+      .from("analyses")
+      .select("*")
+      .eq("video_id", video.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (analysis) {
+      const preprocessMeta = video.preprocessing_metadata as Record<string, unknown> | null;
+      const durationFormatted =
+        (preprocessMeta?.durationFormatted as string) ||
+        formatDurationFromSeconds(preprocessMeta?.duration as number | undefined);
+
+      analysisData = {
+        id: video.id,
+        routineName: video.routine_name,
+        dancerName: video.dancer_name || "Dancer",
+        ageGroup: video.age_group,
+        style: video.style,
+        entryType: video.entry_type,
+        duration: durationFormatted,
+        totalScore: analysis.total_score,
+        awardLevel: analysis.award_level,
+        judgeScores: analysis.judge_scores,
+        timelineNotes: analysis.timeline_notes,
+        improvementPriorities: analysis.improvement_priorities,
+        competitionComparison: analysis.competition_comparison,
+      };
+    } else {
+      analysisData = generateFallbackAnalysis(id);
+    }
   } else {
-    // Fallback to simulated data (for backward compatibility)
     analysisData = generateFallbackAnalysis(id);
   }
 

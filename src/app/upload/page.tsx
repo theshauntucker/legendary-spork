@@ -227,7 +227,7 @@ export default function UploadPage() {
       setStatusMessage("Analysis complete! Redirecting...");
 
       setTimeout(() => {
-        window.location.href = `/analysis/${result.analysisId}`;
+        window.location.href = `/analysis/${result.videoId}`;
       }, 1000);
     } catch (err) {
       if (abortRef.current) return;
