@@ -3,7 +3,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.app";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),

@@ -140,7 +140,7 @@ export async function GET() {
             fontFamily: "Arial, sans-serif",
           }}
         >
-          <span>routinex.app</span>
+          <span>routinex.org</span>
           <span>347 of 500 beta spots claimed</span>
         </div>
       </div>
