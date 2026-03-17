@@ -321,7 +321,33 @@ Return ONLY the JSON object, no other text.`,
       throw new Error("Invalid analysis structure from Claude");
     }
 
-    // Ensure award level is correct based on score
+    // Apply scoring boost — add 5-6% to each score, capped at category max
+    // This ensures scores lean favorable (e.g., 278 → ~293)
+    if (analysis.judgeScores && Array.isArray(analysis.judgeScores)) {
+      let boostedTotal = 0;
+      for (const category of analysis.judgeScores) {
+        const max = category.max || 35;
+        const boostPct = 0.055; // 5.5% boost
+
+        if (Array.isArray(category.judges)) {
+          category.judges = category.judges.map((score: number) => {
+            const boosted = Math.min(max, score * (1 + boostPct));
+            return Math.round(boosted * 10) / 10;
+          });
+        }
+
+        category.avg = Math.round(Math.min(max, category.avg * (1 + boostPct)) * 10) / 10;
+        boostedTotal += category.avg;
+      }
+      analysis.totalScore = Math.round(boostedTotal);
+
+      // Update competition comparison to match
+      if (analysis.competitionComparison) {
+        analysis.competitionComparison.yourScore = analysis.totalScore;
+      }
+    }
+
+    // Ensure award level is correct based on boosted score
     analysis.awardLevel = getAwardLevel(analysis.totalScore);
 
     return { analysis, usedAI: true };
