@@ -72,6 +72,7 @@ export default function UploadPage() {
 
   const [paymentVerified, setPaymentVerified] = useState<boolean | null>(null); // null = loading
   const [analysesRemaining, setAnalysesRemaining] = useState(0);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const sessionId = localStorage.getItem("routinex_session_id");
@@ -90,6 +91,9 @@ export default function UploadPage() {
         setPaymentVerified(data.verified === true);
         if (data.analysesRemaining != null) {
           setAnalysesRemaining(data.analysesRemaining);
+        }
+        if (data.email) {
+          setUserEmail(data.email);
         }
       })
       .catch(() => setPaymentVerified(false));
@@ -176,6 +180,7 @@ export default function UploadPage() {
           entryType,
           frames: extractedFrames.frames,
           duration: extractedFrames.duration,
+          ...(userEmail && { email: userEmail }),
         }),
       });
 
