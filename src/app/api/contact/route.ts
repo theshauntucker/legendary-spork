@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     await resend.emails.send({
       from: "RoutineX <notifications@routinex.org>",
-      to: "22tucker22@comcast.net",
+      to: process.env.OWNER_EMAIL || "22tucker22@comcast.net",
       replyTo: email,
       subject: `Contact Form: ${name}`,
       html: `

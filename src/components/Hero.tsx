@@ -26,7 +26,7 @@ export default function Hero() {
             <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500" />
           </span>
           <span className="text-sm text-primary-200">
-            Now Live — Limited Beta Access
+            Now Live — Start Analyzing Today
           </span>
         </motion.div>
 
@@ -128,9 +128,7 @@ export default function Hero() {
         >
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-primary-400" />
-            <span>
-              <span className="text-white font-semibold">487</span> of 1,000 launch spots remaining
-            </span>
+            <span>Trusted by dance families nationwide</span>
           </div>
           <div className="hidden sm:block h-4 w-px bg-surface-800" />
           <div className="flex items-center gap-1">

@@ -7,7 +7,7 @@ const testimonials = [
   {
     name: "Jessica M.",
     role: "Dance Mom — Teen Competitive",
-    text: "We spend thousands on competition fees and private lessons every year. Getting detailed feedback for $2.99 per routine is an absolute game-changer. My daughter improved her scores by 12 points in one season using the beta.",
+    text: "We spend thousands on competition fees and private lessons every year. Getting detailed feedback for $2.99 per routine is an absolute game-changer. My daughter improved her scores by 12 points in one season using RoutineX.",
     rating: 5,
     avatar: "JM",
   },

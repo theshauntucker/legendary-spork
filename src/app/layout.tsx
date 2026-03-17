@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
     description:
-      "Competition-standard scoring and feedback for every routine. Upload your video and get detailed AI analysis in under 5 minutes. Join 500 beta testers getting early access.",
+      "Competition-standard scoring and feedback for every routine. Upload your video and get detailed AI analysis in under 5 minutes.",
     type: "website",
     siteName: "RoutineX",
     url: BASE_URL,
@@ -106,10 +106,10 @@ const jsonLd = {
       offers: [
         {
           "@type": "Offer",
-          name: "Beta Early Access",
+          name: "Founding Member Pass",
           price: "9.99",
           priceCurrency: "USD",
-          description: "One-time beta access fee with 3 free video analyses",
+          description: "One-time membership with 3 video analyses included",
         },
         {
           "@type": "Offer",
@@ -122,7 +122,7 @@ const jsonLd = {
       aggregateRating: {
         "@type": "AggregateRating",
         ratingValue: "5",
-        ratingCount: "347",
+        ratingCount: "48",
         bestRating: "5",
         worstRating: "1",
       },

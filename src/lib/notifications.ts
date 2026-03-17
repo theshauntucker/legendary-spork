@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 
-const OWNER_EMAIL = "22tucker22@comcast.net";
+const OWNER_EMAIL = process.env.OWNER_EMAIL || "22tucker22@comcast.net";
 
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
@@ -52,7 +52,7 @@ export async function notifyPayment(
 ) {
   const now = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
   const amount = (amountCents / 100).toFixed(2);
-  const typeLabel = paymentType === "beta_access" ? "Beta Access ($9.99)" : `Single Analysis ($${amount})`;
+  const typeLabel = paymentType === "beta_access" ? "Founding Member ($9.99)" : `Single Analysis ($${amount})`;
 
   await sendEmail(
     `Payment Received: $${amount} from ${email}`,

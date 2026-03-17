@@ -122,7 +122,7 @@ export async function GET() {
               fontFamily: "Arial, sans-serif",
             }}
           >
-            Join the Beta — $9.99
+            Get Started — $9.99
           </div>
         </div>
 
@@ -141,7 +141,7 @@ export async function GET() {
           }}
         >
           <span>routinex.org</span>
-          <span>347 of 500 beta spots claimed</span>
+          <span>AI-powered analysis for $2.99/video</span>
         </div>
       </div>
     ),
