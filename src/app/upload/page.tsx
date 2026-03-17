@@ -205,6 +205,25 @@ export default function UploadPage() {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
+
+        // No credits — redirect to purchase
+        if (response.status === 402 && data.code === "NO_CREDITS") {
+          setStage("idle");
+          setProgress(0);
+          const purchaseType = data.needsPurchase || "beta_access";
+          const checkoutRes = await fetch("/api/checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: purchaseType }),
+          });
+          const checkoutData = await checkoutRes.json();
+          if (checkoutData.url) {
+            window.location.href = checkoutData.url;
+            return;
+          }
+          throw new Error("Unable to start checkout. Please try again.");
+        }
+
         throw new Error(
           data.error || `Analysis failed (${response.status})`
         );

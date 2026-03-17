@@ -1,46 +1,80 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const stripe = getStripe();
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
 
-    // Try to get the authenticated user's email for Stripe
-    let customerEmail: string | undefined;
+    // Get the authenticated user — required for payment tracking
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "You must be logged in to purchase" },
+        { status: 401 }
+      );
+    }
+
+    // Determine payment type from request body
+    let paymentType = "beta_access";
     try {
-      const supabase = await createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email) {
-        customerEmail = user.email;
+      const body = await request.json();
+      if (body.type === "video_analysis") {
+        paymentType = "video_analysis";
       }
     } catch {
-      // Not logged in — that's fine, checkout still works
+      // Default to beta_access if no body
     }
+
+    const isBeta = paymentType === "beta_access";
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
-      ...(customerEmail && { customer_email: customerEmail }),
+      customer_email: user.email,
+      metadata: {
+        user_id: user.id,
+        payment_type: paymentType,
+      },
       line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "RoutineX Beta — Early Access Pass",
-              description:
-                "One-time join fee. Includes priority access, 3 free video analyses, and founding member status.",
+        isBeta
+          ? {
+              price_data: {
+                currency: "usd",
+                product_data: {
+                  name: "RoutineX Beta — Early Access Pass",
+                  description:
+                    "One-time join fee. Includes priority access, 3 free video analyses, and founding member status.",
+                },
+                unit_amount: 999, // $9.99
+              },
+              quantity: 1,
+            }
+          : {
+              price_data: {
+                currency: "usd",
+                product_data: {
+                  name: "RoutineX — Video Analysis",
+                  description:
+                    "AI-powered competition-standard analysis for one routine video.",
+                },
+                unit_amount: 299, // $2.99
+              },
+              quantity: 1,
             },
-            unit_amount: 999, // $9.99 in cents
-          },
-          quantity: 1,
-        },
       ],
-      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/#pricing`,
+      success_url: isBeta
+        ? `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`
+        : `${baseUrl}/dashboard?purchased=video&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: isBeta ? `${baseUrl}/#pricing` : `${baseUrl}/dashboard`,
     });
 
     return NextResponse.json({ url: session.url });

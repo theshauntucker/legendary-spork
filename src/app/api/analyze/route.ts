@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { getUserCredits, useCredit } from "@/lib/credits";
 
 export const maxDuration = 300; // 5 min max for AI analysis
 
@@ -34,6 +35,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
+    // Check credits before proceeding
+    const serviceClient = await createServiceClient();
+    const creditStatus = await getUserCredits(
+      serviceClient,
+      user.id,
+      user.email
+    );
+
+    if (!creditStatus.hasCredits) {
+      return NextResponse.json(
+        {
+          error: "No credits remaining",
+          code: "NO_CREDITS",
+          needsPurchase: !creditStatus.isBetaMember
+            ? "beta_access"
+            : "video_analysis",
+        },
+        { status: 402 }
+      );
+    }
+
     const body = await request.json();
     const { frames, metadata } = body as {
       frames: FrameInput[];
@@ -53,8 +75,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const serviceClient = await createServiceClient();
 
     // Create video record in the database
     const { data: video, error: videoError } = await serviceClient
@@ -134,6 +154,9 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", video.id);
+
+    // Deduct one credit after successful analysis
+    await useCredit(serviceClient, user.id, user.email);
 
     return NextResponse.json({
       success: true,
