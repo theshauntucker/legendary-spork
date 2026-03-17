@@ -75,3 +75,48 @@ body {
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+/* Print styles for PDF download */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide non-report elements */
+  .fixed,
+  [data-print-hide] {
+    display: none !important;
+  }
+
+  /* Make glass cards visible on white background */
+  .glass {
+    background: #f8f8f8 !important;
+    backdrop-filter: none !important;
+    border: 1px solid #ddd !important;
+  }
+
+  /* Fix gradient text for print */
+  .gradient-text {
+    -webkit-text-fill-color: #7c3aed !important;
+    color: #7c3aed !important;
+  }
+
+  /* Ensure text is dark */
+  .text-surface-200,
+  .text-surface-200\/60 {
+    color: #555 !important;
+  }
+
+  .text-white {
+    color: black !important;
+  }
+
+  /* Page settings */
+  @page {
+    margin: 0.75in;
+    size: letter;
+  }
+}
