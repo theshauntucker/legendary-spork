@@ -21,6 +21,8 @@ interface RoutineMetadata {
   originalFileSize: number;
 }
 
+export const maxDuration = 60; // Allow up to 60s for large uploads
+
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication

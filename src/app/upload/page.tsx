@@ -183,25 +183,45 @@ export default function UploadPage() {
       setProgress(45);
       setStatusMessage("Uploading for analysis...");
 
-      const response = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          frames: base64Frames,
-          metadata: {
-            routineName,
-            dancerName: dancerName || undefined,
-            studioName: studioName || undefined,
-            ageGroup,
-            style,
-            entryType,
-            duration: metadata.duration,
-            resolution: `${metadata.width}x${metadata.height}`,
-            originalFilename: file.name,
-            originalFileSize: file.size,
-          },
-        }),
+      const payload = JSON.stringify({
+        frames: base64Frames,
+        metadata: {
+          routineName,
+          dancerName: dancerName || undefined,
+          studioName: studioName || undefined,
+          ageGroup,
+          style,
+          entryType,
+          duration: metadata.duration,
+          resolution: `${metadata.width}x${metadata.height}`,
+          originalFilename: file.name,
+          originalFileSize: file.size,
+        },
       });
+
+      // Retry up to 2 times for transient network errors
+      let response: Response | null = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const controller = new AbortController();
+          const fetchTimeout = setTimeout(() => controller.abort(), 60000);
+          response = await fetch("/api/analyze", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: payload,
+            signal: controller.signal,
+          });
+          clearTimeout(fetchTimeout);
+          break; // Success — exit retry loop
+        } catch (fetchErr) {
+          if (attempt === 2) throw fetchErr;
+          // Wait before retry: 2s, then 4s
+          setStatusMessage(`Upload interrupted, retrying... (${attempt + 2}/3)`);
+          await new Promise((r) => setTimeout(r, (attempt + 1) * 2000));
+        }
+      }
+
+      if (!response) throw new Error("Upload failed after multiple attempts");
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));

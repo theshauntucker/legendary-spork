@@ -190,13 +190,23 @@ function captureFrameAtTime(
 ): Promise<{ blob: Blob; dataUrl: string }> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
+      cleanup();
       reject(new Error("Frame capture timed out"));
     }, 10000);
 
-    video.currentTime = time;
-
-    video.onseeked = () => {
+    const cleanup = () => {
       clearTimeout(timeout);
+      video.removeEventListener("seeked", onSeeked);
+      video.removeEventListener("error", onError);
+    };
+
+    const onError = () => {
+      cleanup();
+      reject(new Error(`Video error while seeking to ${time}s`));
+    };
+
+    const onSeeked = () => {
+      cleanup();
       try {
         ctx.drawImage(video, 0, 0, width, height);
         const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
@@ -216,6 +226,10 @@ function captureFrameAtTime(
         reject(err);
       }
     };
+
+    video.addEventListener("seeked", onSeeked, { once: true });
+    video.addEventListener("error", onError, { once: true });
+    video.currentTime = time;
   });
 }
 
