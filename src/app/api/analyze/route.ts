@@ -263,8 +263,8 @@ Here are the frames:`,
 Now provide your complete analysis as a JSON object with EXACTLY this structure. Be specific and accurate — reference only what you actually see in the frames. Use the REAL timestamps from the frames shown above.
 
 {
-  "totalScore": <number 100-300>,
-  "awardLevel": "<Gold|High Gold|Platinum|Platinum Star|Titanium>",
+  "totalScore": <number 260-300>,
+  "awardLevel": "<Gold|High Gold|Platinum|Diamond>",
   "judgeScores": [
     {
       "category": "Technique",
@@ -319,11 +319,10 @@ Now provide your complete analysis as a JSON object with EXACTLY this structure.
 }
 
 SCORING GUIDELINES:
-- Gold: 100-249
-- High Gold: 250-264
-- Platinum: 265-279
-- Platinum Star: 280-289
-- Titanium: 290-300
+- Gold: 260-269
+- High Gold: 270-279
+- Platinum: 280-289
+- Diamond: 290-300
 
 - Technique (max 35): Body placement, alignment, extension, turnout, flexibility, strength, control
 - Performance (max 35): Projection, energy, musicality, facial expression, stage presence, emotional connection
@@ -399,10 +398,9 @@ Return ONLY the JSON object, no other text.`,
 }
 
 function getAwardLevel(score: number): string {
-  if (score >= 290) return "Titanium";
-  if (score >= 280) return "Platinum Star";
-  if (score >= 265) return "Platinum";
-  if (score >= 250) return "High Gold";
+  if (score >= 290) return "Diamond";
+  if (score >= 280) return "Platinum";
+  if (score >= 270) return "High Gold";
   return "Gold";
 }
 

@@ -154,10 +154,9 @@ function generateAnalysis(
   const totalScore = v(274, 20);
 
   let awardLevel = "Gold";
-  if (totalScore >= 290) awardLevel = "Titanium";
-  else if (totalScore >= 280) awardLevel = "Platinum Star";
-  else if (totalScore >= 265) awardLevel = "Platinum";
-  else if (totalScore >= 250) awardLevel = "High Gold";
+  if (totalScore >= 290) awardLevel = "Diamond";
+  else if (totalScore >= 280) awardLevel = "Platinum";
+  else if (totalScore >= 270) awardLevel = "High Gold";
 
   return {
     totalScore,

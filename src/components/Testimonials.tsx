@@ -28,7 +28,7 @@ const testimonials = [
   {
     name: "Amanda K.",
     role: "Dance Mom — Junior Division",
-    text: "My 10-year-old used to get nervous about competition scores. Now she uploads her practice videos and works on the specific improvements RoutineX recommends. She went from High Gold to Platinum Star in three competitions.",
+    text: "My 10-year-old used to get nervous about competition scores. Now she uploads her practice videos and works on the specific improvements RoutineX recommends. She went from High Gold to Platinum in three competitions.",
     rating: 5,
     avatar: "AK",
   },

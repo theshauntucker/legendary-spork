@@ -72,18 +72,16 @@ interface AnalysisData {
 }
 
 const awardLevels = [
-  { label: "Gold", min: 100, max: 249, color: "bg-yellow-600" },
-  { label: "High Gold", min: 250, max: 264, color: "bg-yellow-500" },
-  { label: "Platinum", min: 265, max: 279, color: "bg-surface-200" },
-  { label: "Platinum Star", min: 280, max: 289, color: "bg-primary-400" },
-  { label: "Titanium", min: 290, max: 300, color: "bg-gold-400" },
+  { label: "Gold", min: 260, max: 269, color: "bg-yellow-600" },
+  { label: "High Gold", min: 270, max: 279, color: "bg-yellow-500" },
+  { label: "Platinum", min: 280, max: 289, color: "bg-primary-400" },
+  { label: "Diamond", min: 290, max: 300, color: "bg-gold-400" },
 ];
 
 function getAwardLevel(score: number) {
-  if (score >= 290) return "Titanium";
-  if (score >= 280) return "Platinum Star";
-  if (score >= 265) return "Platinum";
-  if (score >= 250) return "High Gold";
+  if (score >= 290) return "Diamond";
+  if (score >= 280) return "Platinum";
+  if (score >= 270) return "High Gold";
   return "Gold";
 }
 
@@ -250,7 +248,7 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
             <div className="mt-6">
               <div className="flex gap-1 h-3 rounded-full overflow-hidden">
                 {awardLevels.map((level) => {
-                  const width = ((level.max - level.min) / 200) * 100;
+                  const width = ((level.max - level.min) / 40) * 100;
                   return (
                     <div
                       key={level.label}
@@ -269,8 +267,7 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
                 <span>Gold</span>
                 <span>High Gold</span>
                 <span>Platinum</span>
-                <span>Platinum Star</span>
-                <span>Titanium</span>
+                <span>Diamond</span>
               </div>
             </div>
           </div>

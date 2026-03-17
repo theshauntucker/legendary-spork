@@ -25,7 +25,7 @@ export default function Footer() {
               <span className="gradient-text">Fall Behind</span>
             </h2>
             <p className="mt-6 text-lg sm:text-xl text-surface-200 max-w-2xl mx-auto">
-              Every routine is a chance to improve. RoutineX gives your dancer the detailed, professional feedback they need to climb from Gold to Titanium.
+              Every routine is a chance to improve. RoutineX gives your dancer the detailed, professional feedback they need to climb from Gold to Diamond.
             </p>
 
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">

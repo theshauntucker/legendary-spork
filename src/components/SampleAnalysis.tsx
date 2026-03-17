@@ -44,7 +44,7 @@ const judgeScores = [
     judges: [9.0, 8.5, 9.5],
     avg: 9.0,
     feedback:
-      "A polished, competition-ready routine with clear artistic vision. Costuming and music selection complement the choreography perfectly. This routine has strong potential for Platinum Star at regionals.",
+      "A polished, competition-ready routine with clear artistic vision. Costuming and music selection complement the choreography perfectly. This routine has strong potential for Platinum at regionals.",
   },
 ];
 
@@ -114,16 +114,15 @@ const improvementPriorities = [
 ];
 
 const awardLevels = [
-  { label: "Gold", min: 100, max: 249, color: "bg-yellow-600" },
-  { label: "High Gold", min: 250, max: 264, color: "bg-yellow-500" },
-  { label: "Platinum", min: 265, max: 279, color: "bg-surface-200" },
-  { label: "Platinum Star", min: 280, max: 289, color: "bg-primary-400" },
-  { label: "Titanium", min: 290, max: 300, color: "bg-gold-400" },
+  { label: "Gold", min: 260, max: 269, color: "bg-yellow-600" },
+  { label: "High Gold", min: 270, max: 279, color: "bg-yellow-500" },
+  { label: "Platinum", min: 280, max: 289, color: "bg-primary-400" },
+  { label: "Diamond", min: 290, max: 300, color: "bg-gold-400" },
 ];
 
 export default function SampleAnalysis() {
   const totalScore = 274;
-  const awardLevel = "Platinum";
+  const awardLevel = "High Gold";
 
   return (
     <section id="sample-analysis" className="relative py-24 sm:py-32">
@@ -194,7 +193,7 @@ export default function SampleAnalysis() {
               <div className="flex gap-1 h-3 rounded-full overflow-hidden">
                 {awardLevels.map((level) => {
                   const width =
-                    ((level.max - level.min) / 200) * 100;
+                    ((level.max - level.min) / 40) * 100;
                   return (
                     <div
                       key={level.label}
@@ -213,8 +212,7 @@ export default function SampleAnalysis() {
                 <span>Gold</span>
                 <span>High Gold</span>
                 <span>Platinum</span>
-                <span>Platinum Star</span>
-                <span>Titanium</span>
+                <span>Diamond</span>
               </div>
             </div>
           </div>
