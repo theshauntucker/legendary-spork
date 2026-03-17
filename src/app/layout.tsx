@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://routinex.app";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://routinex.org";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -260,7 +262,11 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+        <SpeedInsights />
+      </body>
     </html>
   );
 }

@@ -123,7 +123,7 @@ export default function OGImage() {
             color: "#64748b",
           }}
         >
-          routinex.app — Know your score before competition day
+          routinex.org — Know your score before competition day
         </div>
       </div>
     ),

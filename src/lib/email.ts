@@ -30,7 +30,7 @@ function getAwardColor(award: string): string {
 function buildEmailHtml(analysis: AnalysisResult): string {
   const award = getAwardLevel(analysis.totalScore);
   const awardColor = getAwardColor(award);
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://routinex.app";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://routinex.org";
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
