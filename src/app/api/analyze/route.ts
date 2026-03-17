@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     const durationStr = formatDuration(metadata.duration);
 
     // Build the analysis using Claude Vision
-    const analysis = await analyzeWithClaude(frames, metadata, durationStr);
+    const { analysis, usedAI } = await analyzeWithClaude(frames, metadata, durationStr);
 
     // Save analysis to database
     const { data: analysisRecord, error: analysisError } = await serviceClient
@@ -129,6 +129,7 @@ export async function POST(request: NextRequest) {
           durationFormatted: durationStr,
           resolution: metadata.resolution,
           analyzedAt: new Date().toISOString(),
+          analyzedWithAI: usedAI,
         },
         updated_at: new Date().toISOString(),
       })
@@ -166,7 +167,7 @@ async function analyzeWithClaude(
 
   if (!apiKey) {
     console.warn("ANTHROPIC_API_KEY not set — using simulated analysis");
-    return generateSimulatedAnalysis(frames, metadata, durationStr);
+    return { analysis: generateSimulatedAnalysis(frames, metadata, durationStr), usedAI: false };
   }
 
   // Select a subset of frames if we have too many (Claude has image limits)
@@ -356,12 +357,12 @@ Return ONLY the JSON object, no other text.`,
     // Ensure award level is correct based on score
     analysis.awardLevel = getAwardLevel(analysis.totalScore);
 
-    return analysis;
+    return { analysis, usedAI: true };
   } catch (err) {
     console.error("Claude Vision analysis failed:", err);
     // Fall back to simulated analysis if Claude fails
     console.warn("Falling back to simulated analysis");
-    return generateSimulatedAnalysis(frames, metadata, durationStr);
+    return { analysis: generateSimulatedAnalysis(frames, metadata, durationStr), usedAI: false };
   }
 }
 

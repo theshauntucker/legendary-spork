@@ -75,6 +75,9 @@ export default async function AnalysisPage({
         (preprocessMeta?.durationFormatted as string) ||
         formatDurationFromSeconds(preprocessMeta?.duration as number | undefined);
 
+      // Detect if analysis was done by AI or simulated
+      const analysisMethod = (preprocessMeta?.analyzedWithAI === true) ? "ai" as const : "simulated" as const;
+
       analysisData = {
         id: video.id,
         routineName: video.routine_name,
@@ -89,6 +92,7 @@ export default async function AnalysisPage({
         timelineNotes: analysis.timeline_notes,
         improvementPriorities: analysis.improvement_priorities,
         competitionComparison: analysis.competition_comparison,
+        analysisMethod,
       };
     } else {
       analysisData = generateFallbackAnalysis(id);
