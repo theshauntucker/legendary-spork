@@ -38,7 +38,7 @@ export default function Pricing() {
             No Subscriptions. No Hidden Fees.
           </h2>
           <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
-            Pay once to join, then only when you upload. A private coaching session costs $75+. RoutineX gives you detailed feedback for $2.99.
+            Pay once to join, then only when you upload. A private coaching session costs $75+. RoutineX gives you detailed feedback for $3.99.
           </p>
         </motion.div>
 
@@ -53,17 +53,17 @@ export default function Pricing() {
           >
             <div className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-3 py-1 text-xs font-bold">
               <Gift className="h-3 w-3" />
-              LAUNCH PRICE — LIMITED TIME
+              FOUNDING MEMBER PRICE
             </div>
 
             <div className="mt-4">
-              <h3 className="text-xl font-bold">Launch Member Pass</h3>
+              <h3 className="text-xl font-bold">Founding Member Pass</h3>
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="text-5xl font-extrabold">$9.99</span>
                 <span className="text-surface-200 text-sm">one-time</span>
               </div>
               <p className="mt-3 text-sm text-surface-200">
-                Join during our launch and get full platform access at our lowest price ever. This rate won&apos;t last.
+                Get full platform access with 3 analyses included. One-time payment, no subscriptions.
               </p>
             </div>
 
@@ -106,7 +106,7 @@ export default function Pricing() {
           >
             <h3 className="text-xl font-bold">Per Video Analysis</h3>
             <div className="mt-4 flex items-baseline gap-1">
-              <span className="text-5xl font-extrabold">$2.99</span>
+              <span className="text-5xl font-extrabold">$3.99</span>
               <span className="text-surface-200 text-sm">per upload</span>
             </div>
             <p className="mt-3 text-sm text-surface-200">
@@ -133,7 +133,7 @@ export default function Pricing() {
               <Zap className="h-6 w-6 text-gold-400 mx-auto mb-2" />
               <p className="text-sm font-medium">Pay as you go</p>
               <p className="text-xs text-surface-200 mt-1">
-                Members get 3 analyses included, then $2.99 each after
+                Members get 3 analyses included, then $3.99 each after
               </p>
             </div>
           </motion.div>
@@ -155,7 +155,7 @@ export default function Pricing() {
               <span className="line-through">Competition entry: $80–$120</span>
             </div>
             <div className="text-white font-semibold">
-              RoutineX analysis: <span className="text-primary-400">$2.99</span>
+              RoutineX analysis: <span className="text-primary-400">$3.99</span>
             </div>
           </div>
         </motion.div>

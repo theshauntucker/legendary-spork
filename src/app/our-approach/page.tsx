@@ -48,7 +48,7 @@ export default function OurApproachPage() {
           <div className="glass rounded-2xl p-6 sm:p-8">
             <div className="flex items-center gap-3 mb-4">
               <DollarSign className="h-6 w-6 text-green-400 shrink-0" />
-              <h2 className="text-xl font-bold text-white">$2.99 for What Used to Cost $100+</h2>
+              <h2 className="text-xl font-bold text-white">$3.99 for What Used to Cost $100+</h2>
             </div>
             <p className="mb-4">
               Here&apos;s the thing — for the price of a coffee, RoutineX gives

@@ -31,7 +31,7 @@ const faqs = [
   },
   {
     q: "What do I get when I sign up?",
-    a: "Members ($9.99 one-time) get full platform access, 3 video analyses included, founding member status with a profile badge, and a direct feedback channel to our team. Additional analyses are $2.99 each.",
+    a: "Members ($9.99 one-time) get full platform access, 3 video analyses included, founding member status with a profile badge, and a direct feedback channel to our team. Additional analyses are $3.99 each.",
   },
   {
     q: "Can I get a refund?",

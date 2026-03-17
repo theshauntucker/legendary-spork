@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
               price_data: {
                 currency: "usd",
                 product_data: {
-                  name: "RoutineX Beta — Early Access Pass",
+                  name: "RoutineX — Founding Member Pass",
                   description:
-                    "One-time join fee. Includes priority access, 3 free video analyses, and founding member status.",
+                    "One-time membership. Includes full access, 3 video analyses, and founding member status.",
                 },
                 unit_amount: 999, // $9.99
               },
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
                   description:
                     "AI-powered competition-standard analysis for one routine video.",
                 },
-                unit_amount: 299, // $2.99
+                unit_amount: 399, // $3.99
               },
               quantity: 1,
             },

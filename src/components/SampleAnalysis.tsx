@@ -147,7 +147,7 @@ export default function SampleAnalysis() {
             Sample Analysis Report
           </h2>
           <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
-            Here&apos;s exactly what a RoutineX analysis looks like. Every upload gets this level of detail — for just $2.99.
+            Here&apos;s exactly what a RoutineX analysis looks like. Every upload gets this level of detail — for just $3.99.
           </p>
         </motion.div>
 

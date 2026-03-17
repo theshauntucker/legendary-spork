@@ -41,7 +41,7 @@ export default function Footer() {
             <p className="mt-6 text-sm text-surface-200">
               One-time $9.99 membership. 3 analyses included.
               <br />
-              Additional analyses just $2.99 each.
+              Additional analyses just $3.99 each.
             </p>
           </motion.div>
         </div>

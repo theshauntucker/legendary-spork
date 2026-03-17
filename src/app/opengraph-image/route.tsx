@@ -141,7 +141,7 @@ export async function GET() {
           }}
         >
           <span>routinex.org</span>
-          <span>AI-powered analysis for $2.99/video</span>
+          <span>AI-powered analysis for $3.99/video</span>
         </div>
       </div>
     ),

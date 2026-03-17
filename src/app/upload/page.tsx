@@ -683,7 +683,7 @@ export default function UploadPage() {
               </>
             ) : (
               <>
-                Analyze My Routine — $2.99
+                Analyze My Routine — $3.99
                 <ArrowRight className="h-5 w-5" />
               </>
             )}
