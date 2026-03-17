@@ -4,7 +4,7 @@ const BETA_CREDITS = 3;
 
 // Admin emails that bypass payment — add yours here
 const ADMIN_EMAILS = [
-  process.env.ADMIN_EMAIL, // Set in Vercel env vars
+  process.env.ADMIN_EMAIL?.toLowerCase(), // Set in Vercel env vars
 ].filter(Boolean);
 
 export function isAdmin(email: string | undefined): boolean {
