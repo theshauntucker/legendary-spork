@@ -17,20 +17,40 @@ import {
 import { extractFrames } from "@/lib/extractFrames";
 import type { ExtractedFrame } from "@/lib/types";
 
-const ageGroups = ["Mini (5-6)", "Petite (6-9)", "Junior (9-12)", "Teen (12-15)", "Senior (15-19)"];
+const ageGroups = [
+  "Mini (5 & Under)",
+  "Petite (6-8)",
+  "Junior (9-11)",
+  "Teen (12-14)",
+  "Senior (15-19)",
+  "Adult (20+)",
+];
 const danceStyles = [
   "Jazz",
   "Contemporary",
   "Lyrical",
+  "Ballet",
+  "Pointe",
   "Hip Hop",
   "Tap",
-  "Ballet",
   "Musical Theater",
+  "Modern",
   "Pom",
   "Acro",
+  "Clogging",
+  "Ballroom",
   "Cheer",
+  "Open/Freestyle",
 ];
-const entryTypes = ["Solo", "Duo/Trio", "Small Group", "Large Group", "Production"];
+const entryTypes = [
+  "Solo",
+  "Duo/Trio",
+  "Small Group (4-9)",
+  "Large Group (10-19)",
+  "Line (20+)",
+  "Extended Line",
+  "Production",
+];
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);

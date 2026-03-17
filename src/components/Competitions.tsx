@@ -4,38 +4,50 @@ import { motion } from "framer-motion";
 import { Shield, Music, Users } from "lucide-react";
 
 const competitions = [
-  "Star Power",
+  "StarQuest",
+  "Starpower",
+  "Showstopper",
   "JUMP",
   "NUVO",
+  "RADIX",
   "24 Seven",
+  "The Dance Awards",
+  "Hall of Fame",
+  "Star Power",
   "NexStar",
   "Revolution",
   "UCA",
   "NCA",
   "Applause",
-  "Turn It Up",
+  "Energy",
   "Platinum",
-  "RADIX",
 ];
 
 const ageGroups = [
-  { name: "Mini", ages: "5–6", color: "from-pink-400 to-pink-600" },
-  { name: "Petite", ages: "6–9", color: "from-purple-400 to-purple-600" },
-  { name: "Junior", ages: "9–12", color: "from-primary-400 to-primary-600" },
-  { name: "Teen", ages: "12–15", color: "from-accent-400 to-accent-600" },
+  { name: "Mini", ages: "5 & Under", color: "from-pink-400 to-pink-600" },
+  { name: "Petite", ages: "6–8", color: "from-purple-400 to-purple-600" },
+  { name: "Junior", ages: "9–11", color: "from-primary-400 to-primary-600" },
+  { name: "Teen", ages: "12–14", color: "from-accent-400 to-accent-600" },
   { name: "Senior", ages: "15–19", color: "from-gold-400 to-gold-600" },
+  { name: "Adult", ages: "20+", color: "from-surface-200 to-surface-400" },
 ];
 
 const styles = [
   "Jazz",
   "Contemporary",
   "Lyrical",
+  "Ballet",
+  "Pointe",
   "Hip Hop",
   "Tap",
-  "Ballet",
   "Musical Theater",
+  "Modern",
   "Pom",
   "Acro",
+  "Clogging",
+  "Ballroom",
+  "Cheer",
+  "Open/Freestyle",
 ];
 
 export default function Competitions() {
