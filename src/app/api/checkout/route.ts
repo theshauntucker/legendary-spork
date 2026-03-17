@@ -31,7 +31,10 @@ export async function POST() {
     return NextResponse.json({ url: session.url });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("Stripe checkout error:", message);
+    const keyPrefix = process.env.STRIPE_SECRET_KEY
+      ? process.env.STRIPE_SECRET_KEY.substring(0, 12) + "..."
+      : "NOT SET";
+    console.error("Stripe checkout error:", message, "| Key prefix:", keyPrefix);
     return NextResponse.json(
       { error: message },
       { status: 500 }
