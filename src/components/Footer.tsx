@@ -41,7 +41,7 @@ export default function Footer() {
             <p className="mt-6 text-sm text-surface-200">
               Only <span className="text-white font-semibold">153</span> of 500 beta spots remaining.
               <br />
-              Launching Q2 2026. Beta members get early access + 3 free analyses.
+              Beta members get 3 analyses included with signup.
             </p>
           </motion.div>
         </div>

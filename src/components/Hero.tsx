@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Play, ArrowRight, Users, Star, Mail } from "lucide-react";
+import { Play, ArrowRight, Users, Star, Shield, Zap, Trophy } from "lucide-react";
 
 export default function Hero() {
   return (
@@ -26,7 +26,7 @@ export default function Hero() {
             <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500" />
           </span>
           <span className="text-sm text-primary-200">
-            Just Launched — Limited to First 1,000 Members
+            Now Live — Limited Beta Access
           </span>
         </motion.div>
 
@@ -37,8 +37,12 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] font-[family-name:var(--font-display)]"
         >
-          Your Dancer&apos;s{" "}
-          <span className="gradient-text">Secret Weapon</span>
+          AI-Powered{" "}
+          <span className="gradient-text">Dance Scoring</span>
+          <br />
+          <span className="text-3xl sm:text-4xl lg:text-5xl font-bold text-surface-200 mt-2 block">
+            for Competitive Dancers
+          </span>
         </motion.h1>
 
         {/* Subheadline */}
@@ -48,13 +52,34 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mx-auto mt-6 max-w-2xl text-lg sm:text-xl text-surface-200 leading-relaxed"
         >
-          Upload any routine and get{" "}
+          Upload your routine and get{" "}
           <span className="text-white font-semibold">
             competition-standard scoring
           </span>{" "}
           with detailed, actionable feedback — powered by AI trained on
           real judging rubrics from Star Power, JUMP, UCA &amp; more.
         </motion.p>
+
+        {/* Trust badges */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.25 }}
+          className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-surface-200"
+        >
+          <div className="flex items-center gap-1.5">
+            <Shield className="h-4 w-4 text-primary-400" />
+            <span>Competition-Calibrated</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Zap className="h-4 w-4 text-accent-400" />
+            <span>Results in Minutes</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Trophy className="h-4 w-4 text-gold-400" />
+            <span>Used by Studio Owners</span>
+          </div>
+        </motion.div>
 
         {/* CTA Buttons */}
         <motion.div
@@ -67,14 +92,13 @@ export default function Hero() {
             href="/signup"
             className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary-600/25 hover:shadow-primary-600/40 transition-all animate-pulse-glow"
           >
-            Get Started — It&apos;s $9.99
+            Get Started — $9.99
             <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </a>
           <a
             href="/login"
             className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-4 text-base font-medium text-white hover:bg-white/5 transition-colors"
           >
-            <Mail className="h-5 w-5 text-primary-400" />
             Already have an account? Log In
           </a>
         </motion.div>

@@ -250,7 +250,7 @@ Now provide your complete analysis as a JSON object with EXACTLY this structure.
 SCORING PHILOSOPHY:
 Score GENEROUSLY. These are dancers who have trained hard and are paying for constructive feedback. Your scores should reflect the BEST reasonable interpretation of what you see. When in doubt, score higher rather than lower. Most routines from trained dancers should land in High Gold (270-279) or Platinum (280-289). Only score below 270 if there are clear, significant issues. Reserve Diamond (290+) for truly exceptional work, but don't be stingy with Platinum.
 
-For Technique specifically: add an 8-10% boost above what you might initially score. Dancers improve faster when they feel encouraged. Apply a similar generous lens across all categories.
+For Technique specifically: add a 5-7% boost above what you might initially score. Dancers improve faster when they feel encouraged. Apply a similar generous lens across all categories.
 
 The feedback text should still be honest and specific — point out real areas for improvement — but frame it constructively. The SCORES should lean favorable.
 
@@ -321,9 +321,9 @@ Return ONLY the JSON object, no other text.`,
       throw new Error("Invalid analysis structure from Claude");
     }
 
-    // Apply scoring boost — add 5.5% to each category score AND totalScore
+    // Apply scoring boost — add 3.5% to each category score AND totalScore
     // totalScore is on its own 260-300 scale, NOT a sum of category averages
-    const boostPct = 0.055;
+    const boostPct = 0.035;
 
     if (analysis.judgeScores && Array.isArray(analysis.judgeScores)) {
       for (const category of analysis.judgeScores) {
