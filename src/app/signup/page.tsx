@@ -36,11 +36,13 @@ export default function SignupPage() {
     }
 
     const supabase = createClient();
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
     const { error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { full_name: name },
+        emailRedirectTo: `${baseUrl}/auth/callback`,
       },
     });
 
