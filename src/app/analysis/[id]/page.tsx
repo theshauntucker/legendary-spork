@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import AnalysisReport from "./AnalysisReport";
 
 function formatDurationFromSeconds(seconds: number | undefined): string {
@@ -45,8 +45,11 @@ export default async function AnalysisPage({
 
   if (!user) redirect("/login");
 
+  // Use service client for data reads (bypasses RLS issues)
+  const serviceClient = await createServiceClient();
+
   // Fetch the video record
-  const { data: video } = await supabase
+  const { data: video } = await serviceClient
     .from("videos")
     .select("*")
     .eq("id", id)
@@ -60,8 +63,8 @@ export default async function AnalysisPage({
       redirect(`/processing/${id}`);
     }
 
-    // Fetch analysis separately (more reliable than join)
-    const { data: analysis } = await supabase
+    // Fetch analysis separately
+    const { data: analysis } = await serviceClient
       .from("analyses")
       .select("*")
       .eq("video_id", video.id)

@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import DashboardClient from "./DashboardClient";
 
 export default async function DashboardPage() {
+  // Verify authentication with user's session
   const supabase = await createClient();
   const {
     data: { user },
@@ -10,25 +11,28 @@ export default async function DashboardPage() {
 
   if (!user) redirect("/login");
 
+  // Use service client for data reads (bypasses RLS issues)
+  const serviceClient = await createServiceClient();
+
   // Fetch user's videos
-  const { data: videos } = await supabase
+  const { data: videos } = await serviceClient
     .from("videos")
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  // Fetch analyses separately (join can fail if FK not detected)
-  const videoIds = (videos ?? []).map((v) => v.id);
-  let analysesMap: Record<string, { id: string; total_score: number; award_level: string }[]> = {};
+  // Fetch analyses separately
+  const videoIds = (videos ?? []).map((v: { id: string }) => v.id);
+  const analysesMap: Record<string, { id: string; total_score: number; award_level: string }[]> = {};
 
   if (videoIds.length > 0) {
-    const { data: analyses } = await supabase
+    const { data: analyses } = await serviceClient
       .from("analyses")
       .select("id, video_id, total_score, award_level")
       .in("video_id", videoIds);
 
     if (analyses) {
-      for (const a of analyses) {
+      for (const a of analyses as { id: string; video_id: string; total_score: number; award_level: string }[]) {
         if (!analysesMap[a.video_id]) analysesMap[a.video_id] = [];
         analysesMap[a.video_id].push(a);
       }
