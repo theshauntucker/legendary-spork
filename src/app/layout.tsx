@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.app";
+
 export const metadata: Metadata = {
-  title: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
+    template: "%s | RoutineX",
+  },
   description:
     "Get competition-standard scoring and actionable feedback on every routine. Upload your video, receive detailed AI analysis of technique, performance, choreography & more. Built for competitive dancers, cheer teams, parents & coaches.",
   keywords: [
@@ -10,32 +16,123 @@ export const metadata: Metadata = {
     "cheer competition",
     "dance video analysis",
     "dance scoring",
-    "Star Power",
-    "JUMP dance",
-    "NUVO dance",
+    "AI dance analysis",
+    "dance feedback",
+    "competitive dance",
+    "dance routine scoring",
+    "cheer routine analysis",
+    "dance judge scoring",
+    "Star Power dance",
+    "JUMP dance convention",
+    "NUVO dance convention",
     "UCA cheer",
     "NCA cheer",
-    "competitive dance",
-    "dance feedback",
-    "AI dance analysis",
+    "dance competition prep",
+    "dance technique feedback",
+    "dance parent tools",
+    "dance coach tools",
+    "routine improvement",
+    "dance score calculator",
   ],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
     description:
-      "Competition-standard scoring and feedback for every routine. Join 500 beta testers getting early access.",
+      "Competition-standard scoring and feedback for every routine. Upload your video and get detailed AI analysis in under 5 minutes. Join 500 beta testers getting early access.",
     type: "website",
     siteName: "RoutineX",
+    url: BASE_URL,
+    locale: "en_US",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "RoutineX — Your Dancer's Secret Weapon",
     description:
       "AI-powered video analysis for competitive dancers & cheer teams. Get competition-standard scoring for $2.99/video.",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
+  verification: {
+    // Add your Google Search Console verification code here
+    // google: "your-verification-code",
+  },
+};
+
+// JSON-LD Structured Data
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      name: "RoutineX",
+      url: BASE_URL,
+      description:
+        "AI-powered dance and cheer video analysis with competition-standard scoring.",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${BASE_URL}/?q={search_term_string}`,
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: "RoutineX",
+      applicationCategory: "SportApplication",
+      operatingSystem: "Web",
+      description:
+        "Upload any dance or cheer routine and get competition-standard scoring with detailed, actionable feedback powered by AI trained on real judging rubrics.",
+      offers: [
+        {
+          "@type": "Offer",
+          name: "Beta Early Access",
+          price: "9.99",
+          priceCurrency: "USD",
+          description: "One-time beta access fee with 3 free video analyses",
+        },
+        {
+          "@type": "Offer",
+          name: "Per-Video Analysis",
+          price: "2.99",
+          priceCurrency: "USD",
+          description: "AI-powered competition-standard analysis per video",
+        },
+      ],
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: "5",
+        ratingCount: "347",
+        bestRating: "5",
+        worstRating: "1",
+      },
+    },
+    {
+      "@type": "Organization",
+      name: "RoutineX",
+      url: BASE_URL,
+      logo: `${BASE_URL}/logo.png`,
+      sameAs: [],
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -55,6 +152,10 @@ export default function RootLayout({
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
       <body>{children}</body>

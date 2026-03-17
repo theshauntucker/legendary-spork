@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
+import VideoDemo from "@/components/VideoDemo";
 import HowItWorks from "@/components/HowItWorks";
 import SampleAnalysis from "@/components/SampleAnalysis";
 import Competitions from "@/components/Competitions";
@@ -13,6 +14,7 @@ export default function Home() {
     <main>
       <Navbar />
       <Hero />
+      <VideoDemo />
       <HowItWorks />
       <SampleAnalysis />
       <Competitions />
