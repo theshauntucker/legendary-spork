@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFile, writeFile } from "fs/promises";
-import { join } from "path";
 import { getClaude } from "@/lib/claude";
 import { parseAnalysisResponse } from "@/lib/parseAnalysis";
-import type { UploadMetadata, ExtractedFrame } from "@/lib/types";
+import type { ExtractedFrame } from "@/lib/types";
+import { randomUUID } from "crypto";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -61,17 +60,27 @@ function getStyleRubric(style: string): string {
   return STYLE_RUBRICS[style] || "";
 }
 
+interface AnalyzeRequestBody {
+  routineName: string;
+  dancerName: string;
+  studioName: string;
+  ageGroup: string;
+  style: string;
+  entryType: string;
+  frames: ExtractedFrame[];
+  duration: number;
+}
+
 function buildUserMessage(
-  metadata: UploadMetadata,
-  frames: ExtractedFrame[],
-  duration: string
+  body: AnalyzeRequestBody,
+  durationStr: string
 ) {
-  const styleRubric = getStyleRubric(metadata.style);
+  const styleRubric = getStyleRubric(body.style);
   const styleSection = styleRubric ? `\n\n${styleRubric}\n` : "";
 
-  return `Analyze this ${metadata.style} ${metadata.entryType} routine titled "${metadata.routineName}" performed by ${metadata.dancerName} in the ${metadata.ageGroup} division from ${metadata.studioName}.
+  return `Analyze this ${body.style} ${body.entryType} routine titled "${body.routineName}" performed by ${body.dancerName} in the ${body.ageGroup} division from ${body.studioName}.
 ${styleSection}
-The video is ${duration} long. I am providing ${frames.length} frames extracted at regular intervals throughout the routine. Each frame is approximately ${Math.round(frames[frames.length - 1]?.timestamp / frames.length)}s apart.
+The video is ${durationStr} long. I am providing ${body.frames.length} frames extracted at regular intervals throughout the routine. Each frame is approximately ${Math.round(body.frames[body.frames.length - 1]?.timestamp / body.frames.length)}s apart.
 
 Study each frame carefully. Pay attention to:
 - Body alignment, placement, and line in every frame
@@ -81,16 +90,16 @@ Study each frame carefully. Pay attention to:
 - Transitions between movements
 - Overall energy and commitment visible in body language
 
-For timestamps in timelineNotes, distribute your observations across the full duration of the routine (${duration}). Use formats like "0:00-0:12" for ranges or "1:05" for specific moments. Reference what you actually see in specific frames.
+For timestamps in timelineNotes, distribute your observations across the full duration of the routine (${durationStr}). Use formats like "0:00-0:12" for ranges or "1:05" for specific moments. Reference what you actually see in specific frames.
 
 Respond with ONLY a valid JSON object (no markdown, no code fences) matching this exact schema:
 {
-  "routineName": "${metadata.routineName}",
-  "dancerName": "${metadata.dancerName}",
-  "ageGroup": "${metadata.ageGroup}",
-  "style": "${metadata.style}",
-  "entryType": "${metadata.entryType}",
-  "duration": "${duration}",
+  "routineName": "${body.routineName}",
+  "dancerName": "${body.dancerName}",
+  "ageGroup": "${body.ageGroup}",
+  "style": "${body.style}",
+  "entryType": "${body.entryType}",
+  "duration": "${durationStr}",
   "totalScore": <number between 100-300>,
   "strengthsSummary": [
     "<top strength #1 — specific and referencing what you observed>",
@@ -138,7 +147,7 @@ Respond with ONLY a valid JSON object (no markdown, no code fences) matching thi
   ],
   "competitionComparison": {
     "yourScore": <same as totalScore>,
-    "avgRegional": <realistic regional average for ${metadata.ageGroup} ${metadata.style}, typically 255-265>,
+    "avgRegional": <realistic regional average for ${body.ageGroup} ${body.style}, typically 255-265>,
     "top10Threshold": <realistic top 10% threshold, typically 278-285>,
     "top5Threshold": <realistic top 5% threshold, typically 285-292>
   }
@@ -151,98 +160,31 @@ function formatDuration(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-export async function GET(request: NextRequest) {
-  const id = request.nextUrl.searchParams.get("id");
-  if (!id) {
-    return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });
-  }
-
-  const uploadsDir = join(process.cwd(), "uploads");
-
-  try {
-    const analysisData = await readFile(
-      join(uploadsDir, `${id}-analysis.json`),
-      "utf-8"
-    );
-    return NextResponse.json({ status: "analyzed", analysis: JSON.parse(analysisData) });
-  } catch {
-    // Check if metadata exists at all
-    try {
-      const metaData = await readFile(join(uploadsDir, `${id}.json`), "utf-8");
-      const metadata = JSON.parse(metaData);
-      return NextResponse.json({ status: metadata.status || "processing" });
-    } catch {
-      return NextResponse.json({ error: "Analysis not found" }, { status: 404 });
-    }
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { analysisId } = body;
+    const body: AnalyzeRequestBody = await request.json();
 
-    if (!analysisId) {
+    const { routineName, style, ageGroup, entryType, frames, duration } = body;
+
+    if (!routineName || !style || !ageGroup || !entryType) {
       return NextResponse.json(
-        { error: "Missing analysisId" },
+        { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    const uploadsDir = join(process.cwd(), "uploads");
-
-    // Check if analysis already exists
-    try {
-      const existing = await readFile(
-        join(uploadsDir, `${analysisId}-analysis.json`),
-        "utf-8"
-      );
-      return NextResponse.json({
-        status: "analyzed",
-        analysis: JSON.parse(existing),
-      });
-    } catch {
-      // Analysis doesn't exist yet, proceed
-    }
-
-    // Read metadata
-    let metadata: UploadMetadata;
-    try {
-      const metaData = await readFile(
-        join(uploadsDir, `${analysisId}.json`),
-        "utf-8"
-      );
-      metadata = JSON.parse(metaData);
-    } catch {
+    if (!frames || !Array.isArray(frames) || frames.length === 0) {
       return NextResponse.json(
-        { error: "Upload metadata not found" },
-        { status: 404 }
+        { error: "No video frames provided" },
+        { status: 400 }
       );
     }
 
-    // Read frames
-    let frames: ExtractedFrame[];
-    let duration: number;
-    try {
-      const framesData = await readFile(
-        join(uploadsDir, `${analysisId}-frames.json`),
-        "utf-8"
-      );
-      const parsed = JSON.parse(framesData);
-      frames = parsed.frames;
-      duration = parsed.duration;
-    } catch {
-      return NextResponse.json(
-        { error: "Video frames not found. Please re-upload the video." },
-        { status: 404 }
-      );
-    }
-
+    const analysisId = randomUUID().slice(0, 8);
     const durationStr = formatDuration(duration);
 
     // Build Claude API request with image content blocks
     const imageBlocks = frames.map((frame) => {
-      // dataUrl format: "data:image/jpeg;base64,<data>"
       const base64Data = frame.dataUrl.split(",")[1];
       return {
         type: "image" as const,
@@ -255,7 +197,7 @@ export async function POST(request: NextRequest) {
     });
 
     const claude = getClaude();
-    const userMessage = buildUserMessage(metadata, frames, durationStr);
+    const userMessage = buildUserMessage(body, durationStr);
 
     const response = await claude.messages.create({
       model: "claude-opus-4-20250514",
@@ -280,20 +222,6 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate the analysis
     const analysis = parseAnalysisResponse(textBlock.text, analysisId);
-
-    // Save analysis results
-    await writeFile(
-      join(uploadsDir, `${analysisId}-analysis.json`),
-      JSON.stringify(analysis, null, 2)
-    );
-
-    // Update metadata status
-    metadata.status = "analyzed";
-    metadata.duration = durationStr;
-    await writeFile(
-      join(uploadsDir, `${analysisId}.json`),
-      JSON.stringify(metadata, null, 2)
-    );
 
     return NextResponse.json({ status: "analyzed", analysis });
   } catch (err) {

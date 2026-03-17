@@ -15,7 +15,7 @@ import {
   Film,
 } from "lucide-react";
 import { extractFrames } from "@/lib/extractFrames";
-import type { ExtractedFrame } from "@/lib/types";
+import type { ExtractedFrame, AnalysisResult } from "@/lib/types";
 
 const ageGroups = [
   "Mini (5 & Under)",
@@ -62,11 +62,11 @@ export default function UploadPage() {
   const [dancerName, setDancerName] = useState("");
   const [studioName, setStudioName] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStage, setUploadStage] = useState<"extracting" | "uploading" | "done">("extracting");
+  const [uploadStage, setUploadStage] = useState<"extracting" | "analyzing" | "done">("extracting");
   const [extractedFrames, setExtractedFrames] = useState<{ frames: ExtractedFrame[]; duration: number } | null>(null);
   const [extracting, setExtracting] = useState(false);
   const [error, setError] = useState("");
+  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = (e: React.DragEvent) => {
@@ -134,64 +134,42 @@ export default function UploadPage() {
     }
 
     setUploading(true);
-    setUploadStage("uploading");
+    setUploadStage("analyzing");
     setError("");
 
-    const formData = new FormData();
-    formData.append("video", file);
-    formData.append("routineName", routineName);
-    formData.append("ageGroup", ageGroup);
-    formData.append("style", style);
-    formData.append("entryType", entryType);
-    formData.append("dancerName", dancerName);
-    formData.append("studioName", studioName);
-    formData.append(
-      "frames",
-      JSON.stringify({
-        frames: extractedFrames.frames,
-        duration: extractedFrames.duration,
-      })
-    );
-    formData.append("duration", String(extractedFrames.duration));
-
-    // Simulate upload progress
-    const progressInterval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(progressInterval);
-          return 90;
-        }
-        return prev + Math.random() * 15;
-      });
-    }, 500);
-
     try {
-      const res = await fetch("/api/upload", {
+      const res = await fetch("/api/analyze", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          routineName,
+          dancerName: dancerName || "Unknown",
+          studioName: studioName || "Independent",
+          ageGroup,
+          style,
+          entryType,
+          frames: extractedFrames.frames,
+          duration: extractedFrames.duration,
+        }),
       });
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-      setUploadStage("done");
 
       const data = await res.json();
 
-      if (res.ok && data.analysisId) {
-        // Redirect to analysis page after short delay
+      if (res.ok && data.analysis) {
+        setUploadStage("done");
+        setAnalysis(data.analysis);
+        // Store analysis in sessionStorage and redirect
+        sessionStorage.setItem(`analysis-${data.analysis.id}`, JSON.stringify(data.analysis));
         setTimeout(() => {
-          window.location.href = `/analysis/${data.analysisId}`;
-        }, 1000);
+          window.location.href = `/analysis/${data.analysis.id}`;
+        }, 1500);
       } else {
-        setError(data.error || "Upload failed. Please try again.");
+        setError(data.error || "Analysis failed. Please try again.");
         setUploading(false);
-        setUploadProgress(0);
       }
     } catch {
-      clearInterval(progressInterval);
-      setError("Upload failed. Please check your connection and try again.");
+      setError("Failed to connect. Please check your connection and try again.");
       setUploading(false);
-      setUploadProgress(0);
     }
   };
 
@@ -221,7 +199,7 @@ export default function UploadPage() {
             Upload Your Routine
           </h1>
           <p className="mt-3 text-surface-200">
-            Upload your video and get a full AI analysis in under 5 minutes.
+            Upload your video and get a full AI analysis in under 2 minutes.
           </p>
         </div>
 
@@ -431,35 +409,32 @@ export default function UploadPage() {
             )}
           </AnimatePresence>
 
-          {/* Upload Progress */}
+          {/* Analysis Progress */}
           <AnimatePresence>
             {uploading && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
+                className="rounded-2xl bg-white/5 p-6 text-center"
               >
-                <div className="h-2 rounded-full bg-surface-800 overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full bg-gradient-to-r from-primary-500 to-accent-400"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${uploadProgress}%` }}
-                    transition={{ duration: 0.3 }}
-                  />
-                </div>
-                <p className="text-xs text-surface-200 mt-2 text-center">
-                  {uploadStage === "uploading" && uploadProgress < 100 ? (
-                    <>
-                      <Loader2 className="inline h-3 w-3 animate-spin mr-1" />
-                      Uploading video... {Math.round(uploadProgress)}%
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="inline h-3 w-3 text-green-400 mr-1" />
-                      Upload complete! Redirecting to analysis...
-                    </>
-                  )}
-                </p>
+                {uploadStage === "analyzing" ? (
+                  <>
+                    <Loader2 className="h-10 w-10 text-primary-400 animate-spin mx-auto mb-3" />
+                    <p className="font-semibold">AI Judges Are Reviewing...</p>
+                    <p className="text-xs text-surface-200 mt-1">
+                      3 expert judges analyzing {extractedFrames?.frames.length} frames. This takes 60-90 seconds.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-10 w-10 text-green-400 mx-auto mb-3" />
+                    <p className="font-semibold">Analysis Complete!</p>
+                    <p className="text-xs text-surface-200 mt-1">
+                      Redirecting to your results...
+                    </p>
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -473,7 +448,7 @@ export default function UploadPage() {
             {uploading ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
-                Uploading...
+                Analyzing...
               </>
             ) : extracting ? (
               <>
@@ -482,7 +457,7 @@ export default function UploadPage() {
               </>
             ) : (
               <>
-                Analyze My Routine — $2.99
+                Analyze My Routine
                 <ArrowRight className="h-5 w-5" />
               </>
             )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Trophy,
@@ -44,52 +44,23 @@ export default function AnalysisPage() {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [analyzing, setAnalyzing] = useState(false);
-
-  const triggerAnalysis = useCallback(async () => {
-    setAnalyzing(true);
-    setError("");
-    try {
-      const res = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ analysisId: id }),
-      });
-      const data = await res.json();
-      if (res.ok && data.analysis) {
-        setAnalysis(data.analysis);
-      } else {
-        setError(data.error || "Analysis failed. Please try again.");
-      }
-    } catch {
-      setError("Failed to connect. Please check your connection and try again.");
-    } finally {
-      setAnalyzing(false);
-      setLoading(false);
-    }
-  }, [id]);
 
   useEffect(() => {
-    async function checkAnalysis() {
+    // Load analysis from sessionStorage (set by upload page after analysis completes)
+    const stored = sessionStorage.getItem(`analysis-${id}`);
+    if (stored) {
       try {
-        const res = await fetch(`/api/analyze?id=${id}`);
-        const data = await res.json();
-        if (data.status === "analyzed" && data.analysis) {
-          setAnalysis(data.analysis);
-          setLoading(false);
-        } else {
-          // No analysis yet — trigger it
-          triggerAnalysis();
-        }
+        setAnalysis(JSON.parse(stored));
       } catch {
-        // No existing analysis — trigger it
-        triggerAnalysis();
+        setError("Failed to load analysis results.");
       }
+    } else {
+      setError("Analysis not found. Please upload your video again.");
     }
-    checkAnalysis();
-  }, [id, triggerAnalysis]);
+    setLoading(false);
+  }, [id]);
 
-  if (loading || analyzing) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="fixed inset-0 -z-10">
@@ -140,23 +111,12 @@ export default function AnalysisPage() {
             {error || "Something went wrong. Please try again."}
           </p>
           <div className="flex flex-col gap-3">
-            <button
-              onClick={() => {
-                setLoading(true);
-                setError("");
-                triggerAnalysis();
-              }}
+            <a
+              href="/upload"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-6 py-3 font-semibold text-white hover:opacity-90 transition-opacity"
             >
               <RefreshCw className="h-4 w-4" />
-              Retry Analysis
-            </button>
-            <a
-              href="/upload"
-              className="inline-flex items-center justify-center gap-2 text-sm text-surface-200 hover:text-white transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Re-upload Video
+              Upload & Try Again
             </a>
           </div>
         </motion.div>
