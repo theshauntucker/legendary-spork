@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
@@ -12,10 +12,28 @@ import {
   Loader2,
   Music,
   Users,
+  ImageIcon,
+  AlertCircle,
+  RotateCcw,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  extractFrames,
+  framesToBase64,
+  loadVideoMetadata,
+  type ExtractedFrame,
+  type ExtractionProgress,
+} from "@/lib/video-processor";
 
-const ageGroups = ["Mini (5-6)", "Petite (6-9)", "Junior (9-12)", "Teen (12-15)", "Senior (15-19)"];
+const ageGroups = [
+  "Mini (5-6)",
+  "Petite (6-9)",
+  "Junior (9-12)",
+  "Teen (12-15)",
+  "Senior (15-19)",
+  "Adult (20+)",
+];
+
 const danceStyles = [
   "Jazz",
   "Contemporary",
@@ -27,8 +45,31 @@ const danceStyles = [
   "Pom",
   "Acro",
   "Cheer",
+  "Open / Freestyle",
+  "Clogging",
+  "Pointe",
+  "Character",
+  "Improvisation",
 ];
-const entryTypes = ["Solo", "Duo/Trio", "Small Group", "Large Group", "Production"];
+
+const entryTypes = [
+  "Solo",
+  "Duo/Trio",
+  "Small Group",
+  "Large Group",
+  "Line",
+  "Super Line",
+  "Production",
+  "Extended Line",
+];
+
+type UploadStage =
+  | "idle"
+  | "extracting"
+  | "uploading"
+  | "analyzing"
+  | "done"
+  | "error";
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -39,11 +80,18 @@ export default function UploadPage() {
   const [entryType, setEntryType] = useState("");
   const [dancerName, setDancerName] = useState("");
   const [studioName, setStudioName] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStage, setUploadStage] = useState<"uploading" | "processing" | "done">("uploading");
+
+  // Upload/processing state
+  const [stage, setStage] = useState<UploadStage>("idle");
+  const [progress, setProgress] = useState(0);
+  const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState("");
+  const [extractedFrames, setExtractedFrames] = useState<ExtractedFrame[]>([]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortRef = useRef(false);
+
+  const isProcessing = stage !== "idle" && stage !== "error";
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -63,6 +111,7 @@ export default function UploadPage() {
     if (droppedFile && droppedFile.type.startsWith("video/")) {
       setFile(droppedFile);
       setError("");
+      setExtractedFrames([]);
     } else {
       setError("Please upload a video file (MP4, MOV, AVI, WebM).");
     }
@@ -73,10 +122,19 @@ export default function UploadPage() {
     if (selectedFile && selectedFile.type.startsWith("video/")) {
       setFile(selectedFile);
       setError("");
+      setExtractedFrames([]);
     } else {
       setError("Please upload a video file (MP4, MOV, AVI, WebM).");
     }
   };
+
+  const resetState = useCallback(() => {
+    setStage("idle");
+    setProgress(0);
+    setStatusMessage("");
+    setError("");
+    abortRef.current = false;
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,103 +143,122 @@ export default function UploadPage() {
       return;
     }
 
-    setUploading(true);
+    abortRef.current = false;
     setError("");
-    setUploadStage("uploading");
-    setUploadProgress(0);
+    setProgress(0);
 
     try {
-      // Step 1: Get a signed upload URL
-      const signedUrlRes = await fetch("/api/upload/signed-url", {
+      // ── Step 1: Extract frames from the video ──────────────────────
+      setStage("extracting");
+      setStatusMessage("Preparing your video...");
+
+      const metadata = await loadVideoMetadata(file);
+      // Determine frame count based on video duration
+      const frameCount = Math.min(
+        Math.max(12, Math.ceil(metadata.duration / 5)),
+        30
+      );
+
+      const frames = await extractFrames(
+        file,
+        frameCount,
+        (p: ExtractionProgress) => {
+          const pct = Math.round((p.current / p.total) * 30); // 0-30%
+          setProgress(pct);
+          setStatusMessage(p.message);
+        }
+      );
+
+      if (abortRef.current) return;
+      setExtractedFrames(frames);
+
+      // ── Step 2: Convert frames to base64 for upload ────────────────
+      setStage("uploading");
+      setProgress(35);
+      setStatusMessage("Uploading frames for analysis...");
+
+      const base64Frames = await framesToBase64(frames);
+
+      // ── Step 3: Send to analysis API ───────────────────────────────
+      setProgress(45);
+      setStatusMessage("Sending to AI for analysis...");
+
+      const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          filename: file.name,
-          contentType: file.type,
-          fileSize: file.size,
-          routineName,
-          ageGroup,
-          style,
-          entryType,
-          dancerName,
-          studioName,
+          frames: base64Frames,
+          metadata: {
+            routineName,
+            dancerName: dancerName || undefined,
+            studioName: studioName || undefined,
+            ageGroup,
+            style,
+            entryType,
+            duration: metadata.duration,
+            resolution: `${metadata.width}x${metadata.height}`,
+            originalFilename: file.name,
+            originalFileSize: file.size,
+          },
         }),
       });
 
-      const signedUrlData = await signedUrlRes.json();
-
-      if (!signedUrlRes.ok || !signedUrlData.signedUrl) {
-        throw new Error(signedUrlData.error || "Failed to prepare upload");
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(
+          data.error || `Analysis failed (${response.status})`
+        );
       }
 
-      const { videoId, storagePath, token } = signedUrlData;
+      const result = await response.json();
 
-      // Step 2: Upload directly to Supabase Storage with progress tracking
-      const supabase = createClient();
+      if (abortRef.current) return;
 
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
+      // ── Step 4: Done ───────────────────────────────────────────────
+      setStage("analyzing");
+      setProgress(90);
+      setStatusMessage("Generating your scorecard...");
 
-        xhr.upload.addEventListener("progress", (e) => {
-          if (e.lengthComputable) {
-            const percent = Math.round((e.loaded / e.total) * 80); // 0-80% for upload
-            setUploadProgress(percent);
-          }
-        });
+      // Brief pause so the user sees the final stage
+      await new Promise((r) => setTimeout(r, 1500));
 
-        xhr.addEventListener("load", () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve();
-          } else {
-            reject(new Error("Upload failed"));
-          }
-        });
+      setProgress(100);
+      setStage("done");
+      setStatusMessage("Analysis complete! Redirecting...");
 
-        xhr.addEventListener("error", () => reject(new Error("Upload failed")));
-
-        // Upload to the signed URL
-        const uploadUrl = signedUrlData.signedUrl;
-        xhr.open("PUT", uploadUrl);
-        xhr.setRequestHeader("Content-Type", file.type);
-        xhr.send(file);
-      });
-
-      setUploadProgress(85);
-      setUploadStage("processing");
-
-      // Step 3: Notify the server that upload is complete, trigger preprocessing
-      const completeRes = await fetch("/api/upload/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ videoId }),
-      });
-
-      if (!completeRes.ok) {
-        throw new Error("Failed to start processing");
-      }
-
-      setUploadProgress(100);
-      setUploadStage("done");
-
-      // Redirect to processing page
       setTimeout(() => {
-        window.location.href = `/processing/${videoId}`;
-      }, 1500);
+        window.location.href = `/analysis/${result.analysisId}`;
+      }, 1000);
     } catch (err) {
-      console.error("Upload error:", err);
+      if (abortRef.current) return;
+      console.error("Upload/analysis error:", err);
+      setStage("error");
       setError(
         err instanceof Error
           ? err.message
-          : "Upload failed. Please try again."
+          : "Something went wrong. Please try again."
       );
-      setUploading(false);
-      setUploadProgress(0);
     }
   };
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const stageLabel = () => {
+    switch (stage) {
+      case "extracting":
+        return "Preparing video...";
+      case "uploading":
+        return "Uploading...";
+      case "analyzing":
+        return "Analyzing...";
+      case "done":
+        return "Complete!";
+      default:
+        return "";
+    }
   };
 
   return (
@@ -205,7 +282,7 @@ export default function UploadPage() {
             Upload Your Routine
           </h1>
           <p className="mt-3 text-surface-200">
-            Upload your video and get a full AI analysis in under 5 minutes.
+            Upload your video and get a full AI analysis in under 2 minutes.
           </p>
         </div>
 
@@ -226,8 +303,12 @@ export default function UploadPage() {
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
               onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className={`relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-colors ${
+              onClick={() => !isProcessing && fileInputRef.current?.click()}
+              className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${
+                isProcessing
+                  ? "cursor-default border-white/10"
+                  : "cursor-pointer"
+              } ${
                 dragActive
                   ? "border-primary-400 bg-primary-500/10"
                   : file
@@ -241,6 +322,7 @@ export default function UploadPage() {
                 accept="video/*"
                 onChange={handleFileSelect}
                 className="hidden"
+                disabled={isProcessing}
               />
 
               <AnimatePresence mode="wait">
@@ -252,23 +334,28 @@ export default function UploadPage() {
                     exit={{ opacity: 0 }}
                     className="flex items-center justify-center gap-3"
                   >
-                    <Video className="h-8 w-8 text-green-400" />
-                    <div className="text-left">
-                      <p className="font-medium text-sm">{file.name}</p>
+                    <Video className="h-8 w-8 text-green-400 shrink-0" />
+                    <div className="text-left min-w-0">
+                      <p className="font-medium text-sm truncate">
+                        {file.name}
+                      </p>
                       <p className="text-xs text-surface-200">
                         {formatFileSize(file.size)}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFile(null);
-                      }}
-                      className="ml-2 p-1 rounded-full hover:bg-white/10"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                    {!isProcessing && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFile(null);
+                          setExtractedFrames([]);
+                        }}
+                        className="ml-2 p-1 rounded-full hover:bg-white/10 shrink-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
                   </motion.div>
                 ) : (
                   <motion.div
@@ -282,13 +369,56 @@ export default function UploadPage() {
                       Drag & drop your video here
                     </p>
                     <p className="text-xs text-surface-200 mt-1">
-                      MP4, MOV, AVI, WebM — up to 500MB
+                      MP4, MOV, AVI, WebM — any size
                     </p>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
           </div>
+
+          {/* Frame Preview (shown after extraction) */}
+          <AnimatePresence>
+            {extractedFrames.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <ImageIcon className="h-3.5 w-3.5 text-primary-400" />
+                  <span className="text-xs font-medium text-surface-200">
+                    {extractedFrames.length} frames extracted for analysis
+                  </span>
+                </div>
+                <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-thin">
+                  {extractedFrames.slice(0, 8).map((frame, i) => (
+                    <div
+                      key={i}
+                      className="relative shrink-0 w-16 h-10 rounded-md overflow-hidden border border-white/10"
+                    >
+                      <img
+                        src={frame.dataUrl}
+                        alt={`Frame at ${frame.label}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <span className="absolute bottom-0 left-0 right-0 text-[8px] text-center bg-black/60 text-white/80">
+                        {frame.label}
+                      </span>
+                    </div>
+                  ))}
+                  {extractedFrames.length > 8 && (
+                    <div className="shrink-0 w-16 h-10 rounded-md border border-white/10 flex items-center justify-center bg-white/5">
+                      <span className="text-[10px] text-surface-200">
+                        +{extractedFrames.length - 8}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Routine Details */}
           <div className="grid sm:grid-cols-2 gap-4">
@@ -301,7 +431,8 @@ export default function UploadPage() {
                 value={routineName}
                 onChange={(e) => setRoutineName(e.target.value)}
                 placeholder='e.g., "Into the Light"'
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors"
+                disabled={isProcessing}
+                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors disabled:opacity-50"
               />
             </div>
 
@@ -314,7 +445,8 @@ export default function UploadPage() {
                 value={dancerName}
                 onChange={(e) => setDancerName(e.target.value)}
                 placeholder="e.g., Emma R."
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors"
+                disabled={isProcessing}
+                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors disabled:opacity-50"
               />
             </div>
           </div>
@@ -328,7 +460,8 @@ export default function UploadPage() {
               value={studioName}
               onChange={(e) => setStudioName(e.target.value)}
               placeholder="e.g., Elite Dance Academy"
-              className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors"
+              disabled={isProcessing}
+              className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors disabled:opacity-50"
             />
           </div>
 
@@ -342,9 +475,12 @@ export default function UploadPage() {
               <select
                 value={ageGroup}
                 onChange={(e) => setAgeGroup(e.target.value)}
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none"
+                disabled={isProcessing}
+                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none disabled:opacity-50"
               >
-                <option value="" className="bg-surface-900">Select...</option>
+                <option value="" className="bg-surface-900">
+                  Select...
+                </option>
                 {ageGroups.map((ag) => (
                   <option key={ag} value={ag} className="bg-surface-900">
                     {ag}
@@ -361,9 +497,12 @@ export default function UploadPage() {
               <select
                 value={style}
                 onChange={(e) => setStyle(e.target.value)}
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none"
+                disabled={isProcessing}
+                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none disabled:opacity-50"
               >
-                <option value="" className="bg-surface-900">Select...</option>
+                <option value="" className="bg-surface-900">
+                  Select...
+                </option>
                 {danceStyles.map((s) => (
                   <option key={s} value={s} className="bg-surface-900">
                     {s}
@@ -379,9 +518,12 @@ export default function UploadPage() {
               <select
                 value={entryType}
                 onChange={(e) => setEntryType(e.target.value)}
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none"
+                disabled={isProcessing}
+                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none disabled:opacity-50"
               >
-                <option value="" className="bg-surface-900">Select...</option>
+                <option value="" className="bg-surface-900">
+                  Select...
+                </option>
                 {entryTypes.map((et) => (
                   <option key={et} value={et} className="bg-surface-900">
                     {et}
@@ -394,53 +536,104 @@ export default function UploadPage() {
           {/* Error */}
           <AnimatePresence>
             {error && (
-              <motion.p
+              <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="text-sm text-red-400 text-center"
+                className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20"
               >
-                {error}
-              </motion.p>
+                <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-red-300">{error}</p>
+                  {stage === "error" && (
+                    <button
+                      type="button"
+                      onClick={resetState}
+                      className="mt-2 inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      Try again
+                    </button>
+                  )}
+                </div>
+              </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Upload Progress */}
+          {/* Progress */}
           <AnimatePresence>
-            {uploading && (
+            {isProcessing && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
+                className="space-y-3"
               >
+                {/* Progress bar */}
                 <div className="h-2 rounded-full bg-surface-800 overflow-hidden">
                   <motion.div
                     className="h-full rounded-full bg-gradient-to-r from-primary-500 to-accent-400"
                     initial={{ width: 0 }}
-                    animate={{ width: `${uploadProgress}%` }}
+                    animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.3 }}
                   />
                 </div>
-                <p className="text-xs text-surface-200 mt-2 text-center">
-                  {uploadStage === "uploading" && (
-                    <>
-                      <Loader2 className="inline h-3 w-3 animate-spin mr-1" />
-                      Uploading to cloud... {Math.round(uploadProgress)}%
-                    </>
+
+                {/* Status */}
+                <div className="flex items-center justify-center gap-2 text-xs text-surface-200">
+                  {stage === "done" ? (
+                    <CheckCircle className="h-3.5 w-3.5 text-green-400" />
+                  ) : (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   )}
-                  {uploadStage === "processing" && (
-                    <>
-                      <Loader2 className="inline h-3 w-3 animate-spin mr-1" />
-                      Processing video...
-                    </>
-                  )}
-                  {uploadStage === "done" && (
-                    <>
-                      <CheckCircle className="inline h-3 w-3 text-green-400 mr-1" />
-                      Upload complete! Redirecting...
-                    </>
-                  )}
-                </p>
+                  <span>{statusMessage || stageLabel()}</span>
+                </div>
+
+                {/* Stage indicators */}
+                <div className="flex justify-between px-2">
+                  {[
+                    { key: "extracting", label: "Extract Frames" },
+                    { key: "uploading", label: "Upload" },
+                    { key: "analyzing", label: "AI Analysis" },
+                    { key: "done", label: "Done" },
+                  ].map((s, i) => {
+                    const stages: UploadStage[] = [
+                      "extracting",
+                      "uploading",
+                      "analyzing",
+                      "done",
+                    ];
+                    const currentIdx = stages.indexOf(stage);
+                    const thisIdx = i;
+                    const isActive = thisIdx === currentIdx;
+                    const isComplete = thisIdx < currentIdx;
+
+                    return (
+                      <div key={s.key} className="flex flex-col items-center gap-1">
+                        <div
+                          className={`w-2 h-2 rounded-full transition-colors ${
+                            isComplete
+                              ? "bg-green-400"
+                              : isActive
+                              ? "bg-primary-400"
+                              : "bg-surface-600"
+                          }`}
+                        />
+                        <span
+                          className={`text-[10px] ${
+                            isActive
+                              ? "text-primary-400 font-medium"
+                              : isComplete
+                              ? "text-green-400"
+                              : "text-surface-400"
+                          }`}
+                        >
+                          {s.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -448,13 +641,13 @@ export default function UploadPage() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={uploading}
+            disabled={isProcessing}
             className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-6 py-4 text-lg font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {uploading ? (
+            {isProcessing ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
-                {uploadStage === "uploading" ? "Uploading..." : "Processing..."}
+                {stageLabel()}
               </>
             ) : (
               <>
