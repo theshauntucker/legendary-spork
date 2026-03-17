@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DanceIQ — AI-Powered Dance & Cheer Video Analysis",
+  title: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
   description:
     "Get competition-standard scoring and actionable feedback on every routine. Upload your video, receive detailed AI analysis of technique, performance, choreography & more. Built for competitive dancers, cheer teams, parents & coaches.",
   keywords: [
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     "AI dance analysis",
   ],
   openGraph: {
-    title: "DanceIQ — AI-Powered Dance & Cheer Video Analysis",
+    title: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
     description:
       "Competition-standard scoring and feedback for every routine. Join 500 beta testers getting early access.",
     type: "website",

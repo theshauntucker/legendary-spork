@@ -53,7 +53,7 @@ export default function Hero() {
             competition-standard scoring
           </span>{" "}
           with detailed, actionable feedback — powered by AI trained on
-          real judging rubrics from Star Power, JUMP, UCA & more.
+          real judging rubrics from Star Power, JUMP, UCA &amp; more.
         </motion.p>
 
         {/* CTA Buttons */}

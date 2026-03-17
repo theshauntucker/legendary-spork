@@ -25,7 +25,7 @@ export default function Footer() {
               <span className="gradient-text">Fall Behind</span>
             </h2>
             <p className="mt-6 text-lg sm:text-xl text-surface-200 max-w-2xl mx-auto">
-              Every routine is a chance to improve. DanceIQ gives your dancer the detailed, professional feedback they need to climb from Gold to Titanium.
+              Every routine is a chance to improve. RoutineX gives your dancer the detailed, professional feedback they need to climb from Gold to Titanium.
             </p>
 
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -54,7 +54,7 @@ export default function Footer() {
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary-400" />
               <span className="font-bold">
-                Dance<span className="gradient-text">IQ</span>
+                Routine<span className="gradient-text">X</span>
               </span>
             </div>
 
@@ -76,7 +76,7 @@ export default function Footer() {
           </div>
 
           <p className="mt-4 text-center text-xs text-surface-200/50">
-            &copy; {new Date().getFullYear()} DanceIQ. All rights reserved. Not affiliated with any competition organization.
+            &copy; {new Date().getFullYear()} RoutineX. All rights reserved. Not affiliated with any competition organization.
           </p>
         </div>
       </div>

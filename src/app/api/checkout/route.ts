@@ -16,7 +16,7 @@ export async function POST() {
           price_data: {
             currency: "usd",
             product_data: {
-              name: "DanceIQ Beta — Early Access Pass",
+              name: "RoutineX Beta — Early Access Pass",
               description:
                 "One-time join fee. Includes priority access, 3 free video analyses, and founding member status.",
             },

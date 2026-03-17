@@ -43,7 +43,7 @@ export default function HowItWorks() {
             Simple Process
           </p>
           <h2 className="mt-3 text-4xl sm:text-5xl font-bold font-[family-name:var(--font-display)]">
-            How DanceIQ Works
+            How RoutineX Works
           </h2>
           <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
             From upload to actionable feedback in under 5 minutes. No appointments, no waiting for judges — just results.

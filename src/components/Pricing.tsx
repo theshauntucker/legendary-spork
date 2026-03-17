@@ -38,7 +38,7 @@ export default function Pricing() {
             No Subscriptions. No Hidden Fees.
           </h2>
           <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
-            Pay once to join, then only when you upload. A private coaching session costs $75+. DanceIQ gives you detailed feedback for $2.99.
+            Pay once to join, then only when you upload. A private coaching session costs $75+. RoutineX gives you detailed feedback for $2.99.
           </p>
         </motion.div>
 
@@ -155,7 +155,7 @@ export default function Pricing() {
               <span className="line-through">Competition entry: $80–$120</span>
             </div>
             <div className="text-white font-semibold">
-              DanceIQ analysis: <span className="text-primary-400">$2.99</span>
+              RoutineX analysis: <span className="text-primary-400">$2.99</span>
             </div>
           </div>
         </motion.div>

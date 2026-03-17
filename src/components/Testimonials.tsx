@@ -14,21 +14,21 @@ const testimonials = [
   {
     name: "Coach Sarah T.",
     role: "Studio Owner — 15 Years",
-    text: "I run a studio with 200+ competitive dancers. DanceIQ lets me give every single routine personalized feedback without spending hours reviewing video myself. The AI catches things I sometimes miss during group rehearsals.",
+    text: "I run a studio with 200+ competitive dancers. RoutineX lets me give every single routine personalized feedback without spending hours reviewing video myself. The AI catches things I sometimes miss during group rehearsals.",
     rating: 5,
     avatar: "ST",
   },
   {
     name: "Michael R.",
     role: "Cheer Coach — All-Star Program",
-    text: "We needed a way to evaluate routines between practices. DanceIQ's timestamped notes are incredibly accurate — it flags the exact moments where our formations break or stunts lose sync. Worth every penny.",
+    text: "We needed a way to evaluate routines between practices. RoutineX's timestamped notes are incredibly accurate — it flags the exact moments where our formations break or stunts lose sync. Worth every penny.",
     rating: 5,
     avatar: "MR",
   },
   {
     name: "Amanda K.",
     role: "Dance Mom — Junior Division",
-    text: "My 10-year-old used to get nervous about competition scores. Now she uploads her practice videos and works on the specific improvements DanceIQ recommends. She went from High Gold to Platinum Star in three competitions.",
+    text: "My 10-year-old used to get nervous about competition scores. Now she uploads her practice videos and works on the specific improvements RoutineX recommends. She went from High Gold to Platinum Star in three competitions.",
     rating: 5,
     avatar: "AK",
   },
@@ -49,7 +49,7 @@ export default function Testimonials() {
             Beta Tester Results
           </p>
           <h2 className="mt-3 text-4xl sm:text-5xl font-bold font-[family-name:var(--font-display)]">
-            Parents & Coaches Love DanceIQ
+            Parents & Coaches Love RoutineX
           </h2>
           <p className="mt-4 text-lg text-surface-200">
             Real feedback from our early beta testing group.

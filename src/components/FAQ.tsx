@@ -7,7 +7,7 @@ import { ChevronDown } from "lucide-react";
 const faqs = [
   {
     q: "How does the AI analysis work?",
-    a: "DanceIQ uses advanced AI trained on real competition judging rubrics from major organizations. When you upload a video, our AI evaluates technique, performance quality, choreography, and overall impression — the same categories judges use — and generates a detailed scorecard with actionable feedback in under 5 minutes.",
+    a: "RoutineX uses advanced AI trained on real competition judging rubrics from major organizations. When you upload a video, our AI evaluates technique, performance quality, choreography, and overall impression — the same categories judges use — and generates a detailed scorecard with actionable feedback in under 5 minutes.",
   },
   {
     q: "What video formats and lengths are supported?",
@@ -15,19 +15,19 @@ const faqs = [
   },
   {
     q: "How accurate is the scoring compared to real judges?",
-    a: "Our AI is trained on thousands of real competition scores and judging rubrics. While no AI replaces the nuance of a live judge, DanceIQ provides consistent, unbiased feedback that closely mirrors competition scoring. Beta testers report their DanceIQ scores typically fall within 5-8 points of their actual competition scores.",
+    a: "Our AI is trained on thousands of real competition scores and judging rubrics. While no AI replaces the nuance of a live judge, RoutineX provides consistent, unbiased feedback that closely mirrors competition scoring. Beta testers report their RoutineX scores typically fall within 5-8 points of their actual competition scores.",
   },
   {
     q: "Is this a replacement for judges or coaching?",
-    a: "Not at all — DanceIQ is a training tool, not a replacement. Think of it as having an extra set of expert eyes on every practice run. Use it between competitions and lessons to track progress, identify areas for improvement, and make the most of your studio time.",
+    a: "Not at all — RoutineX is a training tool, not a replacement. Think of it as having an extra set of expert eyes on every practice run. Use it between competitions and lessons to track progress, identify areas for improvement, and make the most of your studio time.",
   },
   {
     q: "What age groups and styles does this work for?",
-    a: "DanceIQ works for all competitive age divisions — Mini (5-6), Petite (6-9), Junior (9-12), Teen (12-15), and Senior (15-19). We support Jazz, Contemporary, Lyrical, Hip Hop, Tap, Ballet, Musical Theater, Pom, and Acro. Our AI adapts its scoring criteria to each style.",
+    a: "RoutineX works for all competitive age divisions — Mini (5-6), Petite (6-9), Junior (9-12), Teen (12-15), and Senior (15-19). We support Jazz, Contemporary, Lyrical, Hip Hop, Tap, Ballet, Musical Theater, Pom, and Acro. Our AI adapts its scoring criteria to each style.",
   },
   {
     q: "Can I use this for cheer routines too?",
-    a: "Yes! DanceIQ analyzes cheer routines with the same level of detail, evaluating tumbling, stunts, formations, synchronization, and overall performance quality. It works for both All-Star and school cheer programs.",
+    a: "Yes! RoutineX analyzes cheer routines with the same level of detail, evaluating tumbling, stunts, formations, synchronization, and overall performance quality. It works for both All-Star and school cheer programs.",
   },
   {
     q: "What do I get as a beta member?",

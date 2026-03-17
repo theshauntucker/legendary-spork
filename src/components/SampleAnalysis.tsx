@@ -148,7 +148,7 @@ export default function SampleAnalysis() {
             Sample Analysis Report
           </h2>
           <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
-            Here&apos;s exactly what a DanceIQ analysis looks like. Every upload gets this level of detail — for just $2.99.
+            Here&apos;s exactly what a RoutineX analysis looks like. Every upload gets this level of detail — for just $2.99.
           </p>
         </motion.div>
 
@@ -167,7 +167,7 @@ export default function SampleAnalysis() {
                 <div className="flex items-center gap-2 mb-1">
                   <Trophy className="h-5 w-5 text-gold-400" />
                   <span className="text-sm font-semibold text-gold-400 uppercase tracking-wider">
-                    DanceIQ Analysis Report
+                    RoutineX Analysis Report
                   </span>
                 </div>
                 <h3 className="text-2xl font-bold">

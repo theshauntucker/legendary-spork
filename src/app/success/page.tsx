@@ -30,7 +30,7 @@ export default function SuccessPage() {
         </h1>
 
         <p className="mt-4 text-surface-200">
-          Welcome to the DanceIQ beta. You&apos;re officially a founding member
+          Welcome to the RoutineX beta. You&apos;re officially a founding member
           — one of only 500 with early access.
         </p>
 
@@ -81,7 +81,7 @@ export default function SuccessPage() {
           className="mt-6 inline-flex items-center gap-2 text-sm text-primary-400 hover:text-primary-300 transition-colors"
         >
           <ArrowRight className="h-4 w-4 rotate-180" />
-          Back to DanceIQ
+          Back to RoutineX
         </a>
       </motion.div>
     </div>

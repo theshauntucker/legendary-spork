@@ -22,7 +22,7 @@ export default function Navbar() {
           <a href="#" className="flex items-center gap-2">
             <Sparkles className="h-7 w-7 text-primary-400" />
             <span className="text-xl font-bold tracking-tight">
-              Dance<span className="gradient-text">IQ</span>
+              Routine<span className="gradient-text">X</span>
             </span>
           </a>
 
