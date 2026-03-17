@@ -121,8 +121,8 @@ const awardLevels = [
 ];
 
 export default function SampleAnalysis() {
-  const totalScore = 274;
-  const awardLevel = "High Gold";
+  const totalScore = 283;
+  const awardLevel = "Platinum";
 
   return (
     <section id="sample-analysis" className="relative py-24 sm:py-32">

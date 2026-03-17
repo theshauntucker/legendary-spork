@@ -247,11 +247,18 @@ Now provide your complete analysis as a JSON object with EXACTLY this structure.
   }
 }
 
+SCORING PHILOSOPHY:
+Score GENEROUSLY. These are dancers who have trained hard and are paying for constructive feedback. Your scores should reflect the BEST reasonable interpretation of what you see. When in doubt, score higher rather than lower. Most routines from trained dancers should land in High Gold (270-279) or Platinum (280-289). Only score below 270 if there are clear, significant issues. Reserve Diamond (290+) for truly exceptional work, but don't be stingy with Platinum.
+
+For Technique specifically: add an 8-10% boost above what you might initially score. Dancers improve faster when they feel encouraged. Apply a similar generous lens across all categories.
+
+The feedback text should still be honest and specific — point out real areas for improvement — but frame it constructively. The SCORES should lean favorable.
+
 SCORING GUIDELINES:
-- Gold: 260-269
-- High Gold: 270-279
-- Platinum: 280-289
-- Diamond: 290-300
+- Gold: 260-269 (significant issues present)
+- High Gold: 270-279 (solid work with clear room to grow)
+- Platinum: 280-289 (strong, competition-ready routine)
+- Diamond: 290-300 (exceptional, top-tier performance)
 
 - Technique (max 35): Body placement, alignment, extension, turnout, flexibility, strength, control
 - Performance (max 35): Projection, energy, musicality, facial expression, stage presence, emotional connection
@@ -355,7 +362,7 @@ function generateSimulatedAnalysis(
   const v = (base: number, range: number) =>
     Math.round((base + ((seed % range) - range / 2) * 0.1) * 10) / 10;
 
-  const totalScore = v(274, 20);
+  const totalScore = v(282, 12);
 
   const timelineTemplates = [
     { note: `Opening position — energy and stage presence`, type: "positive" },
@@ -375,29 +382,29 @@ function generateSimulatedAnalysis(
       {
         category: "Technique",
         max: 35,
-        judges: [v(32.5, 10), v(31.0, 10), v(33.0, 10)],
-        avg: v(32.2, 10),
+        judges: [v(33.5, 6), v(33.0, 6), v(34.0, 6)],
+        avg: v(33.5, 6),
         feedback: `Foundational technique shows solid training. Body placement and alignment are generally consistent throughout the ${metadata.style.toLowerCase()} choreography. Focus on extension and clean lines in transitions.`,
       },
       {
         category: "Performance",
         max: 35,
-        judges: [v(33.0, 10), v(32.5, 10), v(34.0, 10)],
-        avg: v(33.2, 10),
+        judges: [v(33.5, 6), v(33.0, 6), v(34.5, 6)],
+        avg: v(33.7, 6),
         feedback: `Stage presence is engaging with authentic connection to the movement. Energy level is mostly sustained throughout the ${durationStr} routine. Facial expressions support the choreographic intent.`,
       },
       {
         category: "Choreography",
         max: 20,
-        judges: [v(18.5, 8), v(17.5, 8), v(19.0, 8)],
-        avg: v(18.3, 8),
+        judges: [v(19.0, 4), v(18.5, 4), v(19.5, 4)],
+        avg: v(19.0, 4),
         feedback: `Well-structured ${metadata.entryType.toLowerCase()} routine with clear narrative arc. Effective use of space and levels. Music interpretation is thoughtful with room for more dynamic contrast.`,
       },
       {
         category: "Overall Impression",
         max: 10,
-        judges: [v(9.0, 4), v(8.5, 4), v(9.5, 4)],
-        avg: v(9.0, 4),
+        judges: [v(9.5, 2), v(9.0, 2), v(9.5, 2)],
+        avg: v(9.3, 2),
         feedback: `A polished, competition-ready ${metadata.entryType.toLowerCase()} performance. ${metadata.dancerName || "The performer"} demonstrates maturity and artistry appropriate for the ${metadata.ageGroup} division.`,
       },
     ],
