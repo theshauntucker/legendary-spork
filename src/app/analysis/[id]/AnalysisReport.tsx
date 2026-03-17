@@ -42,6 +42,12 @@ interface ImprovementItem {
   timeToFix: string;
 }
 
+interface AnalysisFrame {
+  timestamp: number;
+  label: string;
+  url: string;
+}
+
 interface AnalysisData {
   id: string;
   routineName: string;
@@ -62,6 +68,7 @@ interface AnalysisData {
     top5Threshold: number;
   };
   analysisMethod?: "ai" | "simulated";
+  frames?: AnalysisFrame[];
 }
 
 const awardLevels = [
@@ -78,6 +85,40 @@ function getAwardLevel(score: number) {
   if (score >= 265) return "Platinum";
   if (score >= 250) return "High Gold";
   return "Gold";
+}
+
+/**
+ * Parse a timestamp like "0:05" or "0:10-0:15" into seconds.
+ */
+function parseTimestamp(time: string): number {
+  // Take the first timestamp if it's a range like "0:10-0:15"
+  const first = time.split("-")[0].trim();
+  const parts = first.split(":").map(Number);
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return parts[0] || 0;
+}
+
+/**
+ * Find the closest saved frame to a timeline note's timestamp.
+ * Returns the frame if one is within 3 seconds, otherwise undefined.
+ */
+function findClosestFrame(
+  time: string,
+  frames?: AnalysisFrame[]
+): AnalysisFrame | undefined {
+  if (!frames || frames.length === 0) return undefined;
+  const targetSec = parseTimestamp(time);
+  let best: AnalysisFrame | undefined;
+  let bestDist = Infinity;
+  for (const f of frames) {
+    const dist = Math.abs(f.timestamp - targetSec);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = f;
+    }
+  }
+  // Only match if within 3 seconds
+  return bestDist <= 3 ? best : undefined;
 }
 
 export default function AnalysisReport({ analysis }: { analysis: AnalysisData }) {
@@ -337,27 +378,48 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
             </div>
           </div>
 
-          {/* Timeline Notes */}
+          {/* Timeline Notes with Frame Screenshots */}
           {analysis.timelineNotes.length > 0 && (
             <div className="px-6 sm:px-8 pb-6 sm:pb-8">
               <div className="flex items-center gap-2 mb-4">
                 <Clock className="h-5 w-5 text-gold-400" />
                 <h2 className="text-lg font-bold">Timestamped Performance Notes</h2>
               </div>
-              <div className="space-y-2">
-                {analysis.timelineNotes.map((note, i) => (
-                  <div key={i} className="flex items-start gap-3 rounded-lg bg-white/5 p-3">
-                    <span className="shrink-0 text-xs font-mono font-bold text-primary-300 w-20">
-                      {note.time}
-                    </span>
-                    {note.type === "positive" ? (
-                      <CheckCircle className="shrink-0 h-4 w-4 text-green-400 mt-0.5" />
-                    ) : (
-                      <AlertCircle className="shrink-0 h-4 w-4 text-gold-400 mt-0.5" />
-                    )}
-                    <span className="text-sm text-surface-200">{note.note}</span>
-                  </div>
-                ))}
+              <div className="space-y-3">
+                {analysis.timelineNotes.map((note, i) => {
+                  const matchedFrame = findClosestFrame(note.time, analysis.frames);
+                  return (
+                    <div key={i} className="rounded-xl bg-white/5 overflow-hidden">
+                      <div className="flex gap-0">
+                        {/* Frame thumbnail */}
+                        {matchedFrame && (
+                          <div className="relative shrink-0 w-28 sm:w-36">
+                            <img
+                              src={matchedFrame.url}
+                              alt={`Frame at ${note.time}`}
+                              className="w-full h-full object-cover"
+                            />
+                            <span className="absolute bottom-1 left-1 text-[9px] font-mono font-bold bg-black/70 text-white px-1.5 py-0.5 rounded">
+                              {matchedFrame.label}
+                            </span>
+                          </div>
+                        )}
+                        {/* Note content */}
+                        <div className="flex items-start gap-3 p-3 flex-1 min-w-0">
+                          <span className="shrink-0 text-xs font-mono font-bold text-primary-300 w-20">
+                            {note.time}
+                          </span>
+                          {note.type === "positive" ? (
+                            <CheckCircle className="shrink-0 h-4 w-4 text-green-400 mt-0.5" />
+                          ) : (
+                            <AlertCircle className="shrink-0 h-4 w-4 text-gold-400 mt-0.5" />
+                          )}
+                          <span className="text-sm text-surface-200">{note.note}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

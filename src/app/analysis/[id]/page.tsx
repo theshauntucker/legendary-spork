@@ -81,6 +81,18 @@ export default async function AnalysisPage({
       // Detect if analysis was done by AI or simulated
       const analysisMethod = (preprocessMeta?.analyzedWithAI === true) ? "ai" as const : "simulated" as const;
 
+      // Build signed URLs for saved frames
+      const rawFrames = (preprocessMeta?.frames ?? []) as Array<{ timestamp: number; label: string; path: string }>;
+      const frameUrls: Array<{ timestamp: number; label: string; url: string }> = [];
+      for (const f of rawFrames) {
+        const { data } = await serviceClient.storage
+          .from("videos")
+          .createSignedUrl(f.path, 60 * 60); // 1 hour
+        if (data?.signedUrl) {
+          frameUrls.push({ timestamp: f.timestamp, label: f.label, url: data.signedUrl });
+        }
+      }
+
       analysisData = {
         id: video.id,
         routineName: video.routine_name,
@@ -96,6 +108,7 @@ export default async function AnalysisPage({
         improvementPriorities: analysis.improvement_priorities,
         competitionComparison: analysis.competition_comparison,
         analysisMethod,
+        frames: frameUrls,
       };
     } else {
       analysisData = generateFallbackAnalysis(id);

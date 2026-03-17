@@ -109,6 +109,14 @@ export async function POST(request: NextRequest) {
     // Build the analysis using Claude Vision
     const { analysis, usedAI } = await analyzeWithClaude(frames, metadata, durationStr);
 
+    // Save key frames to storage for the analysis report
+    const frameUrls = await saveFramesToStorage(
+      serviceClient,
+      frames,
+      user.id,
+      video.id
+    );
+
     // Save analysis to database
     const { data: analysisRecord, error: analysisError } = await serviceClient
       .from("analyses")
@@ -150,6 +158,7 @@ export async function POST(request: NextRequest) {
           resolution: metadata.resolution,
           analyzedAt: new Date().toISOString(),
           analyzedWithAI: usedAI,
+          frames: frameUrls,
         },
         updated_at: new Date().toISOString(),
       })
@@ -486,4 +495,47 @@ function generateSimulatedAnalysis(
       top5Threshold: 288,
     },
   };
+}
+
+/**
+ * Save a subset of key frames to Supabase Storage so they can be
+ * displayed alongside the AI's timeline notes on the analysis report.
+ * Returns an array of { timestamp, label, path } objects.
+ */
+async function saveFramesToStorage(
+  serviceClient: ReturnType<typeof createServiceClient> extends Promise<infer T> ? T : never,
+  frames: FrameInput[],
+  userId: string,
+  videoId: string
+): Promise<Array<{ timestamp: number; label: string; path: string }>> {
+  // Select up to 10 evenly-spaced frames for the report
+  const selected = selectEvenlySpaced(frames, 10);
+  const results: Array<{ timestamp: number; label: string; path: string }> = [];
+
+  for (const frame of selected) {
+    try {
+      // Convert base64 to buffer
+      const buffer = Buffer.from(frame.base64, "base64");
+      const filePath = `analysis-frames/${userId}/${videoId}/${frame.timestamp.toFixed(1)}.jpg`;
+
+      const { error } = await serviceClient.storage
+        .from("videos")
+        .upload(filePath, buffer, {
+          contentType: "image/jpeg",
+          upsert: true,
+        });
+
+      if (!error) {
+        results.push({
+          timestamp: frame.timestamp,
+          label: frame.label,
+          path: filePath,
+        });
+      }
+    } catch {
+      // Skip failed frames — non-critical
+    }
+  }
+
+  return results;
 }
