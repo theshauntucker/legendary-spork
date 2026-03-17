@@ -269,11 +269,38 @@ export default function AnalysisPage() {
             </div>
           </div>
 
+          {/* Top Strengths */}
+          {analysis.strengthsSummary && analysis.strengthsSummary.length > 0 && (
+            <div className="px-6 sm:px-8 pt-6 sm:pt-8">
+              <div className="flex items-center gap-2 mb-4">
+                <Star className="h-5 w-5 text-gold-400" />
+                <h2 className="text-lg font-bold">Top Strengths</h2>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-3">
+                {analysis.strengthsSummary.map((strength, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="rounded-xl bg-green-500/10 border border-green-500/20 p-4"
+                  >
+                    <div className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+                      <p className="text-sm text-surface-200">{strength}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Score Breakdown */}
           <div className="p-6 sm:p-8">
             <div className="flex items-center gap-2 mb-4">
               <BarChart3 className="h-5 w-5 text-primary-400" />
               <h2 className="text-lg font-bold">Score Breakdown by Judge</h2>
+              <span className="text-xs text-surface-200 ml-auto">Technician / Artist / Choreographer</span>
             </div>
 
             <div className="overflow-x-auto">
@@ -356,13 +383,26 @@ export default function AnalysisPage() {
               <p className="mt-3 text-xs text-surface-200">
                 Your score is{" "}
                 <span className="text-primary-400 font-semibold">
-                  {Math.round(analysis.competitionComparison.yourScore - analysis.competitionComparison.avgRegional)} points above regional average
+                  {Math.round(analysis.competitionComparison.yourScore - analysis.competitionComparison.avgRegional)} points {analysis.competitionComparison.yourScore >= analysis.competitionComparison.avgRegional ? "above" : "below"} regional average
                 </span>{" "}
                 and{" "}
                 <span className="text-gold-400 font-semibold">
                   {Math.round(analysis.competitionComparison.top10Threshold - analysis.competitionComparison.yourScore)} points from the top 10%
                 </span>.
               </p>
+
+              {/* Competitive Edge */}
+              {analysis.competitiveEdge && (
+                <div className="mt-4 rounded-xl bg-primary-500/10 border border-primary-500/20 p-4">
+                  <div className="flex items-start gap-2">
+                    <Sparkles className="h-4 w-4 text-primary-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs font-semibold text-primary-300 mb-1">Competitive Edge</p>
+                      <p className="text-sm text-surface-200">{analysis.competitiveEdge}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

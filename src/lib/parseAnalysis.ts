@@ -40,5 +40,13 @@ export function parseAnalysisResponse(raw: string, id: string): AnalysisResult {
     parsed.competitionComparison.yourScore = parsed.totalScore;
   }
 
+  // Ensure new fields have defaults
+  if (!parsed.strengthsSummary || !Array.isArray(parsed.strengthsSummary)) {
+    parsed.strengthsSummary = [];
+  }
+  if (!parsed.competitiveEdge || typeof parsed.competitiveEdge !== "string") {
+    parsed.competitiveEdge = "";
+  }
+
   return parsed as AnalysisResult;
 }

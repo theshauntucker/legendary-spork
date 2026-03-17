@@ -37,6 +37,8 @@ export interface AnalysisResult {
   totalScore: number;
   awardLevel: "Gold" | "High Gold" | "Platinum" | "Platinum Star" | "Titanium";
   judgeScores: JudgeScore[];
+  strengthsSummary: string[];
+  competitiveEdge: string;
   timelineNotes: TimelineNote[];
   improvementPriorities: ImprovementPriority[];
   competitionComparison: CompetitionComparison;

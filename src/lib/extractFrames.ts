@@ -2,7 +2,7 @@ import { ExtractedFrame } from "./types";
 
 export async function extractFrames(
   file: File,
-  frameCount: number = 12
+  frameCount: number = 30
 ): Promise<{ frames: ExtractedFrame[]; duration: number }> {
   return new Promise((resolve, reject) => {
     const video = document.createElement("video");
@@ -42,12 +42,12 @@ export async function extractFrames(
 
       const captureFrame = () => {
         // Scale down to max 720p width for reasonable payload size
-        const scale = Math.min(1, 720 / video.videoWidth);
+        const scale = Math.min(1, 1080 / video.videoWidth);
         canvas.width = Math.round(video.videoWidth * scale);
         canvas.height = Math.round(video.videoHeight * scale);
 
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
 
         frames.push({
           timestamp: timestamps[currentIndex],

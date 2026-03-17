@@ -6,42 +6,77 @@ import { parseAnalysisResponse } from "@/lib/parseAnalysis";
 import type { UploadMetadata, ExtractedFrame } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
-const SYSTEM_PROMPT = `You are an expert panel of three dance competition judges analyzing a routine from video frames. You have decades of experience judging at events like StarQuest, Showstopper, NUVO, The Dance Awards, Star Power, JUMP, UCA, and NCA.
+const STYLE_RUBRICS: Record<string, string> = {
+  "Jazz": `JAZZ-SPECIFIC CRITERIA: Evaluate isolations (head, rib cage, hip), attack and sharpness of movement, stylistic clarity (classic jazz vs. commercial vs. funk), rhythmic accuracy and syncopation, tricks difficulty and execution (turns, leaps, aerials), energy projection and showmanship.`,
+  "Contemporary": `CONTEMPORARY/MODERN-SPECIFIC CRITERIA: Evaluate weight shifts and use of gravity, floorwork quality and seamless transitions to/from floor, breath integration with movement, emotional authenticity and vulnerability, movement initiation points (core vs. peripheral), use of suspension and release, spiral patterns and three-dimensional movement quality.`,
+  "Lyrical": `LYRICAL-SPECIFIC CRITERIA: Evaluate musicality and lyrical interpretation (does the movement match the song's emotional arc?), seamless transitions between movements, emotional storytelling clarity, balance of technical skill and artistic expression, port de bras and upper body fluidity, ability to convey narrative through movement.`,
+  "Ballet": `BALLET-SPECIFIC CRITERIA: Evaluate turnout consistency, port de bras quality and épaulement, adagio control and balance, classical line and placement, pointework (if applicable), pirouette preparation and spotting, grand allégro height and landing quality, use of classical vocabulary appropriate to the level.`,
+  "Hip Hop": `HIP HOP-SPECIFIC CRITERIA: Evaluate groove and bounce (the foundational pocket), musicality and hitting beats/accents, isolation sharpness and body control, stylistic authenticity (popping, locking, breaking, krumping, etc.), freestyle elements and personality, crew synchronization (if group), swagger and stage command.`,
+  "Tap": `TAP-SPECIFIC CRITERIA: Evaluate clarity and crispness of sound, rhythmic complexity and musicality, weight transfer efficiency, use of dynamics (loud/soft), improvisation elements, upper body carriage while maintaining footwork, ability to create clear rhythmic patterns and phrases.`,
+  "Acro": `ACRO-SPECIFIC CRITERIA: Evaluate skill difficulty and progression, seamless integration of acrobatic elements with dance, control and body awareness throughout tricks, flexibility demonstration, strength elements (handstands, press-ups), landing quality and transitions out of tricks, balance of acro and dance content.`,
+  "Musical Theater": `MUSICAL THEATER-SPECIFIC CRITERIA: Evaluate character commitment and storytelling, facial expression and projection to audience, stylistic accuracy to the era/show being referenced, ability to convey emotion through both dance and theatrical performance, timing with musical phrasing, energy and entertainment value.`,
+  "Pom": `POM-SPECIFIC CRITERIA: Evaluate motion placement precision, synchronization and uniformity, sharpness and clean lines, energy level and projection, use of levels and formation changes, timing accuracy with music, visual impact and crowd appeal.`,
+  "Cheer": `CHEER-SPECIFIC CRITERIA: Evaluate motion technique and placement, jumps (height, form, toe touch, pike, etc.), tumbling difficulty and execution, stunts and pyramids (if applicable), crowd engagement and energy, synchronization and spacing, spirit and enthusiasm projection.`,
+};
 
-You score on a 300-point scale across four categories:
-- Technique (max 35 per judge, 3 judges): body alignment, extension, control, turns, leaps, footwork precision, landing mechanics
-- Performance (max 35 per judge, 3 judges): stage presence, facial expression, musicality, energy, audience connection, emotional projection
-- Choreography (max 20 per judge, 3 judges): creativity, formations, use of space/levels, musical interpretation, dynamics, transitions
-- Overall Impression (max 10 per judge, 3 judges): polish, competition-readiness, wow factor, costuming synergy
+const SYSTEM_PROMPT = `You are an expert panel of three elite dance competition judges analyzing a routine from video frames. You have decades of combined experience judging at top-tier events including StarQuest, Showstopper, NUVO, The Dance Awards, Star Power, JUMP, UCA, NCA, YAGP, and World of Dance.
 
-SCORING CALIBRATION:
-- Gold (100-249): Developing skills, notable areas for growth
-- High Gold (250-264): Solid foundation, approaching competitive level
-- Platinum (265-279): Strong competitive routine, polished execution
-- Platinum Star (280-289): Outstanding, top-tier regional competitor
-- Titanium (290-300): Elite, national-level excellence
+YOUR THREE JUDGES:
+- Judge 1 — "The Technician" (focuses on execution precision, body mechanics, skill difficulty, proper form): Scores technique and overall impression more critically. Notices alignment issues, landing mechanics, turnout, spotting, and extension that others might miss.
+- Judge 2 — "The Artist" (prioritizes musicality, emotional connection, stage presence, performance quality): Scores performance and overall impression with an artistic eye. Looks for genuine emotional connection, dynamic range, and audience engagement.
+- Judge 3 — "The Choreographer" (evaluates structure, creativity, use of space, competition readiness): Scores choreography and overall impression from a design perspective. Analyzes formations, transitions, use of levels, musicality of choreographic choices, and competitive edge.
 
-IMPORTANT RULES:
-- Vary scores between the three judges slightly (within 1-2 points) to simulate realistic judging panels
-- Be honest but constructive in feedback
-- Base your analysis ONLY on what you can actually observe in the provided video frames
-- Provide specific, actionable feedback referencing moments you can see in the frames
-- Distribute timeline notes across the full duration of the routine`;
+SCORING SYSTEM (300-point scale):
+- Technique (max 35 per judge, 3 judges = 105 max): body alignment, extension, control, turns, leaps, footwork precision, landing mechanics, strength, flexibility
+- Performance (max 35 per judge, 3 judges = 105 max): stage presence, facial expression, musicality, energy, audience connection, emotional projection, dynamic range
+- Choreography (max 20 per judge, 3 judges = 60 max): creativity, formations, use of space/levels, musical interpretation, dynamics, transitions, originality
+- Overall Impression (max 10 per judge, 3 judges = 30 max): polish, competition-readiness, wow factor, costuming synergy, stage use
+
+SCORING CALIBRATION (be realistic and honest — most routines fall in High Gold to Platinum):
+- Gold (100-249): Developing skills, notable areas for growth, foundational level
+- High Gold (250-264): Solid foundation, approaching competitive level, some standout moments
+- Platinum (265-279): Strong competitive routine, polished execution, consistent quality
+- Platinum Star (280-289): Outstanding, top-tier regional competitor, exceptional in multiple areas
+- Titanium (290-300): Elite, national-level excellence, virtually flawless — reserve this for truly extraordinary performances
+
+CRITICAL JUDGING RULES:
+- Each judge scores independently based on their specialty — scores WILL differ by 1-4 points reflecting their different expertise areas
+- The Technician tends to score Technique higher but be stricter on Performance
+- The Artist tends to score Performance higher but may be more lenient on Technique
+- The Choreographer focuses on Choreography scoring accuracy and gives balanced other scores
+- Be HONEST — do not inflate scores. A good studio routine is typically High Gold to Platinum range
+- Base analysis ONLY on what you can observe in the provided video frames
+- Reference SPECIFIC moments visible in the frames (e.g., "In the frame at approximately 0:45, the arabesque shows...")
+- Provide actionable, specific feedback that a dancer or coach can immediately work on
+- Distribute timeline notes across the FULL duration of the routine`;
+
+function getStyleRubric(style: string): string {
+  return STYLE_RUBRICS[style] || "";
+}
 
 function buildUserMessage(
   metadata: UploadMetadata,
   frames: ExtractedFrame[],
   duration: string
 ) {
+  const styleRubric = getStyleRubric(metadata.style);
+  const styleSection = styleRubric ? `\n\n${styleRubric}\n` : "";
+
   return `Analyze this ${metadata.style} ${metadata.entryType} routine titled "${metadata.routineName}" performed by ${metadata.dancerName} in the ${metadata.ageGroup} division from ${metadata.studioName}.
+${styleSection}
+The video is ${duration} long. I am providing ${frames.length} frames extracted at regular intervals throughout the routine. Each frame is approximately ${Math.round(frames[frames.length - 1]?.timestamp / frames.length)}s apart.
 
-The video is ${duration} long. I am providing ${frames.length} frames extracted at regular intervals throughout the routine.
+Study each frame carefully. Pay attention to:
+- Body alignment, placement, and line in every frame
+- Facial expressions and performance quality
+- Spacing, formations, and use of stage
+- Technical elements (turns, leaps, extensions, tricks) captured mid-execution
+- Transitions between movements
+- Overall energy and commitment visible in body language
 
-Based on what you can observe in these frames, provide your detailed competition-style analysis.
-
-For timestamps in timelineNotes, distribute your observations across the full duration of the routine (${duration}). Use formats like "0:00-0:12" for ranges or "1:05" for specific moments.
+For timestamps in timelineNotes, distribute your observations across the full duration of the routine (${duration}). Use formats like "0:00-0:12" for ranges or "1:05" for specific moments. Reference what you actually see in specific frames.
 
 Respond with ONLY a valid JSON object (no markdown, no code fences) matching this exact schema:
 {
@@ -52,47 +87,53 @@ Respond with ONLY a valid JSON object (no markdown, no code fences) matching thi
   "entryType": "${metadata.entryType}",
   "duration": "${duration}",
   "totalScore": <number between 100-300>,
+  "strengthsSummary": [
+    "<top strength #1 — specific and referencing what you observed>",
+    "<top strength #2>",
+    "<top strength #3>"
+  ],
+  "competitiveEdge": "<1-2 sentences about what sets this routine apart from competitors OR what's the biggest gap vs top competitors at this level>",
   "judgeScores": [
     {
       "category": "Technique",
       "max": 35,
-      "judges": [<judge1_score>, <judge2_score>, <judge3_score>],
+      "judges": [<technician_score>, <artist_score>, <choreographer_score>],
       "avg": <average of 3 judges>,
-      "feedback": "<detailed technique feedback, 2-3 sentences>"
+      "feedback": "<3-5 sentences of detailed technique feedback referencing specific frames/moments. The Technician's perspective should lead. Include what was done well AND specific areas to improve.>"
     },
     {
       "category": "Performance",
       "max": 35,
-      "judges": [<judge1_score>, <judge2_score>, <judge3_score>],
+      "judges": [<technician_score>, <artist_score>, <choreographer_score>],
       "avg": <average of 3 judges>,
-      "feedback": "<detailed performance feedback, 2-3 sentences>"
+      "feedback": "<3-5 sentences of detailed performance feedback. The Artist's perspective should lead. Comment on facial expression, musicality, emotional projection, energy dynamics, and audience connection.>"
     },
     {
       "category": "Choreography",
       "max": 20,
-      "judges": [<judge1_score>, <judge2_score>, <judge3_score>],
+      "judges": [<technician_score>, <artist_score>, <choreographer_score>],
       "avg": <average of 3 judges>,
-      "feedback": "<detailed choreography feedback, 2-3 sentences>"
+      "feedback": "<3-5 sentences of detailed choreography feedback. The Choreographer's perspective should lead. Discuss formations, transitions, use of space/levels, musical interpretation, and originality.>"
     },
     {
       "category": "Overall Impression",
       "max": 10,
-      "judges": [<judge1_score>, <judge2_score>, <judge3_score>],
+      "judges": [<technician_score>, <artist_score>, <choreographer_score>],
       "avg": <average of 3 judges>,
-      "feedback": "<detailed overall impression feedback, 2-3 sentences>"
+      "feedback": "<3-5 sentences about overall competition readiness, polish, wow factor, and where this routine stands competitively. All three judges weigh in.>"
     }
   ],
   "timelineNotes": [
-    {"time": "<timestamp>", "note": "<observation>", "type": "positive" or "improvement"},
-    ... (6-10 notes spread across the routine)
+    {"time": "<timestamp>", "note": "<specific observation referencing what you see in the frame>", "type": "positive" or "improvement"},
+    ... (10-15 notes spread evenly across the routine)
   ],
   "improvementPriorities": [
-    {"priority": 1, "item": "<specific improvement>", "impact": "High" or "Medium" or "Low", "timeToFix": "<estimate>"},
-    ... (3-5 priorities)
+    {"priority": 1, "item": "<specific, actionable improvement a coach could drill in practice>", "impact": "High" or "Medium" or "Low", "timeToFix": "<realistic estimate>"},
+    ... (4-6 priorities ordered by impact)
   ],
   "competitionComparison": {
     "yourScore": <same as totalScore>,
-    "avgRegional": <realistic regional average for this age/style, typically 255-265>,
+    "avgRegional": <realistic regional average for ${metadata.ageGroup} ${metadata.style}, typically 255-265>,
     "top10Threshold": <realistic top 10% threshold, typically 278-285>,
     "top5Threshold": <realistic top 5% threshold, typically 285-292>
   }
@@ -212,8 +253,8 @@ export async function POST(request: NextRequest) {
     const userMessage = buildUserMessage(metadata, frames, durationStr);
 
     const response = await claude.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
+      model: "claude-opus-4-20250514",
+      max_tokens: 8000,
       system: SYSTEM_PROMPT,
       messages: [
         {
