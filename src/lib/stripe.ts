@@ -10,7 +10,11 @@ export function getStripe(): Stripe {
         "STRIPE_SECRET_KEY is not set. Add it to your .env.local file."
       );
     }
-    _stripe = new Stripe(key, { typescript: true });
+    _stripe = new Stripe(key.trim(), {
+      typescript: true,
+      maxNetworkRetries: 1,
+      timeout: 8000,
+    });
   }
   return _stripe;
 }
