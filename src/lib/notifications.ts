@@ -1,0 +1,98 @@
+import { Resend } from "resend";
+
+const OWNER_EMAIL = "22tucker22@comcast.net";
+
+function getResend(): Resend | null {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) {
+    console.warn("RESEND_API_KEY not set — skipping email notification");
+    return null;
+  }
+  return new Resend(key);
+}
+
+async function sendEmail(subject: string, html: string) {
+  const resend = getResend();
+  if (!resend) return;
+
+  try {
+    await resend.emails.send({
+      from: "RoutineX <notifications@routinex.org>",
+      to: OWNER_EMAIL,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error("Failed to send notification email:", err);
+  }
+}
+
+export async function notifyNewSignup(email: string, userId: string) {
+  const now = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
+  await sendEmail(
+    `New Signup: ${email}`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px;">
+      <h2 style="color: #7c3aed;">New User Signed Up</h2>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>User ID:</strong> ${userId}</p>
+      <p><strong>Time:</strong> ${now} ET</p>
+      <hr style="border: none; border-top: 1px solid #e5e7eb;" />
+      <p style="color: #6b7280; font-size: 12px;">RoutineX Notification</p>
+    </div>
+    `
+  );
+}
+
+export async function notifyPayment(
+  email: string,
+  userId: string,
+  paymentType: string,
+  amountCents: number
+) {
+  const now = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
+  const amount = (amountCents / 100).toFixed(2);
+  const typeLabel = paymentType === "beta_access" ? "Beta Access ($9.99)" : `Single Analysis ($${amount})`;
+
+  await sendEmail(
+    `Payment Received: $${amount} from ${email}`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px;">
+      <h2 style="color: #16a34a;">Payment Received!</h2>
+      <p><strong>Customer:</strong> ${email}</p>
+      <p><strong>Amount:</strong> $${amount}</p>
+      <p><strong>Type:</strong> ${typeLabel}</p>
+      <p><strong>User ID:</strong> ${userId}</p>
+      <p><strong>Time:</strong> ${now} ET</p>
+      <hr style="border: none; border-top: 1px solid #e5e7eb;" />
+      <p style="color: #6b7280; font-size: 12px;">RoutineX Notification</p>
+    </div>
+    `
+  );
+}
+
+export async function notifyTrafficSummary(stats: {
+  totalVisitors: number;
+  pageViews: number;
+  topPages: Array<{ page: string; views: number }>;
+  period: string;
+}) {
+  const topPagesHtml = stats.topPages
+    .map((p) => `<li>${p.page} — ${p.views} views</li>`)
+    .join("");
+
+  await sendEmail(
+    `Traffic Summary: ${stats.totalVisitors} visitors (${stats.period})`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px;">
+      <h2 style="color: #7c3aed;">Traffic Summary — ${stats.period}</h2>
+      <p><strong>Unique Visitors:</strong> ${stats.totalVisitors}</p>
+      <p><strong>Page Views:</strong> ${stats.pageViews}</p>
+      <h3>Top Pages</h3>
+      <ul>${topPagesHtml || "<li>No data</li>"}</ul>
+      <hr style="border: none; border-top: 1px solid #e5e7eb;" />
+      <p style="color: #6b7280; font-size: 12px;">RoutineX Daily Notification</p>
+    </div>
+    `
+  );
+}

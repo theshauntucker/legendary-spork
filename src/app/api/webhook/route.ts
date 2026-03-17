@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { grantCredits, BETA_CREDITS } from "@/lib/credits";
 import { createServiceClient } from "@/lib/supabase/server";
+import { notifyPayment } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -82,6 +83,15 @@ export async function POST(request: NextRequest) {
     console.log(
       `Webhook: Granted ${creditsToGrant} credits to ${userId} (${paymentType})`
     );
+
+    // Send payment notification email (don't await — non-blocking)
+    const customerEmail = session.customer_email || session.customer_details?.email || userId;
+    notifyPayment(
+      customerEmail,
+      userId,
+      paymentType,
+      session.amount_total || (isBeta ? 999 : 299)
+    ).catch((err) => console.error("Payment notification failed:", err));
   }
 
   return NextResponse.json({ received: true });
