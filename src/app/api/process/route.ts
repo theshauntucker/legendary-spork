@@ -265,7 +265,7 @@ SCORING GUIDELINES:
 - Choreography (max 20): Creativity, musicality, use of space/levels, transitions, difficulty
 - Overall Impression (max 10): Polish, professionalism, memorability, competition readiness
 
-Provide 6-10 timeline notes using ONLY timestamps from the frames you were shown.
+Provide 6-10 timeline notes using ONLY timestamps from the frames you were shown. IMPORTANT: Each timeline note MUST reference a DIFFERENT frame timestamp — never reuse the same timestamp. Spread your observations across the full duration of the routine so each note highlights a distinct moment.
 Provide 3-5 improvement priorities based on what you actually observe.
 
 Return ONLY the JSON object, no other text.`,

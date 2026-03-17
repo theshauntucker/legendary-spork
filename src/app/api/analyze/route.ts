@@ -182,7 +182,8 @@ async function saveFramesToStorage(
   userId: string,
   videoId: string
 ): Promise<Array<{ timestamp: number; label: string; path: string }>> {
-  const selected = selectEvenlySpaced(frames, 10);
+  // Save ALL frames so each timeline note can match a unique thumbnail
+  const selected = frames;
   const results: Array<{ timestamp: number; label: string; path: string }> = [];
 
   for (const frame of selected) {

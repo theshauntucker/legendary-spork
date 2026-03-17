@@ -97,26 +97,32 @@ function parseTimestamp(time: string): number {
 }
 
 /**
- * Find the closest saved frame to a timeline note's timestamp.
- * Returns the frame if one is within 3 seconds, otherwise undefined.
+ * Match each timeline note to a unique frame. No two notes share a thumbnail.
  */
-function findClosestFrame(
-  time: string,
+function matchFramesToNotes(
+  notes: TimelineNote[],
   frames?: AnalysisFrame[]
-): AnalysisFrame | undefined {
-  if (!frames || frames.length === 0) return undefined;
-  const targetSec = parseTimestamp(time);
-  let best: AnalysisFrame | undefined;
-  let bestDist = Infinity;
-  for (const f of frames) {
-    const dist = Math.abs(f.timestamp - targetSec);
-    if (dist < bestDist) {
-      bestDist = dist;
-      best = f;
+): Map<number, AnalysisFrame | undefined> {
+  const result = new Map<number, AnalysisFrame | undefined>();
+  if (!frames || frames.length === 0) {
+    notes.forEach((_, i) => result.set(i, undefined));
+    return result;
+  }
+  const used = new Set<number>();
+  for (let i = 0; i < notes.length; i++) {
+    const targetSec = parseTimestamp(notes[i].time);
+    const candidates = frames
+      .map((f) => ({ frame: f, dist: Math.abs(f.timestamp - targetSec) }))
+      .filter((c) => c.dist <= 8 && !used.has(c.frame.timestamp))
+      .sort((a, b) => a.dist - b.dist);
+    if (candidates.length > 0) {
+      used.add(candidates[0].frame.timestamp);
+      result.set(i, candidates[0].frame);
+    } else {
+      result.set(i, undefined);
     }
   }
-  // Match if within 10 seconds
-  return bestDist <= 10 ? best : undefined;
+  return result;
 }
 
 export default function AnalysisReport({ analysis }: { analysis: AnalysisData }) {
@@ -383,40 +389,45 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
                 <h2 className="text-lg font-bold">Timestamped Performance Notes</h2>
               </div>
               <div className="space-y-3">
-                {analysis.timelineNotes.map((note, i) => {
-                  const matchedFrame = findClosestFrame(note.time, analysis.frames);
-                  return (
-                    <div key={i} className="rounded-xl bg-white/5 overflow-hidden">
-                      <div className="flex gap-0">
-                        {/* Frame thumbnail */}
-                        {matchedFrame && (
-                          <div className="relative shrink-0 w-28 sm:w-36">
-                            <img
-                              src={matchedFrame.url}
-                              alt={`Frame at ${note.time}`}
-                              className="w-full h-full object-cover"
-                            />
-                            <span className="absolute bottom-1 left-1 text-[9px] font-mono font-bold bg-black/70 text-white px-1.5 py-0.5 rounded">
-                              {matchedFrame.label}
-                            </span>
-                          </div>
-                        )}
-                        {/* Note content */}
-                        <div className="flex items-start gap-3 p-3 flex-1 min-w-0">
-                          <span className="shrink-0 text-xs font-mono font-bold text-primary-300 w-20">
-                            {note.time}
-                          </span>
-                          {note.type === "positive" ? (
-                            <CheckCircle className="shrink-0 h-4 w-4 text-green-400 mt-0.5" />
-                          ) : (
-                            <AlertCircle className="shrink-0 h-4 w-4 text-gold-400 mt-0.5" />
+                {(() => {
+                  const frameMap = matchFramesToNotes(analysis.timelineNotes, analysis.frames);
+                  return analysis.timelineNotes.map((note, i) => {
+                    const matchedFrame = frameMap.get(i);
+                    return (
+                      <div key={i} className="rounded-xl bg-white/5 overflow-hidden">
+                        <div className="flex gap-0">
+                          {/* Frame thumbnail */}
+                          {matchedFrame && (
+                            <div className="relative shrink-0 w-24 sm:w-36">
+                              <img
+                                src={matchedFrame.url}
+                                alt={`Frame at ${note.time}`}
+                                className="w-full h-full object-cover"
+                              />
+                              <span className="absolute bottom-1 left-1 text-[9px] font-mono font-bold bg-black/70 text-white px-1.5 py-0.5 rounded">
+                                {matchedFrame.label}
+                              </span>
+                            </div>
                           )}
-                          <span className="text-sm text-surface-200">{note.note}</span>
+                          {/* Note content — stacked on mobile for readability */}
+                          <div className="flex flex-col gap-1 p-3 flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono font-bold text-primary-300">
+                                {note.time}
+                              </span>
+                              {note.type === "positive" ? (
+                                <CheckCircle className="shrink-0 h-4 w-4 text-green-400" />
+                              ) : (
+                                <AlertCircle className="shrink-0 h-4 w-4 text-gold-400" />
+                              )}
+                            </div>
+                            <p className="text-sm text-surface-200 leading-relaxed">{note.note}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  });
+                })()}
               </div>
             </div>
           )}
