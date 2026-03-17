@@ -156,7 +156,7 @@ export default function UploadPage() {
       // Determine frame count based on video duration
       const frameCount = Math.min(
         Math.max(12, Math.ceil(metadata.duration / 5)),
-        30
+        20
       );
 
       const frames = await extractFrames(

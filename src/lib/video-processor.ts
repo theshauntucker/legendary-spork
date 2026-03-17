@@ -99,8 +99,8 @@ export function extractFrames(
         return;
       }
 
-      // Calculate target resolution — cap at 720p width for efficiency
-      const scale = Math.min(1, 1280 / video.videoWidth);
+      // Calculate target resolution — cap at 512px width to keep payload small
+      const scale = Math.min(1, 512 / video.videoWidth);
       const canvasWidth = Math.round(video.videoWidth * scale);
       const canvasHeight = Math.round(video.videoHeight * scale);
 
@@ -199,7 +199,7 @@ function captureFrameAtTime(
       clearTimeout(timeout);
       try {
         ctx.drawImage(video, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
 
         canvas.toBlob(
           (blob) => {
@@ -210,7 +210,7 @@ function captureFrameAtTime(
             }
           },
           "image/jpeg",
-          0.85
+          0.6
         );
       } catch (err) {
         reject(err);
