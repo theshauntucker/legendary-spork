@@ -99,8 +99,9 @@ export function extractFrames(
         return;
       }
 
-      // Calculate target resolution — cap at 512px width to keep payload small
-      const scale = Math.min(1, 512 / video.videoWidth);
+      // Cap at 1024px width — high enough for AI to read body positioning
+      // and technique details while keeping payload under the 20MB limit
+      const scale = Math.min(1, 1024 / video.videoWidth);
       const canvasWidth = Math.round(video.videoWidth * scale);
       const canvasHeight = Math.round(video.videoHeight * scale);
 
@@ -209,7 +210,7 @@ function captureFrameAtTime(
       cleanup();
       try {
         ctx.drawImage(video, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
 
         canvas.toBlob(
           (blob) => {

@@ -154,9 +154,10 @@ export default function UploadPage() {
 
       const metadata = await loadVideoMetadata(file);
       // Determine frame count based on video duration
+      // ~1 frame every 3-4 seconds for detailed technique analysis
       const frameCount = Math.min(
-        Math.max(12, Math.ceil(metadata.duration / 5)),
-        20
+        Math.max(15, Math.ceil(metadata.duration / 4)),
+        30
       );
 
       const frames = await extractFrames(
