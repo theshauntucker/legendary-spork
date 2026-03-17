@@ -85,7 +85,7 @@ export default function SignupPage() {
             Create Your Account
           </h1>
           <p className="mt-2 text-surface-200">
-            Join 347 dancers already using RoutineX
+            Only 487 of 1,000 launch spots remaining
           </p>
         </div>
 

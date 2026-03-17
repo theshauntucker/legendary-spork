@@ -126,40 +126,42 @@ export default function DashboardClient({
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-          {[
-            {
-              label: "Videos Uploaded",
-              value: videos.length,
-              icon: Video,
-            },
-            {
-              label: "Analyses Complete",
-              value: videos.filter((v) => v.status === "analyzed").length,
-              icon: BarChart3,
-            },
-            {
-              label: "Processing",
-              value: videos.filter((v) =>
-                ["uploaded", "processing", "ready"].includes(v.status)
-              ).length,
-              icon: Loader2,
-            },
-            {
-              label: "Avg. Score",
-              value:
-                videos.filter((v) => v.analyses?.length > 0).length > 0
-                  ? Math.round(
-                      videos
-                        .filter((v) => v.analyses?.length > 0)
-                        .reduce(
-                          (sum, v) => sum + (v.analyses[0]?.total_score ?? 0),
-                          0
-                        ) / videos.filter((v) => v.analyses?.length > 0).length
-                    )
-                  : "—",
-              icon: CheckCircle,
-            },
-          ].map((stat) => (
+          {(() => {
+            const analyzedCount = videos.filter((v) => v.status === "analyzed").length;
+            const freeCredits = Math.max(0, 3 - analyzedCount);
+            const analyzedVideos = videos.filter((v) => v.analyses?.length > 0);
+            const avgScore = analyzedVideos.length > 0
+              ? Math.round(
+                  analyzedVideos.reduce(
+                    (sum, v) => sum + (v.analyses[0]?.total_score ?? 0),
+                    0
+                  ) / analyzedVideos.length
+                )
+              : "—";
+
+            return [
+              {
+                label: "Free Credits",
+                value: freeCredits,
+                icon: CheckCircle,
+              },
+              {
+                label: "Videos Uploaded",
+                value: videos.length,
+                icon: Video,
+              },
+              {
+                label: "Analyses Complete",
+                value: analyzedCount,
+                icon: BarChart3,
+              },
+              {
+                label: "Avg. Score",
+                value: avgScore,
+                icon: CheckCircle,
+              },
+            ];
+          })().map((stat) => (
             <div key={stat.label} className="glass rounded-2xl p-4 text-center">
               <stat.icon className="mx-auto h-5 w-5 text-primary-400 mb-2" />
               <p className="text-2xl font-bold">{stat.value}</p>
