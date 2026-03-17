@@ -87,7 +87,7 @@ export default function SignupPage() {
             Create Your Account
           </h1>
           <p className="mt-2 text-surface-200">
-            Join RoutineX and start improving today
+            Only 487 of 1,000 founding member spots remaining
           </p>
         </div>
 
