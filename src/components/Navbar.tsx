@@ -93,10 +93,10 @@ export default function Navbar() {
                   Log In
                 </a>
                 <a
-                  href="#pricing"
+                  href="/signup"
                   className="rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
                 >
-                  Join Waitlist
+                  Get Started
                 </a>
               </div>
             )}
@@ -167,11 +167,11 @@ export default function Navbar() {
                     Log In
                   </a>
                   <a
-                    href="#pricing"
+                    href="/signup"
                     className="block w-full text-center rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-2.5 text-sm font-semibold text-white"
                     onClick={() => setMobileOpen(false)}
                   >
-                    Join Waitlist — $9.99
+                    Get Started
                   </a>
                 </>
               )}

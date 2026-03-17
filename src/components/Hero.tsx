@@ -1,13 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Play, ArrowRight, Users, Star, Mail } from "lucide-react";
-import WaitlistModal from "./WaitlistModal";
 
 export default function Hero() {
-  const [modalOpen, setModalOpen] = useState(false);
-
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
       {/* Background effects */}
@@ -30,7 +26,7 @@ export default function Hero() {
             <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500" />
           </span>
           <span className="text-sm text-primary-200">
-            Limited Beta — Only 500 Early Access Spots
+            Just Launched — Limited to First 1,000 Members
           </span>
         </motion.div>
 
@@ -68,19 +64,19 @@ export default function Hero() {
           className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <a
-            href="#pricing"
+            href="/signup"
             className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary-600/25 hover:shadow-primary-600/40 transition-all animate-pulse-glow"
           >
-            Join the Beta — $9.99
+            Get Started — It&apos;s $9.99
             <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </a>
-          <button
-            onClick={() => setModalOpen(true)}
+          <a
+            href="/login"
             className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-4 text-base font-medium text-white hover:bg-white/5 transition-colors"
           >
             <Mail className="h-5 w-5 text-primary-400" />
-            Free Waitlist — No Card Needed
-          </button>
+            Already have an account? Log In
+          </a>
         </motion.div>
 
         {/* See Sample link */}
@@ -109,8 +105,7 @@ export default function Hero() {
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-primary-400" />
             <span>
-              <span className="text-white font-semibold">347</span> of 500
-              beta spots claimed
+              <span className="text-white font-semibold">487</span> of 1,000 launch spots remaining
             </span>
           </div>
           <div className="hidden sm:block h-4 w-px bg-surface-800" />
@@ -194,8 +189,6 @@ export default function Hero() {
         </motion.div>
       </div>
 
-      {/* Waitlist Modal */}
-      <WaitlistModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
     </section>
   );
 }

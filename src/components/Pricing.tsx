@@ -53,24 +53,24 @@ export default function Pricing() {
           >
             <div className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-3 py-1 text-xs font-bold">
               <Gift className="h-3 w-3" />
-              BETA — LIMITED TO 500
+              LAUNCH SPECIAL — 1,000 SPOTS
             </div>
 
             <div className="mt-4">
-              <h3 className="text-xl font-bold">Early Access Pass</h3>
+              <h3 className="text-xl font-bold">Launch Member Pass</h3>
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="text-5xl font-extrabold">$9.99</span>
                 <span className="text-surface-200 text-sm">one-time</span>
               </div>
               <p className="mt-3 text-sm text-surface-200">
-                Be one of the first 500 to join and get exclusive early access to sample the full platform before public launch.
+                Join during our launch and get full platform access at our lowest price ever. This rate won&apos;t last.
               </p>
             </div>
 
             <ul className="mt-6 space-y-3">
               {[
-                "Priority access when we launch",
-                "Full platform sample experience",
+                "Instant full platform access",
+                "Upload and analyze right away",
                 "Lock in founding member status",
                 "3 free video analyses included",
                 "Direct feedback channel to our team",
@@ -83,16 +83,16 @@ export default function Pricing() {
               ))}
             </ul>
 
-            <button
-              onClick={handleCheckout}
+            <a
+              href="/signup"
               className="mt-8 w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-6 py-4 text-lg font-bold text-white hover:opacity-90 transition-opacity animate-pulse-glow"
             >
-              Claim Your Spot — $9.99
+              Get Started — $9.99
               <ArrowRight className="h-5 w-5" />
-            </button>
+            </a>
 
             <p className="mt-3 text-center text-xs text-surface-200">
-              Only 153 spots remaining. Secure checkout via Stripe.
+              Only 487 spots remaining. Secure checkout via Stripe.
             </p>
           </motion.div>
 
@@ -133,7 +133,7 @@ export default function Pricing() {
               <Zap className="h-6 w-6 text-gold-400 mx-auto mb-2" />
               <p className="text-sm font-medium">Available at launch</p>
               <p className="text-xs text-surface-200 mt-1">
-                Beta members get 3 free analyses to try before paying
+                Launch members get 3 free analyses to try before paying
               </p>
             </div>
           </motion.div>
