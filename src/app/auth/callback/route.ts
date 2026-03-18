@@ -22,7 +22,7 @@ export async function GET(request: Request) {
           );
         }
 
-        // Check if user has credits — if not, redirect to checkout
+        // Check if user has credits — if not, check for recent payment before redirecting
         const serviceClient = await createServiceClient();
         const creditStatus = await getUserCredits(
           serviceClient,
@@ -31,8 +31,21 @@ export async function GET(request: Request) {
         );
 
         if (!creditStatus.hasCredits && !creditStatus.isAdmin) {
-          // New user without credits — send to pricing/checkout
-          return NextResponse.redirect(`${origin}/#pricing`);
+          // Before redirecting to pricing, check if there's a recent Stripe payment
+          // that the webhook hasn't processed yet (race condition)
+          const { data: recentPayment } = await serviceClient
+            .from("payments")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("status", "completed")
+            .limit(1)
+            .single();
+
+          if (!recentPayment) {
+            // No payment found — send to pricing/checkout
+            return NextResponse.redirect(`${origin}/#pricing`);
+          }
+          // Payment exists but credits not yet visible — let them through
         }
       }
 

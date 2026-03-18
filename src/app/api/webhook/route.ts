@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
             ? session.payment_intent
             : null,
         payment_type: paymentType,
-        amount_cents: session.amount_total || (isBeta ? 999 : 299),
+        amount_cents: session.amount_total || (isBeta ? 999 : 399),
         currency: session.currency || "usd",
         status: "completed",
         credits_granted: creditsToGrant,
