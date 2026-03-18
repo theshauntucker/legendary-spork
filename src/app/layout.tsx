@@ -36,9 +36,7 @@ export const metadata: Metadata = {
     "routine improvement",
     "dance score calculator",
   ],
-  alternates: {
-    canonical: "/",
-  },
+  alternates: {},
   openGraph: {
     title: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
     description:

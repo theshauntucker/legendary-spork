@@ -1,8 +1,11 @@
 import { Sparkles, Heart, Brain, Shield, DollarSign, ArrowRight } from "lucide-react";
 
 export const metadata = {
-  title: "Our Approach | RoutineX",
+  title: "Our Approach",
   description: "A note from our founder on how RoutineX uses AI to help dancers grow — honestly, affordably, and with love.",
+  alternates: {
+    canonical: "/our-approach",
+  },
 };
 
 export default function OurApproachPage() {

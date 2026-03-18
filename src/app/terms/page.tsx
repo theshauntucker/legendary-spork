@@ -1,7 +1,10 @@
 import { Sparkles } from "lucide-react";
 
 export const metadata = {
-  title: "Terms of Service | RoutineX",
+  title: "Terms of Service",
+  alternates: {
+    canonical: "/terms",
+  },
 };
 
 export default function TermsPage() {

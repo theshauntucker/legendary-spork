@@ -1,7 +1,10 @@
 import { Sparkles } from "lucide-react";
 
 export const metadata = {
-  title: "Privacy Policy | RoutineX",
+  title: "Privacy Policy",
+  alternates: {
+    canonical: "/privacy",
+  },
 };
 
 export default function PrivacyPage() {
