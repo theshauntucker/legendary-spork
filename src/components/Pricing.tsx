@@ -102,7 +102,7 @@ export default function Pricing() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="glass rounded-3xl p-8"
+            className="glass rounded-3xl p-8 border border-surface-200/20"
           >
             <h3 className="text-xl font-bold">Per Video Analysis</h3>
             <div className="mt-4 flex items-baseline gap-1">
@@ -123,7 +123,7 @@ export default function Pricing() {
                 "Results in under 5 minutes",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2">
-                  <Check className="h-4 w-4 text-surface-200 mt-0.5 shrink-0" />
+                  <Check className="h-4 w-4 text-accent-400 mt-0.5 shrink-0" />
                   <span className="text-sm text-surface-200">{item}</span>
                 </li>
               ))}
@@ -145,7 +145,7 @@ export default function Pricing() {
                   alert("Something went wrong. Please try again.");
                 }
               }}
-              className="mt-8 w-full flex items-center justify-center gap-2 rounded-full border border-surface-200/30 px-6 py-4 text-lg font-bold text-white hover:bg-white/5 transition-colors"
+              className="mt-8 w-full flex items-center justify-center gap-2 rounded-full bg-surface-200/10 border border-surface-200/30 px-6 py-4 text-lg font-bold text-white hover:bg-surface-200/20 transition-colors"
             >
               Analyze My Routine — $3.99
               <ArrowRight className="h-5 w-5" />
