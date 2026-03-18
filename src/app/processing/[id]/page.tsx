@@ -19,9 +19,11 @@ export default function ProcessingPage() {
 
   const [status, setStatus] = useState("processing");
   const [analysisId, setAnalysisId] = useState<string | null>(null);
+  const [stuckMinutes, setStuckMinutes] = useState(0);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
+    const startedAt = Date.now();
 
     const checkStatus = async () => {
       try {
@@ -40,6 +42,17 @@ export default function ProcessingPage() {
           }, 2000);
         } else if (data.status === "error") {
           clearInterval(interval);
+        } else if (data.status === "processing") {
+          // Check if processing has been stuck too long
+          const elapsedMs = Date.now() - startedAt;
+          const elapsed = Math.floor(elapsedMs / 60000);
+          setStuckMinutes(elapsed);
+
+          // If stuck for more than 6 minutes, mark as timed out
+          if (elapsedMs > 6 * 60 * 1000) {
+            setStatus("error");
+            clearInterval(interval);
+          }
         }
       } catch {
         // Silently retry
@@ -107,6 +120,8 @@ export default function ProcessingPage() {
             ? "Your full scorecard is ready. Redirecting..."
             : status === "error"
             ? "There was an issue processing your video. Please try uploading again."
+            : stuckMinutes >= 3
+            ? "Still working — longer routines can take a few extra minutes..."
             : "Our AI is watching your routine and scoring every moment. This usually takes 1-3 minutes."}
         </p>
 
