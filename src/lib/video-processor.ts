@@ -99,9 +99,9 @@ export function extractFrames(
         return;
       }
 
-      // Cap at 1024px width — high enough for AI to read body positioning
-      // and technique details while keeping payload under the 20MB limit
-      const scale = Math.min(1, 1024 / video.videoWidth);
+      // Cap at 768px width — Claude can read body positioning fine at this
+      // resolution while keeping the total payload manageable for upload
+      const scale = Math.min(1, 768 / video.videoWidth);
       const canvasWidth = Math.round(video.videoWidth * scale);
       const canvasHeight = Math.round(video.videoHeight * scale);
 
@@ -210,7 +210,7 @@ function captureFrameAtTime(
       cleanup();
       try {
         ctx.drawImage(video, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.65);
 
         canvas.toBlob(
           (blob) => {
@@ -221,7 +221,7 @@ function captureFrameAtTime(
             }
           },
           "image/jpeg",
-          0.6
+          0.5
         );
       } catch (err) {
         reject(err);

@@ -103,29 +103,32 @@ export default function UploadPage() {
     }
   };
 
+  const validateAndSetFile = (f: File) => {
+    if (!f.type.startsWith("video/")) {
+      setError("Please upload a video file (MP4, MOV, AVI, WebM).");
+      return;
+    }
+    const sizeMB = f.size / (1024 * 1024);
+    if (sizeMB > 500) {
+      setError("File is too large (max 500 MB). Try trimming or compressing your video first.");
+      return;
+    }
+    setFile(f);
+    setError(sizeMB > 200 ? "Large file detected — upload may take a couple minutes on slower connections." : "");
+    setExtractedFrames([]);
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.type.startsWith("video/")) {
-      setFile(droppedFile);
-      setError("");
-      setExtractedFrames([]);
-    } else {
-      setError("Please upload a video file (MP4, MOV, AVI, WebM).");
-    }
+    if (droppedFile) validateAndSetFile(droppedFile);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (selectedFile && selectedFile.type.startsWith("video/")) {
-      setFile(selectedFile);
-      setError("");
-      setExtractedFrames([]);
-    } else {
-      setError("Please upload a video file (MP4, MOV, AVI, WebM).");
-    }
+    if (selectedFile) validateAndSetFile(selectedFile);
   };
 
   const resetState = useCallback(() => {
@@ -155,9 +158,11 @@ export default function UploadPage() {
       const metadata = await loadVideoMetadata(file);
       // Determine frame count based on video duration
       // ~1 frame every 3-4 seconds for detailed technique analysis
+      // Extract up to 20 frames — Claude API limit is 20 anyway,
+      // so extracting more just wastes upload bandwidth
       const frameCount = Math.min(
-        Math.max(15, Math.ceil(metadata.duration / 4)),
-        30
+        Math.max(12, Math.ceil(metadata.duration / 5)),
+        20
       );
 
       const frames = await extractFrames(
@@ -182,7 +187,7 @@ export default function UploadPage() {
 
       // ── Step 3: Send to analysis API ───────────────────────────────
       setProgress(45);
-      setStatusMessage("Uploading for analysis...");
+      setStatusMessage("Uploading frames — this can take a minute for longer routines...");
 
       const payload = JSON.stringify({
         frames: base64Frames,
@@ -205,7 +210,7 @@ export default function UploadPage() {
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
           const controller = new AbortController();
-          const fetchTimeout = setTimeout(() => controller.abort(), 60000);
+          const fetchTimeout = setTimeout(() => controller.abort(), 180000);
           response = await fetch("/api/analyze", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -217,7 +222,7 @@ export default function UploadPage() {
         } catch (fetchErr) {
           if (attempt === 2) throw fetchErr;
           // Wait before retry: 2s, then 4s
-          setStatusMessage(`Upload interrupted, retrying... (${attempt + 2}/3)`);
+          setStatusMessage(`Connection hiccup — retrying upload (attempt ${attempt + 2} of 3)...`);
           await new Promise((r) => setTimeout(r, (attempt + 1) * 2000));
         }
       }
@@ -401,7 +406,7 @@ export default function UploadPage() {
                       Drag & drop your video here
                     </p>
                     <p className="text-xs text-surface-200 mt-1">
-                      MP4, MOV, AVI, WebM — any size
+                      MP4, MOV, AVI, WebM — up to 500 MB
                     </p>
                   </motion.div>
                 )}
