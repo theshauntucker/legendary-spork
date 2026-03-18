@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { notifyNewSignup } from "@/lib/notifications";
+import { getUserCredits } from "@/lib/credits";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -11,7 +12,6 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      // Check if this is a brand-new user (created in the last 60 seconds)
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const createdAt = new Date(user.created_at).getTime();
@@ -20,6 +20,19 @@ export async function GET(request: Request) {
           notifyNewSignup(user.email || "unknown", user.id).catch((err) =>
             console.error("Signup notification failed:", err)
           );
+        }
+
+        // Check if user has credits — if not, redirect to checkout
+        const serviceClient = await createServiceClient();
+        const creditStatus = await getUserCredits(
+          serviceClient,
+          user.id,
+          user.email
+        );
+
+        if (!creditStatus.hasCredits && !creditStatus.isAdmin) {
+          // New user without credits — send to pricing/checkout
+          return NextResponse.redirect(`${origin}/#pricing`);
         }
       }
 

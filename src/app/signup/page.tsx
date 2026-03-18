@@ -55,7 +55,26 @@ export default function SignupPage() {
     setSuccess(true);
     setLoading(false);
 
-    // Auto-redirect after a moment (Supabase may or may not require email confirmation)
+    // Redirect to Stripe checkout for Founding Member Pass payment
+    try {
+      const checkoutRes = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "beta_access" }),
+      });
+      const checkoutData = await checkoutRes.json();
+      if (checkoutData.url) {
+        // Short delay so user sees success state, then redirect to payment
+        setTimeout(() => {
+          window.location.href = checkoutData.url;
+        }, 1500);
+        return;
+      }
+    } catch (err) {
+      console.error("Failed to create checkout session:", err);
+    }
+
+    // Fallback: if checkout creation fails, go to dashboard
     setTimeout(() => {
       router.push("/dashboard");
       router.refresh();
@@ -100,8 +119,8 @@ export default function SignupPage() {
             <CheckCircle className="mx-auto h-12 w-12 text-green-400 mb-4" />
             <h2 className="text-xl font-bold">Account Created!</h2>
             <p className="mt-2 text-surface-200 text-sm">
-              Check your email for a confirmation link, then you&apos;re all
-              set. Redirecting to your dashboard...
+              Redirecting to payment to activate your Founding Member
+              Pass...
             </p>
           </motion.div>
         ) : (

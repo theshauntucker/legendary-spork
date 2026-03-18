@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { getUserCredits } from "@/lib/credits";
 import DashboardClient from "./DashboardClient";
 
 export default async function DashboardPage() {
@@ -53,6 +54,13 @@ export default async function DashboardPage() {
     analyses: analysesMap[v.id] ?? [],
   }));
 
+  // Fetch actual credit balance from database
+  const creditStatus = await getUserCredits(
+    serviceClient,
+    user.id,
+    user.email
+  );
+
   return (
     <DashboardClient
       user={{
@@ -60,6 +68,11 @@ export default async function DashboardPage() {
         name: user.user_metadata?.full_name ?? "",
       }}
       videos={videosWithAnalyses}
+      credits={{
+        remaining: creditStatus.remaining,
+        total: creditStatus.totalCredits,
+        used: creditStatus.usedCredits,
+      }}
     />
   );
 }

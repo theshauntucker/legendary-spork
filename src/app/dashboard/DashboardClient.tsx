@@ -62,9 +62,11 @@ const statusConfig: Record<
 export default function DashboardClient({
   user,
   videos,
+  credits,
 }: {
   user: { email: string; name: string };
   videos: VideoRecord[];
+  credits: { remaining: number; total: number; used: number };
 }) {
   const router = useRouter();
 
@@ -128,7 +130,6 @@ export default function DashboardClient({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
           {(() => {
             const analyzedCount = videos.filter((v) => v.status === "analyzed").length;
-            const freeCredits = Math.max(0, 3 - analyzedCount);
             const analyzedVideos = videos.filter((v) => v.analyses?.length > 0);
             const avgScore = analyzedVideos.length > 0
               ? Math.round(
@@ -141,8 +142,8 @@ export default function DashboardClient({
 
             return [
               {
-                label: "Free Credits",
-                value: freeCredits,
+                label: "Credits Left",
+                value: credits.remaining,
                 icon: CheckCircle,
               },
               {
@@ -169,6 +170,30 @@ export default function DashboardClient({
             </div>
           ))}
         </div>
+
+        {/* Purchase CTA — shown when user has no credits */}
+        {credits.remaining === 0 && credits.total === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.05 }}
+            className="mb-6 flex items-center justify-between glass rounded-2xl p-6 border border-accent-500/30"
+          >
+            <div>
+              <p className="font-bold text-accent-400">Payment Required</p>
+              <p className="text-sm text-surface-200 mt-1">
+                Purchase a Founding Member Pass ($9.99) to unlock 3 video analyses.
+              </p>
+            </div>
+            <a
+              href="/#pricing"
+              className="shrink-0 ml-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-2.5 font-semibold text-white hover:opacity-90 transition-opacity text-sm"
+            >
+              Get Started
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          </motion.div>
+        )}
 
         {/* Upload CTA */}
         <motion.a
