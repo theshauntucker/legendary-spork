@@ -89,6 +89,7 @@ export async function useCredit(
 
 /**
  * Grant credits to a user after payment.
+ * Throws on failure so callers (webhook, verify-payment) can handle it.
  */
 export async function grantCredits(
   serviceClient: SupabaseClient,
@@ -96,7 +97,7 @@ export async function grantCredits(
   credits: number,
   isBetaPurchase: boolean
 ): Promise<void> {
-  const { data: existing } = await serviceClient
+  const { data: existing, error: selectError } = await serviceClient
     .from("user_credits")
     .select("user_id")
     .eq("user_id", userId)
@@ -104,19 +105,27 @@ export async function grantCredits(
 
   if (existing) {
     // Add credits to existing record
-    await serviceClient.rpc("add_credits", {
+    const { error: rpcError } = await serviceClient.rpc("add_credits", {
       p_user_id: userId,
       p_credits: credits,
       p_is_beta: isBetaPurchase,
     });
+    if (rpcError) {
+      throw new Error(`add_credits RPC failed: ${rpcError.message}`);
+    }
   } else {
-    // Create new record
-    await serviceClient.from("user_credits").insert({
-      user_id: userId,
-      total_credits: credits,
-      used_credits: 0,
-      is_beta_member: isBetaPurchase,
-    });
+    // No existing record (selectError is expected here — PGRST116 = no rows)
+    const { error: insertError } = await serviceClient
+      .from("user_credits")
+      .insert({
+        user_id: userId,
+        total_credits: credits,
+        used_credits: 0,
+        is_beta_member: isBetaPurchase,
+      });
+    if (insertError) {
+      throw new Error(`user_credits insert failed: ${insertError.message}`);
+    }
   }
 }
 

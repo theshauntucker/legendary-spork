@@ -64,19 +64,25 @@ export async function POST(request: NextRequest) {
 
     // Record payment and grant credits — both must succeed or Stripe retries
     try {
-      await serviceClient.from("payments").insert({
-        user_id: userId,
-        stripe_session_id: session.id,
-        stripe_payment_intent:
-          typeof session.payment_intent === "string"
-            ? session.payment_intent
-            : null,
-        payment_type: paymentType,
-        amount_cents: session.amount_total || (isBeta ? 999 : 399),
-        currency: session.currency || "usd",
-        status: "completed",
-        credits_granted: creditsToGrant,
-      });
+      const { error: insertError } = await serviceClient
+        .from("payments")
+        .insert({
+          user_id: userId,
+          stripe_session_id: session.id,
+          stripe_payment_intent:
+            typeof session.payment_intent === "string"
+              ? session.payment_intent
+              : null,
+          payment_type: paymentType,
+          amount_cents: session.amount_total || (isBeta ? 999 : 399),
+          currency: session.currency || "usd",
+          status: "completed",
+          credits_granted: creditsToGrant,
+        });
+
+      if (insertError) {
+        throw new Error(`Payment insert failed: ${insertError.message}`);
+      }
 
       await grantCredits(serviceClient, userId, creditsToGrant, isBeta);
     } catch (err) {

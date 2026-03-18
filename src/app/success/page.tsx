@@ -44,21 +44,27 @@ export default async function SuccessPage({
           const isBeta = paymentType === "beta_access";
           const creditsToGrant = isBeta ? BETA_CREDITS : 1;
 
-          await serviceClient.from("payments").insert({
-            user_id: user.id,
-            stripe_session_id: sessionId,
-            stripe_payment_intent:
-              typeof session.payment_intent === "string"
-                ? session.payment_intent
-                : null,
-            payment_type: paymentType,
-            amount_cents: session.amount_total || (isBeta ? 999 : 399),
-            currency: session.currency || "usd",
-            status: "completed",
-            credits_granted: creditsToGrant,
-          });
+          const { error: insertError } = await serviceClient
+            .from("payments")
+            .insert({
+              user_id: user.id,
+              stripe_session_id: sessionId,
+              stripe_payment_intent:
+                typeof session.payment_intent === "string"
+                  ? session.payment_intent
+                  : null,
+              payment_type: paymentType,
+              amount_cents: session.amount_total || (isBeta ? 999 : 399),
+              currency: session.currency || "usd",
+              status: "completed",
+              credits_granted: creditsToGrant,
+            });
 
-          await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
+          if (insertError) {
+            console.error("Success page: Payment insert failed:", insertError.message);
+          } else {
+            await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
+          }
           console.log(
             `Success page: Granted ${creditsToGrant} credits to ${user.id} (webhook fallback)`
           );
