@@ -62,29 +62,37 @@ export async function POST(request: NextRequest) {
     const isBeta = paymentType === "beta_access";
     const creditsToGrant = isBeta ? BETA_CREDITS : 1;
 
-    // Record the payment
-    await serviceClient.from("payments").insert({
-      user_id: userId,
-      stripe_session_id: session.id,
-      stripe_payment_intent:
-        typeof session.payment_intent === "string"
-          ? session.payment_intent
-          : null,
-      payment_type: paymentType,
-      amount_cents: session.amount_total || (isBeta ? 999 : 299),
-      currency: session.currency || "usd",
-      status: "completed",
-      credits_granted: creditsToGrant,
-    });
+    // Record payment and grant credits — both must succeed or Stripe retries
+    try {
+      await serviceClient.from("payments").insert({
+        user_id: userId,
+        stripe_session_id: session.id,
+        stripe_payment_intent:
+          typeof session.payment_intent === "string"
+            ? session.payment_intent
+            : null,
+        payment_type: paymentType,
+        amount_cents: session.amount_total || (isBeta ? 999 : 299),
+        currency: session.currency || "usd",
+        status: "completed",
+        credits_granted: creditsToGrant,
+      });
 
-    // Grant credits
-    await grantCredits(serviceClient, userId, creditsToGrant, isBeta);
+      await grantCredits(serviceClient, userId, creditsToGrant, isBeta);
+    } catch (err) {
+      console.error("Webhook: Failed to record payment or grant credits:", err);
+      // Return 500 so Stripe retries the webhook
+      return NextResponse.json(
+        { error: "Failed to process payment" },
+        { status: 500 }
+      );
+    }
 
     console.log(
       `Webhook: Granted ${creditsToGrant} credits to ${userId} (${paymentType})`
     );
 
-    // Send payment notification email (don't await — non-blocking)
+    // Send payment notification email (non-blocking, ok to fail)
     const customerEmail = session.customer_email || session.customer_details?.email || userId;
     notifyPayment(
       customerEmail,

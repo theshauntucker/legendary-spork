@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
     // Deduct credit now (before background processing)
     await useCredit(serviceClient, user.id, user.email);
 
-    // Fire off the background analysis — don't await it
+    // Fire off the background analysis — only send IDs, process reads frames from storage
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
     fetch(`${baseUrl}/api/process`, {
       method: "POST",
@@ -140,9 +140,6 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         videoId: video.id,
         userId: user.id,
-        frames,
-        metadata,
-        durationStr,
       }),
     }).catch((err) => {
       console.error("Failed to trigger background processing:", err);

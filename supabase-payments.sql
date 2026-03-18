@@ -80,6 +80,18 @@ end;
 $$ language plpgsql security definer;
 
 
+-- Decrement used_credits by 1 (refund on failed analysis)
+create or replace function public.decrement_used_credits(p_user_id uuid)
+returns void as $$
+begin
+  update public.user_credits
+  set used_credits = greatest(0, used_credits - 1),
+      updated_at = now()
+  where user_id = p_user_id;
+end;
+$$ language plpgsql security definer;
+
+
 -- ============================================
 -- DONE! Now deploy and set STRIPE_WEBHOOK_SECRET
 -- in your Vercel environment variables.

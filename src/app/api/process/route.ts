@@ -1,49 +1,86 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { refundCredit } from "@/lib/credits";
 
 export const maxDuration = 300; // 5 min max for AI analysis
 
-interface FrameInput {
+interface FrameData {
   timestamp: number;
   label: string;
   base64: string;
 }
 
-interface RoutineMetadata {
-  routineName: string;
-  dancerName?: string;
-  studioName?: string;
-  ageGroup: string;
-  style: string;
-  entryType: string;
+interface PreprocessingMetadata {
+  frameCount: number;
   duration: number;
+  durationFormatted: string;
   resolution: string;
-  originalFilename: string;
-  originalFileSize: number;
+  frames: Array<{ timestamp: number; label: string; path: string }>;
 }
 
 export async function POST(request: NextRequest) {
   let videoId: string | undefined;
+  let userId: string | undefined;
 
   try {
     const body = await request.json();
-    const { userId, frames, metadata, durationStr } = body as {
-      videoId: string;
-      userId: string;
-      frames: FrameInput[];
-      metadata: RoutineMetadata;
-      durationStr: string;
-    };
     videoId = body.videoId;
+    userId = body.userId;
 
-    if (!videoId || !userId || !frames) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!videoId || !userId) {
+      return NextResponse.json({ error: "Missing videoId or userId" }, { status: 400 });
     }
 
     const serviceClient = await createServiceClient();
 
+    // Load video record with all metadata from DB
+    const { data: video, error: videoError } = await serviceClient
+      .from("videos")
+      .select("*")
+      .eq("id", videoId)
+      .single();
+
+    if (videoError || !video) {
+      console.error("Video not found:", videoError);
+      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    }
+
+    const meta = video.preprocessing_metadata as PreprocessingMetadata | null;
+    if (!meta?.frames || meta.frames.length === 0) {
+      console.error("No frames in preprocessing_metadata for video:", videoId);
+      await markVideoError(serviceClient, videoId);
+      await tryRefundCredit(serviceClient, userId, video.user_email);
+      return NextResponse.json({ error: "No frames available" }, { status: 400 });
+    }
+
+    // Download frames from Supabase storage
+    const frames = await downloadFramesFromStorage(serviceClient, meta.frames);
+
+    if (frames.length === 0) {
+      console.error("All frame downloads failed for video:", videoId);
+      await markVideoError(serviceClient, videoId);
+      await tryRefundCredit(serviceClient, userId, video.user_email);
+      return NextResponse.json({ error: "Failed to download frames" }, { status: 500 });
+    }
+
+    // Build routine metadata from DB record
+    const routineMetadata = {
+      routineName: video.routine_name || "Untitled",
+      dancerName: video.dancer_name || undefined,
+      studioName: video.studio_name || undefined,
+      ageGroup: video.age_group || "Senior (15-19)",
+      style: video.style || "Contemporary",
+      entryType: video.entry_type || "Solo",
+      duration: meta.duration,
+      resolution: meta.resolution || "unknown",
+      originalFilename: video.filename || "video",
+      originalFileSize: video.file_size || 0,
+    };
+
+    const durationStr = meta.durationFormatted || formatDuration(meta.duration);
+
     // Run the AI analysis
-    const { analysis, usedAI } = await analyzeWithClaude(frames, metadata, durationStr);
+    const { analysis, usedAI } = await analyzeWithClaude(frames, routineMetadata, durationStr);
 
     // Save analysis to database
     const { data: analysisRecord, error: analysisError } = await serviceClient
@@ -63,21 +100,10 @@ export async function POST(request: NextRequest) {
 
     if (analysisError || !analysisRecord) {
       console.error("Analysis insert error:", analysisError);
-      await serviceClient
-        .from("videos")
-        .update({ status: "error", updated_at: new Date().toISOString() })
-        .eq("id", videoId);
+      await markVideoError(serviceClient, videoId);
+      await tryRefundCredit(serviceClient, userId, video.user_email);
       return NextResponse.json({ error: "Failed to save analysis" }, { status: 500 });
     }
-
-    // Get existing preprocessing metadata to preserve frame URLs
-    const { data: existingVideo } = await serviceClient
-      .from("videos")
-      .select("preprocessing_metadata")
-      .eq("id", videoId)
-      .single();
-
-    const existingMeta = (existingVideo?.preprocessing_metadata || {}) as Record<string, unknown>;
 
     // Update video as analyzed
     await serviceClient
@@ -86,7 +112,7 @@ export async function POST(request: NextRequest) {
         status: "analyzed",
         analysis_id: analysisRecord.id,
         preprocessing_metadata: {
-          ...existingMeta,
+          ...meta,
           analyzedAt: new Date().toISOString(),
           analyzedWithAI: usedAI,
         },
@@ -98,14 +124,14 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error("Process route error:", err);
 
-    // Mark the video as error so the client stops spinning
+    // Mark the video as error and refund credit
     if (videoId) {
       try {
         const serviceClient = await createServiceClient();
-        await serviceClient
-          .from("videos")
-          .update({ status: "error", updated_at: new Date().toISOString() })
-          .eq("id", videoId);
+        await markVideoError(serviceClient, videoId);
+        if (userId) {
+          await tryRefundCredit(serviceClient, userId);
+        }
       } catch (updateErr) {
         console.error("Failed to mark video as error:", updateErr);
       }
@@ -118,12 +144,95 @@ export async function POST(request: NextRequest) {
   }
 }
 
+async function markVideoError(
+  serviceClient: Awaited<ReturnType<typeof createServiceClient>>,
+  videoId: string
+) {
+  await serviceClient
+    .from("videos")
+    .update({ status: "error", updated_at: new Date().toISOString() })
+    .eq("id", videoId);
+}
+
+async function tryRefundCredit(
+  serviceClient: Awaited<ReturnType<typeof createServiceClient>>,
+  userId: string,
+  userEmail?: string
+) {
+  try {
+    await refundCredit(serviceClient, userId, userEmail);
+    console.log(`Refunded credit for user ${userId}`);
+  } catch (err) {
+    console.error("Failed to refund credit:", err);
+  }
+}
+
+/**
+ * Download frame images from Supabase storage and convert to base64.
+ */
+async function downloadFramesFromStorage(
+  serviceClient: Awaited<ReturnType<typeof createServiceClient>>,
+  storedFrames: Array<{ timestamp: number; label: string; path: string }>
+): Promise<FrameData[]> {
+  const frames: FrameData[] = [];
+
+  // Download in parallel batches of 5 for speed
+  const batchSize = 5;
+  for (let i = 0; i < storedFrames.length; i += batchSize) {
+    const batch = storedFrames.slice(i, i + batchSize);
+    const results = await Promise.allSettled(
+      batch.map(async (frame) => {
+        const { data, error } = await serviceClient.storage
+          .from("videos")
+          .download(frame.path);
+
+        if (error || !data) {
+          console.warn(`Failed to download frame ${frame.path}:`, error);
+          return null;
+        }
+
+        const buffer = Buffer.from(await data.arrayBuffer());
+        return {
+          timestamp: frame.timestamp,
+          label: frame.label,
+          base64: buffer.toString("base64"),
+        };
+      })
+    );
+
+    for (const result of results) {
+      if (result.status === "fulfilled" && result.value) {
+        frames.push(result.value);
+      }
+    }
+  }
+
+  return frames;
+}
+
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
 /**
  * Send frames to Claude Vision API and get a structured dance analysis.
  */
 async function analyzeWithClaude(
-  frames: FrameInput[],
-  metadata: RoutineMetadata,
+  frames: FrameData[],
+  metadata: {
+    routineName: string;
+    dancerName?: string;
+    studioName?: string;
+    ageGroup: string;
+    style: string;
+    entryType: string;
+    duration: number;
+    resolution: string;
+    originalFilename: string;
+    originalFileSize: number;
+  },
   durationStr: string
 ) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -146,7 +255,6 @@ async function analyzeWithClaude(
     | { type: "image"; source: { type: "base64"; media_type: "image/jpeg"; data: string } }
   > = [];
 
-  // System context about the routine
   content.push({
     type: "text",
     text: `You are an expert competitive dance judge analyzing a ${metadata.style} ${metadata.entryType} routine.
@@ -171,7 +279,6 @@ IMPORTANT: Only reference timestamps that correspond to the actual frames shown.
 Here are the frames:`,
   });
 
-  // Add each frame with its timestamp
   for (const frame of selectedFrames) {
     content.push({
       type: "text",
@@ -187,7 +294,6 @@ Here are the frames:`,
     });
   }
 
-  // Request structured analysis
   content.push({
     type: "text",
     text: `
@@ -306,7 +412,6 @@ Return ONLY the JSON object, no other text.`,
       throw new Error("Empty response from Claude");
     }
 
-    // Parse the JSON response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error("Could not parse JSON from Claude response");
@@ -314,7 +419,6 @@ Return ONLY the JSON object, no other text.`,
 
     const analysis = JSON.parse(jsonMatch[0]);
 
-    // Validate required fields
     if (
       typeof analysis.totalScore !== "number" ||
       !analysis.judgeScores ||
@@ -323,8 +427,7 @@ Return ONLY the JSON object, no other text.`,
       throw new Error("Invalid analysis structure from Claude");
     }
 
-    // Apply scoring boost — add 3.5% to each category score AND totalScore
-    // totalScore is on its own 260-300 scale, NOT a sum of category averages
+    // Apply scoring boost
     const boostPct = 0.035;
 
     if (analysis.judgeScores && Array.isArray(analysis.judgeScores)) {
@@ -341,14 +444,12 @@ Return ONLY the JSON object, no other text.`,
       }
     }
 
-    // Boost the totalScore separately (it's on 260-300 scale)
     analysis.totalScore = Math.min(300, Math.round(analysis.totalScore * (1 + boostPct)));
 
     if (analysis.competitionComparison) {
       analysis.competitionComparison.yourScore = analysis.totalScore;
     }
 
-    // Ensure award level is correct based on boosted score
     analysis.awardLevel = getAwardLevel(analysis.totalScore);
 
     return { analysis, usedAI: true };
@@ -372,13 +473,9 @@ function selectEvenlySpaced<T>(arr: T[], count: number): T[] {
   return Array.from({ length: count }, (_, i) => arr[Math.round(i * step)]);
 }
 
-/**
- * Fallback: Generate analysis based on real frame timestamps
- * when Claude API key is not configured.
- */
 function generateSimulatedAnalysis(
-  frames: FrameInput[],
-  metadata: RoutineMetadata,
+  frames: FrameData[],
+  metadata: { routineName: string; dancerName?: string; studioName?: string; ageGroup: string; style: string; entryType: string },
   durationStr: string
 ) {
   const timelineFrames = selectEvenlySpaced(frames, 8);

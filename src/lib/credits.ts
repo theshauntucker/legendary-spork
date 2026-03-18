@@ -120,4 +120,17 @@ export async function grantCredits(
   }
 }
 
+/**
+ * Refund one credit (decrement used_credits) when analysis fails after payment.
+ */
+export async function refundCredit(
+  serviceClient: SupabaseClient,
+  userId: string,
+  userEmail?: string
+): Promise<void> {
+  if (isAdmin(userEmail)) return;
+
+  await serviceClient.rpc("decrement_used_credits", { p_user_id: userId });
+}
+
 export { BETA_CREDITS };

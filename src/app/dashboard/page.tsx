@@ -14,6 +14,14 @@ export default async function DashboardPage() {
   // Use service client for data reads (bypasses RLS issues)
   const serviceClient = await createServiceClient();
 
+  // Auto-fix videos stuck in "processing" for over 7 minutes
+  await serviceClient
+    .from("videos")
+    .update({ status: "error", updated_at: new Date().toISOString() })
+    .eq("user_id", user.id)
+    .eq("status", "processing")
+    .lt("updated_at", new Date(Date.now() - 7 * 60 * 1000).toISOString());
+
   // Fetch user's videos
   const { data: videos } = await serviceClient
     .from("videos")
