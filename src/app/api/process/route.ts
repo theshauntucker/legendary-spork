@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { refundCredit } from "@/lib/credits";
+import { STYLE_CRITERIA, ENTRY_TYPE_CRITERIA, getCompetitionContext } from "@/lib/dance-criteria";
 
 export const maxDuration = 300; // 5 min max for AI analysis
 
@@ -255,9 +256,27 @@ async function analyzeWithClaude(
     | { type: "image"; source: { type: "base64"; media_type: "image/jpeg"; data: string } }
   > = [];
 
+  // Resolve style-specific and entry-type-specific criteria
+  const styleCriteria = STYLE_CRITERIA[metadata.style] || STYLE_CRITERIA["Jazz"];
+  const entryTypeCriteria = ENTRY_TYPE_CRITERIA[metadata.entryType] || ENTRY_TYPE_CRITERIA["Solo"];
+  const competitionContext = getCompetitionContext(metadata.ageGroup, metadata.style, metadata.entryType);
+  const isGroupEntry = entryTypeCriteria.additionalMetrics.length > 0;
+
   content.push({
     type: "text",
-    text: `You are an expert competitive dance judge analyzing a ${metadata.style} ${metadata.entryType} routine.
+    text: `You are an expert competitive dance judge specializing in ${metadata.style}.
+
+STYLE CONTEXT:
+${styleCriteria.styleDefinition}
+
+For ${metadata.style} routines, judges specifically evaluate:
+- Technique: ${styleCriteria.techniqueEmphasis.join(", ")}
+- Performance: ${styleCriteria.performanceEmphasis.join(", ")}
+- Choreography: ${styleCriteria.choreographyEmphasis.join(", ")}
+
+Common deductions in ${metadata.style}: ${styleCriteria.commonDeductions.join("; ")}
+
+Use this vocabulary in your feedback: ${styleCriteria.judgeVocabulary.join(", ")}
 
 ROUTINE DETAILS:
 - Routine Name: "${metadata.routineName}"
@@ -267,11 +286,18 @@ ROUTINE DETAILS:
 - Style: ${metadata.style}
 - Entry Type: ${metadata.entryType}
 - Total Duration: ${durationStr}
-
+${isGroupEntry ? `
+ENTRY TYPE CONSIDERATIONS (${metadata.entryType}):
+In addition to individual merit, evaluate:
+${entryTypeCriteria.additionalMetrics.map((m) => `- ${m}`).join("\n")}
+${entryTypeCriteria.scoringNotes}
+` : `
+ENTRY TYPE NOTE: ${entryTypeCriteria.scoringNotes}
+`}
 You will be shown ${selectedFrames.length} frames extracted from this routine at specific timestamps. Analyze each frame carefully for:
-- Technique (body placement, alignment, extension, turnout, flexibility, strength)
-- Performance quality (facial expression, energy, projection, musicality cues)
-- Choreography (use of space, levels, formations, transitions visible between frames)
+- Technique: ${styleCriteria.techniqueEmphasis.slice(0, 3).join(", ")}
+- Performance quality: ${styleCriteria.performanceEmphasis.slice(0, 3).join(", ")}
+- Choreography: ${styleCriteria.choreographyEmphasis.slice(0, 3).join(", ")}
 - Overall polish and competition readiness
 
 IMPORTANT: Only reference timestamps that correspond to the actual frames shown. The video is ${durationStr} long — do NOT reference times beyond this duration.
@@ -308,28 +334,32 @@ Now provide your complete analysis as a JSON object with EXACTLY this structure.
       "max": 35,
       "judges": [<judge1 score>, <judge2 score>, <judge3 score>],
       "avg": <average>,
-      "feedback": "<2-3 sentences about what you specifically observe in the technique>"
+      "feedback": "<2-3 sentences about what you specifically observe in the technique>",
+      "styleNotes": "<1-2 sentences of ${metadata.style}-specific technique observations using style vocabulary>"
     },
     {
       "category": "Performance",
       "max": 35,
       "judges": [<j1>, <j2>, <j3>],
       "avg": <avg>,
-      "feedback": "<2-3 sentences about performance quality you observe>"
+      "feedback": "<2-3 sentences about performance quality you observe>",
+      "styleNotes": "<1-2 sentences of ${metadata.style}-specific performance observations>"
     },
     {
       "category": "Choreography",
       "max": 20,
       "judges": [<j1>, <j2>, <j3>],
       "avg": <avg>,
-      "feedback": "<2-3 sentences about choreographic elements visible>"
+      "feedback": "<2-3 sentences about choreographic elements visible>",
+      "styleNotes": "<1-2 sentences of ${metadata.style}-specific choreography observations>"
     },
     {
       "category": "Overall Impression",
       "max": 10,
       "judges": [<j1>, <j2>, <j3>],
       "avg": <avg>,
-      "feedback": "<1-2 sentences overall assessment>"
+      "feedback": "<1-2 sentences overall assessment>",
+      "styleNotes": "<1 sentence on overall ${metadata.style} quality>"
     }
   ],
   "timelineNotes": [
@@ -344,14 +374,17 @@ Now provide your complete analysis as a JSON object with EXACTLY this structure.
       "priority": 1,
       "item": "<specific improvement based on what you observed>",
       "impact": "<High|Medium|Low>",
-      "timeToFix": "<realistic estimate>"
+      "timeToFix": "<realistic estimate>",
+      "trainingTip": "<specific drill, exercise, or practice approach to address this — be actionable>"
     }
   ],
   "competitionComparison": {
     "yourScore": <same as totalScore>,
     "avgRegional": <estimated regional average for this age/style>,
     "top10Threshold": <estimated top 10% threshold>,
-    "top5Threshold": <estimated top 5% threshold>
+    "top5Threshold": <estimated top 5% threshold>,
+    "benchmarkContext": "${competitionContext.benchmarkContext}",
+    "ageStyleNote": "${competitionContext.ageStyleNote}"
   }
 }
 
@@ -368,9 +401,9 @@ SCORING GUIDELINES:
 - Platinum: 280-289 (strong, competition-ready routine)
 - Diamond: 290-300 (exceptional, top-tier performance)
 
-- Technique (max 35): Body placement, alignment, extension, turnout, flexibility, strength, control
-- Performance (max 35): Projection, energy, musicality, facial expression, stage presence, emotional connection
-- Choreography (max 20): Creativity, musicality, use of space/levels, transitions, difficulty
+- Technique (max 35): ${styleCriteria.techniqueEmphasis.join(", ")}
+- Performance (max 35): ${styleCriteria.performanceEmphasis.join(", ")}
+- Choreography (max 20): ${styleCriteria.choreographyEmphasis.join(", ")}
 - Overall Impression (max 10): Polish, professionalism, memorability, competition readiness
 
 Provide 6-10 timeline notes using ONLY timestamps from the frames you were shown. IMPORTANT: Each timeline note MUST reference a DIFFERENT frame timestamp — never reuse the same timestamp. Spread your observations across the full duration of the routine so each note highlights a distinct moment.
@@ -488,6 +521,10 @@ function generateSimulatedAnalysis(
 
   const totalScore = v(282, 12);
 
+  const styleCriteria = STYLE_CRITERIA[metadata.style] || STYLE_CRITERIA["Jazz"];
+  const competitionCtx = getCompetitionContext(metadata.ageGroup, metadata.style, metadata.entryType);
+  const styleLC = metadata.style.toLowerCase();
+
   const timelineTemplates = [
     { note: `Opening position — energy and stage presence`, type: "positive" },
     { note: `${metadata.style} technique visible — check alignment`, type: "improvement" },
@@ -508,7 +545,8 @@ function generateSimulatedAnalysis(
         max: 35,
         judges: [v(33.5, 6), v(33.0, 6), v(34.0, 6)],
         avg: v(33.5, 6),
-        feedback: `Foundational technique shows solid training. Body placement and alignment are generally consistent throughout the ${metadata.style.toLowerCase()} choreography. Focus on extension and clean lines in transitions.`,
+        feedback: `Foundational technique shows solid training. Body placement and alignment are generally consistent throughout the ${styleLC} choreography. Focus on extension and clean lines in transitions.`,
+        styleNotes: `For ${metadata.style}: ${styleCriteria.techniqueEmphasis[0]} is evident. Continue developing ${styleCriteria.techniqueEmphasis[1]}.`,
       },
       {
         category: "Performance",
@@ -516,6 +554,7 @@ function generateSimulatedAnalysis(
         judges: [v(33.5, 6), v(33.0, 6), v(34.5, 6)],
         avg: v(33.7, 6),
         feedback: `Stage presence is engaging with authentic connection to the movement. Energy level is mostly sustained throughout the ${durationStr} routine. Facial expressions support the choreographic intent.`,
+        styleNotes: `For ${metadata.style}: ${styleCriteria.performanceEmphasis[0]} comes through well. Work on ${styleCriteria.performanceEmphasis[1]}.`,
       },
       {
         category: "Choreography",
@@ -523,6 +562,7 @@ function generateSimulatedAnalysis(
         judges: [v(19.0, 4), v(18.5, 4), v(19.5, 4)],
         avg: v(19.0, 4),
         feedback: `Well-structured ${metadata.entryType.toLowerCase()} routine with clear narrative arc. Effective use of space and levels. Music interpretation is thoughtful with room for more dynamic contrast.`,
+        styleNotes: `For ${metadata.style}: ${styleCriteria.choreographyEmphasis[0]} is well-executed. Consider exploring ${styleCriteria.choreographyEmphasis[1]}.`,
       },
       {
         category: "Overall Impression",
@@ -530,6 +570,7 @@ function generateSimulatedAnalysis(
         judges: [v(9.5, 2), v(9.0, 2), v(9.5, 2)],
         avg: v(9.3, 2),
         feedback: `A polished, competition-ready ${metadata.entryType.toLowerCase()} performance. ${metadata.dancerName || "The performer"} demonstrates maturity and artistry appropriate for the ${metadata.ageGroup} division.`,
+        styleNotes: `Shows strong ${styleLC} foundation with room to deepen ${styleCriteria.judgeVocabulary[0]} and ${styleCriteria.judgeVocabulary[1]}.`,
       },
     ],
     timelineNotes: timelineFrames.map((frame, i) => ({
@@ -538,17 +579,19 @@ function generateSimulatedAnalysis(
       type: timelineTemplates[i % timelineTemplates.length].type,
     })),
     improvementPriorities: [
-      { priority: 1, item: "Extension and line quality in transitions", impact: "High", timeToFix: "2-3 weeks" },
-      { priority: 2, item: "Energy consistency throughout full routine", impact: "High", timeToFix: "1-2 weeks" },
-      { priority: 3, item: "Dynamic contrast between sections", impact: "Medium", timeToFix: "2-3 rehearsals" },
-      { priority: 4, item: "Musicality detail in accents and phrasing", impact: "Medium", timeToFix: "1 rehearsal" },
-      { priority: 5, item: "Stage presence projection to back of room", impact: "Medium", timeToFix: "Ongoing" },
+      { priority: 1, item: "Extension and line quality in transitions", impact: "High", timeToFix: "2-3 weeks", trainingTip: "Practice slow relevé combinations at the barre, focusing on lengthening through the fingertips and toes. Hold each position for 4 counts." },
+      { priority: 2, item: "Energy consistency throughout full routine", impact: "High", timeToFix: "1-2 weeks", trainingTip: "Run the routine 3 times back-to-back in rehearsal to build stamina. Focus on maintaining performance energy even when tired." },
+      { priority: 3, item: "Dynamic contrast between sections", impact: "Medium", timeToFix: "2-3 rehearsals", trainingTip: "Mark through the routine identifying 'loud' and 'quiet' moments. Exaggerate the difference between them, then scale back to performance level." },
+      { priority: 4, item: "Musicality detail in accents and phrasing", impact: "Medium", timeToFix: "1 rehearsal", trainingTip: "Listen to the music without dancing and mark every accent with a hand clap. Then layer those accents back into the choreography." },
+      { priority: 5, item: "Stage presence projection to back of room", impact: "Medium", timeToFix: "Ongoing", trainingTip: "Practice performing to a specific spot on the back wall. Have someone stand at the back of the room and give feedback on what they can see." },
     ],
     competitionComparison: {
       yourScore: totalScore,
       avgRegional: 261,
       top10Threshold: 282,
       top5Threshold: 288,
+      benchmarkContext: competitionCtx.benchmarkContext,
+      ageStyleNote: competitionCtx.ageStyleNote,
     },
   };
 }

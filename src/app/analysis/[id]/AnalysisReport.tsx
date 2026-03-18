@@ -27,6 +27,7 @@ interface JudgeScore {
   judges: number[];
   avg: number;
   feedback: string;
+  styleNotes?: string;
 }
 
 interface TimelineNote {
@@ -40,6 +41,7 @@ interface ImprovementItem {
   item: string;
   impact: string;
   timeToFix: string;
+  trainingTip?: string;
 }
 
 interface AnalysisFrame {
@@ -66,6 +68,8 @@ interface AnalysisData {
     avgRegional: number;
     top10Threshold: number;
     top5Threshold: number;
+    benchmarkContext?: string;
+    ageStyleNote?: string;
   };
   analysisMethod?: "ai" | "simulated";
   frames?: AnalysisFrame[];
@@ -352,6 +356,16 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
                   <p className="text-2xl font-bold text-primary-400">{analysis.competitionComparison.top5Threshold}</p>
                 </div>
               </div>
+              {analysis.competitionComparison.benchmarkContext && (
+                <p className="mt-3 text-xs text-surface-200 leading-relaxed">
+                  {analysis.competitionComparison.benchmarkContext}
+                </p>
+              )}
+              {analysis.competitionComparison.ageStyleNote && (
+                <p className="mt-1 text-xs text-primary-300/80 italic">
+                  {analysis.competitionComparison.ageStyleNote}
+                </p>
+              )}
             </div>
           </div>
 
@@ -376,6 +390,12 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
                     </span>
                   </div>
                   <p className="text-sm text-surface-200 leading-relaxed">{row.feedback}</p>
+                  {row.styleNotes && (
+                    <div className="mt-2 flex items-start gap-2 text-xs text-primary-300 bg-primary-500/5 rounded-lg p-2">
+                      <Sparkles className="h-3 w-3 mt-0.5 shrink-0" />
+                      <span>{row.styleNotes}</span>
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </div>
@@ -450,6 +470,11 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
                       <p className="text-xs text-surface-200 mt-0.5">
                         Impact: {item.impact} &bull; Est. time: {item.timeToFix}
                       </p>
+                      {item.trainingTip && (
+                        <p className="text-xs text-green-300/80 mt-1">
+                          Training tip: {item.trainingTip}
+                        </p>
+                      )}
                     </div>
                     <ChevronRight className="h-4 w-4 text-surface-200" />
                   </div>
