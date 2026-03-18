@@ -23,15 +23,18 @@ interface RoutineMetadata {
 }
 
 export async function POST(request: NextRequest) {
+  let videoId: string | undefined;
+
   try {
     const body = await request.json();
-    const { videoId, userId, frames, metadata, durationStr } = body as {
+    const { userId, frames, metadata, durationStr } = body as {
       videoId: string;
       userId: string;
       frames: FrameInput[];
       metadata: RoutineMetadata;
       durationStr: string;
     };
+    videoId = body.videoId;
 
     if (!videoId || !userId || !frames) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -62,7 +65,7 @@ export async function POST(request: NextRequest) {
       console.error("Analysis insert error:", analysisError);
       await serviceClient
         .from("videos")
-        .update({ status: "error" })
+        .update({ status: "error", updated_at: new Date().toISOString() })
         .eq("id", videoId);
       return NextResponse.json({ error: "Failed to save analysis" }, { status: 500 });
     }
@@ -95,18 +98,17 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error("Process route error:", err);
 
-    // Try to mark the video as error
-    try {
-      const body = await request.clone().json().catch(() => null);
-      if (body?.videoId) {
+    // Mark the video as error so the client stops spinning
+    if (videoId) {
+      try {
         const serviceClient = await createServiceClient();
         await serviceClient
           .from("videos")
-          .update({ status: "error" })
-          .eq("id", body.videoId);
+          .update({ status: "error", updated_at: new Date().toISOString() })
+          .eq("id", videoId);
+      } catch (updateErr) {
+        console.error("Failed to mark video as error:", updateErr);
       }
-    } catch {
-      // Best effort
     }
 
     return NextResponse.json(
