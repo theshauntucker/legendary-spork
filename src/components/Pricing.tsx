@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, Zap, ArrowRight, Gift } from "lucide-react";
+import { Check, ArrowRight, Gift } from "lucide-react";
 
 export default function Pricing() {
   const handleCheckout = async () => {
@@ -129,13 +129,31 @@ export default function Pricing() {
               ))}
             </ul>
 
-            <div className="mt-8 rounded-2xl bg-white/5 p-4 text-center">
-              <Zap className="h-6 w-6 text-gold-400 mx-auto mb-2" />
-              <p className="text-sm font-medium">Pay as you go</p>
-              <p className="text-xs text-surface-200 mt-1">
-                Members get 3 analyses included, then $3.99 each after
-              </p>
-            </div>
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch("/api/checkout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ type: "video_analysis" }),
+                  });
+                  const data = await res.json();
+                  if (data.url) {
+                    window.location.href = data.url;
+                  }
+                } catch {
+                  alert("Something went wrong. Please try again.");
+                }
+              }}
+              className="mt-8 w-full flex items-center justify-center gap-2 rounded-full border border-surface-200/30 px-6 py-4 text-lg font-bold text-white hover:bg-white/5 transition-colors"
+            >
+              Analyze My Routine — $3.99
+              <ArrowRight className="h-5 w-5" />
+            </button>
+
+            <p className="mt-3 text-center text-xs text-surface-200">
+              Secure checkout via Stripe. No membership required.
+            </p>
           </motion.div>
         </div>
 
