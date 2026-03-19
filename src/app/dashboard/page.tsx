@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { getUserCredits, grantCredits, BETA_CREDITS } from "@/lib/credits";
+import { getUserCredits, grantCredits, hasCreditsInDb, BETA_CREDITS } from "@/lib/credits";
 import { getStripe } from "@/lib/stripe";
 import DashboardClient from "./DashboardClient";
 
@@ -32,9 +32,16 @@ export default async function DashboardPage({
         .from("payments")
         .select("id")
         .eq("stripe_session_id", sessionId)
-        .single();
+        .maybeSingle();
 
-      if (!existingPayment) {
+      if (existingPayment) {
+        // Payment recorded — but were credits actually granted?
+        const hasCredits = await hasCreditsInDb(serviceClient, user.id);
+        if (!hasCredits) {
+          await grantCredits(serviceClient, user.id, BETA_CREDITS, true);
+          console.log(`Dashboard: Recovered missing credits for ${user.id}`);
+        }
+      } else {
         // Not yet processed — verify with Stripe and grant credits
         const stripe = getStripe();
         const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -68,10 +75,10 @@ export default async function DashboardPage({
             console.error("Dashboard: Payment insert failed:", insertError.message);
           } else {
             await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
+            console.log(
+              `Dashboard: Granted ${creditsToGrant} credits to ${user.id} (webhook fallback)`
+            );
           }
-          console.log(
-            `Dashboard: Granted ${creditsToGrant} credits to ${user.id} (webhook fallback)`
-          );
         }
       }
     } catch (err) {

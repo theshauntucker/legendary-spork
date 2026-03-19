@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { refundCredit } from "@/lib/credits";
+import { useCredit } from "@/lib/credits";
 import { STYLE_CRITERIA, ENTRY_TYPE_CRITERIA, getCompetitionContext } from "@/lib/dance-criteria";
 
 export const maxDuration = 300; // 5 min max for AI analysis
@@ -34,6 +34,17 @@ export async function POST(request: NextRequest) {
 
     const serviceClient = await createServiceClient();
 
+    // Idempotency: if analysis already exists for this video, return early
+    const { data: existingAnalysis } = await serviceClient
+      .from("analyses")
+      .select("id")
+      .eq("video_id", videoId)
+      .maybeSingle();
+
+    if (existingAnalysis) {
+      return NextResponse.json({ success: true, analysisId: existingAnalysis.id });
+    }
+
     // Load video record with all metadata from DB
     const { data: video, error: videoError } = await serviceClient
       .from("videos")
@@ -50,7 +61,6 @@ export async function POST(request: NextRequest) {
     if (!meta?.frames || meta.frames.length === 0) {
       console.error("No frames in preprocessing_metadata for video:", videoId);
       await markVideoError(serviceClient, videoId);
-      await tryRefundCredit(serviceClient, userId, video.user_email);
       return NextResponse.json({ error: "No frames available" }, { status: 400 });
     }
 
@@ -60,7 +70,6 @@ export async function POST(request: NextRequest) {
     if (frames.length === 0) {
       console.error("All frame downloads failed for video:", videoId);
       await markVideoError(serviceClient, videoId);
-      await tryRefundCredit(serviceClient, userId, video.user_email);
       return NextResponse.json({ error: "Failed to download frames" }, { status: 500 });
     }
 
@@ -102,7 +111,6 @@ export async function POST(request: NextRequest) {
     if (analysisError || !analysisRecord) {
       console.error("Analysis insert error:", analysisError);
       await markVideoError(serviceClient, videoId);
-      await tryRefundCredit(serviceClient, userId, video.user_email);
       return NextResponse.json({ error: "Failed to save analysis" }, { status: 500 });
     }
 
@@ -121,18 +129,22 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", videoId);
 
+    // Analysis delivered successfully — NOW deduct the credit
+    try {
+      await useCredit(serviceClient, userId);
+    } catch (creditErr) {
+      console.error("Failed to deduct credit (analysis still saved):", creditErr);
+    }
+
     return NextResponse.json({ success: true, analysisId: analysisRecord.id });
   } catch (err) {
     console.error("Process route error:", err);
 
-    // Mark the video as error and refund credit
+    // Mark the video as error (no credit was deducted, so no refund needed)
     if (videoId) {
       try {
         const serviceClient = await createServiceClient();
         await markVideoError(serviceClient, videoId);
-        if (userId) {
-          await tryRefundCredit(serviceClient, userId);
-        }
       } catch (updateErr) {
         console.error("Failed to mark video as error:", updateErr);
       }
@@ -153,19 +165,6 @@ async function markVideoError(
     .from("videos")
     .update({ status: "error", updated_at: new Date().toISOString() })
     .eq("id", videoId);
-}
-
-async function tryRefundCredit(
-  serviceClient: Awaited<ReturnType<typeof createServiceClient>>,
-  userId: string,
-  userEmail?: string
-) {
-  try {
-    await refundCredit(serviceClient, userId, userEmail);
-    console.log(`Refunded credit for user ${userId}`);
-  } catch (err) {
-    console.error("Failed to refund credit:", err);
-  }
 }
 
 /**

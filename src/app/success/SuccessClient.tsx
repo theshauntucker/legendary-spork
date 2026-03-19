@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { CheckCircle, ArrowRight, Gift, Star, Upload } from "lucide-react";
 
-export default function SuccessClient() {
+export default function SuccessClient({ sessionId }: { sessionId?: string }) {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="absolute inset-0">
@@ -73,7 +73,7 @@ export default function SuccessClient() {
         </div>
 
         <a
-          href="/dashboard"
+          href={sessionId ? `/dashboard?session_id=${sessionId}` : "/dashboard"}
           className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
         >
           Go to Dashboard

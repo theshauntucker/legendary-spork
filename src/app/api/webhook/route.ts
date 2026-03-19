@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
-import { grantCredits, BETA_CREDITS } from "@/lib/credits";
+import { grantCredits, hasCreditsInDb, BETA_CREDITS } from "@/lib/credits";
 import { createServiceClient } from "@/lib/supabase/server";
 import { notifyPayment } from "@/lib/notifications";
 
@@ -44,6 +44,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
+    // Determine credits to grant (moved up so it's available in duplicate check)
+    const isBeta = paymentType === "beta_access";
+    const creditsToGrant = isBeta ? BETA_CREDITS : 1;
+
     const serviceClient = await createServiceClient();
 
     // Check for duplicate — idempotency
@@ -51,16 +55,23 @@ export async function POST(request: NextRequest) {
       .from("payments")
       .select("id")
       .eq("stripe_session_id", session.id)
-      .single();
+      .maybeSingle();
 
     if (existingPayment) {
-      console.log("Webhook: Duplicate session, skipping", session.id);
+      // Payment recorded — but were credits actually granted?
+      const hasCredits = await hasCreditsInDb(serviceClient, userId);
+      if (!hasCredits) {
+        // Payment exists but credits missing — recover now
+        try {
+          await grantCredits(serviceClient, userId, creditsToGrant, isBeta);
+          console.log(`Webhook: Recovered missing credits for ${userId}`);
+        } catch (err) {
+          console.error("Webhook: Credit recovery failed:", err);
+          return NextResponse.json({ error: "Credit recovery failed" }, { status: 500 });
+        }
+      }
       return NextResponse.json({ received: true });
     }
-
-    // Determine credits to grant
-    const isBeta = paymentType === "beta_access";
-    const creditsToGrant = isBeta ? BETA_CREDITS : 1;
 
     // Record payment and grant credits — both must succeed or Stripe retries
     try {
@@ -105,7 +116,7 @@ export async function POST(request: NextRequest) {
       userId,
       paymentType,
       session.amount_total || (isBeta ? 999 : 299)
-    ).catch((err) => console.error("Payment notification failed:", err));
+    ).catch((err: unknown) => console.error("Payment notification failed:", err));
   }
 
   return NextResponse.json({ received: true });

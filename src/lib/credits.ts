@@ -97,11 +97,16 @@ export async function grantCredits(
   credits: number,
   isBetaPurchase: boolean
 ): Promise<void> {
+  // Use maybeSingle() — returns null (not an error) when no rows exist
   const { data: existing, error: selectError } = await serviceClient
     .from("user_credits")
-    .select("user_id")
+    .select("user_id, total_credits")
     .eq("user_id", userId)
-    .single();
+    .maybeSingle();
+
+  if (selectError) {
+    throw new Error(`user_credits select failed: ${selectError.message}`);
+  }
 
   if (existing) {
     // Add credits to existing record
@@ -114,7 +119,7 @@ export async function grantCredits(
       throw new Error(`add_credits RPC failed: ${rpcError.message}`);
     }
   } else {
-    // No existing record (selectError is expected here — PGRST116 = no rows)
+    // First-time purchase — create credit record
     const { error: insertError } = await serviceClient
       .from("user_credits")
       .insert({
@@ -127,6 +132,23 @@ export async function grantCredits(
       throw new Error(`user_credits insert failed: ${insertError.message}`);
     }
   }
+}
+
+/**
+ * Check if a user has credits in the database.
+ * Used by webhook/success/dashboard to verify credits were actually granted.
+ */
+export async function hasCreditsInDb(
+  serviceClient: SupabaseClient,
+  userId: string
+): Promise<boolean> {
+  const { data } = await serviceClient
+    .from("user_credits")
+    .select("total_credits")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  return !!data && data.total_credits > 0;
 }
 
 /**

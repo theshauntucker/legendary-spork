@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { grantCredits, BETA_CREDITS } from "@/lib/credits";
+import { grantCredits, hasCreditsInDb, BETA_CREDITS } from "@/lib/credits";
 import { getStripe } from "@/lib/stripe";
 import SuccessClient from "./SuccessClient";
 
@@ -29,9 +29,22 @@ export default async function SuccessPage({
         .from("payments")
         .select("id")
         .eq("stripe_session_id", sessionId)
-        .single();
+        .maybeSingle();
 
-      if (!existingPayment) {
+      if (existingPayment) {
+        // Payment recorded — but were credits actually granted?
+        const hasCredits = await hasCreditsInDb(serviceClient, user.id);
+        if (!hasCredits) {
+          const paymentType = "beta_access"; // safe default for recovery
+          const isBeta = true;
+          const creditsToGrant = BETA_CREDITS;
+          await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
+          console.log(
+            `Success page: Recovered missing credits for ${user.id}`
+          );
+        }
+      } else {
+        // Not yet processed by webhook — verify with Stripe and grant credits
         const stripe = getStripe();
         const session = await stripe.checkout.sessions.retrieve(sessionId);
 
@@ -64,10 +77,10 @@ export default async function SuccessPage({
             console.error("Success page: Payment insert failed:", insertError.message);
           } else {
             await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
+            console.log(
+              `Success page: Granted ${creditsToGrant} credits to ${user.id} (webhook fallback)`
+            );
           }
-          console.log(
-            `Success page: Granted ${creditsToGrant} credits to ${user.id} (webhook fallback)`
-          );
         }
       }
     } catch (err) {
@@ -75,5 +88,5 @@ export default async function SuccessPage({
     }
   }
 
-  return <SuccessClient />;
+  return <SuccessClient sessionId={sessionId} />;
 }

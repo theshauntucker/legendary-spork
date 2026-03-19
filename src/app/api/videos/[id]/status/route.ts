@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 export async function GET(
   _request: NextRequest,
@@ -7,8 +7,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
 
+    // Verify authentication with user's session
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -17,9 +18,12 @@ export async function GET(
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const { data: video, error } = await supabase
+    // Use service client for DB reads (avoids RLS issues after Stripe redirect)
+    const serviceClient = await createServiceClient();
+
+    const { data: video, error } = await serviceClient
       .from("videos")
-      .select("id, status, thumbnail_path, analysis_id, updated_at")
+      .select("id, status, thumbnail_path, analysis_id, updated_at, user_id")
       .eq("id", id)
       .eq("user_id", user.id)
       .single();
@@ -28,14 +32,14 @@ export async function GET(
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    // If video has been stuck in "processing" for over 7 minutes, mark as error
+    // Self-healing: if video is stuck in "processing", take action
     if (video.status === "processing" && video.updated_at) {
       const updatedAt = new Date(video.updated_at).getTime();
       const staleMs = Date.now() - updatedAt;
+
       if (staleMs > 7 * 60 * 1000) {
-        const serviceClient = (await import("@/lib/supabase/server")).createServiceClient;
-        const sc = await serviceClient();
-        await sc
+        // Stuck for over 7 minutes — mark as error
+        await serviceClient
           .from("videos")
           .update({ status: "error", updated_at: new Date().toISOString() })
           .eq("id", id);
@@ -46,6 +50,27 @@ export async function GET(
           analysisId: video.analysis_id,
           updatedAt: new Date().toISOString(),
         });
+      }
+
+      if (staleMs > 30_000) {
+        // Stuck for over 30 seconds — re-trigger processing (self-healing)
+        // Update timestamp to prevent re-triggering on next poll (3s interval)
+        await serviceClient
+          .from("videos")
+          .update({ updated_at: new Date().toISOString() })
+          .eq("id", id);
+
+        // Re-trigger the process route
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
+        fetch(`${baseUrl}/api/process`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ videoId: id, userId: user.id }),
+        }).catch((err) => {
+          console.error("Self-healing: Failed to re-trigger processing:", err);
+        });
+
+        console.log(`Self-healing: Re-triggered processing for video ${id}`);
       }
     }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { getUserCredits, useCredit } from "@/lib/credits";
+import { getUserCredits } from "@/lib/credits";
 
 interface FrameInput {
   timestamp: number;
@@ -129,10 +129,8 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", video.id);
 
-    // Deduct credit now (before background processing)
-    await useCredit(serviceClient, user.id, user.email);
-
     // Fire off the background analysis — only send IDs, process reads frames from storage
+    // Credit is deducted in /api/process AFTER successful analysis (not here)
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
     fetch(`${baseUrl}/api/process`, {
       method: "POST",

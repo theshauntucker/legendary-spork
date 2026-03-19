@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles,
@@ -69,6 +70,27 @@ export default function DashboardClient({
   credits: { remaining: number; total: number; used: number };
 }) {
   const router = useRouter();
+
+  // Client-side credit verification fallback:
+  // If user just paid but credits are still 0, call verify-payment API
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    if (sessionId && credits.remaining === 0) {
+      fetch("/api/verify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.verified) {
+            router.refresh();
+          }
+        })
+        .catch(() => {});
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLogout = async () => {
     const supabase = createClient();
