@@ -50,23 +50,11 @@ export async function POST(request: NextRequest) {
 
     const serviceClient = await createServiceClient();
 
-    // Check if already processed (idempotency — same check as webhook)
-    const { data: existingPayment } = await serviceClient
-      .from("payments")
-      .select("id")
-      .eq("stripe_session_id", session_id)
-      .single();
-
-    if (existingPayment) {
-      // Already processed — credits should be there
-      return NextResponse.json({ verified: true, already_processed: true });
-    }
-
-    // Webhook hasn't processed yet — grant credits now
     const paymentType = session.metadata?.payment_type || "beta_access";
     const isBeta = paymentType === "beta_access";
     const creditsToGrant = isBeta ? BETA_CREDITS : 1;
 
+    // Try to record payment (may already exist from webhook — that's fine)
     const { error: insertError } = await serviceClient
       .from("payments")
       .insert({
@@ -83,10 +71,11 @@ export async function POST(request: NextRequest) {
         credits_granted: creditsToGrant,
       });
 
-    if (insertError) {
-      throw new Error(`Payment insert failed: ${insertError.message}`);
+    if (insertError && insertError.code !== "23505") {
+      console.error("Verify-payment: Payment insert failed:", insertError.message);
     }
 
+    // Always try to grant credits — grantCredits handles duplicates safely
     await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
 
     console.log(

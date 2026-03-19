@@ -73,14 +73,16 @@ export default async function SuccessPage({
               credits_granted: creditsToGrant,
             });
 
-          if (insertError) {
+          if (insertError && insertError.code !== "23505") {
             console.error("Success page: Payment insert failed:", insertError.message);
-          } else {
-            await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
-            console.log(
-              `Success page: Granted ${creditsToGrant} credits to ${user.id} (webhook fallback)`
-            );
           }
+
+          // Always try to grant credits — even if payment insert was a duplicate.
+          // The webhook may have recorded the payment but failed to grant credits.
+          await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
+          console.log(
+            `Success page: Granted ${creditsToGrant} credits to ${user.id} (webhook fallback)`
+          );
         }
       }
     } catch (err) {

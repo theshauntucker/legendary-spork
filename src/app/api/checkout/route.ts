@@ -23,58 +23,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine payment type from request body
-    let paymentType = "beta_access";
-    try {
-      const body = await request.json();
-      if (body.type === "video_analysis") {
-        paymentType = "video_analysis";
-      }
-    } catch {
-      // Default to beta_access if no body
-    }
-
-    const isBeta = paymentType === "beta_access";
-
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
       customer_email: user.email,
       metadata: {
         user_id: user.id,
-        payment_type: paymentType,
+        payment_type: "beta_access",
       },
       line_items: [
-        isBeta
-          ? {
-              price_data: {
-                currency: "usd",
-                product_data: {
-                  name: "RoutineX — Founding Member Pass",
-                  description:
-                    "One-time membership. Includes full access, 3 video analyses, and founding member status.",
-                },
-                unit_amount: 999, // $9.99
-              },
-              quantity: 1,
-            }
-          : {
-              price_data: {
-                currency: "usd",
-                product_data: {
-                  name: "RoutineX — Video Analysis",
-                  description:
-                    "AI-powered competition-standard analysis for one routine video.",
-                },
-                unit_amount: 399, // $3.99
-              },
-              quantity: 1,
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "RoutineX — Founding Member Pass",
+              description:
+                "One-time membership. Includes full access, 3 video analyses, and founding member status.",
             },
+            unit_amount: 999, // $9.99
+          },
+          quantity: 1,
+        },
       ],
-      success_url: isBeta
-        ? `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`
-        : `${baseUrl}/dashboard?purchased=video&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: isBeta ? `${baseUrl}/#pricing` : `${baseUrl}/dashboard`,
+      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/#pricing`,
     });
 
     return NextResponse.json({ url: session.url });

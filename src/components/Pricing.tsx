@@ -4,18 +4,6 @@ import { motion } from "framer-motion";
 import { Check, ArrowRight, Gift } from "lucide-react";
 
 export default function Pricing() {
-  const handleCheckout = async () => {
-    try {
-      const res = await fetch("/api/checkout", { method: "POST" });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch {
-      alert("Something went wrong. Please try again.");
-    }
-  };
-
   return (
     <section id="pricing" className="relative py-24 sm:py-32">
       <div className="absolute inset-0">
@@ -35,15 +23,15 @@ export default function Pricing() {
             Simple Pricing
           </p>
           <h2 className="mt-3 text-4xl sm:text-5xl font-bold font-[family-name:var(--font-display)]">
-            No Subscriptions. No Hidden Fees.
+            One Price. Full Access.
           </h2>
           <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
-            Pay once to join, then only when you upload. A private coaching session costs $75+. RoutineX gives you detailed feedback for $3.99.
+            Join as a founding member for $9.99 and start analyzing routines instantly. A private coaching session costs $75+ — RoutineX gives you detailed feedback for a fraction of the price.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-          {/* Beta Access Card */}
+        <div className="max-w-md mx-auto">
+          {/* Founding Member Card */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -63,18 +51,19 @@ export default function Pricing() {
                 <span className="text-surface-200 text-sm">one-time</span>
               </div>
               <p className="mt-3 text-sm text-surface-200">
-                Get full platform access with 3 analyses included. One-time payment, no subscriptions.
+                Get full platform access with 3 video analyses included. One-time payment, no subscriptions.
               </p>
             </div>
 
             <ul className="mt-6 space-y-3">
               {[
                 "Instant full platform access",
-                "Upload and analyze right away",
+                "3 video analyses included",
+                "Full scoring across all categories",
+                "3-judge simulation with detailed breakdown",
+                "Timestamped performance notes",
                 "Lock in founding member status",
-                "3 free video analyses included",
-                "Direct feedback channel to our team",
-                "Founding member badge on profile",
+                "Results in under 5 minutes",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2">
                   <Check className="h-4 w-4 text-primary-400 mt-0.5 shrink-0" />
@@ -92,67 +81,7 @@ export default function Pricing() {
             </a>
 
             <p className="mt-3 text-center text-xs text-surface-200">
-              Secure checkout via Stripe.
-            </p>
-          </motion.div>
-
-          {/* Per Upload Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="glass rounded-3xl p-8 border border-surface-200/20"
-          >
-            <h3 className="text-xl font-bold">Per Video Analysis</h3>
-            <div className="mt-4 flex items-baseline gap-1">
-              <span className="text-5xl font-extrabold">$3.99</span>
-              <span className="text-surface-200 text-sm">per upload</span>
-            </div>
-            <p className="mt-3 text-sm text-surface-200">
-              Upload any routine and get your full AI analysis. No bulk commitments required — analyze as many or as few as you want.
-            </p>
-
-            <ul className="mt-6 space-y-3">
-              {[
-                "Full scoring across all categories",
-                "3-judge simulation with detailed breakdown",
-                "Timestamped performance notes",
-                "Prioritized improvement action items",
-                "Competition comparison benchmarks",
-                "Results in under 5 minutes",
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-2">
-                  <Check className="h-4 w-4 text-accent-400 mt-0.5 shrink-0" />
-                  <span className="text-sm text-surface-200">{item}</span>
-                </li>
-              ))}
-            </ul>
-
-            <button
-              onClick={async () => {
-                try {
-                  const res = await fetch("/api/checkout", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ type: "video_analysis" }),
-                  });
-                  const data = await res.json();
-                  if (data.url) {
-                    window.location.href = data.url;
-                  }
-                } catch {
-                  alert("Something went wrong. Please try again.");
-                }
-              }}
-              className="mt-8 w-full flex items-center justify-center gap-2 rounded-full bg-surface-200/10 border border-surface-200/30 px-6 py-4 text-lg font-bold text-white hover:bg-surface-200/20 transition-colors"
-            >
-              Analyze My Routine — $3.99
-              <ArrowRight className="h-5 w-5" />
-            </button>
-
-            <p className="mt-3 text-center text-xs text-surface-200">
-              Secure checkout via Stripe. No membership required.
+              Secure checkout via Stripe. One-time payment.
             </p>
           </motion.div>
         </div>
@@ -173,7 +102,7 @@ export default function Pricing() {
               <span className="line-through">Competition entry: $80–$120</span>
             </div>
             <div className="text-white font-semibold">
-              RoutineX analysis: <span className="text-primary-400">$3.99</span>
+              RoutineX: <span className="text-primary-400">$9.99 for 3 analyses</span>
             </div>
           </div>
         </motion.div>

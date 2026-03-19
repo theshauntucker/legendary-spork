@@ -34,14 +34,7 @@ export default async function DashboardPage({
         .eq("stripe_session_id", sessionId)
         .maybeSingle();
 
-      if (existingPayment) {
-        // Payment recorded — but were credits actually granted?
-        const hasCredits = await hasCreditsInDb(serviceClient, user.id);
-        if (!hasCredits) {
-          await grantCredits(serviceClient, user.id, BETA_CREDITS, true);
-          console.log(`Dashboard: Recovered missing credits for ${user.id}`);
-        }
-      } else {
+      if (!existingPayment) {
         // Not yet processed — verify with Stripe and grant credits
         const stripe = getStripe();
         const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -71,20 +64,48 @@ export default async function DashboardPage({
               credits_granted: creditsToGrant,
             });
 
-          if (insertError) {
+          if (insertError && insertError.code !== "23505") {
             console.error("Dashboard: Payment insert failed:", insertError.message);
-          } else {
-            await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
-            console.log(
-              `Dashboard: Granted ${creditsToGrant} credits to ${user.id} (webhook fallback)`
-            );
           }
+
+          // Always try to grant credits
+          await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
+          console.log(
+            `Dashboard: Granted ${creditsToGrant} credits to ${user.id} (webhook fallback)`
+          );
         }
       }
     } catch (err) {
       console.error("Dashboard: Payment verification failed:", err);
       // Non-fatal — continue loading dashboard
     }
+  }
+
+  // ALWAYS check: if user has completed payments but no credits, recover them.
+  // This catches cases where webhook, success page, and session_id fallbacks all failed.
+  try {
+    const hasCredits = await hasCreditsInDb(serviceClient, user.id);
+    if (!hasCredits) {
+      const { data: completedPayment } = await serviceClient
+        .from("payments")
+        .select("payment_type, credits_granted")
+        .eq("user_id", user.id)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (completedPayment) {
+        const isBeta = completedPayment.payment_type === "beta_access";
+        const creditsToGrant = completedPayment.credits_granted || (isBeta ? BETA_CREDITS : 1);
+        await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
+        console.log(
+          `Dashboard: Recovered ${creditsToGrant} missing credits for ${user.id} from existing payment`
+        );
+      }
+    }
+  } catch (err) {
+    console.error("Dashboard: Credit recovery check failed:", err);
   }
 
   // Auto-fix videos stuck in "processing" for over 7 minutes

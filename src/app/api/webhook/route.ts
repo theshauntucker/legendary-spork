@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    // Record payment and grant credits — both must succeed or Stripe retries
+    // Record payment and grant credits
     try {
       const { error: insertError } = await serviceClient
         .from("payments")
@@ -92,9 +92,16 @@ export async function POST(request: NextRequest) {
         });
 
       if (insertError) {
-        throw new Error(`Payment insert failed: ${insertError.message}`);
+        // Unique constraint violation = success page already recorded this payment.
+        // That's fine — continue to grant credits (they may not have been granted yet).
+        if (insertError.code !== "23505") {
+          throw new Error(`Payment insert failed: ${insertError.message}`);
+        }
+        console.log(`Webhook: Payment already recorded for session ${session.id}, ensuring credits granted...`);
       }
 
+      // Always attempt to grant credits — grantCredits is idempotent-safe
+      // (uses insert-first with unique constraint fallback)
       await grantCredits(serviceClient, userId, creditsToGrant, isBeta);
     } catch (err) {
       console.error("Webhook: Failed to record payment or grant credits:", err);
@@ -115,7 +122,7 @@ export async function POST(request: NextRequest) {
       customerEmail,
       userId,
       paymentType,
-      session.amount_total || (isBeta ? 999 : 299)
+      session.amount_total || (isBeta ? 999 : 399)
     ).catch((err: unknown) => console.error("Payment notification failed:", err));
   }
 

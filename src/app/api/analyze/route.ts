@@ -48,9 +48,7 @@ export async function POST(request: NextRequest) {
         {
           error: "No credits remaining",
           code: "NO_CREDITS",
-          needsPurchase: !creditStatus.isBetaMember
-            ? "beta_access"
-            : "video_analysis",
+          needsPurchase: "beta_access",
         },
         { status: 402 }
       );
