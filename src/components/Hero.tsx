@@ -8,9 +8,11 @@ export default function Hero() {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
       {/* Background effects */}
       <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary-600/30 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent-500/25 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gold-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0.5s' }} />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-primary-400/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent-600/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary-500/40 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent-500/35 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gold-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0.5s' }} />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 text-center">
@@ -116,12 +118,10 @@ export default function Hero() {
         </motion.div>
 
         {/* Privacy trust badge — DIRECTLY below buttons, impossible to miss */}
-        <div className="mt-5 flex flex-col items-center gap-2">
-          <div className="inline-flex flex-wrap justify-center items-center gap-2 bg-white/10 border border-gold-400/40 rounded-xl px-5 py-3">
-            <span className="text-gold-400">🔒</span>
-            <span className="text-sm text-white font-semibold">Your video never leaves your phone.</span>
-            <span className="text-sm text-gray-300">Only still-frame thumbnails are analyzed.</span>
-            <span className="text-sm text-gray-300">Nothing is uploaded, stored, or seen by anyone.</span>
+        <div className="mt-6 mx-auto max-w-2xl">
+          <div className="bg-white/10 border border-gold-400/50 rounded-2xl px-6 py-4 text-center">
+            <p className="text-base font-bold text-white mb-1">🔒 Your video never leaves your phone.</p>
+            <p className="text-sm text-gray-300">Only still-frame thumbnails are analyzed by AI. Nothing is uploaded, stored, or seen by any human. Ever.</p>
           </div>
         </div>
 

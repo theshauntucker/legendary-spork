@@ -23,7 +23,6 @@ export default function Home() {
       <Navbar />
       <Hero />
       <PrivacyTrust />
-      <VideoDemo />
       <HowItWorks />
       <SampleAnalysis />
       <Competitions />
