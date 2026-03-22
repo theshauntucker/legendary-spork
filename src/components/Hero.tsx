@@ -110,12 +110,18 @@ export default function Hero() {
             <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </a>
           <a
-            href="/login"
+            href="/signup"
             className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-4 text-base font-medium text-white hover:bg-white/5 transition-colors"
           >
-            Already have an account? Log In
+            Get 5 Analyses — $24.99
           </a>
         </motion.div>
+
+        {/* Small login link for returning users — not a CTA */}
+        <p className="mt-2 text-xs text-surface-200">
+          Already have an account?{" "}
+          <a href="/login" className="underline hover:text-white transition-colors">Log in</a>
+        </p>
 
         {/* Privacy trust badge — DIRECTLY below buttons, impossible to miss */}
         <div className="mt-6 mx-auto max-w-2xl">
