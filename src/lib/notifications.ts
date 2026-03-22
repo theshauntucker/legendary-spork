@@ -27,16 +27,16 @@ async function sendEmail(subject: string, html: string) {
   }
 }
 
-export async function notifyNewSignup(email: string, userId: string) {
-  const now = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
+export async function notifyNewSignup(email: string, userIdOrName: string = "") {
+  const now = new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
   await sendEmail(
-    `New Signup: ${email}`,
+    `🎉 New Signup: ${email}`,
     `
     <div style="font-family: sans-serif; max-width: 500px;">
       <h2 style="color: #7c3aed;">New User Signed Up</h2>
       <p><strong>Email:</strong> ${email}</p>
-      <p><strong>User ID:</strong> ${userId}</p>
-      <p><strong>Time:</strong> ${now} ET</p>
+      <p><strong>Name / ID:</strong> ${userIdOrName || "Not provided"}</p>
+      <p><strong>Time:</strong> ${now} PDT</p>
       <hr style="border: none; border-top: 1px solid #e5e7eb;" />
       <p style="color: #6b7280; font-size: 12px;">RoutineX Notification</p>
     </div>

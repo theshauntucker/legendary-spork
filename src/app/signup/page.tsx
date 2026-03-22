@@ -56,6 +56,13 @@ export default function SignupPage() {
     setSuccess(true);
     setLoading(false);
 
+    // Notify admin of new signup immediately (fire and forget)
+    fetch("/api/notify-admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "signup", email, name }),
+    }).catch(() => {});
+
     // Redirect to Stripe checkout for Founding Member Pass payment
     try {
       const checkoutRes = await fetch("/api/checkout", {
