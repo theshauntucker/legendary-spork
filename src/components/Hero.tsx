@@ -115,14 +115,14 @@ export default function Hero() {
           </a>
         </motion.div>
 
-        {/* Privacy trust badge — right below CTA, can't be missed */}
-        <div className="mt-4 inline-flex items-center gap-2 bg-white/10 border border-gold-400/40 rounded-full px-4 py-2">
-          <span className="text-gold-400 text-sm">🔒</span>
-          <span className="text-sm text-white font-medium">Your video never leaves your phone</span>
-          <span className="text-gold-300 text-sm">·</span>
-          <span className="text-sm text-gray-300">Only thumbnails analyzed</span>
-          <span className="text-gold-300 text-sm">·</span>
-          <span className="text-sm text-gray-300">Nothing stored or sold</span>
+        {/* Privacy trust badge — DIRECTLY below buttons, impossible to miss */}
+        <div className="mt-5 flex flex-col items-center gap-2">
+          <div className="inline-flex flex-wrap justify-center items-center gap-2 bg-white/10 border border-gold-400/40 rounded-xl px-5 py-3">
+            <span className="text-gold-400">🔒</span>
+            <span className="text-sm text-white font-semibold">Your video never leaves your phone.</span>
+            <span className="text-sm text-gray-300">Only still-frame thumbnails are analyzed.</span>
+            <span className="text-sm text-gray-300">Nothing is uploaded, stored, or seen by anyone.</span>
+          </div>
         </div>
 
         {/* See Sample link */}
