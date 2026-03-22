@@ -97,7 +97,7 @@ export default function FAQ() {
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <p className="px-5 pb-5 text-sm text-surface-200 leading-relaxed">
+                    <p className="px-5 pb-5 text-sm text-surface-200 leading-relaxed whitespace-pre-line">
                       {faq.a}
                     </p>
                   </motion.div>

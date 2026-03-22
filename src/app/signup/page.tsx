@@ -207,7 +207,7 @@ export default function SignupPage() {
             </button>
 
             <p className="text-xs text-surface-200 text-center">
-              By signing up, you agree to our Terms of Service.
+              By signing up, you agree to our Terms of Service. Videos are never sold or shared. Built by a dance dad.
             </p>
           </form>
         )}
