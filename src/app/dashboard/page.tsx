@@ -154,6 +154,15 @@ export default async function DashboardPage({
     user.email
   );
 
+  // Check if trial has been used — determines which purchase option to show
+  const { data: usedTrial } = await serviceClient
+    .from("payments")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("payment_type", "trial")
+    .eq("status", "completed")
+    .maybeSingle();
+
   return (
     <DashboardClient
       user={{
@@ -166,6 +175,7 @@ export default async function DashboardPage({
         total: creditStatus.totalCredits,
         used: creditStatus.usedCredits,
       }}
+      trialUsed={!!usedTrial}
     />
   );
 }

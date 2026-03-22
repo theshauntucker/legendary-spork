@@ -64,10 +64,12 @@ export default function DashboardClient({
   user,
   videos,
   credits,
+  trialUsed = false,
 }: {
   user: { email: string; name: string };
   videos: VideoRecord[];
   credits: { remaining: number; total: number; used: number };
+  trialUsed?: boolean;
 }) {
   const router = useRouter();
 
@@ -194,7 +196,7 @@ export default function DashboardClient({
         </div>
 
         {/* Purchase CTA — shown when user has no credits */}
-        {credits.remaining === 0 && credits.total === 0 && (
+        {credits.remaining === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -202,16 +204,27 @@ export default function DashboardClient({
             className="mb-6 flex items-center justify-between glass rounded-2xl p-6 border border-accent-500/30"
           >
             <div>
-              <p className="font-bold text-accent-400">Payment Required</p>
-              <p className="text-sm text-surface-200 mt-1">
-                Purchase a Founding Member Pass ($4.99) to unlock 3 video analyses.
-              </p>
+              {trialUsed ? (
+                <>
+                  <p className="font-bold text-gold-400">Ready for More?</p>
+                  <p className="text-sm text-surface-200 mt-1">
+                    You&apos;ve used your $4.99 trial. Get 5 more analyses for $24.99.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="font-bold text-accent-400">No Credits Remaining</p>
+                  <p className="text-sm text-surface-200 mt-1">
+                    Get 5 analyses for $24.99 — only $5 each.
+                  </p>
+                </>
+              )}
             </div>
             <a
               href="/#pricing"
-              className="shrink-0 ml-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-2.5 font-semibold text-white hover:opacity-90 transition-opacity text-sm"
+              className="shrink-0 ml-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-gold-500 px-5 py-2.5 font-semibold text-white hover:opacity-90 transition-opacity text-sm"
             >
-              Get Started
+              Get 5 for $24.99
               <ArrowRight className="h-4 w-4" />
             </a>
           </motion.div>

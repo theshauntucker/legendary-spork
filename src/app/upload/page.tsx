@@ -237,7 +237,8 @@ export default function UploadPage() {
         if (response.status === 402 && data.code === "NO_CREDITS") {
           setStage("idle");
           setProgress(0);
-          const purchaseType = data.needsPurchase || "beta_access";
+          // Always send to pack ($24.99) if trial already used
+          const purchaseType = data.trialUsed ? "pack" : (data.needsPurchase || "pack");
           const checkoutRes = await fetch("/api/checkout", {
             method: "POST",
             headers: { "Content-Type": "application/json" },

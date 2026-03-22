@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +18,31 @@ export async function POST(request: NextRequest) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    // Block trial if already used — only one $4.99 trial per account ever
+    if (type === "trial") {
+      const serviceClient = await createServiceClient();
+      const { data: existingTrial } = await serviceClient
+        .from("payments")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("payment_type", "trial")
+        .eq("status", "completed")
+        .maybeSingle();
+
+      if (existingTrial) {
+        // Trial already used — force them to the pack
+        return NextResponse.json({
+          error: "trial_used",
+          message: "You've already used your $4.99 trial. Get 5 analyses for $24.99.",
+          redirect: "pack",
+        }, { status: 403 });
+      }
+    }
 
     if (!user) {
       return NextResponse.json(

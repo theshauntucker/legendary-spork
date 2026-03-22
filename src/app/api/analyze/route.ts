@@ -45,11 +45,21 @@ export async function POST(request: NextRequest) {
     );
 
     if (!creditStatus.hasCredits) {
+      // Check if trial has been used to send them to correct purchase flow
+      const { data: usedTrial } = await serviceClient
+        .from("payments")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("payment_type", "trial")
+        .eq("status", "completed")
+        .maybeSingle();
+
       return NextResponse.json(
         {
           error: "No credits remaining",
           code: "NO_CREDITS",
-          needsPurchase: "beta_access",
+          trialUsed: !!usedTrial,
+          needsPurchase: usedTrial ? "pack" : "trial",
         },
         { status: 402 }
       );
