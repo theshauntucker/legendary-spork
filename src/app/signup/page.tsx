@@ -38,7 +38,7 @@ export default function SignupPage() {
 
     const supabase = createClient();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
-    const { error: authError } = await supabase.auth.signUp({
+    const { data: signUpData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -51,6 +51,16 @@ export default function SignupPage() {
       setError(authError.message);
       setLoading(false);
       return;
+    }
+
+    // Auto-confirm is on — sign them in immediately so checkout works
+    if (signUpData.user && !signUpData.session) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        setError("Account created but sign-in failed. Please log in.");
+        setLoading(false);
+        return;
+      }
     }
 
     setSuccess(true);
@@ -68,7 +78,7 @@ export default function SignupPage() {
       const checkoutRes = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "beta_access" }),
+        body: JSON.stringify({ type: "trial" }),
       });
       const checkoutData = await checkoutRes.json();
       if (checkoutData.url) {
