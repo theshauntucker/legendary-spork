@@ -42,7 +42,7 @@ export default function TermsPage() {
 
           <h2 className="text-lg font-semibold text-white">4. Payments & Refunds</h2>
           <p>
-            Membership requires a one-time fee of $9.99 USD, which includes 3 video analyses. Additional analyses are $3.99 each. All payments are processed through Stripe. Refunds are handled on a case-by-case basis — contact us at the email below.
+            Membership requires a one-time fee of $4.99 USD, which includes 3 video analyses. Additional analyses: get 5 for $24.99. All payments are processed through Stripe. Refunds are handled on a case-by-case basis — contact us at the email below.
           </p>
 
           <h2 className="text-lg font-semibold text-white">5. User Content</h2>

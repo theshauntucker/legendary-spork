@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "RoutineX — Your Dancer's Secret Weapon",
     description:
-      "AI-powered video analysis for competitive dancers & cheer teams. Get competition-standard scoring for $3.99/video.",
+      "AI-powered video analysis for competitive dancers & cheer teams. Get competition-standard scoring for $4.99/video.",
     images: ["/opengraph-image"],
   },
   robots: {
@@ -105,14 +105,14 @@ const jsonLd = {
         {
           "@type": "Offer",
           name: "Founding Member Pass",
-          price: "9.99",
+          price: "4.99",
           priceCurrency: "USD",
-          description: "One-time membership with 3 video analyses included",
+          description: "One-time membership with 1 video analysis included",
         },
         {
           "@type": "Offer",
           name: "Per-Video Analysis",
-          price: "3.99",
+          price: "4.99",
           priceCurrency: "USD",
           description: "AI-powered competition-standard analysis per video",
         },

@@ -52,7 +52,7 @@ export async function notifyPayment(
 ) {
   const now = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
   const amount = (amountCents / 100).toFixed(2);
-  const typeLabel = paymentType === "beta_access" ? "Founding Member ($9.99)" : `Video Analysis ($${amount})`;
+  const typeLabel = paymentType === "beta_access" ? "Trial ($4.99)" : `Video Analysis ($${amount})`;
 
   await sendEmail(
     `Payment Received: $${amount} from ${email}`,

@@ -104,7 +104,7 @@ export default function Hero() {
             href="/signup"
             className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary-600/25 hover:shadow-primary-600/40 transition-all animate-pulse-glow"
           >
-            Get Started — $9.99
+            Start for $4.99 →
             <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </a>
           <a

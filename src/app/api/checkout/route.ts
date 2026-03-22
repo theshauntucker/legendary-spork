@@ -10,6 +10,9 @@ export async function POST(request: NextRequest) {
     const baseUrl =
       process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
 
+    const body = await request.json().catch(() => ({}));
+    const type = body.type || "trial"; // "trial" = $4.99, "pack" = $24.99
+
     // Get the authenticated user — required for payment tracking
     const supabase = await createClient();
     const {
@@ -23,24 +26,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const isPack = type === "pack";
+    const productConfig = isPack
+      ? {
+          name: "RoutineX — Competition Pack",
+          description: "5 AI-powered dance routine analyses. Competition-standard scoring.",
+          unit_amount: 2499, // $24.99
+          payment_type: "video_analysis",
+        }
+      : {
+          name: "RoutineX — First Analysis",
+          description: "Your first AI-powered dance routine analysis. Competition-standard scoring.",
+          unit_amount: 499, // $4.99
+          payment_type: "trial",
+        };
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
       customer_email: user.email,
       metadata: {
         user_id: user.id,
-        payment_type: "beta_access",
+        payment_type: productConfig.payment_type,
       },
       line_items: [
         {
           price_data: {
             currency: "usd",
             product_data: {
-              name: "RoutineX — Founding Member Pass",
-              description:
-                "One-time membership. Includes full access, 3 video analyses, and founding member status.",
+              name: productConfig.name,
+              description: productConfig.description,
             },
-            unit_amount: 999, // $9.99
+            unit_amount: productConfig.unit_amount,
           },
           quantity: 1,
         },

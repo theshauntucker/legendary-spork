@@ -204,7 +204,7 @@ export default function DashboardClient({
             <div>
               <p className="font-bold text-accent-400">Payment Required</p>
               <p className="text-sm text-surface-200 mt-1">
-                Purchase a Founding Member Pass ($9.99) to unlock 3 video analyses.
+                Purchase a Founding Member Pass ($4.99) to unlock 3 video analyses.
               </p>
             </div>
             <a

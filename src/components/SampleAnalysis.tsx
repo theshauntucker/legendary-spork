@@ -147,7 +147,7 @@ export default function SampleAnalysis() {
             Sample Analysis Report
           </h2>
           <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
-            Here&apos;s exactly what a RoutineX analysis looks like. Every upload gets this level of detail — for just $3.99.
+            Here&apos;s exactly what a RoutineX analysis looks like. Every upload gets this level of detail — for just $4.99.
           </p>
         </motion.div>
 
@@ -436,7 +436,7 @@ export default function SampleAnalysis() {
               href="/signup"
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-6 py-3 font-semibold text-white hover:opacity-90 transition-opacity"
             >
-              Get Started — $9.99
+              Get Started — $4.99
               <ChevronRight className="h-4 w-4" />
             </a>
           </div>
