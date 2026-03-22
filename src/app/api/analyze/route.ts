@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getUserCredits } from "@/lib/credits";
+import { notifyAnalysisComplete, notifyAnalysisError } from "@/lib/notifications";
 
 interface FrameInput {
   timestamp: number;

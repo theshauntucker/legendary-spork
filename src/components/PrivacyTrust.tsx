@@ -2,9 +2,9 @@ import { Shield, Lock, CheckCircle } from "lucide-react";
 
 export default function PrivacyTrust() {
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary-900 via-primary-800 to-accent-900">
+    <section className="py-14 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary-900 via-primary-800 to-accent-900">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-16">
+        <div className="text-center mb-10">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Shield className="w-8 h-8 text-gold-500" />
             <h2 className="text-3xl md:text-4xl font-bold text-white">

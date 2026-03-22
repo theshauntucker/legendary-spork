@@ -40,7 +40,7 @@ const styles = [
 
 export default function Competitions() {
   return (
-    <section className="relative py-24 sm:py-32 overflow-hidden">
+    <section className="relative py-14 sm:py-20 overflow-hidden">
       <div className="absolute inset-0">
         <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary-500/20 to-transparent" />
       </div>

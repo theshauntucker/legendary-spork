@@ -17,7 +17,7 @@ async function sendEmail(subject: string, html: string) {
 
   try {
     await resend.emails.send({
-      from: "RoutineX <notifications@routinex.org>",
+      from: "RoutineX <onboarding@resend.dev>",
       to: OWNER_EMAIL,
       subject,
       html,
@@ -92,6 +92,53 @@ export async function notifyTrafficSummary(stats: {
       <ul>${topPagesHtml || "<li>No data</li>"}</ul>
       <hr style="border: none; border-top: 1px solid #e5e7eb;" />
       <p style="color: #6b7280; font-size: 12px;">RoutineX Daily Notification</p>
+    </div>
+    `
+  );
+}
+
+export async function notifyAnalysisComplete(
+  email: string,
+  routineName: string,
+  style: string,
+  score: number,
+  award: string
+) {
+  const now = new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
+  await sendEmail(
+    `✅ Analysis Complete — ${routineName} (${email})`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px;">
+      <h2 style="color: #16a34a;">Analysis Complete</h2>
+      <p><strong>User:</strong> ${email}</p>
+      <p><strong>Routine:</strong> ${routineName}</p>
+      <p><strong>Style:</strong> ${style}</p>
+      <p><strong>Score:</strong> ${score} — ${award}</p>
+      <p><strong>Time:</strong> ${now} PDT</p>
+      <hr style="border: none; border-top: 1px solid #e5e7eb;" />
+      <p style="color: #6b7280; font-size: 12px;">RoutineX Notification</p>
+    </div>
+    `
+  );
+}
+
+export async function notifyAnalysisError(
+  email: string,
+  error: string,
+  context?: string
+) {
+  const now = new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
+  await sendEmail(
+    `❌ Analysis Error — ${email}`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px;">
+      <h2 style="color: #dc2626;">Analysis Failed</h2>
+      <p><strong>User:</strong> ${email}</p>
+      <p><strong>Error:</strong> ${error}</p>
+      ${context ? `<p><strong>Context:</strong> ${context}</p>` : ""}
+      <p><strong>Time:</strong> ${now} PDT</p>
+      <hr style="border: none; border-top: 1px solid #e5e7eb;" />
+      <p style="color: #6b7280; font-size: 12px;">RoutineX Notification</p>
     </div>
     `
   );

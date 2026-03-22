@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { useCredit } from "@/lib/credits";
 import { STYLE_CRITERIA, ENTRY_TYPE_CRITERIA, getCompetitionContext } from "@/lib/dance-criteria";
+import { notifyAnalysisComplete, notifyAnalysisError } from "@/lib/notifications";
 
 export const maxDuration = 300; // 5 min max for AI analysis
 
@@ -136,9 +137,26 @@ export async function POST(request: NextRequest) {
       console.error("Failed to deduct credit (analysis still saved):", creditErr);
     }
 
+    // Notify admin of completed analysis
+    const userEmail = video.user_id ? (await serviceClient.auth.admin.getUserById(userId)).data.user?.email || "unknown" : "unknown";
+    notifyAnalysisComplete(
+      userEmail,
+      video.routine_name || "Untitled",
+      video.style || "Unknown",
+      analysis.totalScore,
+      analysis.awardLevel
+    ).catch(() => {});
+
     return NextResponse.json({ success: true, analysisId: analysisRecord.id });
   } catch (err) {
     console.error("Process route error:", err);
+
+    // Notify admin of error
+    notifyAnalysisError(
+      "unknown",
+      err instanceof Error ? err.message : String(err),
+      `videoId: ${videoId}`
+    ).catch(() => {});
 
     // Mark the video as error (no credit was deducted, so no refund needed)
     if (videoId) {

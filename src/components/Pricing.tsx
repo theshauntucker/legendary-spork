@@ -5,7 +5,7 @@ import { Check, ArrowRight, Gift } from "lucide-react";
 
 export default function Pricing() {
   return (
-    <section id="pricing" className="relative py-24 sm:py-32">
+    <section id="pricing" className="relative py-14 sm:py-20">
       <div className="absolute inset-0">
         <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/3 left-1/4 w-96 h-96 bg-gold-500/10 rounded-full blur-3xl" />

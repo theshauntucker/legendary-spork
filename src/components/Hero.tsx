@@ -8,9 +8,9 @@ export default function Hero() {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
       {/* Background effects */}
       <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-600/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-gold-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary-600/30 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent-500/25 rounded-full blur-3xl animate-pulse" style="animationDelay:'1s'" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gold-500/10 rounded-full blur-3xl animate-pulse" style="animationDelay:'0.5s'" />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 text-center">
@@ -115,10 +115,15 @@ export default function Hero() {
           </a>
         </motion.div>
 
-        {/* Privacy trust line */}
-        <p className="mt-3 text-sm text-gray-400">
-          🔒 Your video never leaves your phone. 100% private.
-        </p>
+        {/* Privacy trust badge — right below CTA, can't be missed */}
+        <div className="mt-4 inline-flex items-center gap-2 bg-white/10 border border-gold-400/40 rounded-full px-4 py-2">
+          <span className="text-gold-400 text-sm">🔒</span>
+          <span className="text-sm text-white font-medium">Your video never leaves your phone</span>
+          <span className="text-gold-300 text-sm">·</span>
+          <span className="text-sm text-gray-300">Only thumbnails analyzed</span>
+          <span className="text-gold-300 text-sm">·</span>
+          <span className="text-sm text-gray-300">Nothing stored or sold</span>
+        </div>
 
         {/* See Sample link */}
         <motion.div
