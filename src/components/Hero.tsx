@@ -102,19 +102,28 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <a
-            href="/signup"
-            className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary-600/25 hover:shadow-primary-600/40 transition-all animate-pulse-glow"
-          >
-            Start for $4.99 →
-            <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-          </a>
-          <a
-            href="/signup"
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-4 text-base font-medium text-white hover:bg-white/5 transition-colors"
-          >
-            Get 5 Analyses — $24.99
-          </a>
+          {/* Trial CTA */}
+          <div className="flex flex-col items-center gap-1">
+            <a
+              href="/signup"
+              className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary-600/25 hover:shadow-primary-600/40 transition-all animate-pulse-glow"
+            >
+              Try 1 Analysis — $4.99
+              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </a>
+            <span className="text-xs text-gold-300 font-semibold">⚡ One-time trial offer — new accounts only</span>
+          </div>
+
+          {/* Pack CTA */}
+          <div className="flex flex-col items-center gap-1">
+            <a
+              href="/signup"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-4 text-base font-medium text-white hover:bg-white/5 transition-colors"
+            >
+              Get 5 Analyses — $24.99
+            </a>
+            <span className="text-xs text-gray-400">Only $5 each</span>
+          </div>
         </motion.div>
 
         {/* Small login link for returning users — not a CTA */}
