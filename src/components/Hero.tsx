@@ -115,6 +115,11 @@ export default function Hero() {
           </a>
         </motion.div>
 
+        {/* Privacy trust line */}
+        <p className="mt-3 text-sm text-gray-400">
+          🔒 Your video never leaves your phone. 100% private.
+        </p>
+
         {/* See Sample link */}
         <motion.div
           initial={{ opacity: 0 }}

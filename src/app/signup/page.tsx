@@ -12,6 +12,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import UploadTrustBadge from "@/components/UploadTrustBadge";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -108,6 +109,9 @@ export default function SignupPage() {
           <p className="mt-2 text-surface-200">
             Only 487 of 1,000 founding member spots remaining
           </p>
+          <div className="mt-4">
+            <UploadTrustBadge />
+          </div>
         </div>
 
         {success ? (

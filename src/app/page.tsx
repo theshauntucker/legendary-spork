@@ -8,6 +8,7 @@ import Competitions from "@/components/Competitions";
 import Pricing from "@/components/Pricing";
 import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
+import PrivacyTrust from "@/components/PrivacyTrust";
 import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ export default function Home() {
       <SampleAnalysis />
       <Competitions />
       <Pricing />
+      <PrivacyTrust />
       <Testimonials />
       <FAQ />
       <Footer />

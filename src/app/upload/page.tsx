@@ -17,6 +17,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import UploadTrustBadge from "@/components/UploadTrustBadge";
 import {
   extractFrames,
   framesToBase64,
@@ -321,6 +322,9 @@ export default function UploadPage() {
           <p className="mt-3 text-surface-200">
             Upload your video and get a full AI analysis in under 2 minutes.
           </p>
+          <div className="mt-4">
+            <UploadTrustBadge />
+          </div>
         </div>
 
         <motion.form

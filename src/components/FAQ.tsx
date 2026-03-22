@@ -6,6 +6,10 @@ import { ChevronDown } from "lucide-react";
 
 const faqs = [
   {
+    q: "What happens to my dancer's video? Is it uploaded, stored, or sold?",
+    a: `We get this question a lot, and it's the most important one we can answer.\n\nA dance mom emailed us and said it perfectly: "I really love the idea of this product. Would love to try — but I'm wondering about your privacy policy. What happens to the videos of the children being uploaded? Privacy is a real issue and we want to protect our children. Are videos sold to third parties?"\n\nHere is the honest, complete answer:\n\nYour video never leaves your phone. RoutineX processes your video locally on your device. We extract 12 small still-frame snapshots at key moments — those are what get analyzed. The full video is never uploaded, never stored on our servers, and never seen by any human. We don't sell data. We don't share videos. Period.\n\nYour child's privacy isn't an afterthought. It's how we built RoutineX from day one.`,
+  },
+  {
     q: "How does the AI analysis work?",
     a: "RoutineX uses advanced AI trained on real competition judging rubrics from major organizations. When you upload a video, our AI evaluates technique, performance quality, choreography, and overall impression — the same categories judges use — and generates a detailed scorecard with actionable feedback in under 5 minutes.",
   },
