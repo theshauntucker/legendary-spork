@@ -99,9 +99,9 @@ export function extractFrames(
         return;
       }
 
-      // Cap at 768px width — Claude can read body positioning fine at this
-      // resolution while keeping the total payload manageable for upload
-      const scale = Math.min(1, 768 / video.videoWidth);
+      // Cap at 1024px width — better detail for technique analysis
+      // (arm lines, turnout, extension visible at this resolution)
+      const scale = Math.min(1, 1024 / video.videoWidth);
       const canvasWidth = Math.round(video.videoWidth * scale);
       const canvasHeight = Math.round(video.videoHeight * scale);
 
@@ -110,9 +110,20 @@ export function extractFrames(
       canvas.height = canvasHeight;
       const ctx = canvas.getContext("2d")!;
 
-      // Calculate timestamps: skip first/last 0.5s, evenly distribute
-      const start = Math.min(0.5, duration * 0.02);
-      const end = duration - Math.min(0.5, duration * 0.02);
+      // Smart timing: skip the intro (walking out, waiting for music)
+      // and the very end (bow, walking off). Scale based on video length.
+      // For a 2:30 routine: start at 8s, end at duration-2s
+      // For a short clip under 30s: start at 10% in, end at 95%
+      const introSkip = duration > 30
+        ? Math.min(8, duration * 0.10)   // 8s max intro skip for longer videos
+        : duration * 0.10;                // 10% for short clips
+
+      const outroSkip = duration > 30
+        ? Math.min(2, duration * 0.03)   // 2s max outro skip
+        : duration * 0.05;               // 5% for short clips
+
+      const start = introSkip;
+      const end = duration - outroSkip;
       const interval = (end - start) / (frameCount - 1);
       const timestamps = Array.from(
         { length: frameCount },
