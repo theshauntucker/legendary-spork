@@ -19,6 +19,8 @@ import {
   Check,
   Bot,
   Cpu,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 
 interface JudgeScore {
@@ -155,6 +157,25 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
   const handleDownload = () => {
     // Use browser's print dialog — user can "Save as PDF" for a polished report
     window.print();
+  };
+
+  const [framesDeleted, setFramesDeleted] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDeleteFrames = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/delete-frames?videoId=${analysis.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setFramesDeleted(true);
+        setShowDeleteConfirm(false);
+      }
+    } catch {
+      // Silent fail — frames will auto-delete within 24h anyway
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -482,6 +503,49 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
               </div>
             </div>
           )}
+
+          {/* Delete Frames — COPPA compliance */}
+          <div className="p-4 sm:p-6 border-t border-white/5" data-print-hide>
+            {framesDeleted ? (
+              <div className="flex items-center justify-center gap-2 text-sm text-green-400">
+                <CheckCircle className="h-4 w-4" />
+                Video frames have been permanently deleted. Your analysis results are preserved.
+              </div>
+            ) : showDeleteConfirm ? (
+              <div className="text-center space-y-3">
+                <p className="text-sm text-surface-200">Are you sure? This permanently deletes all stored video frames. Your analysis scores and feedback will be kept.</p>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    onClick={handleDeleteFrames}
+                    disabled={deleting}
+                    className="inline-flex items-center gap-2 rounded-full bg-red-500/20 border border-red-500/30 px-4 py-2 text-sm font-medium text-red-300 hover:bg-red-500/30 transition-colors disabled:opacity-50"
+                  >
+                    {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                    {deleting ? "Deleting..." : "Yes, Delete Frames"}
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="rounded-full px-4 py-2 text-sm text-surface-200 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center">
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="inline-flex items-center gap-2 text-xs text-surface-200 hover:text-red-300 transition-colors"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete My Video Frames
+                </button>
+              </div>
+            )}
+            <p className="text-center text-[10px] text-surface-200/50 mt-2">
+              Frames are automatically deleted within 24 hours.
+            </p>
+          </div>
 
           {/* Bottom CTA */}
           <div className="bg-gradient-to-r from-primary-700/30 to-accent-600/30 p-6 sm:p-8 text-center" data-print-hide>

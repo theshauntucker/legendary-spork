@@ -81,6 +81,7 @@ export default function UploadPage() {
   const [entryType, setEntryType] = useState("");
   const [dancerName, setDancerName] = useState("");
   const [studioName, setStudioName] = useState("");
+  const [parentConsent, setParentConsent] = useState(false);
 
   // Upload/processing state
   const [stage, setStage] = useState<UploadStage>("idle");
@@ -141,6 +142,10 @@ export default function UploadPage() {
     e.preventDefault();
     if (!file || !routineName || !ageGroup || !style || !entryType) {
       setError("Please fill in all required fields and upload a video.");
+      return;
+    }
+    if (!parentConsent) {
+      setError("Parental/guardian consent is required before submitting a video for analysis.");
       return;
     }
 
@@ -677,10 +682,26 @@ export default function UploadPage() {
             )}
           </AnimatePresence>
 
+          {/* Parental Consent */}
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+            <input
+              type="checkbox"
+              id="parentConsent"
+              checked={parentConsent}
+              onChange={(e) => setParentConsent(e.target.checked)}
+              disabled={isProcessing}
+              className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-primary-500 focus:ring-primary-500 shrink-0"
+            />
+            <label htmlFor="parentConsent" className="text-xs text-surface-200 leading-relaxed">
+              I am the parent or legal guardian of the performer(s) in this video (or I am the performer and I am 18+). I consent to video frames being processed by AI for dance analysis. Frames are automatically deleted within 24 hours. See our{" "}
+              <a href="/privacy" className="text-primary-400 underline hover:text-primary-300">Privacy Policy</a>.
+            </label>
+          </div>
+
           {/* Submit */}
           <button
             type="submit"
-            disabled={isProcessing}
+            disabled={isProcessing || !parentConsent}
             className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-6 py-4 text-lg font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isProcessing ? (

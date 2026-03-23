@@ -57,9 +57,27 @@ export default function PrivacyPage() {
             We retain your account data and analysis results for as long as your account is active. You may request deletion of your account and all associated data at any time by contacting us.
           </p>
 
-          <h2 className="text-lg font-semibold text-white">6. Children&apos;s Privacy</h2>
+          <h2 className="text-lg font-semibold text-white">6. Children&apos;s Privacy &amp; COPPA Compliance</h2>
           <p>
-            RoutineX is not directed at children under 13. Users between 13 and 18 must have parental consent. If we learn we have collected data from a child under 13 without parental consent, we will delete it promptly.
+            RoutineX processes videos of competitive dancers, many of whom are minors. We take children&apos;s privacy seriously and comply with the Children&apos;s Online Privacy Protection Act (COPPA).
+          </p>
+          <p>
+            <strong>How we protect minors:</strong>
+          </p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>We require verifiable parental/guardian consent before any video of a minor is submitted for analysis.</li>
+            <li>Video frames sent to our AI provider are used solely for dance analysis and are not used for training AI models.</li>
+            <li>Extracted frames are automatically deleted within 24 hours of analysis completion.</li>
+            <li>Users can request immediate deletion of frames at any time from their analysis results page.</li>
+            <li>We do not knowingly collect personal information from children under 13 without parental consent.</li>
+            <li>Dancer and studio names are anonymized before being sent to the AI provider for analysis.</li>
+          </ul>
+          <p>
+            <strong>Parental rights:</strong> Parents or guardians may review, request deletion of, or refuse further collection of their child&apos;s information at any time by contacting us at{" "}
+            <a href="mailto:hello@routinex.org" className="text-primary-400 hover:text-primary-300">hello@routinex.org</a>.
+          </p>
+          <p>
+            If we learn we have collected personal information from a child under 13 without verifiable parental consent, we will delete that information promptly.
           </p>
 
           <h2 className="text-lg font-semibold text-white">7. Security</h2>
