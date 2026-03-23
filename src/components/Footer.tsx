@@ -59,13 +59,16 @@ export default function Footer() {
             </div>
 
             <div className="flex items-center gap-6 text-xs text-surface-200">
-              <a href="#" className="hover:text-white transition-colors">
+              <a href="/privacy" className="hover:text-white transition-colors">
                 Privacy Policy
               </a>
-              <a href="#" className="hover:text-white transition-colors">
-                Terms of Service
+              <a href="/signup" className="hover:text-white transition-colors">
+                Sign Up
               </a>
-              <a href="#" className="hover:text-white transition-colors">
+              <a href="/login" className="hover:text-white transition-colors">
+                Sign In
+              </a>
+              <a href="mailto:22tucker22@comcast.net" className="hover:text-white transition-colors">
                 Contact
               </a>
             </div>
