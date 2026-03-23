@@ -202,7 +202,6 @@ export default function AdminClient({ users: initialUsers, analyses, recentActiv
                 { label: "Total Revenue", value: `$${(stats.totalRevenue / 100).toFixed(2)}`, icon: DollarSign, color: "text-green-400", sub: `$${(stats.trialRevenue/100).toFixed(2)} trial + $${(stats.packRevenue/100).toFixed(2)} packs` },
                 { label: "Total Members", value: stats.totalMembers, icon: Users, color: "text-primary-400", sub: `${stats.convertedMembers} paid` },
                 { label: "Conversion Rate", value: `${stats.conversionRate}%`, icon: TrendingUp, color: "text-gold-400", sub: `${stats.convertedMembers} of ${stats.totalMembers}` },
-                { label: "Analyses Run", value: stats.totalAnalyses, icon: Star, color: "text-accent-400", sub: `${stats.totalVideos} videos uploaded` },
               ].map((s) => (
                 <div key={s.label} className="glass rounded-2xl p-5">
                   <s.icon className={`h-5 w-5 ${s.color} mb-2`} />
