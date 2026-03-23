@@ -55,13 +55,13 @@ export async function POST(request: NextRequest) {
     const productConfig = isPack
       ? {
           name: "RoutineX — Competition Pack",
-          description: "5 AI-powered dance routine analyses. Competition-standard scoring.",
+          description: "5 AI-powered dance routine analyses. Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.",
           unit_amount: 2499, // $24.99
           payment_type: "video_analysis",
         }
       : {
           name: "RoutineX — First Analysis",
-          description: "Your first AI-powered dance routine analysis. Competition-standard scoring.",
+          description: "Your first AI analysis. Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.",
           unit_amount: 499, // $4.99
           payment_type: "trial",
         };
