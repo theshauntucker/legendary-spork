@@ -19,6 +19,8 @@ import {
   ArrowLeft,
   Loader2,
   RefreshCw,
+  Shield,
+  Trash2,
 } from "lucide-react";
 import type { AnalysisResult } from "@/lib/types";
 
@@ -45,6 +47,29 @@ export default function AnalysisPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [shareToast, setShareToast] = useState(false);
+  const [framesDeleted, setFramesDeleted] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDeleteFrames = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/delete-frames", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ analysisId: id }),
+      });
+      const data = await res.json();
+      if (data.deleted) {
+        setFramesDeleted(true);
+      }
+    } catch {
+      // Silent fail — user can retry
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   useEffect(() => {
     // Load analysis from sessionStorage (set by upload page after analysis completes)
@@ -266,6 +291,62 @@ ${analysis.improvementPriorities.map((p) => `<div class="improvement"><span clas
                 </span>
               )}
             </button>
+          </div>
+        </div>
+
+        {/* Privacy Banner */}
+        <div className="mb-6 rounded-2xl bg-primary-900/30 border border-primary-500/20 p-4">
+          <div className="flex items-start gap-3">
+            <Shield className="h-5 w-5 text-primary-400 mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-surface-200">
+                <strong className="text-white">Your privacy is protected.</strong>{" "}
+                Thumbnail images auto-delete within 24 hours. Your video never left your device.{" "}
+                <a href="/privacy" className="text-primary-400 hover:text-primary-300 underline">
+                  Privacy Policy
+                </a>
+              </p>
+              {!framesDeleted ? (
+                <div className="mt-3">
+                  {showDeleteConfirm ? (
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-surface-200">Delete all thumbnail images now?</span>
+                      <button
+                        onClick={handleDeleteFrames}
+                        disabled={deleting}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-red-500/20 border border-red-500/30 px-3 py-1 text-xs font-medium text-red-300 hover:bg-red-500/30 transition-colors disabled:opacity-50"
+                      >
+                        {deleting ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3 w-3" />
+                        )}
+                        {deleting ? "Deleting..." : "Yes, delete now"}
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(false)}
+                        className="text-xs text-surface-200 hover:text-white"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="inline-flex items-center gap-1.5 text-xs text-primary-400 hover:text-primary-300 transition-colors"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Delete my images now (don&apos;t wait 24 hours)
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <p className="mt-2 text-xs text-green-400 flex items-center gap-1.5">
+                  <CheckCircle className="h-3 w-3" />
+                  All thumbnail images have been deleted. Only your scores and feedback remain.
+                </p>
+              )}
+            </div>
           </div>
         </div>
 

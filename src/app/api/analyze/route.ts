@@ -80,7 +80,7 @@ function buildUserMessage(
   const styleRubric = getStyleRubric(body.style);
   const styleSection = styleRubric ? `\n\n${styleRubric}\n` : "";
 
-  return `Analyze this ${body.style} ${body.entryType} routine titled "${body.routineName}" performed by ${body.dancerName} in the ${body.ageGroup} division from ${body.studioName}.
+  return `Analyze this ${body.style} ${body.entryType} routine titled "${body.routineName}" performed by The performer in the ${body.ageGroup} division from The studio.
 ${styleSection}
 The video is ${durationStr} long. I am providing ${body.frames.length} frames extracted at regular intervals throughout the routine. Each frame is approximately ${Math.round(body.frames[body.frames.length - 1]?.timestamp / body.frames.length)}s apart.
 
@@ -224,6 +224,12 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate the analysis
     const analysis = parseAnalysisResponse(textBlock.text, analysisId);
+
+    // Re-inject real names (we sent anonymous placeholders to AI)
+    analysis.dancerName = body.dancerName;
+    if (analysis.routineName) {
+      analysis.routineName = body.routineName;
+    }
 
     // Fire-and-forget email send
     if (body.email) {
