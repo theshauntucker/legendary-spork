@@ -73,30 +73,11 @@ export default function SignupPage() {
       body: JSON.stringify({ type: "signup", email, name }),
     }).catch(() => {});
 
-    // Redirect to Stripe checkout for Founding Member Pass payment
-    try {
-      const checkoutRes = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "trial" }),
-      });
-      const checkoutData = await checkoutRes.json();
-      if (checkoutData.url) {
-        // Short delay so user sees success state, then redirect to payment
-        setTimeout(() => {
-          window.location.href = checkoutData.url;
-        }, 1500);
-        return;
-      }
-    } catch (err) {
-      console.error("Failed to create checkout session:", err);
-    }
-
-    // Fallback: if checkout creation fails, go to dashboard
+    // Send to dashboard — they'll see the welcome banner + pricing options there
     setTimeout(() => {
       router.push("/dashboard");
       router.refresh();
-    }, 2000);
+    }, 1200);
   };
 
   return (

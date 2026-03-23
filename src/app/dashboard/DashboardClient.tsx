@@ -1,7 +1,7 @@
 "use client";
 
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles,
@@ -59,6 +59,61 @@ const statusConfig: Record<
     icon: AlertCircle,
   },
 };
+
+// Sub-component for purchase cards
+function PurchaseCard({
+  badge, badgeColor, title, price, description, features, buttonText, buttonStyle, type
+}: {
+  badge: string; badgeColor: string; title: string; price: string;
+  description: string; features: string[]; buttonText: string;
+  buttonStyle: string; type: string;
+}) {
+  const [loading, setLoading] = React.useState(false);
+
+  const handlePurchase = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.message || "Something went wrong. Please try again.");
+        setLoading(false);
+      }
+    } catch {
+      alert("Something went wrong. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="glass rounded-2xl p-6 border border-white/10 flex flex-col">
+      <span className={`inline-block text-xs font-bold px-3 py-1 rounded-full mb-3 w-fit ${badgeColor}`}>{badge}</span>
+      <h3 className="text-xl font-bold text-white mb-1">{title}</h3>
+      <p className="text-3xl font-extrabold text-white mb-1">{price}</p>
+      <p className="text-sm text-surface-200 mb-4">{description}</p>
+      <ul className="space-y-2 mb-6 flex-1">
+        {features.map(f => (
+          <li key={f} className="flex items-center gap-2 text-sm text-surface-200">
+            <span className="text-primary-400">✓</span> {f}
+          </li>
+        ))}
+      </ul>
+      <button
+        onClick={handlePurchase}
+        disabled={loading}
+        className={`w-full py-3 rounded-full font-bold text-white transition-all ${buttonStyle} disabled:opacity-50`}
+      >
+        {loading ? "Loading..." : buttonText}
+      </button>
+    </div>
+  );
+}
 
 export default function DashboardClient({
   user,
@@ -195,38 +250,61 @@ export default function DashboardClient({
           ))}
         </div>
 
-        {/* Purchase CTA — shown when user has no credits */}
+        {/* Welcome + Pricing — shown when user has no credits */}
         {credits.remaining === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.05 }}
-            className="mb-6 flex items-center justify-between glass rounded-2xl p-6 border border-accent-500/30"
+            className="mb-8"
           >
-            <div>
-              {trialUsed ? (
-                <>
-                  <p className="font-bold text-gold-400">Ready for More?</p>
-                  <p className="text-sm text-surface-200 mt-1">
-                    You&apos;ve used your $4.99 trial. Get 5 more analyses for $24.99.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="font-bold text-accent-400">No Credits Remaining</p>
-                  <p className="text-sm text-surface-200 mt-1">
-                    Get 5 analyses for $24.99 — only $5 each.
-                  </p>
-                </>
-              )}
+            {/* Welcome banner */}
+            <div className="bg-gradient-to-r from-primary-700/60 via-accent-600/40 to-primary-700/60 border border-primary-500/30 rounded-2xl p-6 mb-4 text-center">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                {trialUsed ? "Ready for Your Next Routine?" : `Welcome to RoutineX${user.name ? `, ${user.name.split(' ')[0]}` : ''}! 🏆`}
+              </h2>
+              <p className="text-surface-200 text-sm max-w-lg mx-auto">
+                {trialUsed
+                  ? "You've used your one-time trial. Get 5 more analyses to keep improving your routines."
+                  : "You're in. Upload any dance or cheer routine and get competition-standard scoring with detailed judge feedback in under 5 minutes."}
+              </p>
+              {/* Privacy statement */}
+              <div className="mt-3 flex items-center justify-center gap-2 text-xs text-gray-400">
+                <span>🔒</span>
+                <span>RoutineX was built with privacy in mind. Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.</span>
+              </div>
             </div>
-            <a
-              href="/#pricing"
-              className="shrink-0 ml-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-gold-500 px-5 py-2.5 font-semibold text-white hover:opacity-90 transition-opacity text-sm"
-            >
-              Get 5 for $24.99
-              <ArrowRight className="h-4 w-4" />
-            </a>
+
+            {/* Pricing options */}
+            <div className={`grid gap-4 ${trialUsed ? 'grid-cols-1 max-w-sm mx-auto' : 'sm:grid-cols-2'}`}>
+              {/* Trial option — hidden once used */}
+              {!trialUsed && (
+                <PurchaseCard
+                  badge="⚡ One-Time Only"
+                  badgeColor="text-accent-300 bg-accent-500/20"
+                  title="First Analysis"
+                  price="$4.99"
+                  description="Try it once. See exactly what a judge sees."
+                  features={["1 full AI analysis", "Competition-standard scoring", "Timestamped judge notes", "Improvement roadmap"]}
+                  buttonText="Try for $4.99"
+                  buttonStyle="border-2 border-accent-500 hover:bg-accent-500/20"
+                  type="trial"
+                />
+              )}
+
+              {/* Pack option — always visible */}
+              <PurchaseCard
+                badge="🏆 Best Value"
+                badgeColor="text-gold-300 bg-gold-500/20"
+                title="Competition Pack"
+                price="$24.99"
+                description="5 analyses — track progress all season long."
+                features={["5 full AI analyses", "Only $5 each", "All styles supported", "Use any time, never expire"]}
+                buttonText="Get 5 Analyses — $24.99"
+                buttonStyle="bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 hover:opacity-90"
+                type="pack"
+              />
+            </div>
           </motion.div>
         )}
 
