@@ -13,17 +13,21 @@ function getResend(): Resend | null {
 
 async function sendEmail(subject: string, html: string) {
   const resend = getResend();
-  if (!resend) return;
+  if (!resend) {
+    console.warn("RESEND_API_KEY not configured — email skipped:", subject);
+    return;
+  }
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: "RoutineX <onboarding@resend.dev>",
       to: OWNER_EMAIL,
       subject,
       html,
     });
+    console.log("Email sent:", subject, "ID:", result?.id);
   } catch (err) {
-    console.error("Failed to send notification email:", err);
+    console.error("Failed to send notification email:", subject, err);
   }
 }
 
