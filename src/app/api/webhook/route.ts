@@ -44,9 +44,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    // Determine credits to grant (moved up so it's available in duplicate check)
+    // Determine credits to grant based on payment type
+    // trial = $4.99 = 1 credit
+    // video_analysis / pack = $24.99 = 5 credits
+    // beta_access (legacy) = 3 credits
     const isBeta = paymentType === "beta_access";
-    const creditsToGrant = isBeta ? BETA_CREDITS : 1;
+    const isPack = paymentType === "video_analysis";
+    const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : 1;
 
     const serviceClient = await createServiceClient();
 
