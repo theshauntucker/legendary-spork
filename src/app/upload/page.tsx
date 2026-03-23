@@ -110,12 +110,9 @@ export default function UploadPage() {
       return;
     }
     const sizeMB = f.size / (1024 * 1024);
-    if (sizeMB > 500) {
-      setError("File is too large (max 500 MB). Try trimming or compressing your video first.");
-      return;
-    }
     setFile(f);
-    setError(sizeMB > 200 ? "Large file detected — upload may take a couple minutes on slower connections." : "");
+    // No file size limit — video is processed locally, only thumbnails are sent
+    setError(sizeMB > 500 ? "Large video detected — frame extraction may take a moment, but your video never leaves your device." : "");
     setExtractedFrames([]);
   };
 
@@ -411,7 +408,7 @@ export default function UploadPage() {
                       Drag & drop your video here
                     </p>
                     <p className="text-xs text-surface-200 mt-1">
-                      MP4, MOV, AVI, WebM — up to 500 MB
+                      MP4, MOV, AVI, WebM — any size (processed on your device)
                     </p>
                   </motion.div>
                 )}
@@ -693,14 +690,14 @@ export default function UploadPage() {
               </>
             ) : (
               <>
-                Analyze My Routine — $4.99
+                Analyze My Routine
                 <ArrowRight className="h-5 w-5" />
               </>
             )}
           </button>
 
           <p className="text-xs text-surface-200 text-center">
-            Members: Your first 3 analyses are included with signup.
+            1 credit will be used for this analysis.
           </p>
         </motion.form>
       </div>

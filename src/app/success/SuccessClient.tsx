@@ -37,9 +37,9 @@ export default function SuccessClient({ sessionId }: { sessionId?: string }) {
           <div className="flex items-start gap-3 rounded-xl bg-white/5 p-4">
             <Gift className="h-5 w-5 text-primary-400 mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium text-sm">3 Analyses Included</p>
+              <p className="font-medium text-sm">1 Analysis Included</p>
               <p className="text-xs text-surface-200">
-                Your membership includes 3 video analyses — upload your first routine now.
+                Your $4.99 trial includes 1 video analysis — upload your first routine now.
               </p>
             </div>
           </div>
@@ -57,9 +57,9 @@ export default function SuccessClient({ sessionId }: { sessionId?: string }) {
           <div className="flex items-start gap-3 rounded-xl bg-white/5 p-4">
             <Star className="h-5 w-5 text-gold-400 mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium text-sm">Founding Member</p>
+              <p className="font-medium text-sm">RoutineX Member</p>
               <p className="text-xs text-surface-200">
-                You joined at our launch price — your profile carries a founding member badge.
+                Ready to upload? Head to your dashboard and use your 1 analysis credit.
               </p>
             </div>
           </div>
