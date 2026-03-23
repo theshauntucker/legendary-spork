@@ -25,7 +25,7 @@ async function sendEmail(subject: string, html: string) {
       subject,
       html,
     });
-    console.log("Email sent:", subject, "ID:", result?.id);
+    console.log("Email sent:", subject, "ID:", (result as any)?.id);
   } catch (err) {
     console.error("Failed to send notification email:", subject, err);
   }
