@@ -1,5 +1,8 @@
 {
   "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "outputDirectory": ".next",
   "functions": {
     "src/app/api/analyze/route.ts": {
       "maxDuration": 300
@@ -7,5 +10,11 @@
     "src/app/api/webhook/route.ts": {
       "maxDuration": 30
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-frames",
+      "schedule": "0 * * * *"
+    }
+  ]
 }

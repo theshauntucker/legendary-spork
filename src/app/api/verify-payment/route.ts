@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         verified: true,
         analysesRemaining: cached.analysesRemaining,
+        email: cached.email,
       });
     }
 
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         verified: true,
         analysesRemaining: 3,
+        email: session.customer_details?.email || null,
       });
     }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getClaude } from "@/lib/claude";
 import { parseAnalysisResponse } from "@/lib/parseAnalysis";
+import { sendAnalysisEmail } from "@/lib/email";
 import type { ExtractedFrame } from "@/lib/types";
 import { randomUUID } from "crypto";
 
@@ -38,19 +39,19 @@ SCORING SYSTEM (300-point scale):
 - Choreography (max 20 per judge, 3 judges = 60 max): creativity, formations, use of space/levels, musical interpretation, dynamics, transitions, originality
 - Overall Impression (max 10 per judge, 3 judges = 30 max): polish, competition-readiness, wow factor, costuming synergy, stage use
 
-SCORING CALIBRATION (be realistic and honest — most routines fall in High Gold to Platinum):
+SCORING CALIBRATION (be encouraging while honest — most competition-ready routines score in the Platinum to Platinum Star range):
 - Gold (100-249): Developing skills, notable areas for growth, foundational level
-- High Gold (250-264): Solid foundation, approaching competitive level, some standout moments
-- Platinum (265-279): Strong competitive routine, polished execution, consistent quality
-- Platinum Star (280-289): Outstanding, top-tier regional competitor, exceptional in multiple areas
-- Titanium (290-300): Elite, national-level excellence, virtually flawless — reserve this for truly extraordinary performances
+- High Gold (250-264): Developing competitive skills, shows potential, building toward competitive level
+- Platinum (265-279): Solid competitive routine, good execution with some standout moments — baseline for competition-ready dancers
+- Platinum Star (280-289): Strong competitor, polished and consistent, would place well at regionals — most well-prepared routines should land here
+- Titanium (290-300): Exceptional, top-tier performer, national-caliber excellence — reserve for truly outstanding performances but don't be afraid to award it when deserved
 
 CRITICAL JUDGING RULES:
 - Each judge scores independently based on their specialty — scores WILL differ by 1-4 points reflecting their different expertise areas
 - The Technician tends to score Technique higher but be stricter on Performance
 - The Artist tends to score Performance higher but may be more lenient on Technique
 - The Choreographer focuses on Choreography scoring accuracy and gives balanced other scores
-- Be HONEST — do not inflate scores. A good studio routine is typically High Gold to Platinum range
+- Be ENCOURAGING while honest — recognize effort and achievement. A well-prepared studio routine typically scores in the Platinum to Platinum Star range. When in doubt between two score levels, lean toward the higher one
 - Base analysis ONLY on what you can observe in the provided video frames
 - Reference SPECIFIC moments visible in the frames (e.g., "In the frame at approximately 0:45, the arabesque shows...")
 - Provide actionable, specific feedback that a dancer or coach can immediately work on
@@ -69,6 +70,7 @@ interface AnalyzeRequestBody {
   entryType: string;
   frames: ExtractedFrame[];
   duration: number;
+  email?: string;
 }
 
 function buildUserMessage(
@@ -78,7 +80,7 @@ function buildUserMessage(
   const styleRubric = getStyleRubric(body.style);
   const styleSection = styleRubric ? `\n\n${styleRubric}\n` : "";
 
-  return `Analyze this ${body.style} ${body.entryType} routine titled "${body.routineName}" performed by ${body.dancerName} in the ${body.ageGroup} division from ${body.studioName}.
+  return `Analyze this ${body.style} ${body.entryType} routine titled "${body.routineName}" performed by The performer in the ${body.ageGroup} division from The studio.
 ${styleSection}
 The video is ${durationStr} long. I am providing ${body.frames.length} frames extracted at regular intervals throughout the routine. Each frame is approximately ${Math.round(body.frames[body.frames.length - 1]?.timestamp / body.frames.length)}s apart.
 
@@ -147,9 +149,9 @@ Respond with ONLY a valid JSON object (no markdown, no code fences) matching thi
   ],
   "competitionComparison": {
     "yourScore": <same as totalScore>,
-    "avgRegional": <realistic regional average for ${body.ageGroup} ${body.style}, typically 255-265>,
-    "top10Threshold": <realistic top 10% threshold, typically 278-285>,
-    "top5Threshold": <realistic top 5% threshold, typically 285-292>
+    "avgRegional": <realistic regional average for ${body.ageGroup} ${body.style}, typically 262-272>,
+    "top10Threshold": <realistic top 10% threshold, typically 282-288>,
+    "top5Threshold": <realistic top 5% threshold, typically 288-295>
   }
 }`;
 }
@@ -222,6 +224,19 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate the analysis
     const analysis = parseAnalysisResponse(textBlock.text, analysisId);
+
+    // Re-inject real names (we sent anonymous placeholders to AI)
+    analysis.dancerName = body.dancerName;
+    if (analysis.routineName) {
+      analysis.routineName = body.routineName;
+    }
+
+    // Fire-and-forget email send
+    if (body.email) {
+      sendAnalysisEmail(body.email, analysis).catch((err) =>
+        console.error("Email send failed:", err)
+      );
+    }
 
     return NextResponse.json({ status: "analyzed", analysis });
   } catch (err) {

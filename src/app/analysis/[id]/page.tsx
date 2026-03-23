@@ -19,6 +19,8 @@ import {
   ArrowLeft,
   Loader2,
   RefreshCw,
+  Shield,
+  Trash2,
 } from "lucide-react";
 import type { AnalysisResult } from "@/lib/types";
 
@@ -44,6 +46,30 @@ export default function AnalysisPage() {
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [shareToast, setShareToast] = useState(false);
+  const [framesDeleted, setFramesDeleted] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDeleteFrames = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/delete-frames", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ analysisId: id }),
+      });
+      const data = await res.json();
+      if (data.deleted) {
+        setFramesDeleted(true);
+      }
+    } catch {
+      // Silent fail — user can retry
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   useEffect(() => {
     // Load analysis from sessionStorage (set by upload page after analysis completes)
@@ -59,6 +85,109 @@ export default function AnalysisPage() {
     }
     setLoading(false);
   }, [id]);
+
+  const handleShare = async () => {
+    if (!analysis) return;
+    const awardLvl = getAwardLevel(analysis.totalScore);
+    const summary = [
+      `RoutineX Analysis Report`,
+      `${analysis.routineName} — ${analysis.dancerName}`,
+      `${analysis.style} ${analysis.entryType} | ${analysis.ageGroup}`,
+      ``,
+      `Score: ${analysis.totalScore}/300 (${awardLvl})`,
+      ``,
+      `Top Strengths:`,
+      ...analysis.strengthsSummary.map((s, i) => `${i + 1}. ${s}`),
+      ``,
+      `Powered by RoutineX — AI Dance Analysis`,
+    ].join("\n");
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `RoutineX: ${analysis.routineName}`, text: summary });
+        return;
+      }
+    } catch {
+      // User cancelled or share failed, fall through to clipboard
+    }
+
+    try {
+      await navigator.clipboard.writeText(summary);
+      setShareToast(true);
+      setTimeout(() => setShareToast(false), 2000);
+    } catch {
+      // Clipboard not available
+    }
+  };
+
+  const handleDownload = () => {
+    if (!analysis) return;
+    const awardLvl = getAwardLevel(analysis.totalScore);
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>RoutineX Report — ${analysis.routineName}</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 24px; color: #1a1a2e; background: #fff; }
+  h1 { font-size: 28px; margin: 0; } h2 { font-size: 18px; margin: 24px 0 12px; border-bottom: 2px solid #6c63ff; padding-bottom: 6px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+  .score { font-size: 48px; font-weight: 800; color: #6c63ff; } .award { display: inline-block; background: #6c63ff; color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; }
+  .meta { color: #666; font-size: 14px; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; } th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; } th { background: #f8f8fc; font-weight: 600; font-size: 13px; }
+  .strength { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; margin: 6px 0; font-size: 14px; }
+  .timeline { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; } .time { font-family: monospace; font-weight: 700; color: #6c63ff; min-width: 70px; }
+  .improvement { background: #f8f8fc; border-radius: 8px; padding: 12px 16px; margin: 6px 0; } .improvement .num { display: inline-block; background: #6c63ff; color: #fff; width: 24px; height: 24px; border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; font-weight: 700; margin-right: 8px; }
+  .feedback { background: #fafafa; border-radius: 8px; padding: 14px; margin: 8px 0; font-size: 14px; line-height: 1.6; }
+  .footer { margin-top: 40px; text-align: center; color: #999; font-size: 12px; }
+  @media print { body { padding: 20px; } }
+</style></head><body>
+<div class="header">
+  <div>
+    <h1>${analysis.routineName}</h1>
+    <div class="meta">${analysis.dancerName} &bull; ${analysis.ageGroup} &bull; ${analysis.style} ${analysis.entryType} &bull; ${analysis.duration}</div>
+    <div class="meta" style="margin-top:2px">Analysis ID: ${id}</div>
+  </div>
+  <div style="text-align:right">
+    <div class="score">${analysis.totalScore}</div>
+    <div style="font-size:13px;color:#666">out of 300</div>
+    <span class="award">${awardLvl}</span>
+  </div>
+</div>
+
+<h2>Top Strengths</h2>
+${analysis.strengthsSummary.map((s) => `<div class="strength">${s}</div>`).join("")}
+
+<h2>Score Breakdown</h2>
+<table>
+  <thead><tr><th>Category</th><th>Max</th><th>Technician</th><th>Artist</th><th>Choreographer</th><th>Average</th></tr></thead>
+  <tbody>
+    ${analysis.judgeScores.map((r) => `<tr><td><strong>${r.category}</strong></td><td>${r.max}</td>${r.judges.map((j) => `<td>${j.toFixed(1)}</td>`).join("")}<td><strong>${r.avg.toFixed(1)}</strong></td></tr>`).join("")}
+    <tr style="font-weight:700;font-size:16px"><td>Total</td><td>300</td><td colspan="3"></td><td>${analysis.totalScore}</td></tr>
+  </tbody>
+</table>
+
+<h2>How You Compare</h2>
+<table>
+  <thead><tr><th>Your Score</th><th>Regional Avg.</th><th>Top 10%</th><th>Top 5%</th></tr></thead>
+  <tbody><tr><td><strong>${analysis.competitionComparison.yourScore}</strong></td><td>${analysis.competitionComparison.avgRegional}</td><td>${analysis.competitionComparison.top10Threshold}</td><td>${analysis.competitionComparison.top5Threshold}</td></tr></tbody>
+</table>
+${analysis.competitiveEdge ? `<div class="feedback"><strong>Competitive Edge:</strong> ${analysis.competitiveEdge}</div>` : ""}
+
+<h2>Detailed Feedback</h2>
+${analysis.judgeScores.map((r) => `<div><strong>${r.category} (${r.avg.toFixed(1)}/${r.max})</strong><div class="feedback">${r.feedback}</div></div>`).join("")}
+
+<h2>Timestamped Notes</h2>
+${analysis.timelineNotes.map((n) => `<div class="timeline"><span class="time">${n.time}</span><span>${n.type === "positive" ? "+" : "!"} ${n.note}</span></div>`).join("")}
+
+<h2>Improvement Roadmap</h2>
+${analysis.improvementPriorities.map((p) => `<div class="improvement"><span class="num">${p.priority}</span><strong>${p.item}</strong><br><span style="font-size:12px;color:#666">Impact: ${p.impact} &bull; Est. time: ${p.timeToFix}</span></div>`).join("")}
+
+<div class="footer">Generated by RoutineX — AI-Powered Dance Analysis</div>
+<script>window.onload = () => window.print()</script>
+</body></html>`;
+
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    window.open(url);
+  };
 
   if (loading) {
     return (
@@ -151,12 +280,73 @@ export default function AnalysisPage() {
             </span>
           </a>
           <div className="flex items-center gap-2">
-            <button className="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Download Report">
+            <button onClick={handleDownload} className="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Download Report">
               <Download className="h-4 w-4 text-surface-200" />
             </button>
-            <button className="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Share">
+            <button onClick={handleShare} className="p-2 rounded-lg hover:bg-white/10 transition-colors relative" title="Share">
               <Share2 className="h-4 w-4 text-surface-200" />
+              {shareToast && (
+                <span className="absolute -bottom-8 right-0 whitespace-nowrap rounded-lg bg-green-500 px-2 py-1 text-xs font-medium text-white">
+                  Copied!
+                </span>
+              )}
             </button>
+          </div>
+        </div>
+
+        {/* Privacy Banner */}
+        <div className="mb-6 rounded-2xl bg-primary-900/30 border border-primary-500/20 p-4">
+          <div className="flex items-start gap-3">
+            <Shield className="h-5 w-5 text-primary-400 mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-surface-200">
+                <strong className="text-white">Your privacy is protected.</strong>{" "}
+                Thumbnail images auto-delete within 24 hours. Your video never left your device.{" "}
+                <a href="/privacy" className="text-primary-400 hover:text-primary-300 underline">
+                  Privacy Policy
+                </a>
+              </p>
+              {!framesDeleted ? (
+                <div className="mt-3">
+                  {showDeleteConfirm ? (
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-surface-200">Delete all thumbnail images now?</span>
+                      <button
+                        onClick={handleDeleteFrames}
+                        disabled={deleting}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-red-500/20 border border-red-500/30 px-3 py-1 text-xs font-medium text-red-300 hover:bg-red-500/30 transition-colors disabled:opacity-50"
+                      >
+                        {deleting ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3 w-3" />
+                        )}
+                        {deleting ? "Deleting..." : "Yes, delete now"}
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(false)}
+                        className="text-xs text-surface-200 hover:text-white"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="inline-flex items-center gap-1.5 text-xs text-primary-400 hover:text-primary-300 transition-colors"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Delete my images now (don&apos;t wait 24 hours)
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <p className="mt-2 text-xs text-green-400 flex items-center gap-1.5">
+                  <CheckCircle className="h-3 w-3" />
+                  All thumbnail images have been deleted. Only your scores and feedback remain.
+                </p>
+              )}
+            </div>
           </div>
         </div>
 

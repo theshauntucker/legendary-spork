@@ -68,10 +68,12 @@ export default function UploadPage() {
   const [extracting, setExtracting] = useState(false);
   const [error, setError] = useState("");
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [parentConsent, setParentConsent] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [paymentVerified, setPaymentVerified] = useState<boolean | null>(null); // null = loading
   const [analysesRemaining, setAnalysesRemaining] = useState(0);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const sessionId = localStorage.getItem("routinex_session_id");
@@ -90,6 +92,9 @@ export default function UploadPage() {
         setPaymentVerified(data.verified === true);
         if (data.analysesRemaining != null) {
           setAnalysesRemaining(data.analysesRemaining);
+        }
+        if (data.email) {
+          setUserEmail(data.email);
         }
       })
       .catch(() => setPaymentVerified(false));
@@ -115,10 +120,12 @@ export default function UploadPage() {
       setExtractedFrames(result);
     } catch (err) {
       console.error("Frame extraction failed:", err);
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const defaultMsg = isMobile
+        ? "Could not process this video on your device. Try recording in MP4 format, or upload from a computer."
+        : "Failed to process video. Please try MP4 format.";
       setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to process video. Please try MP4 format."
+        err instanceof Error ? err.message : defaultMsg
       );
       setFile(null);
     } finally {
@@ -126,12 +133,20 @@ export default function UploadPage() {
     }
   };
 
+  const isVideoFile = (file: File) => {
+    // Check MIME type first
+    if (file.type.startsWith("video/")) return true;
+    // Fallback: check extension (iOS sometimes sends files with empty MIME type)
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    return ["mp4", "mov", "m4v", "avi", "webm", "mkv", "3gp"].includes(ext || "");
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.type.startsWith("video/")) {
+    if (droppedFile && isVideoFile(droppedFile)) {
       processFile(droppedFile);
     } else {
       setError("Please upload a video file (MP4, MOV, AVI, WebM).");
@@ -140,10 +155,10 @@ export default function UploadPage() {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (selectedFile && selectedFile.type.startsWith("video/")) {
+    if (selectedFile && isVideoFile(selectedFile)) {
       processFile(selectedFile);
-    } else {
-      setError("Please upload a video file (MP4, MOV, AVI, WebM).");
+    } else if (selectedFile) {
+      setError("This file type isn't supported. Please use MP4 or MOV format.");
     }
   };
 
@@ -151,6 +166,11 @@ export default function UploadPage() {
     e.preventDefault();
     if (!file || !routineName || !ageGroup || !style || !entryType) {
       setError("Please fill in all required fields and upload a video.");
+      return;
+    }
+
+    if (!parentConsent) {
+      setError("Please confirm you are the parent or guardian of the performer.");
       return;
     }
 
@@ -176,6 +196,7 @@ export default function UploadPage() {
           entryType,
           frames: extractedFrames.frames,
           duration: extractedFrames.duration,
+          ...(userEmail && { email: userEmail }),
         }),
       });
 
@@ -307,7 +328,8 @@ export default function UploadPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="video/*"
+                accept="video/*,video/mp4,video/quicktime,video/x-m4v"
+                capture="environment"
                 onChange={handleFileSelect}
                 className="hidden"
               />
@@ -358,7 +380,8 @@ export default function UploadPage() {
                   >
                     <Upload className="mx-auto h-10 w-10 text-surface-200 mb-3" />
                     <p className="font-medium text-sm">
-                      Drag & drop your video here
+                      <span className="hidden sm:inline">Drag & drop your video here</span>
+                      <span className="sm:hidden">Tap to select or record a video</span>
                     </p>
                     <p className="text-xs text-surface-200 mt-1">
                       MP4, MOV, AVI, WebM — any resolution including 4K
@@ -514,10 +537,30 @@ export default function UploadPage() {
             )}
           </AnimatePresence>
 
+          {/* Parental Consent (COPPA) */}
+          <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={parentConsent}
+                onChange={(e) => setParentConsent(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-primary-500 focus:ring-primary-500 focus:ring-offset-0 shrink-0"
+              />
+              <span className="text-xs text-surface-200 leading-relaxed">
+                I am the <strong className="text-white">parent or legal guardian</strong> of the performer(s) in this video.
+                I consent to RoutineX temporarily extracting still-frame images for AI analysis.
+                Images are processed anonymously and auto-deleted within 24 hours.{" "}
+                <a href="/privacy" className="text-primary-400 hover:text-primary-300 underline" target="_blank" rel="noopener noreferrer">
+                  Privacy Policy
+                </a>
+              </span>
+            </label>
+          </div>
+
           {/* Submit */}
           <button
             type="submit"
-            disabled={uploading || extracting}
+            disabled={uploading || extracting || !parentConsent}
             className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-6 py-4 text-lg font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {uploading ? (
