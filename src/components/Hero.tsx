@@ -166,7 +166,7 @@ export default function Hero() {
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-primary-400" />
             <span>
-              <span className="text-white font-semibold">487</span> of 1,000 founding member spots remaining
+              
             </span>
           </div>
           <div className="hidden sm:block h-4 w-px bg-surface-800" />

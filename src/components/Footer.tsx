@@ -39,7 +39,7 @@ export default function Footer() {
             </div>
 
             <p className="mt-6 text-sm text-surface-200">
-              Only <span className="text-white font-semibold">153</span> of 500 founding member spots remaining.
+              
               <br />
               Founding members get 1 analysis included with signup.
             </p>
