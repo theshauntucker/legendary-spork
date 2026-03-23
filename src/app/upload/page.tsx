@@ -68,6 +68,7 @@ export default function UploadPage() {
   const [extracting, setExtracting] = useState(false);
   const [error, setError] = useState("");
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [parentConsent, setParentConsent] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [paymentVerified, setPaymentVerified] = useState<boolean | null>(null); // null = loading
@@ -165,6 +166,11 @@ export default function UploadPage() {
     e.preventDefault();
     if (!file || !routineName || !ageGroup || !style || !entryType) {
       setError("Please fill in all required fields and upload a video.");
+      return;
+    }
+
+    if (!parentConsent) {
+      setError("Please confirm you are the parent or guardian of the performer.");
       return;
     }
 
@@ -531,10 +537,30 @@ export default function UploadPage() {
             )}
           </AnimatePresence>
 
+          {/* Parental Consent (COPPA) */}
+          <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={parentConsent}
+                onChange={(e) => setParentConsent(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-primary-500 focus:ring-primary-500 focus:ring-offset-0 shrink-0"
+              />
+              <span className="text-xs text-surface-200 leading-relaxed">
+                I am the <strong className="text-white">parent or legal guardian</strong> of the performer(s) in this video.
+                I consent to RoutineX temporarily extracting still-frame images for AI analysis.
+                Images are processed anonymously and auto-deleted within 24 hours.{" "}
+                <a href="/privacy" className="text-primary-400 hover:text-primary-300 underline" target="_blank" rel="noopener noreferrer">
+                  Privacy Policy
+                </a>
+              </span>
+            </label>
+          </div>
+
           {/* Submit */}
           <button
             type="submit"
-            disabled={uploading || extracting}
+            disabled={uploading || extracting || !parentConsent}
             className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-6 py-4 text-lg font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {uploading ? (
