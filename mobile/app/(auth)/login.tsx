@@ -14,7 +14,7 @@ import { useAuth } from '../../lib/auth';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signIn, enterPreviewMode } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -158,6 +158,27 @@ export default function LoginScreen() {
               <Text style={{ color: '#a855f7' }}>Create one</Text>
             </Text>
           </TouchableOpacity>
+
+          {/* Preview Mode */}
+          <View style={{ alignItems: 'center', marginTop: 32, paddingTop: 24, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' }}>
+            <Text style={{ color: '#6b7280', fontSize: 12, marginBottom: 10 }}>
+              Just want to see how it works?
+            </Text>
+            <TouchableOpacity
+              onPress={enterPreviewMode}
+              style={{
+                borderWidth: 1,
+                borderColor: 'rgba(168,85,247,0.4)',
+                borderRadius: 999,
+                paddingVertical: 12,
+                paddingHorizontal: 24,
+              }}
+            >
+              <Text style={{ color: '#a855f7', fontWeight: '600', fontSize: 14 }}>
+                Preview App
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

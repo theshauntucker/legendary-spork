@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getAnalysis, deleteFrames } from '../../lib/api';
+import { useAuth } from '../../lib/auth';
 
 interface JudgeScore {
   category: string;
@@ -61,9 +62,75 @@ function getNoteColor(type: string) {
   return '#60a5fa';
 }
 
+const MOCK_ANALYSES: Record<string, AnalysisResult & { title: string }> = {
+  'preview-1': {
+    title: 'Into the Light',
+    overallScore: 274,
+    judgeScores: [
+      { category: 'Technique', score: 92, maxScore: 100, feedback: 'Strong foundation with clean lines and precise movements. Extension through the fingertips adds a polished quality. Minor ankle alignment corrections would elevate the score further.' },
+      { category: 'Performance', score: 91, maxScore: 100, feedback: 'Engaging stage presence that draws the audience in. Facial expressions match the emotional arc of the piece. Could push dynamic contrast a bit more in the bridge section.' },
+      { category: 'Choreography', score: 91, maxScore: 100, feedback: 'Well-structured routine with creative transitions and good use of levels. The opening sequence is particularly memorable. Consider adding more floor work to the second half for variety.' },
+    ],
+    timelineNotes: [
+      { timestamp: 5, note: 'Strong opening — clean formation with excellent musicality on the intro hits.', type: 'strength' },
+      { timestamp: 30, note: 'Turns sequence could use tighter spotting — slight wobble on the double pirouette.', type: 'technique' },
+      { timestamp: 55, note: 'Beautiful lyrical section — emotion really shines through in the contemporary passage.', type: 'performance' },
+      { timestamp: 80, note: 'Energy dipped slightly mid-routine — consider adding a visual accent to maintain momentum.', type: 'improvement' },
+      { timestamp: 110, note: 'Powerful ending formation — great use of levels and dramatic final pose.', type: 'strength' },
+    ],
+    improvementPriorities: [
+      { rank: 1, item: 'Turn technique & spotting', trainingTip: 'Practice slow single turns focusing on fixed spot before building speed. Aim for 15 min/day drill.', impact: 'high' },
+      { rank: 2, item: 'Mid-routine energy', trainingTip: 'Add a "breath moment" followed by an explosive accent to re-engage the audience at the 1:20 mark.', impact: 'medium' },
+      { rank: 3, item: 'Ankle alignment in relevé', trainingTip: 'Strengthen with Thera-Band exercises and practice balancing on relevé for 30-second holds.', impact: 'low' },
+    ],
+  },
+  'preview-2': {
+    title: 'Unstoppable',
+    overallScore: 282,
+    judgeScores: [
+      { category: 'Technique', score: 94, maxScore: 100, feedback: 'Exceptional isolations and hitting. Crisp movements with clear start and stop points. Power moves are well-controlled and land with confidence.' },
+      { category: 'Performance', score: 95, maxScore: 100, feedback: 'Electric stage presence — commands attention from the first beat. Swagger is authentic and age-appropriate. Crowd engagement is natural and confident.' },
+      { category: 'Choreography', score: 93, maxScore: 100, feedback: 'Innovative musicality choices with unexpected accents that showcase personality. Great use of levels and dynamics. The breakdown section is a standout moment.' },
+    ],
+    timelineNotes: [
+      { timestamp: 3, note: 'Explosive opening — immediate crowd engagement with high-energy isolations.', type: 'strength' },
+      { timestamp: 25, note: 'Musicality on the syncopated section is outstanding — every accent is hit cleanly.', type: 'strength' },
+      { timestamp: 45, note: 'Power move transition could be smoother — slight pause before the floor work.', type: 'technique' },
+      { timestamp: 70, note: 'Breakdown section is the highlight — creative and unexpected choreographic choices.', type: 'performance' },
+      { timestamp: 95, note: 'Ending is strong but could hit even harder — consider a more dramatic final freeze.', type: 'improvement' },
+    ],
+    improvementPriorities: [
+      { rank: 1, item: 'Floor work transitions', trainingTip: 'Drill the drop-to-floor sequence at half speed to find a seamless entry. Focus on controlled descent.', impact: 'medium' },
+      { rank: 2, item: 'Ending impact', trainingTip: 'Choreograph a 3-count freeze with full extension for maximum visual impact in the final pose.', impact: 'medium' },
+    ],
+  },
+  'preview-3': {
+    title: 'Gravity',
+    overallScore: 268,
+    judgeScores: [
+      { category: 'Technique', score: 89, maxScore: 100, feedback: 'Beautiful fluidity with good use of suspension and release. Balances are generally strong. Flexibility is evident in extensions. Some moments where core engagement could be tighter.' },
+      { category: 'Performance', score: 90, maxScore: 100, feedback: 'Genuinely emotional performance — the vulnerability reads well. Connection to the music is heartfelt. A few moments of self-consciousness break the spell.' },
+      { category: 'Choreography', score: 89, maxScore: 100, feedback: 'Thoughtful movement choices that serve the story. The recurring motif works well thematically. Spatial patterns could be more varied to use the full stage.' },
+    ],
+    timelineNotes: [
+      { timestamp: 8, note: 'Gorgeous opening — the slow unfold into the first movement phrase sets a powerful tone.', type: 'strength' },
+      { timestamp: 35, note: 'Core engagement drops during the back attitude — focus on pulling up through the center.', type: 'technique' },
+      { timestamp: 60, note: 'The emotional climax at the 1-minute mark is beautifully performed — real vulnerability.', type: 'performance' },
+      { timestamp: 85, note: 'Stage coverage is limited — most movement happens center-stage. Use the diagonals more.', type: 'improvement' },
+      { timestamp: 105, note: 'Lovely ending that circles back to the opening motif — gives the piece a sense of completeness.', type: 'strength' },
+    ],
+    improvementPriorities: [
+      { rank: 1, item: 'Core stability in balances', trainingTip: 'Add 10 minutes of Pilates-based core work before each rehearsal. Focus on transverse abdominis engagement.', impact: 'high' },
+      { rank: 2, item: 'Stage coverage', trainingTip: 'Map out a floor pattern that hits all four corners and both diagonals. Rehearse the new spacing 3x.', impact: 'medium' },
+      { rank: 3, item: 'Performance confidence', trainingTip: 'Rehearse in front of a mirror less — practice performing for a friend or recording yourself to build comfort.', impact: 'medium' },
+    ],
+  },
+};
+
 export default function AnalysisScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { previewMode } = useAuth();
   const [data, setData] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [framesDeleted, setFramesDeleted] = useState(false);
@@ -72,8 +139,14 @@ export default function AnalysisScreen() {
 
   useEffect(() => {
     if (!id) return;
+    if (previewMode && id in MOCK_ANALYSES) {
+      setData(MOCK_ANALYSES[id]);
+      setFramesDeleted(true);
+      setLoading(false);
+      return;
+    }
     loadAnalysis();
-  }, [id]);
+  }, [id, previewMode]);
 
   const loadAnalysis = async () => {
     try {

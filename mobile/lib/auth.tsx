@@ -6,9 +6,11 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  previewMode: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null; data: { user: User | null } }>;
   signOut: () => Promise<void>;
+  enterPreviewMode: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [previewMode, setPreviewMode] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -44,11 +47,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    if (previewMode) {
+      setPreviewMode(false);
+      setUser(null);
+      return;
+    }
     await supabase.auth.signOut();
   };
 
+  const enterPreviewMode = () => {
+    setPreviewMode(true);
+    setUser({ id: 'preview-user', email: 'preview@routinex.org' } as User);
+    setLoading(false);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, previewMode, signIn, signUp, signOut, enterPreviewMode }}>
       {children}
     </AuthContext.Provider>
   );

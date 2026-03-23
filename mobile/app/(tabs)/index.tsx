@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { getUserAnalyses } from '../../lib/api';
+import { useAuth } from '../../lib/auth';
 
 interface AnalysisItem {
   id: string;
@@ -35,13 +36,50 @@ function formatDate(dateStr: string) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+const MOCK_ANALYSES: AnalysisItem[] = [
+  {
+    id: 'preview-1',
+    routine_title: 'Into the Light',
+    dancer_name: 'Emma',
+    dance_style: 'Jazz',
+    status: 'complete',
+    analysis_data: { overallScore: 274 },
+    created_at: '2026-03-20T14:30:00Z',
+  },
+  {
+    id: 'preview-2',
+    routine_title: 'Unstoppable',
+    dancer_name: 'Ava',
+    dance_style: 'Hip Hop',
+    status: 'complete',
+    analysis_data: { overallScore: 282 },
+    created_at: '2026-03-18T10:15:00Z',
+  },
+  {
+    id: 'preview-3',
+    routine_title: 'Gravity',
+    dancer_name: 'Lily',
+    dance_style: 'Contemporary',
+    status: 'complete',
+    analysis_data: { overallScore: 268 },
+    created_at: '2026-03-15T09:00:00Z',
+  },
+];
+
 export default function DashboardScreen() {
   const router = useRouter();
+  const { previewMode } = useAuth();
   const [analyses, setAnalyses] = useState<AnalysisItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadAnalyses = useCallback(async () => {
+    if (previewMode) {
+      setAnalyses(MOCK_ANALYSES);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     try {
       const data = await getUserAnalyses();
       setAnalyses(data as unknown as AnalysisItem[]);
@@ -51,7 +89,7 @@ export default function DashboardScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [previewMode]);
 
   useEffect(() => {
     loadAnalyses();
