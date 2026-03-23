@@ -139,19 +139,32 @@ eas submit --platform android
 
 ## Implementation Status
 
-### Part 1: Web Privacy Features — NOT YET BUILT
-- [ ] `src/app/api/process/route.ts` — name anonymization in AI prompt
-- [ ] `src/app/api/delete-frames/route.ts` — user frame deletion endpoint
-- [ ] `src/app/api/cron/cleanup-frames/route.ts` — 24hr auto-cleanup cron
-- [ ] `src/app/analysis/[id]/AnalysisReport.tsx` — privacy UI (banners, delete button)
-- [ ] `src/app/analysis/[id]/page.tsx` — pass framesDeleted/videoId to report
-- [ ] `src/app/privacy/page.tsx` — full privacy policy (15 sections)
-- [ ] `vercel.json` — add cron schedule
+### Part 1: Web Privacy Features — COMPLETE
+- [x] `src/app/api/process/route.ts` — name anonymization in AI prompt
+- [x] `src/app/api/delete-frames/route.ts` — user frame deletion endpoint
+- [x] `src/app/api/cron/cleanup-frames/route.ts` — 24hr auto-cleanup cron
+- [x] `src/app/analysis/[id]/AnalysisReport.tsx` — privacy UI (banners, delete button)
+- [x] `src/app/analysis/[id]/page.tsx` — pass framesDeleted/videoId to report
+- [x] `src/app/privacy/page.tsx` — full privacy policy (15 sections)
+- [x] `vercel.json` — add cron schedule
 
-### Part 2: COPPA Consent Flow — NOT YET BUILT
-- [ ] `src/app/signup/page.tsx` — registration with consent checkboxes
-- [ ] `consent_records` table in Supabase
-- [ ] Block signup until consent given
+### Part 2: COPPA Consent Flow — COMPLETE
+- [x] `src/app/signup/page.tsx` — registration with consent checkboxes
+- [x] `src/app/login/page.tsx` — login page with Supabase Auth
+- [x] `src/lib/supabase.ts` — shared Supabase client helpers
+- [ ] `consent_records` table in Supabase — SQL ready, needs to be run manually
+- [x] Block signup until consent given
+
+### Part 3: Mobile App — SCREENS BUILT
+- [x] Expo project scaffolded in `mobile/`
+- [x] Auth (login/signup with COPPA)
+- [x] Dashboard (past analyses with scores, pull-to-refresh)
+- [x] Upload flow (video pick/record → frame extract → metadata → pay → submit)
+- [x] Analysis report (full port from web — scores, timeline, improvement roadmap, delete frames)
+- [x] Processing status (animated progress steps, polling)
+- [x] Profile & settings (privacy info, sign out, delete account)
+- [ ] Push notifications
+- [ ] App Store submission (requires Apple Developer Account)
 
 ### Part 3: Mobile App — NOT YET BUILT
 - [ ] Expo project scaffolded in `mobile/`

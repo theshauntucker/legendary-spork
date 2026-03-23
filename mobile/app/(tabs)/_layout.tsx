@@ -1,40 +1,57 @@
 import { Tabs } from 'expo-router';
+import { Text } from 'react-native';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#10b981',
+        tabBarActiveTintColor: '#a855f7',
         tabBarInactiveTintColor: '#6b7280',
         tabBarStyle: {
           backgroundColor: '#0a0a0a',
           borderTopColor: '#1f2937',
+          borderTopWidth: 1,
+          height: 85,
+          paddingBottom: 28,
+          paddingTop: 8,
         },
         headerStyle: {
           backgroundColor: '#0a0a0a',
         },
         headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: '700',
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Dashboard',
-          // tabBarIcon will use a list icon
+          headerTitle: 'Your Analyses',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 22, color }}>📊</Text>
+          ),
         }}
       />
       <Tabs.Screen
         name="upload"
         options={{
           title: 'Analyze',
-          // tabBarIcon will use a video/camera icon
+          headerTitle: 'Analyze a Routine',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 22, color }}>🎬</Text>
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          // tabBarIcon will use a user icon
+          headerTitle: 'Profile & Settings',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 22, color }}>👤</Text>
+          ),
         }}
       />
     </Tabs>
