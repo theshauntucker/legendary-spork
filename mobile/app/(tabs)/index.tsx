@@ -7,8 +7,10 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { getUserAnalyses } from '../../lib/api';
+import { colors, gradients, gradientProps } from '../../lib/theme';
 
 interface AnalysisItem {
   id: string;
@@ -67,6 +69,7 @@ export default function DashboardScreen() {
     const score = item.analysis_data?.overallScore;
     const award = score ? getAwardLevel(score) : null;
     const isProcessing = item.status === 'processing';
+    const title = item.routine_title || item.dance_style || 'Untitled Routine';
 
     return (
       <TouchableOpacity
@@ -78,45 +81,56 @@ export default function DashboardScreen() {
           }
         }}
         activeOpacity={0.7}
-        style={{
-          backgroundColor: 'rgba(255,255,255,0.05)',
-          borderRadius: 16,
-          padding: 16,
-          marginBottom: 12,
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.08)',
-        }}
+        style={{ marginBottom: 12, borderRadius: 16, overflow: 'hidden' }}
       >
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
-              {item.routine_title || 'Untitled Routine'}
-            </Text>
-            <Text style={{ color: '#9ca3af', fontSize: 13, marginTop: 4 }}>
-              {item.dancer_name || 'Unknown'} • {item.dance_style || 'Dance'}
-            </Text>
-            <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>
-              {formatDate(item.created_at)}
-            </Text>
-          </View>
+        <View
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            borderWidth: 1,
+            borderColor: 'rgba(255,255,255,0.08)',
+            borderRadius: 16,
+            overflow: 'hidden',
+          }}
+        >
+          {/* Gradient top accent bar */}
+          <LinearGradient
+            colors={gradients.brand}
+            {...gradientProps.leftToRight}
+            style={{ height: 3 }}
+          />
+          <View style={{ padding: 16 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
+                  {title}
+                </Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 4 }}>
+                  {item.dancer_name || 'Unknown'} · {item.dance_style || 'Dance'}
+                </Text>
+                <Text style={{ color: colors.textTertiary, fontSize: 12, marginTop: 4 }}>
+                  {formatDate(item.created_at)}
+                </Text>
+              </View>
 
-          {isProcessing ? (
-            <View style={{ alignItems: 'center' }}>
-              <ActivityIndicator size="small" color="#a855f7" />
-              <Text style={{ color: '#a855f7', fontSize: 11, marginTop: 4 }}>
-                Processing
-              </Text>
+              {isProcessing ? (
+                <View style={{ alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color={colors.primary[500]} />
+                  <Text style={{ color: colors.primary[500], fontSize: 11, marginTop: 4 }}>
+                    Processing
+                  </Text>
+                </View>
+              ) : score ? (
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{ color: '#fff', fontSize: 28, fontWeight: '800' }}>
+                    {score}
+                  </Text>
+                  <Text style={{ color: award!.color, fontSize: 11, fontWeight: '600' }}>
+                    {award!.label}
+                  </Text>
+                </View>
+              ) : null}
             </View>
-          ) : score ? (
-            <View style={{ alignItems: 'center' }}>
-              <Text style={{ color: '#fff', fontSize: 28, fontWeight: '800' }}>
-                {score}
-              </Text>
-              <Text style={{ color: award!.color, fontSize: 11, fontWeight: '600' }}>
-                {award!.label}
-              </Text>
-            </View>
-          ) : null}
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -124,14 +138,14 @@ export default function DashboardScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#a855f7" />
+      <View style={{ flex: 1, backgroundColor: colors.surface[950], justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={colors.primary[500]} />
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
+    <View style={{ flex: 1, backgroundColor: colors.surface[950] }}>
       <FlatList
         data={analyses}
         keyExtractor={(item) => item.id}
@@ -141,30 +155,34 @@ export default function DashboardScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#a855f7"
+            tintColor={colors.primary[500]}
           />
         }
         ListEmptyComponent={
           <View style={{ alignItems: 'center', marginTop: 60 }}>
+            {/* Decorative blur */}
+            <View style={{ position: 'absolute', top: -20, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.08)' }} />
+
             <Text style={{ fontSize: 48, marginBottom: 16 }}>🎬</Text>
             <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600', marginBottom: 8 }}>
               No analyses yet
             </Text>
-            <Text style={{ color: '#9ca3af', fontSize: 14, textAlign: 'center', marginBottom: 24 }}>
+            <Text style={{ color: colors.textSecondary, fontSize: 14, textAlign: 'center', marginBottom: 24 }}>
               Upload your first routine to get AI-powered scoring and feedback.
             </Text>
             <TouchableOpacity
               onPress={() => router.push('/(tabs)/upload')}
-              style={{
-                backgroundColor: '#9333ea',
-                borderRadius: 999,
-                paddingVertical: 14,
-                paddingHorizontal: 28,
-              }}
+              activeOpacity={0.8}
             >
-              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>
-                Analyze a Routine
-              </Text>
+              <LinearGradient
+                colors={gradients.brand}
+                {...gradientProps.diagonal}
+                style={{ borderRadius: 999, paddingVertical: 14, paddingHorizontal: 28 }}
+              >
+                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>
+                  Analyze a Routine
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         }

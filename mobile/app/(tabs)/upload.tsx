@@ -8,12 +8,16 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Linking,
+  Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import * as WebBrowser from 'expo-web-browser';
 import { uploadFrames, getAuthToken } from '../../lib/api';
+import { colors, gradients, gradientProps } from '../../lib/theme';
 
 const DANCE_STYLES = [
   'Contemporary', 'Jazz', 'Lyrical', 'Hip Hop', 'Tap',
@@ -46,40 +50,88 @@ export default function UploadScreen() {
   const [error, setError] = useState('');
 
   const pickVideo = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Permission needed', 'Please allow access to your photo library to select a video.');
-      return;
-    }
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        // On iOS 14+, check if user granted limited access
+        if (Platform.OS === 'ios' && permission.accessPrivileges === 'limited') {
+          Alert.alert(
+            'Full Access Needed',
+            'RoutineX needs full photo library access to select videos. Please go to Settings > RoutineX > Photos and select "Full Access".',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Open Settings', onPress: () => Linking.openSettings() },
+            ]
+          );
+        } else {
+          Alert.alert(
+            'Permission Needed',
+            'Please allow access to your photo library to select a video.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Open Settings', onPress: () => Linking.openSettings() },
+            ]
+          );
+        }
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['videos'],
-      quality: 1,
-      videoMaxDuration: 300, // 5 minutes
-    });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['videos'],
+        quality: 1,
+        videoMaxDuration: 300, // 5 minutes
+      });
 
-    if (!result.canceled && result.assets[0]) {
-      setVideoUri(result.assets[0].uri);
-      await extractFrames(result.assets[0].uri);
+      if (!result.canceled && result.assets[0]) {
+        setVideoUri(result.assets[0].uri);
+        await extractFrames(result.assets[0].uri);
+      }
+    } catch (err: any) {
+      console.error('Video pick error:', err);
+      // Handle PHPhotosErrorDomain and other iOS errors
+      if (err?.message?.includes('PHPhotos') || err?.message?.includes('couldn\'t be completed')) {
+        Alert.alert(
+          'Video Access Error',
+          'There was a problem accessing your photo library. Please check that RoutineX has full photo access in Settings > RoutineX > Photos.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() },
+          ]
+        );
+      } else {
+        setError('Could not select video. Please try again.');
+      }
     }
   };
 
   const recordVideo = async () => {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Permission needed', 'Please allow camera access to record a video.');
-      return;
-    }
+    try {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert(
+          'Permission Needed',
+          'Please allow camera access to record a video.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() },
+          ]
+        );
+        return;
+      }
 
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['videos'],
-      quality: 1,
-      videoMaxDuration: 300,
-    });
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['videos'],
+        quality: 1,
+        videoMaxDuration: 300,
+      });
 
-    if (!result.canceled && result.assets[0]) {
-      setVideoUri(result.assets[0].uri);
-      await extractFrames(result.assets[0].uri);
+      if (!result.canceled && result.assets[0]) {
+        setVideoUri(result.assets[0].uri);
+        await extractFrames(result.assets[0].uri);
+      }
+    } catch (err: any) {
+      console.error('Video record error:', err);
+      setError('Could not access camera. Please try again.');
     }
   };
 
@@ -210,62 +262,77 @@ export default function UploadScreen() {
   // Step: Select Video
   if (step === 'select') {
     return (
-      <View style={{ flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'center', padding: 24 }}>
+      <View style={{ flex: 1, backgroundColor: colors.surface[950], justifyContent: 'center', padding: 24 }}>
+        {/* Decorative blur */}
+        <View style={{ position: 'absolute', top: '20%', right: -40, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(147,51,234,0.08)' }} />
+
         <Text style={{ color: '#fff', fontSize: 24, fontWeight: '700', textAlign: 'center', marginBottom: 8 }}>
           Analyze a Routine
         </Text>
-        <Text style={{ color: '#9ca3af', fontSize: 14, textAlign: 'center', marginBottom: 32 }}>
+        <Text style={{ color: colors.textSecondary, fontSize: 14, textAlign: 'center', marginBottom: 32 }}>
           Select or record a video to get AI-powered scoring and feedback.
         </Text>
 
         <TouchableOpacity
           onPress={pickVideo}
+          activeOpacity={0.7}
           style={{
+            borderRadius: 16,
+            overflow: 'hidden',
+            marginBottom: 12,
+          }}
+        >
+          <View style={{
             backgroundColor: 'rgba(255,255,255,0.05)',
             borderWidth: 1,
             borderColor: 'rgba(255,255,255,0.1)',
             borderRadius: 16,
             padding: 24,
             alignItems: 'center',
-            marginBottom: 12,
-          }}
-        >
-          <Text style={{ fontSize: 36, marginBottom: 8 }}>📁</Text>
-          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Choose from Library</Text>
-          <Text style={{ color: '#9ca3af', fontSize: 13, marginTop: 4 }}>
-            MP4, MOV — up to 5 minutes
-          </Text>
+          }}>
+            <Text style={{ fontSize: 36, marginBottom: 8 }}>📁</Text>
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Choose from Library</Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 4 }}>
+              MP4, MOV — up to 5 minutes
+            </Text>
+          </View>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={recordVideo}
+          activeOpacity={0.7}
           style={{
+            borderRadius: 16,
+            overflow: 'hidden',
+          }}
+        >
+          <View style={{
             backgroundColor: 'rgba(255,255,255,0.05)',
             borderWidth: 1,
             borderColor: 'rgba(255,255,255,0.1)',
             borderRadius: 16,
             padding: 24,
             alignItems: 'center',
-          }}
-        >
-          <Text style={{ fontSize: 36, marginBottom: 8 }}>🎥</Text>
-          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Record Now</Text>
-          <Text style={{ color: '#9ca3af', fontSize: 13, marginTop: 4 }}>
-            Use your camera to record a routine
-          </Text>
+          }}>
+            <Text style={{ fontSize: 36, marginBottom: 8 }}>🎥</Text>
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Record Now</Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 4 }}>
+              Use your camera to record a routine
+            </Text>
+          </View>
         </TouchableOpacity>
 
         {extracting && (
           <View style={{ alignItems: 'center', marginTop: 24 }}>
-            <ActivityIndicator size="large" color="#a855f7" />
-            <Text style={{ color: '#a855f7', marginTop: 8, fontSize: 14 }}>
+            <ActivityIndicator size="large" color={colors.primary[500]} />
+            <Text style={{ color: colors.primary[500], marginTop: 8, fontSize: 14 }}>
               Extracting frames...
             </Text>
           </View>
         )}
 
         {error ? (
-          <Text style={{ color: '#f87171', fontSize: 13, textAlign: 'center', marginTop: 16 }}>
+          <Text style={{ color: colors.error, fontSize: 13, textAlign: 'center', marginTop: 16 }}>
             {error}
           </Text>
         ) : null}
@@ -276,11 +343,11 @@ export default function UploadScreen() {
   // Step: Review Frames
   if (step === 'frames') {
     return (
-      <View style={{ flex: 1, backgroundColor: '#0a0a0a', padding: 24 }}>
+      <View style={{ flex: 1, backgroundColor: colors.surface[950], padding: 24 }}>
         <Text style={{ color: '#fff', fontSize: 20, fontWeight: '700', marginBottom: 4 }}>
           Extracted Frames
         </Text>
-        <Text style={{ color: '#9ca3af', fontSize: 13, marginBottom: 16 }}>
+        <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 16 }}>
           {frames.length} frames extracted. These will be sent for AI analysis.
           Your full video stays on your device.
         </Text>
@@ -313,7 +380,7 @@ export default function UploadScreen() {
           borderWidth: 1,
           borderColor: 'rgba(16,185,129,0.2)',
         }}>
-          <Text style={{ color: '#6ee7b7', fontSize: 13, lineHeight: 18 }}>
+          <Text style={{ color: colors.successLight, fontSize: 13, lineHeight: 18 }}>
             🔒 Only these thumbnail images leave your device. Your full video is never uploaded.
             Thumbnails auto-delete within 24 hours.
           </Text>
@@ -324,7 +391,7 @@ export default function UploadScreen() {
             onPress={() => { setStep('select'); setFrames([]); setVideoUri(null); }}
             style={{
               flex: 1,
-              backgroundColor: 'rgba(255,255,255,0.05)',
+              backgroundColor: colors.cardBg,
               borderRadius: 999,
               padding: 14,
               alignItems: 'center',
@@ -334,15 +401,16 @@ export default function UploadScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setStep('metadata')}
-            style={{
-              flex: 1,
-              backgroundColor: '#9333ea',
-              borderRadius: 999,
-              padding: 14,
-              alignItems: 'center',
-            }}
+            activeOpacity={0.8}
+            style={{ flex: 1, borderRadius: 999, overflow: 'hidden' }}
           >
-            <Text style={{ color: '#fff', fontWeight: '700' }}>Continue</Text>
+            <LinearGradient
+              colors={gradients.brand}
+              {...gradientProps.diagonal}
+              style={{ padding: 14, alignItems: 'center', borderRadius: 999 }}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700' }}>Continue</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       </View>
@@ -352,7 +420,7 @@ export default function UploadScreen() {
   // Step: Metadata + Confirm
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: '#0a0a0a' }}
+      style={{ flex: 1, backgroundColor: colors.surface[950] }}
       contentContainerStyle={{ padding: 24 }}
       keyboardShouldPersistTaps="handled"
     >
@@ -367,7 +435,7 @@ export default function UploadScreen() {
             value={routineTitle}
             onChangeText={setRoutineTitle}
             placeholder='"Into the Light"'
-            placeholderTextColor="#52525b"
+            placeholderTextColor={colors.placeholder}
             style={inputStyle}
           />
         </View>
@@ -378,7 +446,7 @@ export default function UploadScreen() {
             value={dancerName}
             onChangeText={setDancerName}
             placeholder="Emma R."
-            placeholderTextColor="#52525b"
+            placeholderTextColor={colors.placeholder}
             style={inputStyle}
           />
         </View>
@@ -389,7 +457,7 @@ export default function UploadScreen() {
             value={studioName}
             onChangeText={setStudioName}
             placeholder="Elite Dance Academy"
-            placeholderTextColor="#52525b"
+            placeholderTextColor={colors.placeholder}
             style={inputStyle}
           />
         </View>
@@ -403,13 +471,13 @@ export default function UploadScreen() {
                 key={s}
                 onPress={() => setDanceStyle(s)}
                 style={{
-                  backgroundColor: danceStyle === s ? '#7c3aed' : 'rgba(255,255,255,0.05)',
+                  backgroundColor: danceStyle === s ? colors.primary[700] : colors.cardBg,
                   borderRadius: 999,
                   paddingVertical: 8,
                   paddingHorizontal: 16,
                   marginRight: 8,
                   borderWidth: 1,
-                  borderColor: danceStyle === s ? '#9333ea' : 'rgba(255,255,255,0.1)',
+                  borderColor: danceStyle === s ? colors.primary[600] : colors.border,
                 }}
               >
                 <Text style={{ color: danceStyle === s ? '#fff' : '#d4d4d8', fontSize: 13 }}>
@@ -429,13 +497,13 @@ export default function UploadScreen() {
                 key={ag}
                 onPress={() => setAgeGroup(ag)}
                 style={{
-                  backgroundColor: ageGroup === ag ? '#7c3aed' : 'rgba(255,255,255,0.05)',
+                  backgroundColor: ageGroup === ag ? colors.primary[700] : colors.cardBg,
                   borderRadius: 999,
                   paddingVertical: 8,
                   paddingHorizontal: 16,
                   marginRight: 8,
                   borderWidth: 1,
-                  borderColor: ageGroup === ag ? '#9333ea' : 'rgba(255,255,255,0.1)',
+                  borderColor: ageGroup === ag ? colors.primary[600] : colors.border,
                 }}
               >
                 <Text style={{ color: ageGroup === ag ? '#fff' : '#d4d4d8', fontSize: 13 }}>
@@ -455,13 +523,13 @@ export default function UploadScreen() {
                 key={et}
                 onPress={() => setEntryType(et)}
                 style={{
-                  backgroundColor: entryType === et ? '#7c3aed' : 'rgba(255,255,255,0.05)',
+                  backgroundColor: entryType === et ? colors.primary[700] : colors.cardBg,
                   borderRadius: 999,
                   paddingVertical: 8,
                   paddingHorizontal: 16,
                   marginRight: 8,
                   borderWidth: 1,
-                  borderColor: entryType === et ? '#9333ea' : 'rgba(255,255,255,0.1)',
+                  borderColor: entryType === et ? colors.primary[600] : colors.border,
                 }}
               >
                 <Text style={{ color: entryType === et ? '#fff' : '#d4d4d8', fontSize: 13 }}>
@@ -474,7 +542,7 @@ export default function UploadScreen() {
       </View>
 
       {error ? (
-        <Text style={{ color: '#f87171', fontSize: 13, textAlign: 'center', marginTop: 16 }}>
+        <Text style={{ color: colors.error, fontSize: 13, textAlign: 'center', marginTop: 16 }}>
           {error}
         </Text>
       ) : null}
@@ -490,17 +558,17 @@ export default function UploadScreen() {
             <TouchableOpacity
               onPress={() => setPurchaseType('trial')}
               style={{
-                backgroundColor: purchaseType === 'trial' ? 'rgba(168,85,247,0.15)' : 'rgba(255,255,255,0.05)',
+                backgroundColor: purchaseType === 'trial' ? 'rgba(168,85,247,0.15)' : colors.cardBg,
                 borderRadius: 12,
                 padding: 14,
                 borderWidth: 1.5,
-                borderColor: purchaseType === 'trial' ? '#9333ea' : 'rgba(255,255,255,0.1)',
+                borderColor: purchaseType === 'trial' ? colors.primary[600] : colors.border,
               }}
             >
               <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>
                 First Analysis — $4.99
               </Text>
-              <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 2 }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
                 One-time trial offer — 1 full AI analysis
               </Text>
             </TouchableOpacity>
@@ -509,17 +577,17 @@ export default function UploadScreen() {
           <TouchableOpacity
             onPress={() => setPurchaseType('pack')}
             style={{
-              backgroundColor: purchaseType === 'pack' ? 'rgba(168,85,247,0.15)' : 'rgba(255,255,255,0.05)',
+              backgroundColor: purchaseType === 'pack' ? 'rgba(168,85,247,0.15)' : colors.cardBg,
               borderRadius: 12,
               padding: 14,
               borderWidth: 1.5,
-              borderColor: purchaseType === 'pack' ? '#9333ea' : 'rgba(255,255,255,0.1)',
+              borderColor: purchaseType === 'pack' ? colors.primary[600] : colors.border,
             }}
           >
             <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>
               Competition Pack — $24.99
             </Text>
-            <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 2 }}>
+            <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
               5 analyses — only $5 each. Best value.
             </Text>
           </TouchableOpacity>
@@ -535,7 +603,7 @@ export default function UploadScreen() {
           borderWidth: 1,
           borderColor: 'rgba(16,185,129,0.2)',
         }}>
-          <Text style={{ color: '#6ee7b7', fontSize: 13 }}>
+          <Text style={{ color: colors.successLight, fontSize: 13 }}>
             You have {creditsRemaining} analysis credit{creditsRemaining !== 1 ? 's' : ''} remaining.
           </Text>
         </View>
@@ -546,7 +614,7 @@ export default function UploadScreen() {
           onPress={() => setStep('frames')}
           style={{
             flex: 1,
-            backgroundColor: 'rgba(255,255,255,0.05)',
+            backgroundColor: colors.cardBg,
             borderRadius: 999,
             padding: 16,
             alignItems: 'center',
@@ -557,26 +625,31 @@ export default function UploadScreen() {
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={uploading || checkingCredits}
+          activeOpacity={0.8}
           style={{
             flex: 2,
-            backgroundColor: '#9333ea',
             borderRadius: 999,
-            padding: 16,
-            alignItems: 'center',
+            overflow: 'hidden',
             opacity: uploading || checkingCredits ? 0.6 : 1,
           }}
         >
-          {uploading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
-              {hasCredits
-                ? 'Analyze Now'
-                : purchaseType === 'trial'
-                  ? 'Analyze — $4.99'
-                  : 'Analyze — $24.99'}
-            </Text>
-          )}
+          <LinearGradient
+            colors={gradients.brand}
+            {...gradientProps.diagonal}
+            style={{ padding: 16, alignItems: 'center', borderRadius: 999 }}
+          >
+            {uploading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
+                {hasCredits
+                  ? 'Analyze Now'
+                  : purchaseType === 'trial'
+                    ? 'Analyze — $4.99'
+                    : 'Analyze — $24.99'}
+              </Text>
+            )}
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -591,9 +664,9 @@ const labelStyle = {
 };
 
 const inputStyle = {
-  backgroundColor: 'rgba(255,255,255,0.05)',
+  backgroundColor: 'rgba(255,255,255,0.07)',
   borderWidth: 1,
-  borderColor: 'rgba(255,255,255,0.1)',
+  borderColor: 'rgba(255,255,255,0.12)',
   borderRadius: 12,
   padding: 14,
   color: '#fff',

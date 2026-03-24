@@ -8,9 +8,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Linking,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../lib/auth';
+import { colors, gradients, gradientProps } from '../../lib/theme';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -37,129 +40,186 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1, backgroundColor: '#0a0a0a' }}
-    >
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: 'center',
-          padding: 24,
+    <View style={{ flex: 1, backgroundColor: colors.surface[950] }}>
+      {/* Decorative gradient blurs */}
+      <View
+        style={{
+          position: 'absolute',
+          top: -80,
+          left: -60,
+          width: 260,
+          height: 260,
+          borderRadius: 130,
+          backgroundColor: 'rgba(147,51,234,0.15)',
         }}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Logo */}
-        <View style={{ alignItems: 'center', marginBottom: 32 }}>
-          <Text style={{ fontSize: 32, fontWeight: '800', color: '#fff' }}>
-            Routine<Text style={{ color: '#a855f7' }}>X</Text>
-          </Text>
-          <Text style={{ color: '#9ca3af', marginTop: 8, fontSize: 15 }}>
-            Welcome back
-          </Text>
-        </View>
+      />
+      <View
+        style={{
+          position: 'absolute',
+          top: 120,
+          right: -80,
+          width: 200,
+          height: 200,
+          borderRadius: 100,
+          backgroundColor: 'rgba(236,72,153,0.1)',
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 100,
+          left: -40,
+          width: 180,
+          height: 180,
+          borderRadius: 90,
+          backgroundColor: 'rgba(245,158,11,0.08)',
+        }}
+      />
 
-        {/* Form */}
-        <View style={{ gap: 16 }}>
-          <View>
-            <Text style={{ color: '#d4d4d8', fontSize: 13, marginBottom: 6, fontWeight: '500' }}>
-              Email Address
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            padding: 24,
+          }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Logo */}
+          <View style={{ alignItems: 'center', marginBottom: 40 }}>
+            <Text style={{ fontSize: 36, fontWeight: '800', color: '#fff' }}>
+              Routine<Text style={{ color: colors.primary[400] }}>X</Text>
             </Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="parent@example.com"
-              placeholderTextColor="#52525b"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.1)',
-                borderRadius: 12,
-                padding: 14,
-                color: '#fff',
-                fontSize: 15,
-              }}
-            />
+            <Text style={{ color: colors.textSecondary, marginTop: 8, fontSize: 15 }}>
+              Welcome back
+            </Text>
           </View>
 
-          <View>
-            <Text style={{ color: '#d4d4d8', fontSize: 13, marginBottom: 6, fontWeight: '500' }}>
-              Password
-            </Text>
-            <View style={{ position: 'relative' }}>
+          {/* Form */}
+          <View style={{ gap: 16 }}>
+            <View>
+              <Text style={labelStyle}>Email Address</Text>
               <TextInput
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Your password"
-                placeholderTextColor="#52525b"
-                secureTextEntry={!showPassword}
-                style={{
-                  backgroundColor: 'rgba(255,255,255,0.05)',
-                  borderWidth: 1,
-                  borderColor: 'rgba(255,255,255,0.1)',
-                  borderRadius: 12,
-                  padding: 14,
-                  paddingRight: 50,
-                  color: '#fff',
-                  fontSize: 15,
-                }}
+                value={email}
+                onChangeText={setEmail}
+                placeholder="parent@example.com"
+                placeholderTextColor={colors.placeholder}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={inputStyle}
               />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
+            </View>
+
+            <View>
+              <Text style={labelStyle}>Password</Text>
+              <View style={{ position: 'relative' }}>
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Your password"
+                  placeholderTextColor={colors.placeholder}
+                  secureTextEntry={!showPassword}
+                  style={[inputStyle, { paddingRight: 50 }]}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: 14, top: 14 }}
+                >
+                  <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+                    {showPassword ? 'Hide' : 'Show'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {error ? (
+              <Text style={{ color: colors.error, fontSize: 13, textAlign: 'center' }}>
+                {error}
+              </Text>
+            ) : null}
+
+            {/* Gradient Sign In button */}
+            <TouchableOpacity
+              onPress={handleLogin}
+              disabled={loading}
+              activeOpacity={0.8}
+              style={{ marginTop: 8, opacity: loading ? 0.6 : 1 }}
+            >
+              <LinearGradient
+                colors={gradients.brand}
+                {...gradientProps.diagonal}
                 style={{
-                  position: 'absolute',
-                  right: 14,
-                  top: 14,
+                  borderRadius: 999,
+                  padding: 16,
+                  alignItems: 'center',
                 }}
               >
-                <Text style={{ color: '#9ca3af', fontSize: 13 }}>
-                  {showPassword ? 'Hide' : 'Show'}
-                </Text>
-              </TouchableOpacity>
-            </View>
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
+                    Sign In
+                  </Text>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push('/(auth)/signup')}
+              style={{ alignItems: 'center', marginTop: 8 }}
+            >
+              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+                Don't have an account?{' '}
+                <Text style={{ color: colors.primary[400] }}>Create one</Text>
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          {error ? (
-            <Text style={{ color: '#f87171', fontSize: 13, textAlign: 'center' }}>
-              {error}
-            </Text>
-          ) : null}
-
-          <TouchableOpacity
-            onPress={handleLogin}
-            disabled={loading}
-            style={{
-              backgroundColor: '#9333ea',
-              borderRadius: 999,
-              padding: 16,
-              alignItems: 'center',
-              opacity: loading ? 0.6 : 1,
-              marginTop: 8,
-            }}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
-                Sign In
+          {/* Footer */}
+          <View style={{ alignItems: 'center', marginTop: 40 }}>
+            <Text style={{ color: colors.textTertiary, fontSize: 12, textAlign: 'center', lineHeight: 18 }}>
+              By signing in, you agree to our{' '}
+              <Text
+                style={{ color: colors.primary[400], textDecorationLine: 'underline' }}
+                onPress={() => Linking.openURL('https://routinex.org/terms')}
+              >
+                Terms
+              </Text>{' '}
+              and{' '}
+              <Text
+                style={{ color: colors.primary[400], textDecorationLine: 'underline' }}
+                onPress={() => Linking.openURL('https://routinex.org/privacy')}
+              >
+                Privacy Policy
               </Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => router.push('/(auth)/signup')}
-            style={{ alignItems: 'center', marginTop: 8 }}
-          >
-            <Text style={{ color: '#9ca3af', fontSize: 13 }}>
-              Don't have an account?{' '}
-              <Text style={{ color: '#a855f7' }}>Create one</Text>
             </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <Text style={{ color: colors.textTertiary, fontSize: 12, marginTop: 12 }}>
+              Built by a dance dad.
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
+
+const labelStyle = {
+  color: '#d4d4d8',
+  fontSize: 13,
+  marginBottom: 6,
+  fontWeight: '500' as const,
+};
+
+const inputStyle = {
+  backgroundColor: 'rgba(255,255,255,0.07)',
+  borderWidth: 1,
+  borderColor: 'rgba(255,255,255,0.12)',
+  borderRadius: 12,
+  padding: 14,
+  color: '#fff',
+  fontSize: 15,
+};

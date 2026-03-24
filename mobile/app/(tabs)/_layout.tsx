@@ -1,22 +1,36 @@
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { View, Text } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { colors, gradients, gradientProps } from '../../lib/theme';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#a855f7',
-        tabBarInactiveTintColor: '#6b7280',
+        tabBarActiveTintColor: colors.primary[400],
+        tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: {
-          backgroundColor: '#0a0a0a',
-          borderTopColor: '#1f2937',
-          borderTopWidth: 1,
+          backgroundColor: colors.surface[950],
+          borderTopColor: 'transparent',
+          borderTopWidth: 0,
           height: 85,
           paddingBottom: 28,
           paddingTop: 8,
+          elevation: 0,
         },
+        tabBarBackground: () => (
+          <View style={{ flex: 1 }}>
+            {/* Gradient top border */}
+            <LinearGradient
+              colors={gradients.brand}
+              {...gradientProps.leftToRight}
+              style={{ height: 1, opacity: 0.3 }}
+            />
+            <View style={{ flex: 1, backgroundColor: colors.surface[950] }} />
+          </View>
+        ),
         headerStyle: {
-          backgroundColor: '#0a0a0a',
+          backgroundColor: colors.surface[950],
         },
         headerTintColor: '#fff',
         headerTitleStyle: {

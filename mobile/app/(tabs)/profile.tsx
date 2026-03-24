@@ -7,8 +7,10 @@ import {
   Alert,
   Linking,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../lib/auth';
+import { colors, gradients, gradientProps } from '../../lib/theme';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
@@ -47,56 +49,62 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: '#0a0a0a' }}
+      style={{ flex: 1, backgroundColor: colors.surface[950] }}
       contentContainerStyle={{ padding: 16 }}
     >
-      {/* Profile Card */}
+      {/* Profile Card with gradient accent */}
       <View
         style={{
-          backgroundColor: 'rgba(255,255,255,0.05)',
           borderRadius: 16,
-          padding: 20,
+          overflow: 'hidden',
           marginBottom: 16,
           borderWidth: 1,
           borderColor: 'rgba(255,255,255,0.08)',
         }}
       >
-        <View
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: 28,
-            backgroundColor: '#7c3aed',
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginBottom: 12,
-          }}
-        >
-          <Text style={{ color: '#fff', fontSize: 24, fontWeight: '700' }}>
-            {user?.email?.charAt(0).toUpperCase() || '?'}
+        <LinearGradient
+          colors={gradients.brand}
+          {...gradientProps.leftToRight}
+          style={{ height: 3 }}
+        />
+        <View style={{ backgroundColor: colors.cardBg, padding: 20 }}>
+          {/* Avatar with gradient */}
+          <View style={{ width: 56, height: 56, borderRadius: 28, overflow: 'hidden', marginBottom: 12 }}>
+            <LinearGradient
+              colors={[colors.primary[600], colors.primary[400]]}
+              {...gradientProps.diagonal}
+              style={{
+                width: 56, height: 56,
+                justifyContent: 'center', alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: '#fff', fontSize: 24, fontWeight: '700' }}>
+                {user?.email?.charAt(0).toUpperCase() || '?'}
+              </Text>
+            </LinearGradient>
+          </View>
+          <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>
+            {user?.email || 'Not signed in'}
+          </Text>
+          <Text style={{ color: colors.textTertiary, fontSize: 13, marginTop: 4 }}>
+            Member since{' '}
+            {user?.created_at
+              ? new Date(user.created_at).toLocaleDateString('en-US', {
+                  month: 'long',
+                  year: 'numeric',
+                })
+              : 'Unknown'}
           </Text>
         </View>
-        <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600' }}>
-          {user?.email || 'Not signed in'}
-        </Text>
-        <Text style={{ color: '#6b7280', fontSize: 13, marginTop: 4 }}>
-          Member since{' '}
-          {user?.created_at
-            ? new Date(user.created_at).toLocaleDateString('en-US', {
-                month: 'long',
-                year: 'numeric',
-              })
-            : 'Unknown'}
-        </Text>
       </View>
 
       {/* Privacy Section */}
-      <Text style={{ color: '#9ca3af', fontSize: 12, fontWeight: '600', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8, marginLeft: 4 }}>
+      <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8, marginLeft: 4 }}>
         Privacy & Data
       </Text>
       <View
         style={{
-          backgroundColor: 'rgba(255,255,255,0.05)',
+          backgroundColor: colors.cardBg,
           borderRadius: 16,
           overflow: 'hidden',
           marginBottom: 16,
@@ -109,7 +117,7 @@ export default function ProfileScreen() {
           style={menuItemStyle}
         >
           <Text style={{ color: '#d4d4d8', fontSize: 15 }}>Privacy Policy</Text>
-          <Text style={{ color: '#6b7280', fontSize: 18 }}>›</Text>
+          <Text style={{ color: colors.textTertiary, fontSize: 18 }}>›</Text>
         </TouchableOpacity>
 
         <View style={dividerStyle} />
@@ -117,11 +125,11 @@ export default function ProfileScreen() {
         <View style={menuItemStyle}>
           <View style={{ flex: 1 }}>
             <Text style={{ color: '#d4d4d8', fontSize: 15 }}>Thumbnail Auto-Delete</Text>
-            <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 2 }}>
+            <Text style={{ color: colors.textTertiary, fontSize: 12, marginTop: 2 }}>
               Images automatically removed within 24 hours
             </Text>
           </View>
-          <Text style={{ color: '#10b981', fontSize: 13, fontWeight: '600' }}>ON</Text>
+          <Text style={{ color: colors.success, fontSize: 13, fontWeight: '600' }}>ON</Text>
         </View>
 
         <View style={dividerStyle} />
@@ -129,11 +137,11 @@ export default function ProfileScreen() {
         <View style={menuItemStyle}>
           <View style={{ flex: 1 }}>
             <Text style={{ color: '#d4d4d8', fontSize: 15 }}>Anonymous AI Analysis</Text>
-            <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 2 }}>
+            <Text style={{ color: colors.textTertiary, fontSize: 12, marginTop: 2 }}>
               Names are never sent to the AI
             </Text>
           </View>
-          <Text style={{ color: '#10b981', fontSize: 13, fontWeight: '600' }}>ON</Text>
+          <Text style={{ color: colors.success, fontSize: 13, fontWeight: '600' }}>ON</Text>
         </View>
 
         <View style={dividerStyle} />
@@ -141,21 +149,21 @@ export default function ProfileScreen() {
         <View style={menuItemStyle}>
           <View style={{ flex: 1 }}>
             <Text style={{ color: '#d4d4d8', fontSize: 15 }}>COPPA Consent</Text>
-            <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 2 }}>
+            <Text style={{ color: colors.textTertiary, fontSize: 12, marginTop: 2 }}>
               Parental consent provided at signup
             </Text>
           </View>
-          <Text style={{ color: '#10b981', fontSize: 13, fontWeight: '600' }}>✓</Text>
+          <Text style={{ color: colors.success, fontSize: 13, fontWeight: '600' }}>✓</Text>
         </View>
       </View>
 
       {/* About Section */}
-      <Text style={{ color: '#9ca3af', fontSize: 12, fontWeight: '600', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8, marginLeft: 4 }}>
+      <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8, marginLeft: 4 }}>
         About
       </Text>
       <View
         style={{
-          backgroundColor: 'rgba(255,255,255,0.05)',
+          backgroundColor: colors.cardBg,
           borderRadius: 16,
           overflow: 'hidden',
           marginBottom: 16,
@@ -165,7 +173,7 @@ export default function ProfileScreen() {
       >
         <View style={menuItemStyle}>
           <Text style={{ color: '#d4d4d8', fontSize: 15 }}>Version</Text>
-          <Text style={{ color: '#6b7280', fontSize: 14 }}>1.0.0</Text>
+          <Text style={{ color: colors.textTertiary, fontSize: 14 }}>1.0.0</Text>
         </View>
 
         <View style={dividerStyle} />
@@ -175,7 +183,7 @@ export default function ProfileScreen() {
           style={menuItemStyle}
         >
           <Text style={{ color: '#d4d4d8', fontSize: 15 }}>Contact Support</Text>
-          <Text style={{ color: '#6b7280', fontSize: 18 }}>›</Text>
+          <Text style={{ color: colors.textTertiary, fontSize: 18 }}>›</Text>
         </TouchableOpacity>
 
         <View style={dividerStyle} />
@@ -185,17 +193,17 @@ export default function ProfileScreen() {
           style={menuItemStyle}
         >
           <Text style={{ color: '#d4d4d8', fontSize: 15 }}>Visit Website</Text>
-          <Text style={{ color: '#6b7280', fontSize: 18 }}>›</Text>
+          <Text style={{ color: colors.textTertiary, fontSize: 18 }}>›</Text>
         </TouchableOpacity>
       </View>
 
       {/* Account Actions */}
-      <Text style={{ color: '#9ca3af', fontSize: 12, fontWeight: '600', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8, marginLeft: 4 }}>
+      <Text style={{ color: colors.textSecondary, fontSize: 12, fontWeight: '600', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8, marginLeft: 4 }}>
         Account
       </Text>
       <View
         style={{
-          backgroundColor: 'rgba(255,255,255,0.05)',
+          backgroundColor: colors.cardBg,
           borderRadius: 16,
           overflow: 'hidden',
           marginBottom: 16,
@@ -210,7 +218,7 @@ export default function ProfileScreen() {
         <View style={dividerStyle} />
 
         <TouchableOpacity onPress={handleDeleteAccount} style={menuItemStyle}>
-          <Text style={{ color: '#f87171', fontSize: 15 }}>Delete Account</Text>
+          <Text style={{ color: colors.error, fontSize: 15 }}>Delete Account</Text>
         </TouchableOpacity>
       </View>
 
