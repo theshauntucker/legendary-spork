@@ -205,7 +205,7 @@ export default function SignupPage() {
             </button>
 
             <p className="text-xs text-surface-200 text-center">
-              By signing up, you agree to our Terms of Service. Videos are never sold or shared. Built by a dance dad.
+              By signing up, you agree to our Terms of Service. Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or shared. Built by a dance dad.
             </p>
           </form>
         )}

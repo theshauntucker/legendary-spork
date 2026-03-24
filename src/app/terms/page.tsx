@@ -42,12 +42,12 @@ export default function TermsPage() {
 
           <h2 className="text-lg font-semibold text-white">4. Payments & Refunds</h2>
           <p>
-            Membership requires a one-time fee of $4.99 USD, which includes 3 video analyses. Additional analyses: get 5 for $24.99. All payments are processed through Stripe. Refunds are handled on a case-by-case basis — contact us at the email below.
+            Membership requires a one-time fee of $4.99 USD, which includes 1 video analysis. Additional analyses: get 5 for $24.99. All payments are processed through Stripe. Refunds are handled on a case-by-case basis — contact us at the email below.
           </p>
 
           <h2 className="text-lg font-semibold text-white">5. User Content</h2>
           <p>
-            You retain ownership of all videos and content you upload. By uploading content, you grant RoutineX a limited license to process, analyze, and store your content solely for the purpose of providing the Service. We do not share your videos with third parties.
+            You retain ownership of all videos and content you submit. Your video is processed entirely on your device — it is never uploaded to our servers. Only small still-frame thumbnails are sent to our AI provider for analysis. Frames are automatically deleted within 24 hours of analysis completion, and you can request immediate deletion at any time from your analysis results page. We do not share your video or frames with third parties.
           </p>
 
           <h2 className="text-lg font-semibold text-white">6. AI Disclaimer</h2>
@@ -73,8 +73,8 @@ export default function TermsPage() {
           <h2 className="text-lg font-semibold text-white">10. Contact</h2>
           <p>
             Questions about these terms? Email us at{" "}
-            <a href="mailto:hello@routinex.org" className="text-primary-400 hover:text-primary-300">
-              hello@routinex.org
+            <a href="mailto:danceroutinex@gmail.org" className="text-primary-400 hover:text-primary-300">
+              danceroutinex@gmail.org
             </a>.
           </p>
         </div>

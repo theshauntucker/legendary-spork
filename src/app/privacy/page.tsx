@@ -27,7 +27,7 @@ export default function PrivacyPage() {
 
           <h2 className="text-lg font-semibold text-white">1. Information We Collect</h2>
           <p>
-            We collect information you provide directly: your name, email address, and payment information (processed securely by Stripe). When you upload videos, we process and store the video content and extracted frames for analysis.
+            We collect information you provide directly: your name, email address, and payment information (processed securely by Stripe). When you use RoutineX, your video is processed on your device — the full video is never uploaded to our servers. We extract small still-frame thumbnails from your video, which are sent to our AI provider for analysis.
           </p>
 
           <h2 className="text-lg font-semibold text-white">2. How We Use Your Information</h2>
@@ -37,7 +37,7 @@ export default function PrivacyPage() {
 
           <h2 className="text-lg font-semibold text-white">3. Video Content</h2>
           <p>
-            Videos you upload are stored securely in our cloud infrastructure. Video frames are sent to our AI analysis provider (Anthropic) for processing. We do not sell, share, or publicly display your videos. Videos are associated with your account and accessible only by you.
+            Your full video never leaves your device. RoutineX extracts small still-frame thumbnails on your device, and only those frames are sent to our AI analysis provider (Anthropic) for scoring and feedback. Frames are automatically deleted within 24 hours of analysis completion, and you can request immediate deletion at any time. We do not sell, share, or publicly display your video or frames. No human ever views your video content.
           </p>
 
           <h2 className="text-lg font-semibold text-white">4. Third-Party Services</h2>
@@ -74,7 +74,7 @@ export default function PrivacyPage() {
           </ul>
           <p>
             <strong>Parental rights:</strong> Parents or guardians may review, request deletion of, or refuse further collection of their child&apos;s information at any time by contacting us at{" "}
-            <a href="mailto:hello@routinex.org" className="text-primary-400 hover:text-primary-300">hello@routinex.org</a>.
+            <a href="mailto:danceroutinex@gmail.org" className="text-primary-400 hover:text-primary-300">danceroutinex@gmail.org</a>.
           </p>
           <p>
             If we learn we have collected personal information from a child under 13 without verifiable parental consent, we will delete that information promptly.
@@ -98,8 +98,8 @@ export default function PrivacyPage() {
           <h2 className="text-lg font-semibold text-white">10. Contact</h2>
           <p>
             For privacy questions or data requests, email us at{" "}
-            <a href="mailto:hello@routinex.org" className="text-primary-400 hover:text-primary-300">
-              hello@routinex.org
+            <a href="mailto:danceroutinex@gmail.org" className="text-primary-400 hover:text-primary-300">
+              danceroutinex@gmail.org
             </a>.
           </p>
         </div>
