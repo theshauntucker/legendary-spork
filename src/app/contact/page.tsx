@@ -34,8 +34,8 @@ export default function ContactPage() {
       setStatus("error");
       setErrorMsg(
         err instanceof Error && err.message === "Email service not configured"
-          ? "Our email service is being set up. Please email us directly at 22tucker22@comcast.net in the meantime."
-          : "Something went wrong. Please try again, or email us at 22tucker22@comcast.net."
+          ? "Our email service is being set up. Please email us directly at danceroutinex@gmail.com in the meantime."
+          : "Something went wrong. Please try again, or email us at danceroutinex@gmail.com."
       );
     }
   };

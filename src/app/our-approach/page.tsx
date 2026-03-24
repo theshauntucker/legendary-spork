@@ -1,4 +1,4 @@
-import { Sparkles, Heart, Brain, Shield, DollarSign, ArrowRight } from "lucide-react";
+import { Sparkles, Heart, Brain, Shield, DollarSign, ArrowRight, Lock } from "lucide-react";
 
 export const metadata = {
   title: "Our Approach",
@@ -113,6 +113,26 @@ export default function OurApproachPage() {
               priorities. Upload again in a week and see what improved.
               <span className="text-white font-medium"> That cycle of feedback
               and growth is where the real magic happens.</span>
+            </p>
+          </div>
+
+          <div className="glass rounded-2xl p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Lock className="h-6 w-6 text-green-400 shrink-0" />
+              <h2 className="text-xl font-bold text-white">Your Child&apos;s Privacy Comes First</h2>
+            </div>
+            <p className="mb-4">
+              I know this is the #1 concern for parents — it was mine too.
+              So here&apos;s exactly how it works: <span className="text-white font-medium">your
+              video never leaves your device.</span> RoutineX processes everything
+              locally on your phone. We only send small still-frame thumbnails
+              to the AI for analysis — never the full video.
+            </p>
+            <p>
+              Those frames are <span className="text-white font-medium">automatically
+              deleted within 24 hours</span>, and you can delete them immediately
+              from your results page if you prefer. No human ever sees your
+              content. We don&apos;t store videos. We don&apos;t sell data. Period.
             </p>
           </div>
 

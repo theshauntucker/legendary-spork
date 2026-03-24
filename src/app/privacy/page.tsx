@@ -74,7 +74,7 @@ export default function PrivacyPage() {
           </ul>
           <p>
             <strong>Parental rights:</strong> Parents or guardians may review, request deletion of, or refuse further collection of their child&apos;s information at any time by contacting us at{" "}
-            <a href="mailto:danceroutinex@gmail.org" className="text-primary-400 hover:text-primary-300">danceroutinex@gmail.org</a>.
+            <a href="mailto:danceroutinex@gmail.com" className="text-primary-400 hover:text-primary-300">danceroutinex@gmail.com</a>.
           </p>
           <p>
             If we learn we have collected personal information from a child under 13 without verifiable parental consent, we will delete that information promptly.
@@ -98,8 +98,8 @@ export default function PrivacyPage() {
           <h2 className="text-lg font-semibold text-white">10. Contact</h2>
           <p>
             For privacy questions or data requests, email us at{" "}
-            <a href="mailto:danceroutinex@gmail.org" className="text-primary-400 hover:text-primary-300">
-              danceroutinex@gmail.org
+            <a href="mailto:danceroutinex@gmail.com" className="text-primary-400 hover:text-primary-300">
+              danceroutinex@gmail.com
             </a>.
           </p>
         </div>
