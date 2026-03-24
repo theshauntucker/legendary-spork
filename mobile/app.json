@@ -1,0 +1,72 @@
+{
+  "expo": {
+    "name": "RoutineX",
+    "slug": "routinex",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "routinex",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0a0a"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.routinex.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "RoutineX needs camera access to record dance routines for analysis.",
+        "NSPhotoLibraryUsageDescription": "RoutineX needs photo library access to select routine videos for analysis.",
+        "NSMicrophoneUsageDescription": "RoutineX needs microphone access when recording routines."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0a0a"
+      },
+      "package": "com.routinex.app",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow RoutineX to access your camera to record routines."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow RoutineX to access your photos to select routine videos."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#10b981"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "YOUR_EAS_PROJECT_ID"
+      },
+      "router": {
+        "origin": "https://routinex.org"
+      }
+    }
+  }
+}

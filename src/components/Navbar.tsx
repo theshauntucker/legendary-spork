@@ -38,10 +38,16 @@ export default function Navbar() {
               </a>
             ))}
             <a
-              href="#pricing"
+              href="/login"
+              className="text-sm text-surface-200 hover:text-white transition-colors"
+            >
+              Sign In
+            </a>
+            <a
+              href="/signup"
               className="rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
             >
-              Join Waitlist
+              Sign Up
             </a>
           </div>
 
@@ -77,11 +83,18 @@ export default function Navbar() {
                 </a>
               ))}
               <a
-                href="#pricing"
+                href="/login"
+                className="block text-sm text-surface-200 hover:text-white transition-colors"
+                onClick={() => setMobileOpen(false)}
+              >
+                Sign In
+              </a>
+              <a
+                href="/signup"
                 className="block w-full text-center rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-2.5 text-sm font-semibold text-white"
                 onClick={() => setMobileOpen(false)}
               >
-                Join Waitlist — $9.99
+                Sign Up
               </a>
             </div>
           </motion.div>

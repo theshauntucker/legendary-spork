@@ -1,129 +1,427 @@
-import { Sparkles } from "lucide-react";
+import { Sparkles, ArrowLeft } from "lucide-react";
 
 export const metadata = {
-  title: "Privacy Policy",
-  alternates: {
-    canonical: "/privacy",
-  },
+  title: "Privacy Policy — RoutineX",
+  description: "How RoutineX protects your data and privacy.",
 };
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen py-20 px-4">
+    <div className="min-h-screen py-12 px-4">
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-primary-600/5 rounded-full blur-3xl" />
+      </div>
+
       <div className="mx-auto max-w-3xl">
-        <a href="/" className="inline-flex items-center gap-2 mb-10">
-          <Sparkles className="h-6 w-6 text-primary-400" />
-          <span className="text-lg font-bold">
-            Routine<span className="gradient-text">X</span>
-          </span>
-        </a>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <a
+            href="/"
+            className="inline-flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </a>
+          <a href="/" className="inline-flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary-400" />
+            <span className="font-bold">
+              Routine<span className="gradient-text">X</span>
+            </span>
+          </a>
+          <div className="w-20" />
+        </div>
 
-        <h1 className="text-3xl sm:text-4xl font-bold font-[family-name:var(--font-display)] mb-8">
-          Privacy Policy
-        </h1>
-
-        <div className="prose prose-invert prose-sm max-w-none space-y-6 text-surface-200">
-          <p><strong>Effective Date:</strong> March 23, 2026</p>
-
-          <h2 className="text-lg font-semibold text-white">1. Information We Collect</h2>
-          <p>
-            We collect information you provide directly: your name, email address, and payment information (processed securely by Stripe — we never store your card details). When you submit a routine for analysis, still-frame thumbnails are extracted from your video and sent to our servers for AI processing.
-          </p>
-
-          <h2 className="text-lg font-semibold text-white">2. How We Use Your Information</h2>
-          <p>
-            We use your information to provide and improve the Service, process payments, send transactional emails (account confirmation, analysis results), and communicate important updates about RoutineX.
-          </p>
-
-          <h2 className="text-lg font-semibold text-white">3. How Video Analysis Works</h2>
-          <p>
-            Your video never leaves your device. RoutineX extracts still-frame thumbnails from the video directly in your browser. Only these thumbnail images — not the full video — are uploaded to our secure servers for analysis. The full video stays on your phone or computer at all times.
+        <div className="glass rounded-3xl p-6 sm:p-10">
+          <h1 className="text-3xl font-bold mb-2">Privacy Policy</h1>
+          <p className="text-sm text-surface-200 mb-8">
+            Last updated: March 23, 2026
           </p>
 
-          <h2 className="text-lg font-semibold text-white">4. Anonymous AI Analysis</h2>
-          <p>
-            When thumbnails are sent to our AI analysis provider (Anthropic Claude), no personal information is included. Your dancer&apos;s name, studio name, email, and account details are never sent to the AI. The analysis is performed anonymously using only the images, routine name, dance style, and scoring instructions. After the AI returns scores and feedback, we personalize the report on our end before delivering it to you.
-          </p>
+          <div className="space-y-8 text-sm text-surface-200 leading-relaxed">
+            {/* 1 */}
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">
+                1. Introduction
+              </h2>
+              <p>
+                RoutineX (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) operates the website routinex.org and the
+                RoutineX mobile application. This Privacy Policy explains how we collect, use,
+                and protect your information when you use our AI-powered dance and cheer video
+                analysis platform.
+              </p>
+              <p className="mt-2">
+                We are committed to protecting the privacy of all our users, including children.
+                We designed RoutineX with privacy as a core principle — your video never leaves
+                your device, names are anonymized before AI analysis, and thumbnail images are
+                automatically deleted.
+              </p>
+            </section>
 
-          <h2 className="text-lg font-semibold text-white">5. No Human Review</h2>
-          <p>
-            The entire analysis pipeline is fully automated. No one on our team ever sees your images or video content. No human eyes, at any point.
-          </p>
+            {/* 2 */}
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">
+                2. How Video Analysis Works
+              </h2>
+              <p>
+                When you use RoutineX to analyze a routine, here&apos;s exactly what happens:
+              </p>
+              <ol className="list-decimal list-inside mt-2 space-y-1.5">
+                <li>
+                  <strong className="text-white">Video stays on your device.</strong> Your full
+                  video file is never uploaded to our servers. Only still-frame thumbnails
+                  (screenshots) extracted from the video are uploaded.
+                </li>
+                <li>
+                  <strong className="text-white">Frames are uploaded temporarily.</strong> The
+                  extracted thumbnail images are stored briefly on our secure servers for the
+                  duration of AI processing.
+                </li>
+                <li>
+                  <strong className="text-white">AI analyzes the frames.</strong> Our AI provider
+                  (Anthropic) reviews the thumbnail images and generates a detailed analysis
+                  with scoring and feedback.
+                </li>
+                <li>
+                  <strong className="text-white">Frames are deleted.</strong> Thumbnail images
+                  are automatically deleted from our servers within 24 hours. You can also
+                  delete them immediately after receiving your analysis.
+                </li>
+              </ol>
+            </section>
 
-          <h2 className="text-lg font-semibold text-white">6. Thumbnail Auto-Deletion</h2>
-          <p>
-            All thumbnail images stored on our servers are automatically deleted within 24 hours of your report being delivered. You also have the option to delete them instantly from your report page. Once thumbnails are removed, only your text-based scores, written feedback, and improvement roadmap remain — available in your dashboard whenever you need them.
-          </p>
+            {/* 3 */}
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">
+                3. Anonymous AI Analysis
+              </h2>
+              <p>
+                We take extra steps to protect your identity during AI analysis:
+              </p>
+              <ul className="list-disc list-inside mt-2 space-y-1.5">
+                <li>
+                  Dancer names, studio names, and other personally identifiable information are
+                  <strong className="text-white"> stripped from the AI prompt</strong> before
+                  sending to our AI provider.
+                </li>
+                <li>
+                  The AI sees &quot;The performer&quot; and &quot;The studio&quot; instead of real names.
+                </li>
+                <li>
+                  After analysis, we replace these placeholders with your actual names in the
+                  final report — but the AI never sees them.
+                </li>
+                <li>
+                  No personally identifiable information (PII) is included in the data sent to
+                  the AI for analysis.
+                </li>
+              </ul>
+            </section>
 
-          <h2 className="text-lg font-semibold text-white">7. Anthropic (AI Provider) Data Policy</h2>
-          <p>
-            We use Anthropic&apos;s Claude API for analysis. Under Anthropic&apos;s commercial API policy, all inputs (the thumbnail images we send) are automatically deleted from their servers within 30 days. API data is never used to train their AI models — this is a flat policy, not an opt-in. For details, see{" "}
-            <a href="https://privacy.claude.com/en/collections/10663361-commercial-customers" className="text-primary-400 hover:text-primary-300" target="_blank" rel="noopener noreferrer">
-              Anthropic&apos;s Commercial Privacy Center
-            </a>.
-          </p>
+            {/* 4 */}
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">
+                4. No Human Review
+              </h2>
+              <p>
+                Your routine thumbnails and analysis are processed entirely by AI. No RoutineX
+                employee, contractor, or third party views your images or analysis results. The
+                process is fully automated from upload to report delivery.
+              </p>
+            </section>
 
-          <h2 className="text-lg font-semibold text-white">8. Data Sharing &amp; Selling</h2>
-          <p>
-            We do not sell, share, or provide your data to any third party. No ads, no data partnerships, no monetization of your information. Our only revenue is the analysis fee. Your data exists to serve your dancer — that&apos;s it.
-          </p>
+            {/* 5 */}
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">
+                5. Thumbnail Auto-Deletion
+              </h2>
+              <p>
+                We believe in data minimization. Thumbnail images uploaded for analysis are:
+              </p>
+              <ul className="list-disc list-inside mt-2 space-y-1.5">
+                <li>
+                  <strong className="text-white">Automatically deleted within 24 hours</strong>{" "}
+                  of your analysis being completed, via an automated cleanup process.
+                </li>
+                <li>
+                  <strong className="text-white">Deletable immediately</strong> by you at any
+                  time using the &quot;Delete Thumbnails Now&quot; button on your analysis report page.
+                </li>
+                <li>
+                  Stored in isolated, encrypted cloud storage during the brief processing
+                  window.
+                </li>
+              </ul>
+              <p className="mt-2">
+                Your analysis report (text scores, feedback, and improvement tips) is retained
+                so you can access it anytime. Only the thumbnail images are deleted.
+              </p>
+            </section>
 
-          <h2 className="text-lg font-semibold text-white">9. Third-Party Services</h2>
-          <p>We use the following third-party services, each with their own privacy policies:</p>
-          <ul className="list-disc list-inside space-y-1">
-            <li><strong>Supabase</strong> — authentication, database, and secure file storage (private buckets, signed URLs)</li>
-            <li><strong>Stripe</strong> — payment processing (we never store card details)</li>
-            <li><strong>Anthropic (Claude API)</strong> — AI image analysis (anonymous, no personal data sent)</li>
-            <li><strong>Vercel</strong> — hosting, infrastructure, and privacy-friendly analytics (no cookies, no third-party trackers)</li>
-          </ul>
-          <p>
-            We only share the minimum data necessary for each service to function. We do not use Google Analytics, Meta Pixel, or any third-party tracking scripts.
-          </p>
+            {/* 6 */}
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">
+                6. Information We Collect
+              </h2>
+              <p>We collect the following information:</p>
+              <ul className="list-disc list-inside mt-2 space-y-1.5">
+                <li>
+                  <strong className="text-white">Account information:</strong> Email address and
+                  password (encrypted) when you create an account.
+                </li>
+                <li>
+                  <strong className="text-white">Routine metadata:</strong> Dancer name, studio
+                  name, routine title, age group, dance style, and entry type that you provide.
+                </li>
+                <li>
+                  <strong className="text-white">Thumbnail images:</strong> Still frames extracted
+                  from your routine video (temporarily — see Section 5).
+                </li>
+                <li>
+                  <strong className="text-white">Payment information:</strong> Processed securely
+                  by Stripe. We never store your full credit card number.
+                </li>
+                <li>
+                  <strong className="text-white">Usage data:</strong> Basic analytics to improve
+                  the service (pages visited, features used).
+                </li>
+              </ul>
+            </section>
 
-          <h2 className="text-lg font-semibold text-white">10. Data Retention</h2>
-          <p>
-            Thumbnail images: automatically deleted within 24 hours (or instantly at your request). Scores, feedback, and improvement roadmaps: retained as long as your account is active. You may request deletion of your account and all associated data at any time by contacting us.
-          </p>
+            {/* 7 */}
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">
+                7. How We Use Your Information
+              </h2>
+              <ul className="list-disc list-inside space-y-1.5">
+                <li>To provide AI-powered routine analysis and scoring</li>
+                <li>To process payments for analysis services</li>
+                <li>To personalize your analysis reports with dancer and studio names</li>
+                <li>To send transactional emails (analysis ready, account updates)</li>
+                <li>To improve our AI analysis accuracy and service quality</li>
+                <li>To comply with legal obligations</li>
+              </ul>
+            </section>
 
-          <h2 className="text-lg font-semibold text-white">11. Children&apos;s Privacy &amp; COPPA Compliance</h2>
-          <p>
-            RoutineX analyzes dance and cheer routines performed by minors. We take this responsibility seriously and comply with the Children&apos;s Online Privacy Protection Act (COPPA).
-          </p>
-          <p>
-            <strong>Parental consent:</strong> Only parents or legal guardians may create RoutineX accounts. During registration, parents confirm they are the parent or guardian of any minor whose routines will be submitted, and consent to the temporary processing of still-frame images as described in this policy.
-          </p>
-          <p>
-            <strong>What we collect:</strong> The only personal information related to minors is the still-frame thumbnail images temporarily extracted for analysis. No names, ages, or other identifying details are sent to our AI provider.
-          </p>
-          <p>
-            <strong>Parental rights:</strong> Parents can review all data associated with their child through their dashboard, delete thumbnail images instantly from any report page, and request complete deletion of all their child&apos;s data by emailing us. Parents may also revoke consent at any time by deleting their account.
-          </p>
-          <p>
-            <strong>Data minimization:</strong> We collect only what is necessary to deliver the analysis. Thumbnail images auto-delete within 24 hours. We do not use children&apos;s data for marketing, advertising, or any purpose beyond delivering the requested analysis.
-          </p>
+            {/* 8 */}
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">
+                8. Anthropic Data Policy
+              </h2>
+              <p>
+                We use Anthropic&apos;s Claude AI for routine analysis. Anthropic&apos;s data handling:
+              </p>
+              <ul className="list-disc list-inside mt-2 space-y-1.5">
+                <li>
+                  Anthropic may retain API inputs for up to <strong className="text-white">30 days</strong> for
+                  safety and abuse monitoring, after which they are deleted.
+                </li>
+                <li>
+                  Anthropic does <strong className="text-white">not use API data to train their models</strong>.
+                </li>
+                <li>
+                  No personally identifiable information is included in our API requests to
+                  Anthropic (see Section 3).
+                </li>
+              </ul>
+              <p className="mt-2">
+                For more details, see{" "}
+                <a
+                  href="https://www.anthropic.com/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary-400 hover:underline"
+                >
+                  Anthropic&apos;s Privacy Policy
+                </a>
+                .
+              </p>
+            </section>
 
-          <h2 className="text-lg font-semibold text-white">12. Security</h2>
-          <p>
-            We implement industry-standard security measures including encrypted data transmission (HTTPS/TLS), secure authentication, row-level security in our database, and private storage buckets with signed URL access. However, no method of transmission over the internet is 100% secure.
-          </p>
+            {/* 9 */}
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">
+                9. Data Sharing &amp; Selling
+              </h2>
+              <p>We want to be crystal clear:</p>
+              <ul className="list-disc list-inside mt-2 space-y-1.5">
+                <li>
+                  We <strong className="text-white">do not sell</strong> your personal data to
+                  anyone, ever.
+                </li>
+                <li>
+                  We <strong className="text-white">do not use advertising trackers</strong> or
+                  serve ads on RoutineX.
+                </li>
+                <li>
+                  We <strong className="text-white">do not share</strong> your data with third
+                  parties for marketing purposes.
+                </li>
+                <li>
+                  The only third parties that process your data are our essential service
+                  providers (see Section 12), and only as needed to deliver our service.
+                </li>
+              </ul>
+            </section>
 
-          <h2 className="text-lg font-semibold text-white">13. Your Rights</h2>
-          <p>
-            You have the right to access, correct, or delete your personal data. You may also request a copy of your data or withdraw consent for processing. To exercise these rights, contact us at the email below.
-          </p>
+            {/* 10 */}
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">
+                10. Children&apos;s Privacy &amp; COPPA Compliance
+              </h2>
+              <p>
+                RoutineX is used by parents and coaches to analyze routines performed by minors.
+                We take children&apos;s privacy seriously and comply with the Children&apos;s Online
+                Privacy Protection Act (COPPA):
+              </p>
+              <ul className="list-disc list-inside mt-2 space-y-1.5">
+                <li>
+                  <strong className="text-white">Parental consent required:</strong> During account
+                  creation, users must confirm they are the parent or legal guardian of any minor
+                  whose routines will be analyzed.
+                </li>
+                <li>
+                  <strong className="text-white">Data minimization:</strong> We collect only the
+                  minimum data necessary to provide analysis. Video never leaves the device.
+                  Thumbnails are auto-deleted.
+                </li>
+                <li>
+                  <strong className="text-white">No PII to AI:</strong> Children&apos;s names are never
+                  sent to our AI provider.
+                </li>
+                <li>
+                  <strong className="text-white">Parental rights:</strong> Parents can request
+                  deletion of all data associated with their child&apos;s routines at any time by
+                  contacting us.
+                </li>
+                <li>
+                  <strong className="text-white">Consent records:</strong> We maintain records of
+                  parental consent including timestamp and consent version.
+                </li>
+              </ul>
+            </section>
 
-          <h2 className="text-lg font-semibold text-white">14. Changes to This Policy</h2>
-          <p>
-            We may update this policy from time to time. We will notify you of material changes via email or through the Service.
-          </p>
+            {/* 11 */}
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">
+                11. Data Security
+              </h2>
+              <p>
+                We implement industry-standard security measures to protect your data:
+              </p>
+              <ul className="list-disc list-inside mt-2 space-y-1.5">
+                <li>All data transmitted over HTTPS/TLS encryption</li>
+                <li>Passwords are hashed and never stored in plain text</li>
+                <li>Thumbnail images stored in encrypted cloud storage with access controls</li>
+                <li>Authentication tokens securely managed via Supabase Auth</li>
+                <li>Regular security reviews of our codebase and infrastructure</li>
+              </ul>
+            </section>
 
-          <h2 className="text-lg font-semibold text-white">15. Contact</h2>
-          <p>
-            For privacy questions or data requests, email us at{" "}
-            <a href="mailto:hello@routinex.org" className="text-primary-400 hover:text-primary-300">
-              hello@routinex.org
-            </a>.
-          </p>
+            {/* 12 */}
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">
+                12. Third-Party Services
+              </h2>
+              <p>
+                RoutineX uses the following third-party services to deliver our platform:
+              </p>
+              <ul className="list-disc list-inside mt-2 space-y-1.5">
+                <li>
+                  <strong className="text-white">Supabase</strong> — Database, authentication,
+                  and file storage. Data stored in encrypted, SOC 2 compliant infrastructure.
+                </li>
+                <li>
+                  <strong className="text-white">Anthropic (Claude AI)</strong> — AI analysis of
+                  routine thumbnails. No PII sent. 30-day input retention for safety monitoring,
+                  no model training.
+                </li>
+                <li>
+                  <strong className="text-white">Stripe</strong> — Payment processing. PCI DSS
+                  Level 1 certified. We never store your full card number.
+                </li>
+                <li>
+                  <strong className="text-white">Vercel</strong> — Web hosting. SOC 2 compliant.
+                </li>
+                <li>
+                  <strong className="text-white">Resend</strong> — Transactional email delivery
+                  only (no marketing emails unless you opt in).
+                </li>
+              </ul>
+            </section>
+
+            {/* 13 */}
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">
+                13. Your Rights
+              </h2>
+              <p>You have the right to:</p>
+              <ul className="list-disc list-inside mt-2 space-y-1.5">
+                <li>Access the personal data we hold about you</li>
+                <li>Request correction of inaccurate data</li>
+                <li>Request deletion of your account and all associated data</li>
+                <li>Delete thumbnail images immediately (via the analysis report page)</li>
+                <li>Export your analysis reports</li>
+                <li>Withdraw consent for data processing at any time</li>
+              </ul>
+              <p className="mt-2">
+                To exercise any of these rights, contact us at{" "}
+                <a
+                  href="mailto:22tucker22@comcast.net"
+                  className="text-primary-400 hover:underline"
+                >
+                  22tucker22@comcast.net
+                </a>
+                .
+              </p>
+            </section>
+
+            {/* 14 */}
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">
+                14. Changes to This Policy
+              </h2>
+              <p>
+                We may update this Privacy Policy from time to time. We will notify you of any
+                material changes by email or by posting a prominent notice on our website. Your
+                continued use of RoutineX after changes constitutes acceptance of the updated
+                policy.
+              </p>
+            </section>
+
+            {/* 15 */}
+            <section>
+              <h2 className="text-lg font-semibold text-white mb-3">
+                15. Contact Us
+              </h2>
+              <p>
+                If you have questions about this Privacy Policy, your data, or your rights,
+                please contact us:
+              </p>
+              <div className="mt-2 rounded-xl bg-white/5 p-4">
+                <p>
+                  <strong className="text-white">RoutineX</strong>
+                </p>
+                <p>
+                  Email:{" "}
+                  <a
+                    href="mailto:22tucker22@comcast.net"
+                    className="text-primary-400 hover:underline"
+                  >
+                    22tucker22@comcast.net
+                  </a>
+                </p>
+                <p>
+                  Website:{" "}
+                  <a
+                    href="https://routinex.org"
+                    className="text-primary-400 hover:underline"
+                  >
+                    routinex.org
+                  </a>
+                </p>
+              </div>
+            </section>
+          </div>
         </div>
       </div>
     </div>
