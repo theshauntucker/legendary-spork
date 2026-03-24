@@ -296,9 +296,9 @@ Common deductions in ${metadata.style}: ${styleCriteria.commonDeductions.join(";
 Use this vocabulary in your feedback: ${styleCriteria.judgeVocabulary.join(", ")}
 
 ROUTINE DETAILS:
-- Routine Name: "${metadata.routineName}"
-- Performer: ${metadata.dancerName || "Not specified"}
-- Studio: ${metadata.studioName || "Not specified"}
+- Routine Name: "[ROUTINE]"
+- Performer: [PERFORMER]
+- Studio: [STUDIO]
 - Age Division: ${metadata.ageGroup}
 - Style: ${metadata.style}
 - Entry Type: ${metadata.entryType}
@@ -467,7 +467,34 @@ Return ONLY the JSON object, no other text.`,
       throw new Error("Could not parse JSON from Claude response");
     }
 
-    const analysis = JSON.parse(jsonMatch[0]);
+    const rawAnalysis = JSON.parse(jsonMatch[0]);
+
+    // De-anonymize: replace placeholders with real names in all text fields
+    const performerName = metadata.dancerName || "Not specified";
+    const studioName = metadata.studioName || "Not specified";
+    const routineName = metadata.routineName;
+
+    function deAnonymize(obj: unknown): unknown {
+      if (typeof obj === "string") {
+        return obj
+          .replace(/\[PERFORMER\]/g, performerName)
+          .replace(/\[STUDIO\]/g, studioName)
+          .replace(/\[ROUTINE\]/g, routineName);
+      }
+      if (Array.isArray(obj)) {
+        return obj.map(deAnonymize);
+      }
+      if (obj && typeof obj === "object") {
+        const result: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+          result[key] = deAnonymize(value);
+        }
+        return result;
+      }
+      return obj;
+    }
+
+    const analysis = deAnonymize(rawAnalysis) as Record<string, unknown>;
 
     if (
       typeof analysis.totalScore !== "number" ||
