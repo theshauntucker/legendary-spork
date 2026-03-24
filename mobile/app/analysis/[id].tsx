@@ -82,7 +82,7 @@ export default function AnalysisScreen() {
     try {
       const result = await getAnalysis(id!);
       setData(result as unknown as AnalysisResult);
-      setFramesDeleted(!!(result as Record<string, unknown>).framesDeleted);
+      setFramesDeleted(!!(result as unknown as Record<string, unknown>).framesDeleted);
     } catch (err) {
       console.error('Failed to load analysis:', err);
     } finally {

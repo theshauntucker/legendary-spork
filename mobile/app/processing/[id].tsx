@@ -83,7 +83,7 @@ export default function ProcessingScreen() {
     const poll = setInterval(async () => {
       try {
         const data = await getAnalysis(id);
-        if (data && (data as Record<string, unknown>).overallScore) {
+        if (data && (data as unknown as Record<string, unknown>).overallScore) {
           clearInterval(poll);
           router.replace(`/analysis/${id}`);
         }
