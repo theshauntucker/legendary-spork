@@ -494,7 +494,8 @@ Return ONLY the JSON object, no other text.`,
       return obj;
     }
 
-    const analysis = deAnonymize(rawAnalysis) as Record<string, unknown>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const analysis = deAnonymize(rawAnalysis) as any;
 
     if (
       typeof analysis.totalScore !== "number" ||
