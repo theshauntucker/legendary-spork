@@ -23,6 +23,7 @@ interface AnalysisItem {
 }
 
 function getAwardLevel(score: number) {
+  if (score >= 295) return { label: 'Diamond', color: '#60a5fa' };
   if (score >= 290) return { label: 'Titanium', color: '#fbbf24' };
   if (score >= 280) return { label: 'Platinum Star', color: '#a855f7' };
   if (score >= 265) return { label: 'Platinum', color: '#d4d4d8' };

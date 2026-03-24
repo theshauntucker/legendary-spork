@@ -1,9 +1,40 @@
 import { supabase } from './supabase';
-import type { AnalysisData, VideoMetadata } from '../../shared/types';
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE || 'https://routinex.org';
 
-async function getAuthToken(): Promise<string> {
+// Types used by the mobile app
+export interface VideoMetadata {
+  routineTitle: string;
+  dancerName: string;
+  studioName: string;
+  danceStyle: string;
+  ageGroup: string;
+  entryType: string;
+  competitionType: string;
+  level: string;
+}
+
+export interface AnalysisData {
+  id: string;
+  routine_title: string;
+  dancer_name: string;
+  dance_style: string;
+  status: string;
+  analysis_data?: {
+    overallScore?: number;
+    scores?: {
+      technique?: number;
+      performance?: number;
+      choreography?: number;
+      overall?: number;
+    };
+    timeline?: Array<{ time: string; note: string; type: string }>;
+    improvements?: Array<{ area: string; note: string; impact: string }>;
+  };
+  created_at: string;
+}
+
+export async function getAuthToken(): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) throw new Error('Not authenticated');
   return session.access_token;

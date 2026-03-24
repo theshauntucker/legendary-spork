@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import * as WebBrowser from 'expo-web-browser';
-import { uploadFrames } from '../../lib/api';
+import { uploadFrames, getAuthToken } from '../../lib/api';
 
 const DANCE_STYLES = [
   'Contemporary', 'Jazz', 'Lyrical', 'Hip Hop', 'Tap',
@@ -112,6 +112,33 @@ export default function UploadScreen() {
     setStep('frames');
   };
 
+  const [purchaseType, setPurchaseType] = useState<'trial' | 'pack'>('trial');
+  const [hasCredits, setHasCredits] = useState(false);
+  const [creditsRemaining, setCreditsRemaining] = useState(0);
+  const [trialUsed, setTrialUsed] = useState(false);
+  const [checkingCredits, setCheckingCredits] = useState(true);
+
+  // Check credits on mount
+  React.useEffect(() => {
+    const checkCredits = async () => {
+      try {
+        const API_BASE = process.env.EXPO_PUBLIC_API_BASE || 'https://routinex.org';
+        const token = await getAuthToken();
+        const res = await fetch(`${API_BASE}/api/credits`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setHasCredits(data.remaining > 0);
+          setCreditsRemaining(data.remaining);
+          setTrialUsed(data.trialUsed || false);
+        }
+      } catch {}
+      setCheckingCredits(false);
+    };
+    checkCredits();
+  }, []);
+
   const handleSubmit = async () => {
     if (!routineTitle || !danceStyle || !entryType) {
       setError('Please fill in routine name, style, and entry type.');
@@ -122,32 +149,56 @@ export default function UploadScreen() {
     setError('');
 
     try {
-      // Open Stripe checkout in browser
       const API_BASE = process.env.EXPO_PUBLIC_API_BASE || 'https://routinex.org';
-      const checkoutRes = await fetch(`${API_BASE}/api/checkout`, { method: 'POST' });
-      const { url } = await checkoutRes.json();
+      const token = await getAuthToken();
 
-      if (url) {
-        const result = await WebBrowser.openBrowserAsync(url);
-        if (result.type !== 'cancel') {
-          // Payment completed — upload frames
-          const { videoId } = await uploadFrames(frames, {
-            routineTitle,
-            dancerName: dancerName || 'Unknown',
-            studioName: studioName || 'Independent',
-            danceStyle,
-            ageGroup: ageGroup || 'Not specified',
-            entryType,
-            competitionType: '',
-            level: '',
-          });
+      // If user has no credits, go through Stripe checkout first
+      if (!hasCredits) {
+        const checkoutRes = await fetch(`${API_BASE}/api/checkout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ type: purchaseType }),
+        });
+        const checkoutData = await checkoutRes.json();
 
-          router.push(`/processing/${videoId}`);
+        if (checkoutData.error === 'trial_used') {
+          setTrialUsed(true);
+          setPurchaseType('pack');
+          setError(checkoutData.message);
+          setUploading(false);
+          return;
+        }
+
+        if (checkoutData.url) {
+          const result = await WebBrowser.openBrowserAsync(checkoutData.url);
+          if (result.type === 'cancel') {
+            setError('Payment was cancelled. Please try again.');
+            setUploading(false);
+            return;
+          }
+        } else {
+          setError('Could not start checkout. Please try again.');
+          setUploading(false);
           return;
         }
       }
 
-      setError('Payment was cancelled. Please try again.');
+      // Upload frames and start analysis
+      const { videoId } = await uploadFrames(frames, {
+        routineTitle,
+        dancerName: dancerName || 'Unknown',
+        studioName: studioName || 'Independent',
+        danceStyle,
+        ageGroup: ageGroup || 'Not specified',
+        entryType,
+        competitionType: '',
+        level: '',
+      });
+
+      router.push(`/processing/${videoId}`);
     } catch (err) {
       console.error('Upload error:', err);
       setError('Upload failed. Please try again.');
@@ -428,6 +479,68 @@ export default function UploadScreen() {
         </Text>
       ) : null}
 
+      {/* Pricing selection — only shown when user has no credits */}
+      {!hasCredits && !checkingCredits && (
+        <View style={{ marginTop: 20, gap: 10 }}>
+          <Text style={{ color: '#d4d4d8', fontSize: 13, fontWeight: '500', marginBottom: 4 }}>
+            Choose a plan to continue:
+          </Text>
+
+          {!trialUsed && (
+            <TouchableOpacity
+              onPress={() => setPurchaseType('trial')}
+              style={{
+                backgroundColor: purchaseType === 'trial' ? 'rgba(168,85,247,0.15)' : 'rgba(255,255,255,0.05)',
+                borderRadius: 12,
+                padding: 14,
+                borderWidth: 1.5,
+                borderColor: purchaseType === 'trial' ? '#9333ea' : 'rgba(255,255,255,0.1)',
+              }}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>
+                First Analysis — $4.99
+              </Text>
+              <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 2 }}>
+                One-time trial offer — 1 full AI analysis
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            onPress={() => setPurchaseType('pack')}
+            style={{
+              backgroundColor: purchaseType === 'pack' ? 'rgba(168,85,247,0.15)' : 'rgba(255,255,255,0.05)',
+              borderRadius: 12,
+              padding: 14,
+              borderWidth: 1.5,
+              borderColor: purchaseType === 'pack' ? '#9333ea' : 'rgba(255,255,255,0.1)',
+            }}
+          >
+            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>
+              Competition Pack — $24.99
+            </Text>
+            <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 2 }}>
+              5 analyses — only $5 each. Best value.
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {hasCredits && !checkingCredits && (
+        <View style={{
+          backgroundColor: 'rgba(16,185,129,0.1)',
+          borderRadius: 12,
+          padding: 12,
+          marginTop: 20,
+          borderWidth: 1,
+          borderColor: 'rgba(16,185,129,0.2)',
+        }}>
+          <Text style={{ color: '#6ee7b7', fontSize: 13 }}>
+            You have {creditsRemaining} analysis credit{creditsRemaining !== 1 ? 's' : ''} remaining.
+          </Text>
+        </View>
+      )}
+
       <View style={{ flexDirection: 'row', gap: 12, marginTop: 24, marginBottom: 40 }}>
         <TouchableOpacity
           onPress={() => setStep('frames')}
@@ -443,21 +556,25 @@ export default function UploadScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           onPress={handleSubmit}
-          disabled={uploading}
+          disabled={uploading || checkingCredits}
           style={{
             flex: 2,
             backgroundColor: '#9333ea',
             borderRadius: 999,
             padding: 16,
             alignItems: 'center',
-            opacity: uploading ? 0.6 : 1,
+            opacity: uploading || checkingCredits ? 0.6 : 1,
           }}
         >
           {uploading ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
-              Analyze — $2.99
+              {hasCredits
+                ? 'Analyze Now'
+                : purchaseType === 'trial'
+                  ? 'Analyze — $4.99'
+                  : 'Analyze — $24.99'}
             </Text>
           )}
         </TouchableOpacity>
