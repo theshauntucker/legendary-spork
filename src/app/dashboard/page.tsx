@@ -154,6 +154,39 @@ export default async function DashboardPage({
     user.email
   );
 
+  // Check if trial has been used
+  const { data: usedTrial } = await serviceClient
+    .from("payments")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("payment_type", "trial")
+    .eq("status", "completed")
+    .maybeSingle();
+
+  // Build dancer groupings from analyzed videos
+  const dancerMap: Record<string, { bestScore: number; bestAward: string; analysisCount: number; styles: string[] }> = {};
+  for (const v of videosWithAnalyses) {
+    const name = v.dancer_name;
+    if (!name || v.status !== "analyzed" || !v.analyses?.length) continue;
+    if (!dancerMap[name]) {
+      dancerMap[name] = { bestScore: 0, bestAward: "Gold", analysisCount: 0, styles: [] };
+    }
+    const d = dancerMap[name];
+    const score = v.analyses[0].total_score;
+    if (score > d.bestScore) {
+      d.bestScore = score;
+      d.bestAward = v.analyses[0].award_level;
+    }
+    d.analysisCount++;
+    if (!d.styles.includes(v.style)) {
+      d.styles.push(v.style);
+    }
+  }
+
+  const dancers = Object.entries(dancerMap).map(([name, data]) => ({
+    name,
+    ...data,
+  }));
   return (
     <DashboardClient
       user={{
@@ -166,6 +199,8 @@ export default async function DashboardPage({
         total: creditStatus.totalCredits,
         used: creditStatus.usedCredits,
       }}
+      trialUsed={!!usedTrial}
+      dancers={dancers}
     />
   );
 }

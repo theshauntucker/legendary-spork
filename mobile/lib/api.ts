@@ -107,6 +107,84 @@ export async function getUserAnalyses(): Promise<AnalysisData[]> {
   return data || [];
 }
 
+export interface CompetitionScoreData {
+  id: string;
+  competition_name: string;
+  competition_date: string;
+  actual_score: number | null;
+  actual_award_level: string | null;
+  placement: string | null;
+  notes: string | null;
+}
+
+export async function getCompetitionScores(analysisId: string): Promise<CompetitionScoreData[]> {
+  const token = await getAuthToken();
+  const res = await fetch(
+    `${API_BASE}/api/competition-scores?analysis_id=${analysisId}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.scores || [];
+}
+
+export async function saveCompetitionScore(params: {
+  analysisId: string;
+  videoId: string;
+  competitionName: string;
+  competitionDate: string;
+  actualScore?: number;
+  actualAwardLevel?: string;
+  placement?: string;
+  notes?: string;
+}): Promise<CompetitionScoreData> {
+  const token = await getAuthToken();
+  const res = await fetch(`${API_BASE}/api/competition-scores`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) throw new Error('Failed to save competition score');
+  const data = await res.json();
+  return data.score;
+}
+
+export async function deleteCompetitionScore(id: string): Promise<void> {
+  const token = await getAuthToken();
+  const res = await fetch(`${API_BASE}/api/competition-scores?id=${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to delete competition score');
+}
+
+export interface ScoreHistoryPoint {
+  videoId: string;
+  analysisId: string;
+  totalScore: number;
+  awardLevel: string;
+  date: string;
+  routineName: string;
+  dancerName: string;
+  style: string;
+}
+
+export async function getScoreHistory(dancerName?: string): Promise<ScoreHistoryPoint[]> {
+  const token = await getAuthToken();
+  const params = new URLSearchParams();
+  if (dancerName) params.set('dancer_name', dancerName);
+  const res = await fetch(
+    `${API_BASE}/api/history?${params.toString()}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.history || [];
+}
+
 export async function storeConsentRecord(
   consentType: string,
   userAgent: string,

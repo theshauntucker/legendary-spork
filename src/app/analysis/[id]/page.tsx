@@ -93,8 +93,39 @@ export default async function AnalysisPage({
         }
       }
 
+      // Fetch competition scores for this analysis
+      const { data: competitionScores } = await serviceClient
+        .from("competition_scores")
+        .select("*")
+        .eq("analysis_id", analysis.id)
+        .eq("user_id", user.id)
+        .order("competition_date", { ascending: false });
+
+      // Fetch score history for this dancer+routine
+      const { data: historyVideos } = await serviceClient
+        .from("videos")
+        .select("id, routine_name, dancer_name, style, created_at, analyses!inner(id, total_score, award_level, created_at)")
+        .eq("user_id", user.id)
+        .eq("status", "analyzed")
+        .eq("dancer_name", video.dancer_name || "")
+        .order("created_at", { ascending: true });
+
+      const scoreHistory = (historyVideos || []).map((v: Record<string, unknown>) => {
+        const analyses = v.analyses as Array<Record<string, unknown>>;
+        const a = analyses[0];
+        return {
+          videoId: v.id as string,
+          analysisId: a.id as string,
+          totalScore: a.total_score as number,
+          awardLevel: a.award_level as string,
+          date: v.created_at as string,
+          routineName: v.routine_name as string,
+        };
+      });
+
       analysisData = {
         id: video.id,
+        analysisRecordId: analysis.id,
         routineName: video.routine_name,
         dancerName: video.dancer_name || "Dancer",
         ageGroup: video.age_group,
@@ -109,6 +140,8 @@ export default async function AnalysisPage({
         competitionComparison: analysis.competition_comparison,
         analysisMethod,
         frames: frameUrls,
+        competitionScores: competitionScores || [],
+        scoreHistory,
       };
     } else {
       analysisData = generateFallbackAnalysis(id);

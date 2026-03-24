@@ -14,6 +14,9 @@ import {
   AlertCircle,
   ArrowRight,
   LogOut,
+  Trophy,
+  ChevronRight,
+  User,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -115,14 +118,26 @@ function PurchaseCard({
   );
 }
 
+interface DancerSummary {
+  name: string;
+  bestScore: number;
+  bestAward: string;
+  analysisCount: number;
+  styles: string[];
+}
+
 export default function DashboardClient({
   user,
   videos,
   credits,
+  trialUsed = false,
+  dancers = [],
 }: {
   user: { email: string; name: string };
   videos: VideoRecord[];
   credits: { remaining: number; total: number; used: number };
+  trialUsed?: boolean;
+  dancers?: DancerSummary[];
 }) {
   const router = useRouter();
 
@@ -325,6 +340,64 @@ export default function DashboardClient({
           </div>
           <ArrowRight className="h-5 w-5 text-surface-200 group-hover:text-white group-hover:translate-x-1 transition-all" />
         </motion.a>
+
+        {/* Your Dancers */}
+        {dancers.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="mb-10"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Trophy className="h-5 w-5 text-gold-400" />
+              <h2 className="text-lg font-bold">Your Dancers</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {dancers.map((dancer) => {
+                const initials = dancer.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2);
+
+                const awardColor =
+                  dancer.bestAward === "Diamond"
+                    ? "text-gold-400"
+                    : dancer.bestAward === "Platinum"
+                    ? "text-primary-400"
+                    : dancer.bestAward === "High Gold"
+                    ? "text-yellow-400"
+                    : "text-yellow-600";
+
+                return (
+                  <a
+                    key={dancer.name}
+                    href={`/dancer/${encodeURIComponent(dancer.name)}`}
+                    className="flex items-center gap-4 glass rounded-2xl p-4 hover:border-primary-500/20 transition-colors group"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 via-accent-500 to-gold-500 flex items-center justify-center shrink-0">
+                      <span className="text-sm font-bold text-white">{initials}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{dancer.name}</p>
+                      <p className="text-xs text-surface-200">
+                        {dancer.analysisCount} {dancer.analysisCount === 1 ? "analysis" : "analyses"} &bull;{" "}
+                        {dancer.styles.slice(0, 2).join(", ")}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-lg font-bold ${awardColor}`}>{dancer.bestScore}</p>
+                      <p className="text-[10px] text-surface-200">{dancer.bestAward}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-surface-200 group-hover:text-white transition-colors" />
+                  </a>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
 
         {/* Videos List */}
         {videos.length > 0 ? (

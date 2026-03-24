@@ -10,8 +10,9 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { getAnalysis, deleteFrames } from '../../lib/api';
+import { getAnalysis, deleteFrames, getCompetitionScores, CompetitionScoreData } from '../../lib/api';
 import { colors, gradients, gradientProps, glass, glassElevated } from '../../lib/theme';
+import { CompetitionScoreSection } from '../../components/CompetitionScoreForm';
 
 interface JudgeScore {
   category: string;
@@ -72,6 +73,7 @@ export default function AnalysisScreen() {
   const [framesDeleted, setFramesDeleted] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [competitionScores, setCompetitionScores] = useState<CompetitionScoreData[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -83,6 +85,12 @@ export default function AnalysisScreen() {
       const result = await getAnalysis(id!);
       setData(result as unknown as AnalysisResult);
       setFramesDeleted(!!(result as unknown as Record<string, unknown>).framesDeleted);
+      // Load competition scores
+      const resultAny = result as unknown as Record<string, unknown>;
+      if (resultAny.analysisId) {
+        const scores = await getCompetitionScores(resultAny.analysisId as string);
+        setCompetitionScores(scores);
+      }
     } catch (err) {
       console.error('Failed to load analysis:', err);
     } finally {
@@ -325,6 +333,15 @@ export default function AnalysisScreen() {
           ))}
         </View>
       )}
+
+      {/* Competition Scores */}
+      <CompetitionScoreSection
+        scores={competitionScores}
+        aiScore={data.overallScore}
+        analysisId={id!}
+        videoId={id!}
+        onScoresChange={setCompetitionScores}
+      />
 
       {/* Delete Frames Button */}
       {!framesDeleted && (

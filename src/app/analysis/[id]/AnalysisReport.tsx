@@ -21,7 +21,10 @@ import {
   Cpu,
   Trash2,
   Loader2,
+  User,
 } from "lucide-react";
+import ScoreHistoryChart from "@/components/ScoreHistoryChart";
+import { CompetitionScoreDisplay } from "@/components/CompetitionScoreForm";
 
 interface JudgeScore {
   category: string;
@@ -52,8 +55,28 @@ interface AnalysisFrame {
   url: string;
 }
 
+interface CompetitionScore {
+  id: string;
+  competition_name: string;
+  competition_date: string;
+  actual_score: number | null;
+  actual_award_level: string | null;
+  placement: string | null;
+  notes: string | null;
+}
+
+interface ScorePoint {
+  videoId: string;
+  analysisId: string;
+  totalScore: number;
+  awardLevel: string;
+  date: string;
+  routineName?: string;
+}
+
 interface AnalysisData {
   id: string;
+  analysisRecordId?: string;
   routineName: string;
   dancerName: string;
   ageGroup: string;
@@ -75,6 +98,8 @@ interface AnalysisData {
   };
   analysisMethod?: "ai" | "simulated";
   frames?: AnalysisFrame[];
+  competitionScores?: CompetitionScore[];
+  scoreHistory?: ScorePoint[];
 }
 
 const awardLevels = [
@@ -134,6 +159,9 @@ function matchFramesToNotes(
 export default function AnalysisReport({ analysis }: { analysis: AnalysisData }) {
   const awardLevel = getAwardLevel(analysis.totalScore);
   const [copied, setCopied] = useState(false);
+  const [competitionScores, setCompetitionScores] = useState<CompetitionScore[]>(
+    analysis.competitionScores || []
+  );
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -389,6 +417,43 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
               )}
             </div>
           </div>
+
+          {/* Competition Scores */}
+          <div className="px-6 sm:px-8 pb-6 sm:pb-8">
+            {analysis.analysisRecordId && (
+              <CompetitionScoreDisplay
+                scores={competitionScores}
+                aiScore={analysis.totalScore}
+                analysisId={analysis.analysisRecordId}
+                videoId={analysis.id}
+                onScoresChange={setCompetitionScores}
+              />
+            )}
+          </div>
+
+          {/* Score History / Progress Over Time */}
+          {analysis.scoreHistory && analysis.scoreHistory.length >= 2 && (
+            <div className="px-6 sm:px-8 pb-6 sm:pb-8">
+              <ScoreHistoryChart
+                scores={analysis.scoreHistory}
+                title={`${analysis.dancerName}'s Progress Over Time`}
+              />
+            </div>
+          )}
+
+          {/* Dancer Profile Link */}
+          {analysis.dancerName && analysis.dancerName !== "Dancer" && (
+            <div className="px-6 sm:px-8 pb-4" data-print-hide>
+              <a
+                href={`/dancer/${encodeURIComponent(analysis.dancerName)}`}
+                className="inline-flex items-center gap-2 text-xs text-primary-400 hover:text-primary-300 transition-colors"
+              >
+                <User className="h-3 w-3" />
+                View {analysis.dancerName}&apos;s Trophy Room
+                <ChevronRight className="h-3 w-3" />
+              </a>
+            </div>
+          )}
 
           {/* Detailed Feedback */}
           <div className="px-6 sm:px-8 pb-6 sm:pb-8">

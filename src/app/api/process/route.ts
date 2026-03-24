@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { useCredit } from "@/lib/credits";
 import { STYLE_CRITERIA, ENTRY_TYPE_CRITERIA, getCompetitionContext } from "@/lib/dance-criteria";
 import { notifyAnalysisComplete, notifyAnalysisError } from "@/lib/notifications";
+import { checkAndGrantAchievements } from "@/lib/achievements";
 
 export const maxDuration = 300; // 5 min max for AI analysis
 
@@ -90,8 +91,17 @@ export async function POST(request: NextRequest) {
 
     const durationStr = meta.durationFormatted || formatDuration(meta.duration);
 
+    // Fetch historical analyses for the same routine+dancer (for contextual feedback)
+    const historicalContext = await getHistoricalContext(
+      serviceClient,
+      userId,
+      video.routine_name,
+      video.dancer_name,
+      videoId
+    );
+
     // Run the AI analysis
-    const { analysis, usedAI } = await analyzeWithClaude(frames, routineMetadata, durationStr);
+    const { analysis, usedAI } = await analyzeWithClaude(frames, routineMetadata, durationStr, historicalContext);
 
     // Save analysis to database
     const { data: analysisRecord, error: analysisError } = await serviceClient
@@ -136,6 +146,14 @@ export async function POST(request: NextRequest) {
     } catch (creditErr) {
       console.error("Failed to deduct credit (analysis still saved):", creditErr);
     }
+
+    // Check and grant achievements (non-blocking)
+    checkAndGrantAchievements(
+      serviceClient,
+      userId,
+      video.dancer_name,
+      { totalScore: analysis.totalScore, awardLevel: analysis.awardLevel }
+    ).catch((err) => console.warn("Achievement check failed:", err));
 
     // Notify admin of completed analysis
     const userEmail = video.user_id ? (await serviceClient.auth.admin.getUserById(userId)).data.user?.email || "unknown" : "unknown";
@@ -234,6 +252,65 @@ function formatDuration(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+interface HistoricalAnalysis {
+  date: string;
+  totalScore: number;
+  awardLevel: string;
+  judgeScores: Array<{ category: string; avg: number; max: number }>;
+  topImprovements: string[];
+}
+
+/**
+ * Fetch past analyses for the same routine+dancer combo to provide context.
+ */
+async function getHistoricalContext(
+  serviceClient: Awaited<ReturnType<typeof createServiceClient>>,
+  userId: string,
+  routineName: string | null,
+  dancerName: string | null,
+  currentVideoId: string
+): Promise<HistoricalAnalysis[]> {
+  if (!routineName) return [];
+
+  try {
+    let query = serviceClient
+      .from("videos")
+      .select("id, routine_name, created_at, analyses!inner(total_score, award_level, judge_scores, improvement_priorities, created_at)")
+      .eq("user_id", userId)
+      .eq("routine_name", routineName)
+      .eq("status", "analyzed")
+      .neq("id", currentVideoId)
+      .order("created_at", { ascending: false })
+      .limit(3);
+
+    if (dancerName) {
+      query = query.eq("dancer_name", dancerName);
+    }
+
+    const { data, error } = await query;
+
+    if (error || !data || data.length === 0) return [];
+
+    return data.map((v: Record<string, unknown>) => {
+      const analyses = v.analyses as Array<Record<string, unknown>>;
+      const a = analyses[0];
+      const judgeScores = (a.judge_scores as Array<{ category: string; avg: number; max: number }>) || [];
+      const improvements = (a.improvement_priorities as Array<{ item: string }>) || [];
+
+      return {
+        date: new Date(v.created_at as string).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        totalScore: a.total_score as number,
+        awardLevel: a.award_level as string,
+        judgeScores: judgeScores.map((js) => ({ category: js.category, avg: js.avg, max: js.max })),
+        topImprovements: improvements.slice(0, 3).map((imp) => imp.item),
+      };
+    });
+  } catch (err) {
+    console.warn("Failed to fetch historical context:", err);
+    return [];
+  }
+}
+
 /**
  * Send frames to Claude Vision API and get a structured dance analysis.
  */
@@ -251,7 +328,8 @@ async function analyzeWithClaude(
     originalFilename: string;
     originalFileSize: number;
   },
-  durationStr: string
+  durationStr: string,
+  historicalContext: HistoricalAnalysis[] = []
 ) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
@@ -311,6 +389,17 @@ ${entryTypeCriteria.scoringNotes}
 ` : `
 ENTRY TYPE NOTE: ${entryTypeCriteria.scoringNotes}
 `}
+${historicalContext.length > 0 ? `
+HISTORICAL CONTEXT — PROGRESS TRACKING:
+This dancer has ${historicalContext.length} previous analysis(es) for this same routine.
+${historicalContext.map((h, i) => `
+Previous Analysis #${i + 1} (${h.date}):
+- Total Score: ${h.totalScore}/300 (${h.awardLevel})
+${h.judgeScores.map((js) => `- ${js.category}: ${js.avg}/${js.max}`).join("\n")}
+- Top improvements suggested: ${h.topImprovements.join("; ") || "N/A"}
+`).join("")}
+IMPORTANT: When providing feedback, REFERENCE the previous scores specifically. For example: "Your technique score has improved from X to Y since [date]" or "The [issue] noted in your previous analysis appears to be addressed." Be specific about what has changed. This helps the dancer track their progress.
+` : ""}
 You will be shown ${selectedFrames.length} frames extracted from this routine at specific timestamps. Analyze each frame carefully for:
 - Technique: ${styleCriteria.techniqueEmphasis.slice(0, 3).join(", ")}
 - Performance quality: ${styleCriteria.performanceEmphasis.slice(0, 3).join(", ")}
