@@ -19,6 +19,7 @@ export const colors = {
   },
   // Gold
   gold: {
+    300: '#fcd34d',
     400: '#fbbf24',
     500: '#f59e0b',
     600: '#d97706',
@@ -55,6 +56,8 @@ export const gradients = {
   purpleDark: ['rgba(147,51,234,0.2)', 'rgba(147,51,234,0.05)', 'transparent'] as const,
   // Card accent
   cardAccent: ['#9333ea', '#c084fc'] as const,
+  // Score bar gradient
+  scoreBar: ['#9333ea', '#ec4899'] as const,
 };
 
 // Shared gradient props (135° angle)
@@ -62,4 +65,50 @@ export const gradientProps = {
   diagonal: { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
   topToBottom: { start: { x: 0.5, y: 0 }, end: { x: 0.5, y: 1 } },
   leftToRight: { start: { x: 0, y: 0.5 }, end: { x: 1, y: 0.5 } },
+};
+
+// Glass card styling — matches website's .glass class
+export const glass = {
+  backgroundColor: 'rgba(255,255,255,0.06)',
+  borderWidth: 1,
+  borderColor: 'rgba(255,255,255,0.1)',
+  borderRadius: 20,
+};
+
+// Elevated glass card — slightly more visible
+export const glassElevated = {
+  backgroundColor: 'rgba(255,255,255,0.08)',
+  borderWidth: 1,
+  borderColor: 'rgba(255,255,255,0.12)',
+  borderRadius: 20,
+};
+
+// Section header styling
+export const sectionHeader = {
+  color: colors.textSecondary,
+  fontSize: 12 as const,
+  fontWeight: '600' as const,
+  letterSpacing: 1.5,
+  textTransform: 'uppercase' as const,
+  marginBottom: 12,
+  marginLeft: 4,
+};
+
+// Shared input styling
+export const inputStyle = {
+  backgroundColor: 'rgba(255,255,255,0.07)',
+  borderWidth: 1,
+  borderColor: 'rgba(255,255,255,0.12)',
+  borderRadius: 14,
+  padding: 16,
+  color: '#fff',
+  fontSize: 16,
+};
+
+// Shared label styling
+export const labelStyle = {
+  color: '#d4d4d8',
+  fontSize: 13,
+  marginBottom: 8,
+  fontWeight: '500' as const,
 };

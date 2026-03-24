@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../lib/auth';
 import { storeConsentRecord } from '../../lib/api';
-import { colors, gradients, gradientProps } from '../../lib/theme';
+import { colors, gradients, gradientProps, glass, inputStyle, labelStyle } from '../../lib/theme';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -59,7 +59,6 @@ export default function SignupScreen() {
       return;
     }
 
-    // Store COPPA consent records
     if (data.user?.id) {
       try {
         await storeConsentRecord('coppa_parent', 'RoutineX Mobile App');
@@ -75,46 +74,40 @@ export default function SignupScreen() {
 
   if (success) {
     return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: colors.surface[950],
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 24,
-        }}
-      >
-        {/* Decorative blurs */}
-        <View style={{ position: 'absolute', top: '30%', left: -40, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.12)' }} />
-        <View style={{ position: 'absolute', bottom: '20%', right: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.08)' }} />
+      <View style={{
+        flex: 1,
+        backgroundColor: colors.surface[950],
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 28,
+      }}>
+        <View style={{ position: 'absolute', top: '25%', left: -40, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.1)' }} />
+        <View style={{ position: 'absolute', bottom: '20%', right: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.06)' }} />
 
-        <View style={{
-          width: 72, height: 72, borderRadius: 36,
-          justifyContent: 'center', alignItems: 'center', marginBottom: 20,
-          overflow: 'hidden',
-        }}>
+        <View style={{ width: 80, height: 80, borderRadius: 24, overflow: 'hidden', marginBottom: 24 }}>
           <LinearGradient
             colors={gradients.brand}
             {...gradientProps.diagonal}
-            style={{ width: 72, height: 72, justifyContent: 'center', alignItems: 'center' }}
+            style={{ width: 80, height: 80, justifyContent: 'center', alignItems: 'center' }}
           >
-            <Text style={{ fontSize: 32, color: '#fff', fontWeight: '800' }}>✓</Text>
+            <Text style={{ fontSize: 36, color: '#fff', fontWeight: '800' }}>✓</Text>
           </LinearGradient>
         </View>
-        <Text style={{ color: '#fff', fontSize: 22, fontWeight: '700', marginBottom: 8 }}>
+        <Text style={{ color: '#fff', fontSize: 24, fontWeight: '800', marginBottom: 10, letterSpacing: -0.5 }}>
           Account Created!
         </Text>
-        <Text style={{ color: colors.textSecondary, fontSize: 14, textAlign: 'center', marginBottom: 24 }}>
+        <Text style={{ color: colors.textSecondary, fontSize: 15, textAlign: 'center', marginBottom: 28, lineHeight: 22 }}>
           Check your email for a confirmation link, then sign in to start analyzing routines.
         </Text>
         <TouchableOpacity
           onPress={() => router.replace('/(auth)/login')}
           activeOpacity={0.8}
+          style={{ borderRadius: 999, overflow: 'hidden' }}
         >
           <LinearGradient
             colors={gradients.brand}
             {...gradientProps.diagonal}
-            style={{ borderRadius: 999, paddingVertical: 14, paddingHorizontal: 32 }}
+            style={{ borderRadius: 999, paddingVertical: 16, paddingHorizontal: 36 }}
           >
             <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
               Go to Login
@@ -128,30 +121,29 @@ export default function SignupScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface[950] }}>
       {/* Decorative gradient blurs */}
-      <View style={{ position: 'absolute', top: -60, right: -40, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(147,51,234,0.12)' }} />
-      <View style={{ position: 'absolute', top: 200, left: -60, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(236,72,153,0.08)' }} />
-      <View style={{ position: 'absolute', bottom: 60, right: -30, width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(245,158,11,0.06)' }} />
+      <View style={{ position: 'absolute', top: -60, right: -40, width: 240, height: 240, borderRadius: 120, backgroundColor: 'rgba(147,51,234,0.12)' }} />
+      <View style={{ position: 'absolute', top: 220, left: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(236,72,153,0.08)' }} />
+      <View style={{ position: 'absolute', bottom: 60, right: -30, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(245,158,11,0.05)' }} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, padding: 24, paddingTop: 60 }}
+          contentContainerStyle={{ flexGrow: 1, padding: 28, paddingTop: 64 }}
           keyboardShouldPersistTaps="handled"
         >
           {/* Header */}
-          <View style={{ alignItems: 'center', marginBottom: 24 }}>
-            <Text style={{ fontSize: 36, fontWeight: '800', color: '#fff' }}>
+          <View style={{ alignItems: 'center', marginBottom: 28 }}>
+            <Text style={{ fontSize: 40, fontWeight: '800', color: '#fff', letterSpacing: -1 }}>
               Routine<Text style={{ color: colors.primary[400] }}>X</Text>
             </Text>
-            <Text style={{ color: colors.textSecondary, marginTop: 8, fontSize: 15 }}>
+            <Text style={{ color: colors.textSecondary, marginTop: 10, fontSize: 16 }}>
               Create your account
             </Text>
           </View>
 
-          <View style={{ gap: 14 }}>
-            {/* Email */}
+          <View style={{ gap: 16 }}>
             <View>
               <Text style={labelStyle}>Email Address</Text>
               <TextInput
@@ -166,7 +158,6 @@ export default function SignupScreen() {
               />
             </View>
 
-            {/* Password */}
             <View>
               <Text style={labelStyle}>Password</Text>
               <View style={{ position: 'relative' }}>
@@ -176,20 +167,19 @@ export default function SignupScreen() {
                   placeholder="At least 8 characters"
                   placeholderTextColor={colors.placeholder}
                   secureTextEntry={!showPassword}
-                  style={[inputStyle, { paddingRight: 50 }]}
+                  style={{ ...inputStyle, paddingRight: 54 }}
                 />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
-                  style={{ position: 'absolute', right: 14, top: 14 }}
+                  style={{ position: 'absolute', right: 16, top: 16 }}
                 >
-                  <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+                  <Text style={{ color: colors.textSecondary, fontSize: 13, fontWeight: '500' }}>
                     {showPassword ? 'Hide' : 'Show'}
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Confirm Password */}
             <View>
               <Text style={labelStyle}>Confirm Password</Text>
               <TextInput
@@ -203,31 +193,29 @@ export default function SignupScreen() {
             </View>
 
             {/* COPPA Consent */}
-            <View
-              style={{
-                borderTopWidth: 1,
-                borderTopColor: colors.border,
-                paddingTop: 16,
-                marginTop: 8,
-              }}
-            >
-              <Text style={{ color: colors.success, fontSize: 14, fontWeight: '600', marginBottom: 12 }}>
+            <View style={{
+              borderTopWidth: 1,
+              borderTopColor: 'rgba(255,255,255,0.08)',
+              paddingTop: 18,
+              marginTop: 4,
+            }}>
+              <Text style={{ color: colors.success, fontSize: 14, fontWeight: '700', marginBottom: 14 }}>
                 Parental Consent (Required)
               </Text>
 
               <TouchableOpacity
                 onPress={() => setParentConsent(!parentConsent)}
                 activeOpacity={0.7}
-                style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}
+                style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}
               >
                 <Switch
                   value={parentConsent}
                   onValueChange={setParentConsent}
-                  trackColor={{ false: '#27272a', true: '#7c3aed' }}
-                  thumbColor={parentConsent ? '#a855f7' : '#52525b'}
-                  style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
+                  trackColor={{ false: '#27272a', true: colors.primary[700] }}
+                  thumbColor={parentConsent ? colors.primary[400] : '#52525b'}
+                  style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
                 />
-                <Text style={{ color: '#d4d4d8', fontSize: 13, flex: 1, lineHeight: 18 }}>
+                <Text style={{ color: '#d4d4d8', fontSize: 13, flex: 1, lineHeight: 19 }}>
                   I am the parent or legal guardian of any minor whose dance/cheer
                   routines will be submitted for analysis through RoutineX.
                 </Text>
@@ -241,11 +229,11 @@ export default function SignupScreen() {
                 <Switch
                   value={dataConsent}
                   onValueChange={setDataConsent}
-                  trackColor={{ false: '#27272a', true: '#7c3aed' }}
-                  thumbColor={dataConsent ? '#a855f7' : '#52525b'}
-                  style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
+                  trackColor={{ false: '#27272a', true: colors.primary[700] }}
+                  thumbColor={dataConsent ? colors.primary[400] : '#52525b'}
+                  style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
                 />
-                <Text style={{ color: '#d4d4d8', fontSize: 13, flex: 1, lineHeight: 18 }}>
+                <Text style={{ color: '#d4d4d8', fontSize: 13, flex: 1, lineHeight: 19 }}>
                   I consent to the temporary processing of still-frame images
                   extracted from my child's routine video by our AI analysis
                   provider (Anthropic). These images are analyzed anonymously and
@@ -255,9 +243,15 @@ export default function SignupScreen() {
             </View>
 
             {error ? (
-              <Text style={{ color: colors.error, fontSize: 13, textAlign: 'center' }}>
-                {error}
-              </Text>
+              <View style={{
+                backgroundColor: 'rgba(248,113,113,0.1)',
+                borderRadius: 14,
+                padding: 14,
+                borderWidth: 1,
+                borderColor: 'rgba(248,113,113,0.2)',
+              }}>
+                <Text style={{ color: colors.error, fontSize: 13, textAlign: 'center' }}>{error}</Text>
+              </View>
             ) : null}
 
             {/* Gradient Create Account button */}
@@ -265,17 +259,17 @@ export default function SignupScreen() {
               onPress={handleSignup}
               disabled={loading}
               activeOpacity={0.8}
-              style={{ marginTop: 8, opacity: loading ? 0.6 : 1 }}
+              style={{ marginTop: 8, opacity: loading ? 0.6 : 1, borderRadius: 999, overflow: 'hidden' }}
             >
               <LinearGradient
                 colors={gradients.brand}
                 {...gradientProps.diagonal}
-                style={{ borderRadius: 999, padding: 16, alignItems: 'center' }}
+                style={{ borderRadius: 999, padding: 18, alignItems: 'center' }}
               >
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
+                  <Text style={{ color: '#fff', fontWeight: '700', fontSize: 17 }}>
                     Create Account
                   </Text>
                 )}
@@ -284,50 +278,48 @@ export default function SignupScreen() {
 
             <TouchableOpacity
               onPress={() => router.push('/(auth)/login')}
-              style={{ alignItems: 'center', marginTop: 8 }}
+              style={{ alignItems: 'center', marginTop: 10 }}
             >
-              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
                 Already have an account?{' '}
-                <Text style={{ color: colors.primary[400] }}>Sign in</Text>
+                <Text style={{ color: colors.primary[400], fontWeight: '600' }}>Sign in</Text>
               </Text>
             </TouchableOpacity>
           </View>
 
           {/* Privacy Info Section */}
           <View style={{
-            marginTop: 24,
-            backgroundColor: 'rgba(255,255,255,0.04)',
-            borderRadius: 16,
-            padding: 16,
-            borderWidth: 1,
-            borderColor: 'rgba(255,255,255,0.08)',
+            ...glass,
+            borderColor: 'rgba(245,158,11,0.15)',
+            padding: 20,
+            marginTop: 28,
           }}>
-            <Text style={{ color: colors.primary[400], fontSize: 13, fontWeight: '600', marginBottom: 12 }}>
+            <Text style={{ color: colors.primary[400], fontSize: 14, fontWeight: '700', marginBottom: 14 }}>
               Your Privacy Matters
             </Text>
 
-            <View style={{ gap: 10 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={{ gap: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <Text style={{ fontSize: 14 }}>🔒</Text>
-                <Text style={{ color: '#d4d4d8', fontSize: 12, flex: 1 }}>
+                <Text style={{ color: '#d4d4d8', fontSize: 13, flex: 1 }}>
                   Videos are never sold or shared
                 </Text>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <Text style={{ fontSize: 14 }}>📱</Text>
-                <Text style={{ color: '#d4d4d8', fontSize: 12, flex: 1 }}>
+                <Text style={{ color: '#d4d4d8', fontSize: 13, flex: 1 }}>
                   Only thumbnail frames leave your device
                 </Text>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <Text style={{ fontSize: 14 }}>🗑️</Text>
-                <Text style={{ color: '#d4d4d8', fontSize: 12, flex: 1 }}>
+                <Text style={{ color: '#d4d4d8', fontSize: 13, flex: 1 }}>
                   Frames auto-delete within 24 hours
                 </Text>
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <Text style={{ fontSize: 14 }}>👤</Text>
-                <Text style={{ color: '#d4d4d8', fontSize: 12, flex: 1 }}>
+                <Text style={{ color: '#d4d4d8', fontSize: 13, flex: 1 }}>
                   Names anonymized during AI analysis
                 </Text>
               </View>
@@ -335,16 +327,16 @@ export default function SignupScreen() {
 
             <TouchableOpacity
               onPress={() => Linking.openURL('https://routinex.org/privacy')}
-              style={{ marginTop: 12 }}
+              style={{ marginTop: 14 }}
             >
-              <Text style={{ color: colors.primary[400], fontSize: 12, textDecorationLine: 'underline' }}>
+              <Text style={{ color: colors.primary[400], fontSize: 13, textDecorationLine: 'underline' }}>
                 Read our full Privacy Policy
               </Text>
             </TouchableOpacity>
           </View>
 
           {/* Footer */}
-          <View style={{ alignItems: 'center', marginTop: 20, marginBottom: 40 }}>
+          <View style={{ alignItems: 'center', marginTop: 24, marginBottom: 40 }}>
             <Text style={{ color: colors.textTertiary, fontSize: 12, textAlign: 'center', lineHeight: 18 }}>
               By signing up, you agree to our{' '}
               <Text
@@ -354,7 +346,7 @@ export default function SignupScreen() {
                 Terms of Service
               </Text>.
             </Text>
-            <Text style={{ color: colors.textTertiary, fontSize: 12, marginTop: 8 }}>
+            <Text style={{ color: colors.textTertiary, fontSize: 12, marginTop: 10 }}>
               Built by a dance dad.
             </Text>
           </View>
@@ -363,20 +355,3 @@ export default function SignupScreen() {
     </View>
   );
 }
-
-const labelStyle = {
-  color: '#d4d4d8',
-  fontSize: 13,
-  marginBottom: 6,
-  fontWeight: '500' as const,
-};
-
-const inputStyle = {
-  backgroundColor: 'rgba(255,255,255,0.07)',
-  borderWidth: 1,
-  borderColor: 'rgba(255,255,255,0.12)',
-  borderRadius: 12,
-  padding: 14,
-  color: '#fff',
-  fontSize: 15,
-};

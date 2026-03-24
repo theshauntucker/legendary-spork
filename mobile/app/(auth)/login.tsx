@@ -13,7 +13,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../lib/auth';
-import { colors, gradients, gradientProps } from '../../lib/theme';
+import { colors, gradients, gradientProps, inputStyle, labelStyle } from '../../lib/theme';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -41,40 +41,10 @@ export default function LoginScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface[950] }}>
-      {/* Decorative gradient blurs */}
-      <View
-        style={{
-          position: 'absolute',
-          top: -80,
-          left: -60,
-          width: 260,
-          height: 260,
-          borderRadius: 130,
-          backgroundColor: 'rgba(147,51,234,0.15)',
-        }}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          top: 120,
-          right: -80,
-          width: 200,
-          height: 200,
-          borderRadius: 100,
-          backgroundColor: 'rgba(236,72,153,0.1)',
-        }}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          bottom: 100,
-          left: -40,
-          width: 180,
-          height: 180,
-          borderRadius: 90,
-          backgroundColor: 'rgba(245,158,11,0.08)',
-        }}
-      />
+      {/* Decorative gradient blurs — matching website hero */}
+      <View style={{ position: 'absolute', top: -80, left: -60, width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(147,51,234,0.15)' }} />
+      <View style={{ position: 'absolute', top: 140, right: -80, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(236,72,153,0.1)' }} />
+      <View style={{ position: 'absolute', bottom: 80, left: -40, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(245,158,11,0.06)' }} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -84,22 +54,22 @@ export default function LoginScreen() {
           contentContainerStyle={{
             flexGrow: 1,
             justifyContent: 'center',
-            padding: 24,
+            padding: 28,
           }}
           keyboardShouldPersistTaps="handled"
         >
           {/* Logo */}
-          <View style={{ alignItems: 'center', marginBottom: 40 }}>
-            <Text style={{ fontSize: 36, fontWeight: '800', color: '#fff' }}>
+          <View style={{ alignItems: 'center', marginBottom: 44 }}>
+            <Text style={{ fontSize: 40, fontWeight: '800', color: '#fff', letterSpacing: -1 }}>
               Routine<Text style={{ color: colors.primary[400] }}>X</Text>
             </Text>
-            <Text style={{ color: colors.textSecondary, marginTop: 8, fontSize: 15 }}>
+            <Text style={{ color: colors.textSecondary, marginTop: 10, fontSize: 16 }}>
               Welcome back
             </Text>
           </View>
 
           {/* Form */}
-          <View style={{ gap: 16 }}>
+          <View style={{ gap: 18 }}>
             <View>
               <Text style={labelStyle}>Email Address</Text>
               <TextInput
@@ -123,13 +93,13 @@ export default function LoginScreen() {
                   placeholder="Your password"
                   placeholderTextColor={colors.placeholder}
                   secureTextEntry={!showPassword}
-                  style={[inputStyle, { paddingRight: 50 }]}
+                  style={{ ...inputStyle, paddingRight: 54 }}
                 />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
-                  style={{ position: 'absolute', right: 14, top: 14 }}
+                  style={{ position: 'absolute', right: 16, top: 16 }}
                 >
-                  <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+                  <Text style={{ color: colors.textSecondary, fontSize: 13, fontWeight: '500' }}>
                     {showPassword ? 'Hide' : 'Show'}
                   </Text>
                 </TouchableOpacity>
@@ -137,9 +107,15 @@ export default function LoginScreen() {
             </View>
 
             {error ? (
-              <Text style={{ color: colors.error, fontSize: 13, textAlign: 'center' }}>
-                {error}
-              </Text>
+              <View style={{
+                backgroundColor: 'rgba(248,113,113,0.1)',
+                borderRadius: 14,
+                padding: 14,
+                borderWidth: 1,
+                borderColor: 'rgba(248,113,113,0.2)',
+              }}>
+                <Text style={{ color: colors.error, fontSize: 13, textAlign: 'center' }}>{error}</Text>
+              </View>
             ) : null}
 
             {/* Gradient Sign In button */}
@@ -147,21 +123,21 @@ export default function LoginScreen() {
               onPress={handleLogin}
               disabled={loading}
               activeOpacity={0.8}
-              style={{ marginTop: 8, opacity: loading ? 0.6 : 1 }}
+              style={{ marginTop: 8, opacity: loading ? 0.6 : 1, borderRadius: 999, overflow: 'hidden' }}
             >
               <LinearGradient
                 colors={gradients.brand}
                 {...gradientProps.diagonal}
                 style={{
                   borderRadius: 999,
-                  padding: 16,
+                  padding: 18,
                   alignItems: 'center',
                 }}
               >
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
+                  <Text style={{ color: '#fff', fontWeight: '700', fontSize: 17 }}>
                     Sign In
                   </Text>
                 )}
@@ -170,17 +146,17 @@ export default function LoginScreen() {
 
             <TouchableOpacity
               onPress={() => router.push('/(auth)/signup')}
-              style={{ alignItems: 'center', marginTop: 8 }}
+              style={{ alignItems: 'center', marginTop: 10 }}
             >
-              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
                 Don't have an account?{' '}
-                <Text style={{ color: colors.primary[400] }}>Create one</Text>
+                <Text style={{ color: colors.primary[400], fontWeight: '600' }}>Create one</Text>
               </Text>
             </TouchableOpacity>
           </View>
 
           {/* Footer */}
-          <View style={{ alignItems: 'center', marginTop: 40 }}>
+          <View style={{ alignItems: 'center', marginTop: 44 }}>
             <Text style={{ color: colors.textTertiary, fontSize: 12, textAlign: 'center', lineHeight: 18 }}>
               By signing in, you agree to our{' '}
               <Text
@@ -206,20 +182,3 @@ export default function LoginScreen() {
     </View>
   );
 }
-
-const labelStyle = {
-  color: '#d4d4d8',
-  fontSize: 13,
-  marginBottom: 6,
-  fontWeight: '500' as const,
-};
-
-const inputStyle = {
-  backgroundColor: 'rgba(255,255,255,0.07)',
-  borderWidth: 1,
-  borderColor: 'rgba(255,255,255,0.12)',
-  borderRadius: 12,
-  padding: 14,
-  color: '#fff',
-  fontSize: 15,
-};
