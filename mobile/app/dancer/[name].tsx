@@ -9,7 +9,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getScoreHistory, ScoreHistoryPoint } from '../../lib/api';
-import { colors, gradients, gradientProps, glass, glassElevated } from '../../lib/theme';
+import { colors, gradients, gradientProps, glass, glassElevated, screenGradient, CARD_ACCENT_HEIGHT } from '../../lib/theme';
 
 const awardConfig: Record<string, { color: string; icon: string }> = {
   Diamond: { color: '#fbbf24', icon: '💎' },
@@ -72,9 +72,11 @@ export default function DancerProfileScreen() {
   const styles = [...new Set(history.map((h) => h.style))];
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.surface[950] }}>
+    <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
+    <ScrollView style={{ flex: 1 }}>
       {/* Background blurs */}
-      <View style={{ position: 'absolute', top: -40, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.08)' }} />
+      <View style={{ position: 'absolute', top: -40, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.20)' }} />
+      <View style={{ position: 'absolute', top: 300, left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.12)' }} />
 
       {/* Back button */}
       <TouchableOpacity
@@ -148,16 +150,19 @@ export default function DancerProfileScreen() {
           { label: 'Best Score', value: bestScore, color: colors.gold[400] },
           { label: 'Avg Score', value: avgScore, color: colors.primary[400] },
         ].map((stat) => (
-          <View key={stat.label} style={{ flex: 1, ...glass, padding: 14, alignItems: 'center' }}>
-            <Text style={{ color: stat.color, fontSize: 22, fontWeight: '800' }}>{stat.value}</Text>
-            <Text style={{ color: colors.textSecondary, fontSize: 10, marginTop: 4 }}>{stat.label}</Text>
+          <View key={stat.label} style={{ flex: 1, ...glass, overflow: 'hidden', alignItems: 'center' }}>
+            <LinearGradient colors={gradients.brand} {...gradientProps.leftToRight} style={{ height: 2, width: '100%' }} />
+            <View style={{ padding: 14, alignItems: 'center' }}>
+              <Text style={{ color: stat.color, fontSize: 22, fontWeight: '800' }}>{stat.value}</Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 10, marginTop: 4 }}>{stat.label}</Text>
+            </View>
           </View>
         ))}
       </View>
 
       {/* Trophy Case */}
       <View style={{ margin: 16 }}>
-        <Text style={{ color: '#fff', fontSize: 20, fontWeight: '800', marginBottom: 14, letterSpacing: -0.5 }}>
+        <Text style={{ color: colors.primary[400], fontSize: 20, fontWeight: '800', marginBottom: 14, letterSpacing: -0.5 }}>
           Trophy Case
         </Text>
         <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -189,7 +194,7 @@ export default function DancerProfileScreen() {
       {/* Score Progress (simple bar chart) */}
       {history.length >= 2 && (
         <View style={{ margin: 16 }}>
-          <Text style={{ color: '#fff', fontSize: 20, fontWeight: '800', marginBottom: 14, letterSpacing: -0.5 }}>
+          <Text style={{ color: colors.primary[400], fontSize: 20, fontWeight: '800', marginBottom: 14, letterSpacing: -0.5 }}>
             Score Progress
           </Text>
           <View style={{ ...glassElevated, padding: 18 }}>
@@ -223,7 +228,7 @@ export default function DancerProfileScreen() {
 
       {/* All Analyses List */}
       <View style={{ margin: 16 }}>
-        <Text style={{ color: '#fff', fontSize: 20, fontWeight: '800', marginBottom: 14, letterSpacing: -0.5 }}>
+        <Text style={{ color: colors.primary[400], fontSize: 20, fontWeight: '800', marginBottom: 14, letterSpacing: -0.5 }}>
           All Analyses
         </Text>
         {[...history].reverse().map((entry) => {
@@ -268,5 +273,6 @@ export default function DancerProfileScreen() {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </LinearGradient>
   );
 }

@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../lib/auth';
 import { storeConsentRecord } from '../../lib/api';
-import { colors, gradients, gradientProps, glass, inputStyle, labelStyle } from '../../lib/theme';
+import { colors, gradients, gradientProps, glass, inputStyle, labelStyle, screenGradient } from '../../lib/theme';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -74,15 +74,14 @@ export default function SignupScreen() {
 
   if (success) {
     return (
-      <View style={{
+      <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{
         flex: 1,
-        backgroundColor: colors.surface[950],
         justifyContent: 'center',
         alignItems: 'center',
         padding: 28,
       }}>
-        <View style={{ position: 'absolute', top: '25%', left: -40, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.1)' }} />
-        <View style={{ position: 'absolute', bottom: '20%', right: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.06)' }} />
+        <View style={{ position: 'absolute', top: '25%', left: -40, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.25)' }} />
+        <View style={{ position: 'absolute', bottom: '20%', right: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.15)' }} />
 
         <View style={{ width: 80, height: 80, borderRadius: 24, overflow: 'hidden', marginBottom: 24 }}>
           <LinearGradient
@@ -114,16 +113,16 @@ export default function SignupScreen() {
             </Text>
           </LinearGradient>
         </TouchableOpacity>
-      </View>
+      </LinearGradient>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.surface[950] }}>
+    <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
       {/* Decorative gradient blurs */}
-      <View style={{ position: 'absolute', top: -60, right: -40, width: 240, height: 240, borderRadius: 120, backgroundColor: 'rgba(147,51,234,0.12)' }} />
-      <View style={{ position: 'absolute', top: 220, left: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(236,72,153,0.08)' }} />
-      <View style={{ position: 'absolute', bottom: 60, right: -30, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(245,158,11,0.05)' }} />
+      <View style={{ position: 'absolute', top: -60, right: -40, width: 240, height: 240, borderRadius: 120, backgroundColor: 'rgba(147,51,234,0.28)' }} />
+      <View style={{ position: 'absolute', top: 220, left: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(236,72,153,0.18)' }} />
+      <View style={{ position: 'absolute', bottom: 60, right: -30, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(245,158,11,0.12)' }} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -136,7 +135,7 @@ export default function SignupScreen() {
           {/* Header */}
           <View style={{ alignItems: 'center', marginBottom: 28 }}>
             <Text style={{ fontSize: 40, fontWeight: '800', color: '#fff', letterSpacing: -1 }}>
-              Routine<Text style={{ color: colors.primary[400] }}>X</Text>
+              Routine<Text style={{ color: colors.primary[400], textShadowColor: 'rgba(168,85,247,0.6)', textShadowRadius: 16, textShadowOffset: { width: 0, height: 0 } }}>X</Text>
             </Text>
             <Text style={{ color: colors.textSecondary, marginTop: 10, fontSize: 16 }}>
               Create your account
@@ -259,7 +258,17 @@ export default function SignupScreen() {
               onPress={handleSignup}
               disabled={loading}
               activeOpacity={0.8}
-              style={{ marginTop: 8, opacity: loading ? 0.6 : 1, borderRadius: 999, overflow: 'hidden' }}
+              style={{
+                marginTop: 8,
+                opacity: loading ? 0.6 : 1,
+                borderRadius: 999,
+                overflow: 'hidden',
+                shadowColor: colors.primary[500],
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.4,
+                shadowRadius: 16,
+                elevation: 8,
+              }}
             >
               <LinearGradient
                 colors={gradients.brand}
@@ -352,6 +361,6 @@ export default function SignupScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </LinearGradient>
   );
 }

@@ -17,7 +17,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import * as WebBrowser from 'expo-web-browser';
 import { uploadFrames, getAuthToken } from '../../lib/api';
-import { colors, gradients, gradientProps, glass, glassElevated, inputStyle, labelStyle } from '../../lib/theme';
+import { colors, gradients, gradientProps, glass, glassElevated, inputStyle, labelStyle, screenGradient } from '../../lib/theme';
 
 const DANCE_STYLES = [
   'Contemporary', 'Jazz', 'Lyrical', 'Hip Hop', 'Tap',
@@ -254,15 +254,15 @@ export default function UploadScreen() {
   // Step: Select Video
   if (step === 'select') {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.surface[950] }}>
+      <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
         {/* Background blurs */}
-        <View style={{ position: 'absolute', top: '15%', right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.1)' }} />
-        <View style={{ position: 'absolute', bottom: '20%', left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.06)' }} />
-        <View style={{ position: 'absolute', top: '50%', left: '30%', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(245,158,11,0.04)' }} />
+        <View style={{ position: 'absolute', top: '15%', right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.22)' }} />
+        <View style={{ position: 'absolute', bottom: '20%', left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.14)' }} />
+        <View style={{ position: 'absolute', top: '50%', left: '30%', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(245,158,11,0.10)' }} />
 
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>
           <Text style={{ color: '#fff', fontSize: 28, fontWeight: '800', textAlign: 'center', marginBottom: 8, letterSpacing: -0.5 }}>
-            Analyze a Routine
+            Analyze a <Text style={{ color: colors.primary[400] }}>Routine</Text>
           </Text>
           <Text style={{ color: colors.textSecondary, fontSize: 15, textAlign: 'center', marginBottom: 36, lineHeight: 22 }}>
             Select or record a video to get{'\n'}AI-powered scoring and feedback.
@@ -357,15 +357,15 @@ export default function UploadScreen() {
             </Text>
           </View>
         </ScrollView>
-      </View>
+      </LinearGradient>
     );
   }
 
   // Step: Review Frames
   if (step === 'frames') {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.surface[950] }}>
-        <View style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(147,51,234,0.06)' }} />
+      <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
+        <View style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(147,51,234,0.18)' }} />
 
         <ScrollView contentContainerStyle={{ padding: 24 }}>
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800', marginBottom: 6, letterSpacing: -0.5 }}>
@@ -430,18 +430,19 @@ export default function UploadScreen() {
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </View>
+      </LinearGradient>
     );
   }
 
   // Step: Metadata + Confirm
   return (
+    <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.surface[950] }}
+      style={{ flex: 1 }}
       contentContainerStyle={{ padding: 24 }}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={{ position: 'absolute', top: -40, right: -60, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(147,51,234,0.06)' }} />
+      <View style={{ position: 'absolute', top: -40, right: -60, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(147,51,234,0.18)' }} />
 
       <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800', marginBottom: 20, letterSpacing: -0.5 }}>
         Routine Details
@@ -490,7 +491,7 @@ export default function UploadScreen() {
                 key={s}
                 onPress={() => setDanceStyle(s)}
                 style={{
-                  backgroundColor: danceStyle === s ? 'rgba(147,51,234,0.25)' : 'rgba(255,255,255,0.06)',
+                  backgroundColor: danceStyle === s ? 'rgba(147,51,234,0.30)' : 'rgba(255,255,255,0.06)',
                   borderRadius: 999,
                   paddingVertical: 10,
                   paddingHorizontal: 18,
@@ -516,7 +517,7 @@ export default function UploadScreen() {
                 key={ag}
                 onPress={() => setAgeGroup(ag)}
                 style={{
-                  backgroundColor: ageGroup === ag ? 'rgba(147,51,234,0.25)' : 'rgba(255,255,255,0.06)',
+                  backgroundColor: ageGroup === ag ? 'rgba(147,51,234,0.30)' : 'rgba(255,255,255,0.06)',
                   borderRadius: 999,
                   paddingVertical: 10,
                   paddingHorizontal: 18,
@@ -542,7 +543,7 @@ export default function UploadScreen() {
                 key={et}
                 onPress={() => setEntryType(et)}
                 style={{
-                  backgroundColor: entryType === et ? 'rgba(147,51,234,0.25)' : 'rgba(255,255,255,0.06)',
+                  backgroundColor: entryType === et ? 'rgba(147,51,234,0.30)' : 'rgba(255,255,255,0.06)',
                   borderRadius: 999,
                   paddingVertical: 10,
                   paddingHorizontal: 18,
@@ -584,8 +585,9 @@ export default function UploadScreen() {
             <TouchableOpacity onPress={() => setPurchaseType('trial')}>
               <View style={{
                 ...glass,
-                borderColor: purchaseType === 'trial' ? colors.primary[600] : 'rgba(255,255,255,0.1)',
-                backgroundColor: purchaseType === 'trial' ? 'rgba(147,51,234,0.15)' : 'rgba(255,255,255,0.06)',
+                borderColor: purchaseType === 'trial' ? colors.primary[500] : 'rgba(255,255,255,0.1)',
+                borderWidth: purchaseType === 'trial' ? 2 : 1,
+                backgroundColor: purchaseType === 'trial' ? 'rgba(147,51,234,0.20)' : 'rgba(255,255,255,0.06)',
                 padding: 18,
               }}>
                 <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
@@ -601,21 +603,23 @@ export default function UploadScreen() {
           <TouchableOpacity onPress={() => setPurchaseType('pack')}>
             <View style={{
               ...glass,
-              borderColor: purchaseType === 'pack' ? colors.primary[600] : 'rgba(255,255,255,0.1)',
-              backgroundColor: purchaseType === 'pack' ? 'rgba(147,51,234,0.15)' : 'rgba(255,255,255,0.06)',
+              borderColor: purchaseType === 'pack' ? colors.primary[500] : 'rgba(255,255,255,0.1)',
+              borderWidth: purchaseType === 'pack' ? 2 : 1,
+              backgroundColor: purchaseType === 'pack' ? 'rgba(147,51,234,0.20)' : 'rgba(255,255,255,0.06)',
               padding: 18,
             }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
                   Competition Pack — $24.99
                 </Text>
-                <View style={{
-                  backgroundColor: colors.gold[400] + '25',
-                  borderRadius: 999,
-                  paddingVertical: 3,
-                  paddingHorizontal: 10,
-                }}>
-                  <Text style={{ color: colors.gold[400], fontSize: 10, fontWeight: '700' }}>BEST VALUE</Text>
+                <View style={{ borderRadius: 999, overflow: 'hidden' }}>
+                  <LinearGradient
+                    colors={[colors.gold[500], colors.gold[400]]}
+                    {...gradientProps.leftToRight}
+                    style={{ paddingVertical: 3, paddingHorizontal: 10, borderRadius: 999 }}
+                  >
+                    <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800' }}>BEST VALUE</Text>
+                  </LinearGradient>
                 </View>
               </View>
               <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 4 }}>
@@ -683,5 +687,6 @@ export default function UploadScreen() {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </LinearGradient>
   );
 }

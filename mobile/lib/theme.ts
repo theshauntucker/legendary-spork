@@ -67,19 +67,33 @@ export const gradientProps = {
   leftToRight: { start: { x: 0, y: 0.5 }, end: { x: 1, y: 0.5 } },
 };
 
+// Screen-level gradient background (purple tint at top → black)
+export const screenGradient = [
+  'rgba(147,51,234,0.15)',
+  'rgba(147,51,234,0.06)',
+  '#09090b',
+  '#09090b',
+] as const;
+
+// Header bar gradient
+export const headerGradient = ['rgba(147,51,234,0.12)', colors.surface[950]] as const;
+
+// Card accent line height
+export const CARD_ACCENT_HEIGHT = 3;
+
 // Glass card styling — matches website's .glass class
 export const glass = {
-  backgroundColor: 'rgba(255,255,255,0.06)',
+  backgroundColor: 'rgba(255,255,255,0.08)',
   borderWidth: 1,
-  borderColor: 'rgba(255,255,255,0.1)',
+  borderColor: 'rgba(255,255,255,0.12)',
   borderRadius: 20,
 };
 
 // Elevated glass card — slightly more visible
 export const glassElevated = {
-  backgroundColor: 'rgba(255,255,255,0.08)',
+  backgroundColor: 'rgba(255,255,255,0.10)',
   borderWidth: 1,
-  borderColor: 'rgba(255,255,255,0.12)',
+  borderColor: 'rgba(255,255,255,0.15)',
   borderRadius: 20,
 };
 

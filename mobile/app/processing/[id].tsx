@@ -9,7 +9,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getAnalysis } from '../../lib/api';
-import { colors, gradients, gradientProps, glass } from '../../lib/theme';
+import { colors, gradients, gradientProps, glass, screenGradient } from '../../lib/theme';
 
 const POLL_INTERVAL = 5000;
 
@@ -96,16 +96,15 @@ export default function ProcessingScreen() {
   }, [id, router]);
 
   return (
-    <View style={{
+    <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{
       flex: 1,
-      backgroundColor: colors.surface[950],
       justifyContent: 'center',
       alignItems: 'center',
       padding: 24,
     }}>
       {/* Background blurs */}
-      <View style={{ position: 'absolute', top: '20%', right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.1)' }} />
-      <View style={{ position: 'absolute', bottom: '25%', left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.06)' }} />
+      <View style={{ position: 'absolute', top: '20%', right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.22)' }} />
+      <View style={{ position: 'absolute', bottom: '25%', left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.15)' }} />
 
       {/* Animated pulse ring */}
       <View style={{ marginBottom: 36, alignItems: 'center' }}>
@@ -248,6 +247,6 @@ export default function ProcessingScreen() {
           🔒 Names are anonymized during analysis. Your video never leaves your device.
         </Text>
       </View>
-    </View>
+    </LinearGradient>
   );
 }

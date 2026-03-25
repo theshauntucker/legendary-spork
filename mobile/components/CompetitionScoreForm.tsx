@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, gradients, gradientProps, glass, glassElevated } from '../lib/theme';
+import { colors, gradients, gradientProps, glass, glassElevated, CARD_ACCENT_HEIGHT } from '../lib/theme';
 import { saveCompetitionScore, deleteCompetitionScore, CompetitionScoreData } from '../lib/api';
 
 const awardOptions = ['Gold', 'High Gold', 'Platinum', 'Diamond'];
@@ -53,7 +53,7 @@ export function CompetitionScoreSection({
   return (
     <View style={{ margin: 16 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <Text style={{ color: '#fff', fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }}>
+        <Text style={{ color: colors.primary[400], fontSize: 20, fontWeight: '800', letterSpacing: -0.5 }}>
           Competition Results
         </Text>
         <TouchableOpacity onPress={() => setShowForm(true)}>

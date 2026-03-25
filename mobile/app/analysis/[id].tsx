@@ -11,7 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getAnalysis, deleteFrames, getCompetitionScores, CompetitionScoreData } from '../../lib/api';
-import { colors, gradients, gradientProps, glass, glassElevated } from '../../lib/theme';
+import { colors, gradients, gradientProps, glass, glassElevated, screenGradient, CARD_ACCENT_HEIGHT } from '../../lib/theme';
 import { CompetitionScoreSection } from '../../components/CompetitionScoreForm';
 
 interface JudgeScore {
@@ -114,38 +114,40 @@ export default function AnalysisScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.surface[950], justifyContent: 'center', alignItems: 'center' }}>
+      <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <View style={{
           width: 64, height: 64, borderRadius: 32,
-          backgroundColor: 'rgba(147,51,234,0.15)',
+          backgroundColor: 'rgba(147,51,234,0.20)',
           justifyContent: 'center', alignItems: 'center',
         }}>
           <ActivityIndicator size="large" color={colors.primary[400]} />
         </View>
-      </View>
+      </LinearGradient>
     );
   }
 
   if (!data) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.surface[950], justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+      <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
         <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700', marginBottom: 8 }}>
           Analysis not found
         </Text>
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={{ color: colors.primary[400], fontSize: 15 }}>Go back</Text>
         </TouchableOpacity>
-      </View>
+      </LinearGradient>
     );
   }
 
   const award = getAwardLevel(data.overallScore);
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.surface[950] }}>
+    <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
+    <ScrollView style={{ flex: 1 }}>
       {/* Background blurs */}
-      <View style={{ position: 'absolute', top: -40, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.08)' }} />
-      <View style={{ position: 'absolute', top: 300, left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.05)' }} />
+      <View style={{ position: 'absolute', top: -40, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.20)' }} />
+      <View style={{ position: 'absolute', top: 300, left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.12)' }} />
+      <View style={{ position: 'absolute', top: 600, right: -30, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(245,158,11,0.08)' }} />
 
       {/* Privacy Banner */}
       <View style={{
@@ -165,7 +167,7 @@ export default function AnalysisScreen() {
       {/* Score Header — matches website's glass preview card */}
       <View style={{ marginHorizontal: 16, overflow: 'hidden', borderRadius: 24 }}>
         <LinearGradient
-          colors={['rgba(147,51,234,0.2)', 'rgba(236,72,153,0.1)', 'rgba(245,158,11,0.05)']}
+          colors={['rgba(147,51,234,0.30)', 'rgba(236,72,153,0.15)', 'rgba(245,158,11,0.08)']}
           {...gradientProps.diagonal}
           style={{
             borderRadius: 24,
@@ -217,11 +219,17 @@ export default function AnalysisScreen() {
 
       {/* Judge Scores */}
       <View style={{ margin: 16, marginTop: 24 }}>
-        <Text style={{ color: '#fff', fontSize: 20, fontWeight: '800', marginBottom: 14, letterSpacing: -0.5 }}>
+        <Text style={{ color: colors.primary[400], fontSize: 20, fontWeight: '800', marginBottom: 14, letterSpacing: -0.5 }}>
           Score Breakdown
         </Text>
         {data.judgeScores.map((score) => (
-          <View key={score.category} style={{ ...glassElevated, padding: 18, marginBottom: 12 }}>
+          <View key={score.category} style={{ ...glassElevated, overflow: 'hidden', marginBottom: 12 }}>
+            <LinearGradient
+              colors={gradients.scoreBar}
+              {...gradientProps.leftToRight}
+              style={{ height: CARD_ACCENT_HEIGHT }}
+            />
+            <View style={{ padding: 18 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
               <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>
                 {score.category}
@@ -245,6 +253,7 @@ export default function AnalysisScreen() {
             <Text style={{ color: colors.textSecondary, fontSize: 14, lineHeight: 21 }}>
               {score.feedback}
             </Text>
+            </View>
           </View>
         ))}
       </View>
@@ -252,7 +261,7 @@ export default function AnalysisScreen() {
       {/* Timeline Notes */}
       {data.timelineNotes && data.timelineNotes.length > 0 && (
         <View style={{ margin: 16 }}>
-          <Text style={{ color: '#fff', fontSize: 20, fontWeight: '800', marginBottom: 14, letterSpacing: -0.5 }}>
+          <Text style={{ color: colors.primary[400], fontSize: 20, fontWeight: '800', marginBottom: 14, letterSpacing: -0.5 }}>
             Performance Timeline
           </Text>
           {data.timelineNotes.map((note, i) => (
@@ -281,7 +290,7 @@ export default function AnalysisScreen() {
       {/* Improvement Priorities */}
       {data.improvementPriorities && data.improvementPriorities.length > 0 && (
         <View style={{ margin: 16 }}>
-          <Text style={{ color: '#fff', fontSize: 20, fontWeight: '800', marginBottom: 14, letterSpacing: -0.5 }}>
+          <Text style={{ color: colors.primary[400], fontSize: 20, fontWeight: '800', marginBottom: 14, letterSpacing: -0.5 }}>
             Improvement Roadmap
           </Text>
           {data.improvementPriorities.map((item) => (
@@ -445,5 +454,6 @@ export default function AnalysisScreen() {
         </View>
       </Modal>
     </ScrollView>
+    </LinearGradient>
   );
 }

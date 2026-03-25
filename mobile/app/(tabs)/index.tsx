@@ -11,7 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { getUserAnalyses } from '../../lib/api';
-import { colors, gradients, gradientProps, glass } from '../../lib/theme';
+import { colors, gradients, gradientProps, glass, screenGradient, CARD_ACCENT_HEIGHT } from '../../lib/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -91,7 +91,7 @@ export default function DashboardScreen() {
           <LinearGradient
             colors={gradients.brand}
             {...gradientProps.leftToRight}
-            style={{ height: 2 }}
+            style={{ height: CARD_ACCENT_HEIGHT }}
           />
           <View style={{ padding: 18 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -122,11 +122,11 @@ export default function DashboardScreen() {
                 </View>
               ) : score ? (
                 <View style={{ alignItems: 'center' }}>
-                  <Text style={{ color: '#fff', fontSize: 32, fontWeight: '800', letterSpacing: -1 }}>
+                  <Text style={{ color: colors.gold[400], fontSize: 32, fontWeight: '800', letterSpacing: -1 }}>
                     {score}
                   </Text>
                   <View style={{
-                    backgroundColor: award!.color + '20',
+                    backgroundColor: award!.color + '30',
                     borderRadius: 999,
                     paddingVertical: 3,
                     paddingHorizontal: 10,
@@ -167,26 +167,27 @@ export default function DashboardScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.surface[950], justifyContent: 'center', alignItems: 'center' }}>
+      <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <View style={{
           width: 64,
           height: 64,
           borderRadius: 32,
-          backgroundColor: 'rgba(147,51,234,0.15)',
+          backgroundColor: 'rgba(147,51,234,0.20)',
           justifyContent: 'center',
           alignItems: 'center',
         }}>
           <ActivityIndicator size="large" color={colors.primary[400]} />
         </View>
-      </View>
+      </LinearGradient>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.surface[950] }}>
+    <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
       {/* Background decorative blurs */}
-      <View style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.08)' }} />
-      <View style={{ position: 'absolute', bottom: 100, left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.05)' }} />
+      <View style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.20)' }} />
+      <View style={{ position: 'absolute', bottom: 100, left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.15)' }} />
+      <View style={{ position: 'absolute', top: 200, left: '40%', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(245,158,11,0.08)' }} />
 
       <FlatList
         data={analyses}
@@ -202,9 +203,18 @@ export default function DashboardScreen() {
         }
         ListHeaderComponent={
           analyses.length > 0 ? (
-            <View style={{ marginBottom: 16 }}>
+            <View style={{ marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={{ overflow: 'hidden', borderRadius: 8 }}>
+                <LinearGradient
+                  colors={gradients.brand}
+                  {...gradientProps.diagonal}
+                  style={{ paddingVertical: 3, paddingHorizontal: 8, borderRadius: 8 }}
+                >
+                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>{analyses.length}</Text>
+                </LinearGradient>
+              </View>
               <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
-                {analyses.length} routine{analyses.length !== 1 ? 's' : ''} analyzed
+                routine{analyses.length !== 1 ? 's' : ''} analyzed
               </Text>
             </View>
           ) : null
@@ -279,6 +289,6 @@ export default function DashboardScreen() {
           </View>
         }
       />
-    </View>
+    </LinearGradient>
   );
 }

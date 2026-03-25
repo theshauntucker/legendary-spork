@@ -1,30 +1,38 @@
 import { Tabs } from 'expo-router';
 import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, gradients, gradientProps } from '../../lib/theme';
+import { colors, gradients, gradientProps, headerGradient } from '../../lib/theme';
 
 function TabIcon({ label, focused }: { label: string; focused: boolean }) {
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center', width: 48 }}>
       {focused ? (
-        <LinearGradient
-          colors={gradients.brand}
-          {...gradientProps.diagonal}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 12,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ fontSize: 18 }}>{label}</Text>
-        </LinearGradient>
+        <View style={{
+          shadowColor: colors.primary[500],
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.5,
+          shadowRadius: 10,
+          elevation: 8,
+        }}>
+          <LinearGradient
+            colors={gradients.brand}
+            {...gradientProps.diagonal}
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 12,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 18 }}>{label}</Text>
+          </LinearGradient>
+        </View>
       ) : (
         <View
           style={{
-            width: 36,
-            height: 36,
+            width: 38,
+            height: 38,
             borderRadius: 12,
             backgroundColor: 'transparent',
             justifyContent: 'center',
@@ -63,7 +71,7 @@ export default function TabLayout() {
             <LinearGradient
               colors={gradients.brand}
               {...gradientProps.leftToRight}
-              style={{ height: 1, opacity: 0.4 }}
+              style={{ height: 2, opacity: 0.6 }}
             />
             <View style={{ flex: 1, backgroundColor: colors.surface[900] }} />
           </View>
@@ -73,6 +81,13 @@ export default function TabLayout() {
           elevation: 0,
           shadowOpacity: 0,
         },
+        headerBackground: () => (
+          <LinearGradient
+            colors={headerGradient as unknown as string[]}
+            {...gradientProps.topToBottom}
+            style={{ flex: 1 }}
+          />
+        ),
         headerTintColor: '#fff',
         headerTitleStyle: {
           fontWeight: '700',

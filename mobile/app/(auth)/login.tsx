@@ -13,7 +13,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../lib/auth';
-import { colors, gradients, gradientProps, inputStyle, labelStyle } from '../../lib/theme';
+import { colors, gradients, gradientProps, inputStyle, labelStyle, screenGradient } from '../../lib/theme';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -40,11 +40,11 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.surface[950] }}>
+    <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
       {/* Decorative gradient blurs — matching website hero */}
-      <View style={{ position: 'absolute', top: -80, left: -60, width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(147,51,234,0.15)' }} />
-      <View style={{ position: 'absolute', top: 140, right: -80, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(236,72,153,0.1)' }} />
-      <View style={{ position: 'absolute', bottom: 80, left: -40, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(245,158,11,0.06)' }} />
+      <View style={{ position: 'absolute', top: -80, left: -60, width: 280, height: 280, borderRadius: 140, backgroundColor: 'rgba(147,51,234,0.30)' }} />
+      <View style={{ position: 'absolute', top: 140, right: -80, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(236,72,153,0.22)' }} />
+      <View style={{ position: 'absolute', bottom: 80, left: -40, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(245,158,11,0.14)' }} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -61,11 +61,18 @@ export default function LoginScreen() {
           {/* Logo */}
           <View style={{ alignItems: 'center', marginBottom: 44 }}>
             <Text style={{ fontSize: 40, fontWeight: '800', color: '#fff', letterSpacing: -1 }}>
-              Routine<Text style={{ color: colors.primary[400] }}>X</Text>
+              Routine<Text style={{ color: colors.primary[400], textShadowColor: 'rgba(168,85,247,0.6)', textShadowRadius: 16, textShadowOffset: { width: 0, height: 0 } }}>X</Text>
             </Text>
-            <Text style={{ color: colors.textSecondary, marginTop: 10, fontSize: 16 }}>
-              Welcome back
-            </Text>
+            <View style={{ marginTop: 14 }}>
+              <LinearGradient
+                colors={gradients.brand}
+                {...gradientProps.leftToRight}
+                style={{ height: 2, width: 60, borderRadius: 1, alignSelf: 'center', opacity: 0.6, marginBottom: 14 }}
+              />
+              <Text style={{ color: colors.textSecondary, fontSize: 16, textAlign: 'center' }}>
+                Welcome back
+              </Text>
+            </View>
           </View>
 
           {/* Form */}
@@ -123,7 +130,17 @@ export default function LoginScreen() {
               onPress={handleLogin}
               disabled={loading}
               activeOpacity={0.8}
-              style={{ marginTop: 8, opacity: loading ? 0.6 : 1, borderRadius: 999, overflow: 'hidden' }}
+              style={{
+                marginTop: 8,
+                opacity: loading ? 0.6 : 1,
+                borderRadius: 999,
+                overflow: 'hidden',
+                shadowColor: colors.primary[500],
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.4,
+                shadowRadius: 16,
+                elevation: 8,
+              }}
             >
               <LinearGradient
                 colors={gradients.brand}
@@ -179,6 +196,6 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </LinearGradient>
   );
 }

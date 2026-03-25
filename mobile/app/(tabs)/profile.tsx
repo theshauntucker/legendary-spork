@@ -10,7 +10,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../lib/auth';
-import { colors, gradients, gradientProps, glass, sectionHeader } from '../../lib/theme';
+import { colors, gradients, gradientProps, glass, sectionHeader, screenGradient, CARD_ACCENT_HEIGHT } from '../../lib/theme';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
@@ -48,22 +48,35 @@ export default function ProfileScreen() {
   };
 
   return (
+    <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.surface[950] }}
+      style={{ flex: 1 }}
       contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
     >
       {/* Background blurs */}
-      <View style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(147,51,234,0.06)' }} />
+      <View style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(147,51,234,0.18)' }} />
+      <View style={{ position: 'absolute', bottom: 100, left: -40, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(236,72,153,0.10)' }} />
 
       {/* Profile Card */}
       <View style={{ ...glass, overflow: 'hidden', marginBottom: 24 }}>
         <LinearGradient
           colors={gradients.brand}
           {...gradientProps.leftToRight}
-          style={{ height: 2 }}
+          style={{ height: CARD_ACCENT_HEIGHT }}
         />
         <View style={{ padding: 24 }}>
-          <View style={{ width: 60, height: 60, borderRadius: 18, overflow: 'hidden', marginBottom: 16 }}>
+          <View style={{
+            width: 60,
+            height: 60,
+            borderRadius: 18,
+            overflow: 'hidden',
+            marginBottom: 16,
+            shadowColor: colors.primary[600],
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.5,
+            shadowRadius: 12,
+            elevation: 8,
+          }}>
             <LinearGradient
               colors={[colors.primary[600], colors.accent[500]]}
               {...gradientProps.diagonal}
@@ -93,7 +106,7 @@ export default function ProfileScreen() {
       </View>
 
       {/* Privacy Section */}
-      <Text style={sectionHeader}>Privacy & Data</Text>
+      <Text style={{ ...sectionHeader, color: colors.primary[400] }}>Privacy & Data</Text>
       <View style={{ ...glass, overflow: 'hidden', marginBottom: 24 }}>
         <TouchableOpacity
           onPress={() => Linking.openURL('https://routinex.org/privacy')}
@@ -162,7 +175,7 @@ export default function ProfileScreen() {
       </View>
 
       {/* About Section */}
-      <Text style={sectionHeader}>About</Text>
+      <Text style={{ ...sectionHeader, color: colors.primary[400] }}>About</Text>
       <View style={{ ...glass, overflow: 'hidden', marginBottom: 24 }}>
         <View style={menuItemStyle}>
           <Text style={{ color: '#e4e4e7', fontSize: 15, fontWeight: '500' }}>Version</Text>
@@ -191,7 +204,7 @@ export default function ProfileScreen() {
       </View>
 
       {/* Account Actions */}
-      <Text style={sectionHeader}>Account</Text>
+      <Text style={{ ...sectionHeader, color: colors.primary[400] }}>Account</Text>
       <View style={{ ...glass, overflow: 'hidden', marginBottom: 24 }}>
         <TouchableOpacity onPress={handleSignOut} style={menuItemStyle}>
           <Text style={{ color: '#e4e4e7', fontSize: 15, fontWeight: '500' }}>Sign Out</Text>
@@ -204,6 +217,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </LinearGradient>
   );
 }
 
