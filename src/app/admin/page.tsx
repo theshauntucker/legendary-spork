@@ -27,12 +27,14 @@ export default async function AdminPage() {
     { data: videos },
     { data: analyses },
     { data: authUsers },
+    { data: affiliates },
   ] = await Promise.all([
     serviceClient.from("user_credits").select("*").order("created_at", { ascending: false }),
     serviceClient.from("payments").select("*").order("created_at", { ascending: false }),
     serviceClient.from("videos").select("id, user_id, routine_name, style, entry_type, status, created_at").order("created_at", { ascending: false }),
     serviceClient.from("analyses").select("id, video_id, user_id, total_score, award_level, created_at").order("created_at", { ascending: false }),
     adminClient.auth.admin.listUsers(),
+    serviceClient.from("affiliates").select("*").order("created_at", { ascending: false }),
   ]);
 
   const allUsers = authUsers?.users ?? [];
@@ -94,10 +96,27 @@ export default async function AdminPage() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 15);
 
+  // Build affiliate records with referred users
+  const allAffiliates = (affiliates ?? []).map((a) => {
+    const referredUsers = userRecords.filter((u) => {
+      const creditRow = (credits ?? []).find((c) => c.user_id === u.id);
+      return creditRow?.referral_code === a.code;
+    });
+    const referredPayments = allPayments.filter((p) => p.referral_code === a.code);
+    const actualRevenue = referredPayments.reduce((s: number, p: { amount_cents: number }) => s + p.amount_cents, 0);
+    return {
+      ...a,
+      referredUsers: referredUsers.map((u) => ({ email: u.email, name: u.name, totalPaid: u.totalPaid })),
+      actualRevenue,
+      owedAmount: Math.round(actualRevenue * (a.revenue_share_pct / 100)),
+    };
+  });
+
   return (
     <AdminClient
       users={userRecords}
       payments={allPayments}
+      affiliates={allAffiliates}
       analyses={allAnalyses.map(a => ({
         id: a.id,
         videoId: a.video_id,

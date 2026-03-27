@@ -11,7 +11,8 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
 
     const body = await request.json().catch(() => ({}));
-    const type = body.type || "trial"; // "trial" = $4.99, "pack" = $24.99
+    const type = body.type || "single"; // "single" = $8.99, "pack" = $29.99
+    const referralCode = body.referralCode || null;
 
     // Get the authenticated user — required for payment tracking
     const supabase = await createClient();
@@ -23,27 +24,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    // Block trial if already used — only one $4.99 trial per account ever
-    if (type === "trial") {
-      const serviceClient = await createServiceClient();
-      const { data: existingTrial } = await serviceClient
-        .from("payments")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("payment_type", "trial")
-        .eq("status", "completed")
-        .maybeSingle();
-
-      if (existingTrial) {
-        // Trial already used — force them to the pack
-        return NextResponse.json({
-          error: "trial_used",
-          message: "You've already used your $4.99 trial. Get 5 analyses for $24.99.",
-          redirect: "pack",
-        }, { status: 403 });
-      }
-    }
-
     if (!user) {
       return NextResponse.json(
         { error: "You must be logged in to purchase" },
@@ -51,19 +31,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Look up the user's referral code from their account if not passed
+    let effectiveReferralCode = referralCode;
+    if (!effectiveReferralCode) {
+      const svc = await createServiceClient();
+      const { data: creditRow } = await svc
+        .from("user_credits")
+        .select("referral_code")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (creditRow?.referral_code) {
+        effectiveReferralCode = creditRow.referral_code;
+      }
+    }
+
     const isPack = type === "pack";
     const productConfig = isPack
       ? {
-          name: "RoutineX — Competition Pack",
+          name: "RoutineX — Competition Pack (5 Analyses)",
           description: "5 AI-powered dance routine analyses. Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.",
-          unit_amount: 2499, // $24.99
+          unit_amount: 2999, // $29.99
           payment_type: "video_analysis",
         }
       : {
-          name: "RoutineX — First Analysis",
-          description: "Your first AI analysis. Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.",
-          unit_amount: 499, // $4.99
-          payment_type: "trial",
+          name: "RoutineX — Single Analysis",
+          description: "1 AI-powered dance routine analysis. Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.",
+          unit_amount: 899, // $8.99
+          payment_type: "single",
         };
 
     const session = await stripe.checkout.sessions.create({
@@ -73,6 +67,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         user_id: user.id,
         payment_type: productConfig.payment_type,
+        ...(effectiveReferralCode ? { referral_code: effectiveReferralCode.toUpperCase() } : {}),
       },
       line_items: [
         {

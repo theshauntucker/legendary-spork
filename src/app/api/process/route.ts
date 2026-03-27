@@ -351,32 +351,32 @@ Now provide your complete analysis as a JSON object with EXACTLY this structure.
       "max": 35,
       "judges": [<judge1 score>, <judge2 score>, <judge3 score>],
       "avg": <average>,
-      "feedback": "<2-3 sentences about what you specifically observe in the technique>",
-      "styleNotes": "<1-2 sentences of ${metadata.style}-specific technique observations using style vocabulary>"
+      "feedback": "<4-6 sentences about what you specifically observe in the technique — reference specific frames/moments, name exact body positions, and compare to competition standards>",
+      "styleNotes": "<2-3 sentences of ${metadata.style}-specific technique observations using proper style vocabulary — be specific about what's working and what needs attention>"
     },
     {
       "category": "Performance",
       "max": 35,
       "judges": [<j1>, <j2>, <j3>],
       "avg": <avg>,
-      "feedback": "<2-3 sentences about performance quality you observe>",
-      "styleNotes": "<1-2 sentences of ${metadata.style}-specific performance observations>"
+      "feedback": "<4-6 sentences about performance quality you observe — discuss energy arc, facial expression, stage presence, and audience connection across different moments in the routine>",
+      "styleNotes": "<2-3 sentences of ${metadata.style}-specific performance observations — how well do they embody the style's performance demands?>"
     },
     {
       "category": "Choreography",
       "max": 20,
       "judges": [<j1>, <j2>, <j3>],
       "avg": <avg>,
-      "feedback": "<2-3 sentences about choreographic elements visible>",
-      "styleNotes": "<1-2 sentences of ${metadata.style}-specific choreography observations>"
+      "feedback": "<4-6 sentences about choreographic elements — discuss structure, musicality, use of space/levels, transitions, and how well the choreography showcases the dancer's strengths>",
+      "styleNotes": "<2-3 sentences of ${metadata.style}-specific choreography observations — does the choreography honor the style's traditions and expectations?>"
     },
     {
       "category": "Overall Impression",
       "max": 10,
       "judges": [<j1>, <j2>, <j3>],
       "avg": <avg>,
-      "feedback": "<1-2 sentences overall assessment>",
-      "styleNotes": "<1 sentence on overall ${metadata.style} quality>"
+      "feedback": "<3-4 sentences overall assessment — what makes this routine memorable, what's the biggest opportunity for growth, and what would push it to the next award level>",
+      "styleNotes": "<2 sentences on overall ${metadata.style} quality and where this dancer sits relative to their age division>"
     }
   ],
   "timelineNotes": [
@@ -392,7 +392,7 @@ Now provide your complete analysis as a JSON object with EXACTLY this structure.
       "item": "<specific improvement based on what you observed>",
       "impact": "<High|Medium|Low>",
       "timeToFix": "<realistic estimate>",
-      "trainingTip": "<specific drill, exercise, or practice approach to address this — be actionable>"
+      "trainingTip": "<specific drill, exercise, or practice approach to address this — be actionable. Include how many reps, how long to practice, what to focus on. A parent should be able to read this to their dancer and they can immediately start working on it>"
     }
   ],
   "competitionComparison": {
@@ -406,11 +406,21 @@ Now provide your complete analysis as a JSON object with EXACTLY this structure.
 }
 
 SCORING PHILOSOPHY:
-Score GENEROUSLY. These are dancers who have trained hard and are paying for constructive feedback. Your scores should reflect the BEST reasonable interpretation of what you see. When in doubt, score higher rather than lower. Most routines from trained dancers should land in High Gold (270-279) or Platinum (280-289). Only score below 270 if there are clear, significant issues. Reserve Diamond (290+) for truly exceptional work, but don't be stingy with Platinum.
+Think of yourself as the ENCOURAGING judge on the panel — not the harshest judge, not the most generous, but the one who sees the best in a dancer while still being honest. Your scores should be realistic and comparable to what this dancer would receive at a real regional competition.
 
-For Technique specifically: add a 5-7% boost above what you might initially score. Dancers improve faster when they feel encouraged. Apply a similar generous lens across all categories.
+SCORING APPROACH:
+- Score as a fair but warm-hearted judge would. When a moment is borderline, give the benefit of the doubt.
+- Most trained dancers at competitive studios land in High Gold (270-279) to Platinum (280-289). This is normal and expected.
+- Gold (260-269) is appropriate when there are real, visible technical gaps — don't avoid it if it's honest.
+- Diamond (290+) should be rare and earned — reserve it for truly standout work.
+- Parents WILL compare these scores to real competition results. If scores are consistently higher than what judges give at competitions, trust is lost. Aim for scores that feel familiar and credible to an experienced dance parent.
 
-The feedback text should still be honest and specific — point out real areas for improvement — but frame it constructively. The SCORES should lean favorable.
+FEEDBACK APPROACH:
+- Lead with what the dancer does WELL — be specific and genuine.
+- Then address real areas for improvement with actionable, constructive language.
+- Frame flaws as growth opportunities: "To push into Platinum range, focus on..." rather than "This was weak."
+- Be SPECIFIC — reference what you actually see in the frames. Generic praise is useless.
+- The improvement priorities should be the most honest, actionable part of the report. This is where real coaching value lives.
 
 SCORING GUIDELINES:
 - Gold: 260-269 (significant issues present)
@@ -423,8 +433,9 @@ SCORING GUIDELINES:
 - Choreography (max 20): ${styleCriteria.choreographyEmphasis.join(", ")}
 - Overall Impression (max 10): Polish, professionalism, memorability, competition readiness
 
-Provide 6-10 timeline notes using ONLY timestamps from the frames you were shown. IMPORTANT: Each timeline note MUST reference a DIFFERENT frame timestamp — never reuse the same timestamp. Spread your observations across the full duration of the routine so each note highlights a distinct moment.
-Provide 3-5 improvement priorities based on what you actually observe.
+Provide 10-15 timeline notes using ONLY timestamps from the frames you were shown. IMPORTANT: Each timeline note MUST reference a DIFFERENT frame timestamp — never reuse the same timestamp. Spread your observations across the full duration of the routine so each note highlights a distinct moment. Mix positive observations with specific improvement notes — a parent should be able to read through these and feel like a judge was watching every key moment.
+
+Provide 5-7 improvement priorities based on what you actually observe. IMPORTANT: Even for exceptional routines, there is ALWAYS room to grow. Every dancer benefits from specific, actionable feedback. Frame high-scoring improvement items as "to push from Platinum to Diamond" or "to dominate at nationals." There should never be a report that says "nothing to improve." Growth is infinite — that's what keeps great dancers great.
 
 Return ONLY the JSON object, no other text.`,
   });
@@ -439,7 +450,7 @@ Return ONLY the JSON object, no other text.`,
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 4096,
+        max_tokens: 8192,
         messages: [
           {
             role: "user",
@@ -505,29 +516,10 @@ Return ONLY the JSON object, no other text.`,
       throw new Error("Invalid analysis structure from Claude");
     }
 
-    // Apply scoring boost
-    const boostPct = 0.035;
-
-    if (analysis.judgeScores && Array.isArray(analysis.judgeScores)) {
-      for (const category of analysis.judgeScores) {
-        const max = category.max || 35;
-
-        if (Array.isArray(category.judges)) {
-          category.judges = category.judges.map((score: number) => {
-            return Math.round(Math.min(max, score * (1 + boostPct)) * 10) / 10;
-          });
-        }
-
-        category.avg = Math.round(Math.min(max, category.avg * (1 + boostPct)) * 10) / 10;
-      }
-    }
-
-    analysis.totalScore = Math.min(300, Math.round(analysis.totalScore * (1 + boostPct)));
-
+    // Recalculate award level from AI-returned score (no artificial boost)
     if (analysis.competitionComparison) {
       analysis.competitionComparison.yourScore = analysis.totalScore;
     }
-
     analysis.awardLevel = getAwardLevel(analysis.totalScore);
 
     return { analysis, usedAI: true };

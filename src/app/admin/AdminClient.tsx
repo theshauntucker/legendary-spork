@@ -6,7 +6,8 @@ import {
   Users, DollarSign, BarChart3, Sparkles,
   ChevronDown, ChevronUp, Plus, Minus, RefreshCw,
   CheckCircle, AlertCircle, Activity, TrendingUp,
-  Video, Star, ExternalLink, LogOut
+  Video, Star, ExternalLink, LogOut, Gift, Link2,
+  Trash2, Pause, Play, Edit3, Copy, X
 } from "lucide-react";
 
 interface UserRecord {
@@ -50,6 +51,24 @@ interface ActivityItem {
   amount: number;
 }
 
+interface AffiliateRecord {
+  id: string;
+  code: string;
+  name: string;
+  email: string | null;
+  revenue_share_pct: number;
+  status: string;
+  notes: string | null;
+  total_signups: number;
+  total_revenue_cents: number;
+  total_payout_cents: number;
+  created_at: string;
+  updated_at: string;
+  referredUsers: Array<{ email: string; name: string; totalPaid: number }>;
+  actualRevenue: number;
+  owedAmount: number;
+}
+
 interface Stats {
   totalRevenue: number;
   trialRevenue: number;
@@ -66,20 +85,25 @@ interface Stats {
 interface Props {
   users: UserRecord[];
   payments: Array<Record<string, unknown>>;
+  affiliates: AffiliateRecord[];
   analyses: AnalysisRecord[];
   recentActivity: ActivityItem[];
   stats: Stats;
 }
 
-type Tab = "overview" | "members" | "payments" | "analyses";
+type Tab = "overview" | "members" | "payments" | "analyses" | "affiliates";
 
-export default function AdminClient({ users: initialUsers, analyses, recentActivity, stats }: Props) {
+export default function AdminClient({ users: initialUsers, affiliates: initialAffiliates, analyses, recentActivity, stats }: Props) {
   const [users, setUsers] = useState(initialUsers);
+  const [affiliates, setAffiliates] = useState(initialAffiliates);
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [expandedAffiliate, setExpandedAffiliate] = useState<string | null>(null);
   const [creditInputs, setCreditInputs] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [messages, setMessages] = useState<Record<string, { type: "success" | "error"; text: string }>>({});
+  const [showAddAffiliate, setShowAddAffiliate] = useState(false);
+  const [newAffiliate, setNewAffiliate] = useState({ code: "", name: "", email: "", revenueSharePct: "20", notes: "" });
 
   const showMessage = (userId: string, type: "success" | "error", text: string) => {
     setMessages((prev) => ({ ...prev, [userId]: { type, text } }));
@@ -131,9 +155,87 @@ export default function AdminClient({ users: initialUsers, analyses, recentActiv
     }
   };
 
+  // === Affiliate management functions ===
+  const createAffiliate = async () => {
+    if (!newAffiliate.code || !newAffiliate.name) return;
+    setLoading(prev => ({ ...prev, createAffiliate: true }));
+    try {
+      const res = await fetch("/api/admin/affiliates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: newAffiliate.code,
+          name: newAffiliate.name,
+          email: newAffiliate.email || undefined,
+          revenueSharePct: parseFloat(newAffiliate.revenueSharePct) || 20,
+          notes: newAffiliate.notes || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+      setAffiliates(prev => [{ ...data.affiliate, referredUsers: [], actualRevenue: 0, owedAmount: 0 }, ...prev]);
+      setNewAffiliate({ code: "", name: "", email: "", revenueSharePct: "20", notes: "" });
+      setShowAddAffiliate(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to create affiliate");
+    } finally {
+      setLoading(prev => ({ ...prev, createAffiliate: false }));
+    }
+  };
+
+  const updateAffiliateStatus = async (id: string, status: string) => {
+    setLoading(prev => ({ ...prev, [`aff_${id}`]: true }));
+    try {
+      const res = await fetch("/api/admin/affiliates", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setAffiliates(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+    } catch {
+      alert("Failed to update affiliate status");
+    } finally {
+      setLoading(prev => ({ ...prev, [`aff_${id}`]: false }));
+    }
+  };
+
+  const updateAffiliatePayout = async (id: string, amount: number) => {
+    setLoading(prev => ({ ...prev, [`payout_${id}`]: true }));
+    try {
+      const res = await fetch("/api/admin/affiliates", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, totalPayoutCents: amount }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setAffiliates(prev => prev.map(a => a.id === id ? { ...a, total_payout_cents: amount } : a));
+    } catch {
+      alert("Failed to update payout");
+    } finally {
+      setLoading(prev => ({ ...prev, [`payout_${id}`]: false }));
+    }
+  };
+
+  const deleteAffiliate = async (id: string) => {
+    if (!confirm("Delete this affiliate? This cannot be undone.")) return;
+    try {
+      const res = await fetch(`/api/admin/affiliates?id=${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed");
+      setAffiliates(prev => prev.filter(a => a.id !== id));
+    } catch {
+      alert("Failed to delete affiliate");
+    }
+  };
+
+  const copyReferralLink = (code: string) => {
+    navigator.clipboard.writeText(`https://routinex.org/signup?ref=${code}`);
+  };
+
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "members", label: `Members (${users.length})`, icon: Users },
+    { id: "affiliates", label: `Affiliates (${affiliates.length})`, icon: Gift },
     { id: "payments", label: `Revenue`, icon: DollarSign },
     { id: "analyses", label: `Analyses (${analyses.length})`, icon: Star },
   ];
@@ -450,6 +552,226 @@ export default function AdminClient({ users: initialUsers, analyses, recentActiv
                       <span className="font-bold text-green-400">${(p.amount_cents/100).toFixed(2)}</span>
                     </div>
                   ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* AFFILIATES TAB */}
+        {activeTab === "affiliates" && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            {/* Affiliate stats summary */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { label: "Active Affiliates", value: affiliates.filter(a => a.status === "active").length, color: "text-primary-400" },
+                { label: "Total Referral Revenue", value: `$${(affiliates.reduce((s, a) => s + a.actualRevenue, 0) / 100).toFixed(2)}`, color: "text-green-400" },
+                { label: "Total Owed", value: `$${(affiliates.reduce((s, a) => s + Math.max(0, a.owedAmount - a.total_payout_cents), 0) / 100).toFixed(2)}`, color: "text-gold-400" },
+                { label: "Referred Signups", value: affiliates.reduce((s, a) => s + a.total_signups, 0), color: "text-accent-400" },
+              ].map(s => (
+                <div key={s.label} className="glass rounded-2xl p-5">
+                  <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+                  <div className="text-xs text-surface-200 mt-1">{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Add affiliate button / form */}
+            {!showAddAffiliate ? (
+              <button
+                onClick={() => setShowAddAffiliate(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-500 text-white text-sm font-medium transition-colors"
+              >
+                <Plus className="h-4 w-4" /> Add Affiliate
+              </button>
+            ) : (
+              <div className="glass rounded-2xl p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold flex items-center gap-2"><Gift className="h-4 w-4 text-gold-400" /> New Affiliate</h3>
+                  <button onClick={() => setShowAddAffiliate(false)} className="text-surface-200 hover:text-white"><X className="h-4 w-4" /></button>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-surface-200 block mb-1">Code *</label>
+                    <input
+                      type="text"
+                      value={newAffiliate.code}
+                      onChange={(e) => setNewAffiliate(prev => ({ ...prev, code: e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "") }))}
+                      placeholder="DANCERJEN"
+                      className="w-full text-sm bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 uppercase tracking-wider"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-surface-200 block mb-1">Name *</label>
+                    <input
+                      type="text"
+                      value={newAffiliate.name}
+                      onChange={(e) => setNewAffiliate(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Jen Smith"
+                      className="w-full text-sm bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-surface-200 block mb-1">Email</label>
+                    <input
+                      type="email"
+                      value={newAffiliate.email}
+                      onChange={(e) => setNewAffiliate(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="jen@example.com"
+                      className="w-full text-sm bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-surface-200 block mb-1">Revenue Share %</label>
+                    <input
+                      type="number"
+                      value={newAffiliate.revenueSharePct}
+                      onChange={(e) => setNewAffiliate(prev => ({ ...prev, revenueSharePct: e.target.value }))}
+                      placeholder="20"
+                      min="0"
+                      max="100"
+                      className="w-full text-sm bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-surface-200 block mb-1">Notes</label>
+                  <input
+                    type="text"
+                    value={newAffiliate.notes}
+                    onChange={(e) => setNewAffiliate(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Instagram dancer with 50k followers..."
+                    className="w-full text-sm bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={createAffiliate}
+                    disabled={!newAffiliate.code || !newAffiliate.name || loading.createAffiliate}
+                    className="px-4 py-2 text-sm bg-primary-600 hover:bg-primary-500 rounded-xl text-white font-medium disabled:opacity-50 transition-colors"
+                  >
+                    {loading.createAffiliate ? "Creating..." : "Create Affiliate"}
+                  </button>
+                  {newAffiliate.code && (
+                    <span className="text-xs text-surface-200">
+                      Link: routinex.org/signup?ref={newAffiliate.code}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Affiliates list */}
+            <div className="glass rounded-2xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-white/10">
+                <h2 className="font-semibold">All Affiliates ({affiliates.length})</h2>
+              </div>
+              <div className="divide-y divide-white/5">
+                {affiliates.length === 0 && <div className="px-6 py-10 text-center text-surface-200">No affiliates yet. Add one above to get started.</div>}
+                {affiliates.map((aff) => {
+                  const unpaid = Math.max(0, aff.owedAmount - aff.total_payout_cents);
+                  return (
+                    <div key={aff.id}>
+                      <div
+                        className="px-5 py-4 flex items-center gap-3 hover:bg-white/5 cursor-pointer transition-colors"
+                        onClick={() => setExpandedAffiliate(expandedAffiliate === aff.id ? null : aff.id)}
+                      >
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${aff.status === "active" ? "bg-green-400" : aff.status === "paused" ? "bg-yellow-400" : "bg-surface-200/40"}`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-sm">{aff.name}</span>
+                            <span className="text-[10px] bg-primary-500/20 text-primary-400 px-2 py-0.5 rounded-full font-mono tracking-wider">{aff.code}</span>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${aff.status === "active" ? "bg-green-500/20 text-green-400" : aff.status === "paused" ? "bg-yellow-500/20 text-yellow-400" : "bg-white/10 text-surface-200"}`}>{aff.status}</span>
+                          </div>
+                          <div className="text-xs text-surface-200 mt-0.5">
+                            {aff.total_signups} signups · {aff.revenue_share_pct}% rev share · Since {new Date(aff.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <div className="text-right hidden sm:block shrink-0">
+                          <div className="text-sm font-semibold text-green-400">${(aff.actualRevenue / 100).toFixed(2)}</div>
+                          <div className="text-xs text-surface-200">revenue</div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <div className={`text-sm font-bold ${unpaid > 0 ? "text-gold-400" : "text-surface-200"}`}>${(unpaid / 100).toFixed(2)}</div>
+                          <div className="text-xs text-surface-200">owed</div>
+                        </div>
+                        {expandedAffiliate === aff.id ? <ChevronUp className="h-4 w-4 text-surface-200 shrink-0" /> : <ChevronDown className="h-4 w-4 text-surface-200 shrink-0" />}
+                      </div>
+
+                      {expandedAffiliate === aff.id && (
+                        <div className="px-5 pb-5 bg-white/5 border-t border-white/5 space-y-4">
+                          {/* Stats row */}
+                          <div className="pt-4 grid grid-cols-4 gap-3 text-sm">
+                            {[
+                              { label: "Signups", value: aff.total_signups },
+                              { label: "Revenue Generated", value: `$${(aff.actualRevenue / 100).toFixed(2)}`, color: "text-green-400" },
+                              { label: "Their Share", value: `$${(aff.owedAmount / 100).toFixed(2)}`, color: "text-gold-400" },
+                              { label: "Paid Out", value: `$${(aff.total_payout_cents / 100).toFixed(2)}` },
+                            ].map(s => (
+                              <div key={s.label} className="bg-white/5 rounded-xl p-3 text-center">
+                                <div className={`font-bold text-lg ${s.color ?? ""}`}>{s.value}</div>
+                                <div className="text-xs text-surface-200">{s.label}</div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Referral link */}
+                          <div className="flex items-center gap-2 bg-white/5 rounded-xl px-4 py-2.5">
+                            <Link2 className="h-4 w-4 text-primary-400 shrink-0" />
+                            <span className="text-sm text-surface-200 flex-1 truncate font-mono">routinex.org/signup?ref={aff.code}</span>
+                            <button
+                              onClick={() => copyReferralLink(aff.code)}
+                              className="text-xs bg-primary-500/20 text-primary-400 hover:bg-primary-500/30 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1"
+                            >
+                              <Copy className="h-3 w-3" /> Copy Link
+                            </button>
+                          </div>
+
+                          {/* Details */}
+                          {aff.email && <div className="text-sm text-surface-200">Email: {aff.email}</div>}
+                          {aff.notes && <div className="text-sm text-surface-200">Notes: {aff.notes}</div>}
+
+                          {/* Referred users */}
+                          {aff.referredUsers.length > 0 && (
+                            <div>
+                              <p className="text-xs text-surface-200 font-semibold uppercase tracking-wider mb-2">Referred Users</p>
+                              {aff.referredUsers.map((ru, i) => (
+                                <div key={i} className="flex items-center justify-between text-sm bg-white/5 rounded-xl px-4 py-2 mb-1">
+                                  <span className="truncate">{ru.email} {ru.name && <span className="text-surface-200">({ru.name})</span>}</span>
+                                  <span className="font-semibold text-green-400 shrink-0">${(ru.totalPaid / 100).toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Actions */}
+                          <div className="flex flex-wrap gap-2 pt-2">
+                            {aff.status === "active" ? (
+                              <button onClick={() => updateAffiliateStatus(aff.id, "paused")} disabled={loading[`aff_${aff.id}`]}
+                                className="text-xs bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 px-3 py-1.5 rounded-full transition-colors disabled:opacity-50 flex items-center gap-1">
+                                <Pause className="h-3 w-3" /> Pause
+                              </button>
+                            ) : (
+                              <button onClick={() => updateAffiliateStatus(aff.id, "active")} disabled={loading[`aff_${aff.id}`]}
+                                className="text-xs bg-green-500/20 text-green-400 hover:bg-green-500/30 px-3 py-1.5 rounded-full transition-colors disabled:opacity-50 flex items-center gap-1">
+                                <Play className="h-3 w-3" /> Activate
+                              </button>
+                            )}
+                            {unpaid > 0 && (
+                              <button onClick={() => updateAffiliatePayout(aff.id, aff.owedAmount)} disabled={loading[`payout_${aff.id}`]}
+                                className="text-xs bg-gold-500/20 text-gold-400 hover:bg-gold-500/30 px-3 py-1.5 rounded-full transition-colors disabled:opacity-50 flex items-center gap-1">
+                                <DollarSign className="h-3 w-3" /> Mark Paid (${(unpaid / 100).toFixed(2)})
+                              </button>
+                            )}
+                            <button onClick={() => deleteAffiliate(aff.id)}
+                              className="text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1">
+                              <Trash2 className="h-3 w-3" /> Delete
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </motion.div>

@@ -5,7 +5,7 @@ import { Play, ArrowRight, Users, Star, Shield, Zap, Trophy } from "lucide-react
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-28">
       {/* Background effects */}
       <div className="absolute inset-0">
         <div className="absolute top-0 right-0 w-80 h-80 bg-primary-400/20 rounded-full blur-3xl" />
@@ -102,16 +102,16 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          {/* Trial CTA */}
+          {/* Free CTA */}
           <div className="flex flex-col items-center gap-1">
             <a
               href="/signup"
               className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary-600/25 hover:shadow-primary-600/40 transition-all animate-pulse-glow"
             >
-              Try 1 Analysis — $4.99
+              Get Your Free Analysis
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </a>
-            <span className="text-xs text-gold-300 font-semibold">⚡ One-time trial offer — new accounts only</span>
+            <span className="text-xs text-green-300 font-semibold">Your first analysis is completely free</span>
           </div>
 
           {/* Pack CTA */}
@@ -120,9 +120,9 @@ export default function Hero() {
               href="/signup"
               className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-4 text-base font-medium text-white hover:bg-white/5 transition-colors"
             >
-              Get 5 Analyses — $24.99
+              Get 5 Analyses — $29.99
             </a>
-            <span className="text-xs text-gray-400">Only $5 each</span>
+            <span className="text-xs text-gray-400">Only $6 each — save $15</span>
           </div>
         </motion.div>
 

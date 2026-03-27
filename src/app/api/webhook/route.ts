@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
 
     const userId = session.metadata?.user_id;
     const paymentType = session.metadata?.payment_type || "beta_access";
+    const referralCode = session.metadata?.referral_code || null;
 
     if (!userId) {
       console.error("Webhook: No user_id in session metadata", session.id);
@@ -45,11 +46,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine credits to grant based on payment type
-    // trial = $4.99 = 1 credit
-    // video_analysis / pack = $24.99 = 5 credits
+    // single = $8.99 = 1 credit
+    // video_analysis / pack = $29.99 = 5 credits
+    // trial (legacy) = 1 credit
     // beta_access (legacy) = 3 credits
     const isBeta = paymentType === "beta_access";
     const isPack = paymentType === "video_analysis";
+    const isSingle = paymentType === "single";
     const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : 1;
 
     const serviceClient = await createServiceClient();
@@ -93,6 +96,7 @@ export async function POST(request: NextRequest) {
           currency: session.currency || "usd",
           status: "completed",
           credits_granted: creditsToGrant,
+          referral_code: referralCode,
         });
 
       if (insertError) {
@@ -119,6 +123,16 @@ export async function POST(request: NextRequest) {
     console.log(
       `Webhook: Granted ${creditsToGrant} credits to ${userId} (${paymentType})`
     );
+
+    // Attribute revenue to affiliate if referral code present
+    if (referralCode) {
+      serviceClient.rpc("attribute_affiliate_revenue", {
+        p_user_id: userId,
+        p_amount_cents: session.amount_total || 0,
+      }).then(({ error: affErr }) => {
+        if (affErr) console.error("Affiliate attribution failed:", affErr);
+      });
+    }
 
     // Send payment notification email (non-blocking, ok to fail)
     const customerEmail = session.customer_email || session.customer_details?.email || userId;

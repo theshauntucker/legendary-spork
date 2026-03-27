@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles,
@@ -10,20 +11,31 @@ import {
   Eye,
   EyeOff,
   CheckCircle,
+  Gift,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import UploadTrustBadge from "@/components/UploadTrustBadge";
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // Capture ?ref= from URL on mount
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      setReferralCode(ref.toUpperCase());
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,11 +78,26 @@ export default function SignupPage() {
     setSuccess(true);
     setLoading(false);
 
+    // Grant 1 free analysis credit (fire and forget)
+    fetch("/api/free-credit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    }).catch(() => {});
+
+    // Record referral code if present (fire and forget)
+    if (referralCode.trim()) {
+      fetch("/api/referral", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: referralCode.trim() }),
+      }).catch(() => {});
+    }
+
     // Notify admin of new signup immediately (fire and forget)
     fetch("/api/notify-admin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "signup", email, name }),
+      body: JSON.stringify({ type: "signup", email, name, referralCode: referralCode.trim() || undefined }),
     }).catch(() => {});
 
     // Send to dashboard — they'll see the welcome banner + pricing options there
@@ -185,6 +212,23 @@ export default function SignupPage() {
               </div>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                <span className="flex items-center gap-1.5">
+                  <Gift className="h-3.5 w-3.5 text-gold-400" />
+                  Referral Code
+                  <span className="text-surface-200 text-xs font-normal">(optional)</span>
+                </span>
+              </label>
+              <input
+                type="text"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                placeholder="e.g., DANCERJEN"
+                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-gold-500 transition-colors uppercase tracking-wider"
+              />
+            </div>
+
             {error && (
               <p className="text-sm text-red-400 text-center">{error}</p>
             )}
@@ -221,5 +265,17 @@ export default function SignupPage() {
         </p>
       </motion.div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary-400" />
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
   );
 }

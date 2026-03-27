@@ -276,31 +276,29 @@ export default function DashboardClient({
             </div>
 
             {/* Pricing options */}
-            <div className={`grid gap-4 ${trialUsed ? 'grid-cols-1 max-w-sm mx-auto' : 'sm:grid-cols-2'}`}>
-              {/* Trial option — hidden once used */}
-              {!trialUsed && (
-                <PurchaseCard
-                  badge="⚡ One-Time Only"
-                  badgeColor="text-accent-300 bg-accent-500/20"
-                  title="First Analysis"
-                  price="$4.99"
-                  description="Try it once. See exactly what a judge sees."
-                  features={["1 full AI analysis", "Competition-standard scoring", "Timestamped judge notes", "Improvement roadmap"]}
-                  buttonText="Try for $4.99"
-                  buttonStyle="border-2 border-accent-500 hover:bg-accent-500/20"
-                  type="trial"
-                />
-              )}
+            <div className="grid sm:grid-cols-2 gap-4">
+              {/* Single Analysis */}
+              <PurchaseCard
+                badge="⚡ Single Analysis"
+                badgeColor="text-accent-300 bg-accent-500/20"
+                title="Single Analysis"
+                price="$8.99"
+                description="Get one full AI analysis for any routine."
+                features={["1 full AI analysis", "Competition-standard scoring", "Timestamped judge notes", "Improvement roadmap"]}
+                buttonText="Get 1 Analysis — $8.99"
+                buttonStyle="border-2 border-accent-500 hover:bg-accent-500/20"
+                type="single"
+              />
 
-              {/* Pack option — always visible */}
+              {/* Pack option */}
               <PurchaseCard
                 badge="🏆 Best Value"
                 badgeColor="text-gold-300 bg-gold-500/20"
                 title="Competition Pack"
-                price="$24.99"
+                price="$29.99"
                 description="5 analyses — track progress all season long."
-                features={["5 full AI analyses", "Only $5 each", "All styles supported", "Use any time, never expire"]}
-                buttonText="Get 5 Analyses — $24.99"
+                features={["5 full AI analyses", "Only $6 each — save $15", "All styles supported", "Use any time, never expire"]}
+                buttonText="Get 5 Analyses — $29.99"
                 buttonStyle="bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 hover:opacity-90"
                 type="pack"
               />
