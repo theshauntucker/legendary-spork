@@ -78,12 +78,6 @@ function SignupForm() {
     setSuccess(true);
     setLoading(false);
 
-    // Grant 1 free analysis credit (fire and forget)
-    fetch("/api/free-credit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    }).catch(() => {});
-
     // Record referral code if present (fire and forget)
     if (referralCode.trim()) {
       fetch("/api/referral", {

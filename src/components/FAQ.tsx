@@ -35,7 +35,7 @@ const faqs = [
   },
   {
     q: "What do I get when I sign up?",
-    a: "Members ($4.99 one-time) get full platform access, 1 video analysis included, founding member status with a profile badge, and a direct feedback channel to our team. Additional analyses: get 5 for $24.99.",
+    a: "When you sign up, DM us on Instagram @routinex.ai to claim your FREE first analysis. After that, single analyses are $8.99 each, or grab our Competition Pack — 5 analyses for $29.99 (just $6 each).",
   },
   {
     q: "Can I get a refund?",

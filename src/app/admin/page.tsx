@@ -68,10 +68,10 @@ export default async function AdminPage() {
 
   // Stats
   const totalRevenue = allPayments.reduce((s, p) => s + p.amount_cents, 0);
-  const trialRevenue = allPayments.filter(p => p.payment_type === "trial").reduce((s, p) => s + p.amount_cents, 0);
-  const packRevenue = allPayments.filter(p => p.payment_type === "beta_access").reduce((s, p) => s + p.amount_cents, 0);
-  const trialCount = allPayments.filter(p => p.payment_type === "trial").length;
-  const packCount = allPayments.filter(p => p.payment_type === "beta_access").length;
+  const singleRevenue = allPayments.filter(p => p.payment_type === "single" || p.payment_type === "trial").reduce((s, p) => s + p.amount_cents, 0);
+  const packRevenue = allPayments.filter(p => p.payment_type === "video_analysis" || p.payment_type === "beta_access").reduce((s, p) => s + p.amount_cents, 0);
+  const singleCount = allPayments.filter(p => p.payment_type === "single" || p.payment_type === "trial").length;
+  const packCount = allPayments.filter(p => p.payment_type === "video_analysis" || p.payment_type === "beta_access").length;
   const convertedUsers = userRecords.filter(u => u.hasConverted).length;
   const conversionRate = allUsers.length > 0 ? Math.round((convertedUsers / allUsers.length) * 100) : 0;
 
@@ -80,7 +80,7 @@ export default async function AdminPage() {
     type: "payment" as const,
     date: p.created_at,
     userId: p.user_id,
-    detail: `${p.payment_type === "trial" ? "$4.99 Trial" : "$24.99 Pack"} — ${p.credits_granted} credits`,
+    detail: `${p.payment_type === "single" || p.payment_type === "trial" ? `$${(p.amount_cents/100).toFixed(2)} Single` : `$${(p.amount_cents/100).toFixed(2)} Pack`} — ${p.credits_granted} credits`,
     amount: p.amount_cents,
   }));
 
@@ -128,9 +128,9 @@ export default async function AdminPage() {
       recentActivity={recentActivity}
       stats={{
         totalRevenue,
-        trialRevenue,
+        singleRevenue,
         packRevenue,
-        trialCount,
+        singleCount,
         packCount,
         totalMembers: allUsers.length,
         convertedMembers: convertedUsers,

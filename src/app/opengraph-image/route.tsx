@@ -122,7 +122,7 @@ export async function GET() {
               fontFamily: "Arial, sans-serif",
             }}
           >
-            Get Started — $4.99
+            Get Your Free Analysis
           </div>
         </div>
 
@@ -141,7 +141,7 @@ export async function GET() {
           }}
         >
           <span>routinex.org</span>
-          <span>AI-powered analysis for $4.99/video</span>
+          <span>First analysis FREE — then from $6/video</span>
         </div>
       </div>
     ),

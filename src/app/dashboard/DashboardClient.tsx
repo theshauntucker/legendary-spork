@@ -119,12 +119,10 @@ export default function DashboardClient({
   user,
   videos,
   credits,
-  trialUsed = false,
 }: {
   user: { email: string; name: string };
   videos: VideoRecord[];
   credits: { remaining: number; total: number; used: number };
-  trialUsed?: boolean;
 }) {
   const router = useRouter();
 
@@ -261,12 +259,12 @@ export default function DashboardClient({
             {/* Welcome banner */}
             <div className="bg-gradient-to-r from-primary-700/60 via-accent-600/40 to-primary-700/60 border border-primary-500/30 rounded-2xl p-6 mb-4 text-center">
               <h2 className="text-2xl font-bold text-white mb-2">
-                {trialUsed ? "Ready for Your Next Routine?" : `Welcome to RoutineX${user.name ? `, ${user.name.split(' ')[0]}` : ''}! 🏆`}
+                {credits.used > 0 ? "Ready for Your Next Routine?" : `Welcome to RoutineX${user.name ? `, ${user.name.split(' ')[0]}` : ''}! 🏆`}
               </h2>
               <p className="text-surface-200 text-sm max-w-lg mx-auto">
-                {trialUsed
-                  ? "You've used your one-time trial. Get 5 more analyses to keep improving your routines."
-                  : "You're in. Upload any dance or cheer routine and get competition-standard scoring with detailed judge feedback in under 5 minutes."}
+                {credits.used > 0
+                  ? "Pick up more credits to keep improving your routines all season long."
+                  : "DM us on Instagram @routinex.ai for your FREE first analysis credit! Or grab a pack below to get started right away."}
               </p>
               {/* Privacy statement */}
               <div className="mt-3 flex items-center justify-center gap-2 text-xs text-gray-400">

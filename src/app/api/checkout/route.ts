@@ -24,13 +24,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    if (!user) {
-      return NextResponse.json(
-        { error: "You must be logged in to purchase" },
-        { status: 401 }
-      );
-    }
-
     // Look up the user's referral code from their account if not passed
     let effectiveReferralCode = referralCode;
     if (!effectiveReferralCode) {

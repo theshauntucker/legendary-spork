@@ -37,9 +37,9 @@ export default function SuccessClient({ sessionId }: { sessionId?: string }) {
           <div className="flex items-start gap-3 rounded-xl bg-white/5 p-4">
             <Gift className="h-5 w-5 text-primary-400 mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium text-sm">1 Analysis Included</p>
+              <p className="font-medium text-sm">Credits Added</p>
               <p className="text-xs text-surface-200">
-                Your $4.99 trial includes 1 video analysis — upload your first routine now.
+                Your analysis credits are ready — upload a routine now to get started.
               </p>
             </div>
           </div>

@@ -71,9 +71,9 @@ interface AffiliateRecord {
 
 interface Stats {
   totalRevenue: number;
-  trialRevenue: number;
+  singleRevenue: number;
   packRevenue: number;
-  trialCount: number;
+  singleCount: number;
   packCount: number;
   totalMembers: number;
   convertedMembers: number;
@@ -301,7 +301,7 @@ export default function AdminClient({ users: initialUsers, affiliates: initialAf
             {/* Key stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { label: "Total Revenue", value: `$${(stats.totalRevenue / 100).toFixed(2)}`, icon: DollarSign, color: "text-green-400", sub: `$${(stats.trialRevenue/100).toFixed(2)} trial + $${(stats.packRevenue/100).toFixed(2)} packs` },
+                { label: "Total Revenue", value: `$${(stats.totalRevenue / 100).toFixed(2)}`, icon: DollarSign, color: "text-green-400", sub: `$${(stats.singleRevenue/100).toFixed(2)} singles + $${(stats.packRevenue/100).toFixed(2)} packs` },
                 { label: "Total Members", value: stats.totalMembers, icon: Users, color: "text-primary-400", sub: `${stats.convertedMembers} paid` },
                 { label: "Conversion Rate", value: `${stats.conversionRate}%`, icon: TrendingUp, color: "text-gold-400", sub: `${stats.convertedMembers} of ${stats.totalMembers}` },
               ].map((s) => (
@@ -320,14 +320,14 @@ export default function AdminClient({ users: initialUsers, affiliates: initialAf
                 <h3 className="font-semibold mb-4 flex items-center gap-2"><DollarSign className="h-4 w-4 text-green-400" /> Revenue Breakdown</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-surface-200">$4.99 Trial purchases</span>
+                    <span className="text-sm text-surface-200">$8.99 Single purchases</span>
                     <div className="text-right">
-                      <span className="font-bold text-green-400">${(stats.trialRevenue/100).toFixed(2)}</span>
-                      <span className="text-xs text-surface-200 ml-2">({stats.trialCount} sales)</span>
+                      <span className="font-bold text-green-400">${(stats.singleRevenue/100).toFixed(2)}</span>
+                      <span className="text-xs text-surface-200 ml-2">({stats.singleCount} sales)</span>
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-surface-200">$24.99 Pack purchases</span>
+                    <span className="text-sm text-surface-200">$29.99 Pack purchases</span>
                     <div className="text-right">
                       <span className="font-bold text-green-400">${(stats.packRevenue/100).toFixed(2)}</span>
                       <span className="text-xs text-surface-200 ml-2">({stats.packCount} sales)</span>
@@ -522,8 +522,8 @@ export default function AdminClient({ users: initialUsers, affiliates: initialAf
             <div className="grid sm:grid-cols-3 gap-4">
               {[
                 { label: "Total Revenue", value: `$${(stats.totalRevenue/100).toFixed(2)}`, color: "text-green-400" },
-                { label: "Trial Sales ($4.99)", value: `${stats.trialCount} × $4.99 = $${(stats.trialRevenue/100).toFixed(2)}`, color: "text-accent-400" },
-                { label: "Pack Sales ($24.99)", value: `${stats.packCount} × $24.99 = $${(stats.packRevenue/100).toFixed(2)}`, color: "text-gold-400" },
+                { label: "Single Sales ($8.99)", value: `${stats.singleCount} × $8.99 = $${(stats.singleRevenue/100).toFixed(2)}`, color: "text-accent-400" },
+                { label: "Pack Sales ($29.99)", value: `${stats.packCount} × $29.99 = $${(stats.packRevenue/100).toFixed(2)}`, color: "text-gold-400" },
               ].map(s => (
                 <div key={s.label} className="glass rounded-2xl p-5">
                   <div className={`text-xl font-bold ${s.color}`}>{s.value}</div>

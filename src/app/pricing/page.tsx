@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "RoutineX pricing: $4.99 one-time Founding Member Pass with 1 analysis included, or $4.99 per video. No subscriptions, no hidden fees.",
+    "RoutineX pricing: First analysis FREE. $8.99 per single analysis or $29.99 for 5 (Competition Pack). No subscriptions, no hidden fees.",
   alternates: {
     canonical: "/pricing",
   },

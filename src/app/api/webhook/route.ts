@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
               ? session.payment_intent
               : null,
           payment_type: paymentType,
-          amount_cents: session.amount_total || (isBeta ? 999 : 399),
+          amount_cents: session.amount_total || (isBeta ? 999 : 899),
           currency: session.currency || "usd",
           status: "completed",
           credits_granted: creditsToGrant,
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
       customerEmail,
       userId,
       paymentType,
-      session.amount_total || (isBeta ? 999 : 399)
+      session.amount_total || (isBeta ? 999 : 899)
     ).catch((err: unknown) => console.error("Payment notification failed:", err));
   }
 

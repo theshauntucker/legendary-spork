@@ -51,7 +51,7 @@ export default function OurApproachPage() {
           <div className="glass rounded-2xl p-6 sm:p-8">
             <div className="flex items-center gap-3 mb-4">
               <DollarSign className="h-6 w-6 text-green-400 shrink-0" />
-              <h2 className="text-xl font-bold text-white">$4.99 for What Used to Cost $100+</h2>
+              <h2 className="text-xl font-bold text-white">Under $9 for What Used to Cost $100+</h2>
             </div>
             <p className="mb-4">
               Here&apos;s the thing — for the price of a coffee, RoutineX gives
@@ -174,7 +174,7 @@ export default function OurApproachPage() {
               href="/signup"
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-6 py-3 font-semibold text-white hover:opacity-90 transition-opacity"
             >
-              Get Started — $4.99
+              Get Your Free Analysis
               <ArrowRight className="h-4 w-4" />
             </a>
           </div>
