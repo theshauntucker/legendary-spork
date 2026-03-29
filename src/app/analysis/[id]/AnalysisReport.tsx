@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   Trophy,
@@ -134,6 +134,8 @@ function matchFramesToNotes(
 export default function AnalysisReport({ analysis }: { analysis: AnalysisData }) {
   const awardLevel = getAwardLevel(analysis.totalScore);
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -154,9 +156,67 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
     }
   };
 
-  const handleDownload = () => {
-    // Use browser's print dialog — user can "Save as PDF" for a polished report
-    window.print();
+  const handleDownload = async () => {
+    const el = reportRef.current;
+    if (!el || downloading) return;
+    setDownloading(true);
+
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+
+      // Hide interactive elements (buttons, share CTAs)
+      const hideEls = el.querySelectorAll("[data-print-hide]");
+      hideEls.forEach((e) => ((e as HTMLElement).style.display = "none"));
+
+      // Scroll to top so html2canvas captures from the beginning
+      const savedScrollY = window.scrollY;
+      window.scrollTo(0, 0);
+
+      // Lower scale on mobile to stay within canvas pixel limits
+      const isMobile = window.innerWidth < 768;
+      const captureScale = isMobile ? 1.5 : 2;
+
+      // Capture the FULL element — explicit width/height avoids truncation
+      const canvas = await html2canvas(el, {
+        scale: captureScale,
+        useCORS: true,
+        backgroundColor: "#09090b",
+        logging: false,
+        width: el.scrollWidth,
+        height: el.scrollHeight,
+        windowWidth: el.scrollWidth,
+        windowHeight: el.scrollHeight,
+        scrollX: 0,
+        scrollY: 0,
+      });
+
+      // Restore scroll + hidden elements
+      window.scrollTo(0, savedScrollY);
+      hideEls.forEach((e) => ((e as HTMLElement).style.display = ""));
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+
+      // Single continuous page — no breaks, exactly like the website
+      const pdfWidthMm = 210;
+      const pdfHeightMm = (canvas.height / canvas.width) * pdfWidthMm;
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: [pdfWidthMm, pdfHeightMm],
+      });
+
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidthMm, pdfHeightMm);
+
+      const safeName = analysis.routineName.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "-");
+      pdf.save(safeName + "-RoutineX-Analysis.pdf");
+    } catch (err) {
+      console.error("PDF generation failed, falling back to print:", err);
+      window.print();
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const [framesDeleted, setFramesDeleted] = useState(false);
@@ -204,10 +264,15 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
           <div className="flex items-center gap-2">
             <button
               onClick={handleDownload}
-              className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+              disabled={downloading}
+              className="p-2 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50"
               title="Download as PDF"
             >
-              <Download className="h-4 w-4 text-surface-200" />
+              {downloading ? (
+                <Loader2 className="h-4 w-4 text-surface-200 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 text-surface-200" />
+              )}
             </button>
             <button
               onClick={handleShare}
@@ -225,6 +290,7 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
 
         {/* Analysis Report */}
         <motion.div
+          ref={reportRef}
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}

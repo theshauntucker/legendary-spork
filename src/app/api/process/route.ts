@@ -516,7 +516,12 @@ Return ONLY the JSON object, no other text.`,
       throw new Error("Invalid analysis structure from Claude");
     }
 
-    // Recalculate award level from AI-returned score (no artificial boost)
+    // Apply favorable score adjustment — keeps feedback untouched,
+    // proportionally boosts all judge scores so totals land in the 280-286 range.
+    // Scores already at 290+ are left alone.
+    applyScoreAdjustment(analysis);
+
+    // Recalculate award level from adjusted score
     if (analysis.competitionComparison) {
       analysis.competitionComparison.yourScore = analysis.totalScore;
     }
@@ -535,6 +540,60 @@ function getAwardLevel(score: number): string {
   if (score >= 280) return "Platinum";
   if (score >= 270) return "High Gold";
   return "Gold";
+}
+
+/**
+ * Proportional score boost for totals below 290.
+ *
+ * boost = (290 - currentTotal) x 0.5
+ *
+ * totalScore = sum of ALL individual judge scores (~300 max).
+ * The boost is distributed across categories proportionally to each
+ * category max, then divided by judge count so the net increase to
+ * the total equals exactly `boost`.
+ *
+ * 274 -> 282 | 275 -> 283 | 280 -> 285 | 285 -> 288 | 290+ -> unchanged
+ *
+ * Feedback text, timeline notes, improvement priorities are NEVER touched.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function applyScoreAdjustment(analysis: any): void {
+  const currentTotal: number = analysis.totalScore;
+
+  // Leave scores at 290+ completely untouched
+  if (currentTotal >= 290) return;
+
+  const boost = (290 - currentTotal) * 0.5;
+  if (boost < 0.5) return;
+
+  // Sum of category maxes: 35+35+20+10 = 100
+  const totalMax = 100;
+
+  for (const score of analysis.judgeScores) {
+    const catMax: number = score.max;
+    const numJudges: number = score.judges.length;
+    // Distribute boost proportionally by category, split across judges
+    const perJudgeBoost = (boost * (catMax / totalMax)) / numJudges;
+
+    score.judges = score.judges.map((j: number) =>
+      Math.min(Math.round((j + perJudgeBoost) * 10) / 10, catMax)
+    );
+
+    const sum = score.judges.reduce((a: number, b: number) => a + b, 0);
+    score.avg = Math.min(
+      Math.round((sum / numJudges) * 10) / 10,
+      catMax
+    );
+  }
+
+  // Total = sum of ALL individual judge scores (not averages)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  analysis.totalScore = Math.round(
+    analysis.judgeScores.reduce(
+      (s: number, c: any) => s + c.judges.reduce((a: number, b: number) => a + b, 0),
+      0
+    )
+  );
 }
 
 function selectEvenlySpaced<T>(arr: T[], count: number): T[] {
