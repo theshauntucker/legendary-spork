@@ -35,7 +35,7 @@ const faqs = [
   },
   {
     q: "What do I get when I sign up?",
-    a: "When you sign up, DM us on Instagram @routinex.ai to claim your FREE first analysis. After that, single analyses are $8.99 each, or grab our Competition Pack — 5 analyses for $29.99 (just $6 each).",
+    a: "When you sign up, you automatically get your first analysis FREE. After that, single analyses are $8.99 each, or grab our Competition Pack — 5 analyses for $29.99 (just $6 each).",
   },
   {
     q: "Can I get a refund?",

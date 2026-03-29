@@ -264,7 +264,7 @@ export default function DashboardClient({
               <p className="text-surface-200 text-sm max-w-lg mx-auto">
                 {credits.used > 0
                   ? "Pick up more credits to keep improving your routines all season long."
-                  : "DM us on Instagram @routinex.ai for your FREE first analysis credit! Or grab a pack below to get started right away."}
+                  : "Your first analysis is free when you sign up! Grab a pack below to keep going."}
               </p>
               {/* Privacy statement */}
               <div className="mt-3 flex items-center justify-center gap-2 text-xs text-gray-400">

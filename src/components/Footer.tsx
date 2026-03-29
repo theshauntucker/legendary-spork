@@ -41,7 +41,7 @@ export default function Footer() {
             <p className="mt-6 text-sm text-surface-200">
               
               <br />
-              DM us on Instagram @routinex.ai for your free first analysis.
+              Sign up and get your first analysis free.
             </p>
           </motion.div>
         </div>
