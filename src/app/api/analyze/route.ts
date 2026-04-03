@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getUserCredits } from "@/lib/credits";
-import { notifyAnalysisComplete, notifyAnalysisError } from "@/lib/notifications";
 
 interface FrameInput {
   timestamp: number;
@@ -55,9 +54,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { frames, metadata } = body as {
+    const { frames, metadata, parentVideoId } = body as {
       frames: FrameInput[];
       metadata: RoutineMetadata;
+      parentVideoId?: string; // Optional: links this to a previously analyzed routine
     };
 
     if (!frames || frames.length === 0) {
@@ -72,6 +72,29 @@ export async function POST(request: NextRequest) {
         { error: "Missing required metadata" },
         { status: 400 }
       );
+    }
+
+    // ── Dedup check: prevent duplicate submissions from retry logic ────────────
+    // If the user already has a video with the same routine name currently
+    // processing (within the last 10 minutes), return that video ID instead
+    // of creating a brand-new record. This stops the retry loop from burning
+    // two analyses and showing the user two results.
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { data: existingProcessing } = await serviceClient
+      .from("videos")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("routine_name", metadata.routineName)
+      .eq("status", "processing")
+      .gt("created_at", tenMinutesAgo)
+      .maybeSingle();
+
+    if (existingProcessing) {
+      // Already processing — return the existing video ID
+      return NextResponse.json({
+        success: true,
+        videoId: existingProcessing.id,
+      });
     }
 
     // Format duration from seconds
@@ -91,6 +114,7 @@ export async function POST(request: NextRequest) {
         style: metadata.style,
         entry_type: metadata.entryType,
         file_size: metadata.originalFileSize || null,
+        parent_video_id: parentVideoId || null, // Link to previous routine if tracking
         status: "processing",
       })
       .select("id")
@@ -136,6 +160,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         videoId: video.id,
         userId: user.id,
+        parentVideoId: parentVideoId || null, // Forward for context injection
       }),
     }).catch((err) => {
       console.error("Failed to trigger background processing:", err);
@@ -159,12 +184,6 @@ function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
   return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
-function selectEvenlySpaced<T>(arr: T[], count: number): T[] {
-  if (arr.length <= count) return arr;
-  const step = (arr.length - 1) / (count - 1);
-  return Array.from({ length: count }, (_, i) => arr[Math.round(i * step)]);
 }
 
 /**

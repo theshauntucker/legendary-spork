@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
@@ -15,6 +15,8 @@ import {
   ImageIcon,
   AlertCircle,
   RotateCcw,
+  RotateCw,
+  ChevronDown,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import UploadTrustBadge from "@/components/UploadTrustBadge";
@@ -72,6 +74,16 @@ type UploadStage =
   | "done"
   | "error";
 
+interface PreviousRoutine {
+  id: string;
+  routineName: string;
+  dancerName: string | null;
+  style: string;
+  totalScore: number;
+  awardLevel: string;
+  analyzedAt: string;
+}
+
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -82,6 +94,12 @@ export default function UploadPage() {
   const [dancerName, setDancerName] = useState("");
   const [studioName, setStudioName] = useState("");
   const [parentConsent, setParentConsent] = useState(false);
+
+  // Routine tracking state
+  const [isTracking, setIsTracking] = useState<boolean | null>(null); // null = not answered yet
+  const [selectedParentId, setSelectedParentId] = useState<string>("");
+  const [previousRoutines, setPreviousRoutines] = useState<PreviousRoutine[]>([]);
+  const [loadingRoutines, setLoadingRoutines] = useState(false);
 
   // Upload/processing state
   const [stage, setStage] = useState<UploadStage>("idle");
@@ -94,6 +112,70 @@ export default function UploadPage() {
   const abortRef = useRef(false);
 
   const isProcessing = stage !== "idle" && stage !== "error";
+
+  // Load the user's previous analyzed routines on mount
+  useEffect(() => {
+    async function loadPreviousRoutines() {
+      setLoadingRoutines(true);
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Fetch videos that have been analyzed, joined with their scores
+        const { data: videos } = await supabase
+          .from("videos")
+          .select("id, routine_name, dancer_name, style, analysis_id, created_at")
+          .eq("user_id", user.id)
+          .eq("status", "analyzed")
+          .order("created_at", { ascending: false })
+          .limit(30);
+
+        if (!videos || videos.length === 0) return;
+
+        // Fetch the scores for these videos
+        const analysisIds = videos
+          .map((v) => v.analysis_id)
+          .filter(Boolean) as string[];
+
+        const { data: analyses } = await supabase
+          .from("analyses")
+          .select("id, video_id, total_score, award_level, created_at")
+          .in("id", analysisIds);
+
+        const analysisMap = new Map(
+          (analyses || []).map((a) => [a.video_id, a])
+        );
+
+        const routines: PreviousRoutine[] = videos
+          .filter((v) => analysisMap.has(v.id))
+          .map((v) => {
+            const analysis = analysisMap.get(v.id)!;
+            return {
+              id: v.id,
+              routineName: v.routine_name || "Untitled",
+              dancerName: v.dancer_name,
+              style: v.style || "Unknown",
+              totalScore: analysis.total_score,
+              awardLevel: analysis.award_level,
+              analyzedAt: new Date(analysis.created_at).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              }),
+            };
+          });
+
+        setPreviousRoutines(routines);
+      } catch (err) {
+        console.warn("Could not load previous routines:", err);
+      } finally {
+        setLoadingRoutines(false);
+      }
+    }
+
+    loadPreviousRoutines();
+  }, []);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -112,7 +194,6 @@ export default function UploadPage() {
     }
     const sizeMB = f.size / (1024 * 1024);
     setFile(f);
-    // No file size limit — video is processed locally, only thumbnails are sent
     setError(sizeMB > 500 ? "Large video detected — frame extraction may take a moment, but your video never leaves your device." : "");
     setExtractedFrames([]);
   };
@@ -159,10 +240,6 @@ export default function UploadPage() {
       setStatusMessage("Preparing your video...");
 
       const metadata = await loadVideoMetadata(file);
-      // Determine frame count based on video duration
-      // ~1 frame every 3-4 seconds for detailed technique analysis
-      // Extract up to 20 frames — Claude API limit is 20 anyway,
-      // so extracting more just wastes upload bandwidth
       const frameCount = Math.min(
         Math.max(12, Math.ceil(metadata.duration / 5)),
         20
@@ -172,7 +249,7 @@ export default function UploadPage() {
         file,
         frameCount,
         (p: ExtractionProgress) => {
-          const pct = Math.round((p.current / p.total) * 30); // 0-30%
+          const pct = Math.round((p.current / p.total) * 30);
           setProgress(pct);
           setStatusMessage(p.message);
         }
@@ -192,6 +269,10 @@ export default function UploadPage() {
       setProgress(45);
       setStatusMessage("Uploading frames — this can take a minute for longer routines...");
 
+      // Resolve parent video ID (only if user said yes and selected one)
+      const parentVideoId =
+        isTracking === true && selectedParentId ? selectedParentId : undefined;
+
       const payload = JSON.stringify({
         frames: base64Frames,
         metadata: {
@@ -206,6 +287,7 @@ export default function UploadPage() {
           originalFilename: file.name,
           originalFileSize: file.size,
         },
+        parentVideoId, // undefined if not tracking — omitted from JSON
       });
 
       // Retry up to 2 times for transient network errors
@@ -221,10 +303,9 @@ export default function UploadPage() {
             signal: controller.signal,
           });
           clearTimeout(fetchTimeout);
-          break; // Success — exit retry loop
+          break;
         } catch (fetchErr) {
           if (attempt === 2) throw fetchErr;
-          // Wait before retry: 2s, then 4s
           setStatusMessage(`Connection hiccup — retrying upload (attempt ${attempt + 2} of 3)...`);
           await new Promise((r) => setTimeout(r, (attempt + 1) * 2000));
         }
@@ -235,11 +316,9 @@ export default function UploadPage() {
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
 
-        // No credits — redirect to purchase
         if (response.status === 402 && data.code === "NO_CREDITS") {
           setStage("idle");
           setProgress(0);
-          // Default to single analysis checkout
           const checkoutRes = await fetch("/api/checkout", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -253,9 +332,7 @@ export default function UploadPage() {
           throw new Error("Unable to start checkout. Please try again.");
         }
 
-        throw new Error(
-          data.error || `Upload failed (${response.status})`
-        );
+        throw new Error(data.error || `Upload failed (${response.status})`);
       }
 
       const result = await response.json();
@@ -267,7 +344,6 @@ export default function UploadPage() {
       setProgress(100);
       setStatusMessage("Uploaded! Redirecting to analysis...");
 
-      // Redirect to the processing page — AI analysis runs in background
       window.location.href = `/processing/${result.videoId}`;
     } catch (err) {
       if (abortRef.current) return;
@@ -288,18 +364,15 @@ export default function UploadPage() {
 
   const stageLabel = () => {
     switch (stage) {
-      case "extracting":
-        return "Preparing video...";
-      case "uploading":
-        return "Uploading...";
-      case "analyzing":
-        return "Analyzing...";
-      case "done":
-        return "Complete!";
-      default:
-        return "";
+      case "extracting": return "Preparing video...";
+      case "uploading": return "Uploading...";
+      case "analyzing": return "Analyzing...";
+      case "done": return "Complete!";
+      default: return "";
     }
   };
+
+  const selectedRoutine = previousRoutines.find((r) => r.id === selectedParentId);
 
   return (
     <div className="min-h-screen py-20 px-4">
@@ -348,9 +421,7 @@ export default function UploadPage() {
               onDrop={handleDrop}
               onClick={() => !isProcessing && fileInputRef.current?.click()}
               className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${
-                isProcessing
-                  ? "cursor-default border-white/10"
-                  : "cursor-pointer"
+                isProcessing ? "cursor-default border-white/10" : "cursor-pointer"
               } ${
                 dragActive
                   ? "border-primary-400 bg-primary-500/10"
@@ -379,12 +450,8 @@ export default function UploadPage() {
                   >
                     <Video className="h-8 w-8 text-green-400 shrink-0" />
                     <div className="text-left min-w-0">
-                      <p className="font-medium text-sm truncate">
-                        {file.name}
-                      </p>
-                      <p className="text-xs text-surface-200">
-                        {formatFileSize(file.size)}
-                      </p>
+                      <p className="font-medium text-sm truncate">{file.name}</p>
+                      <p className="text-xs text-surface-200">{formatFileSize(file.size)}</p>
                     </div>
                     {!isProcessing && (
                       <button
@@ -408,9 +475,7 @@ export default function UploadPage() {
                     exit={{ opacity: 0 }}
                   >
                     <Upload className="mx-auto h-10 w-10 text-surface-200 mb-3" />
-                    <p className="font-medium text-sm">
-                      Drag & drop your video here
-                    </p>
+                    <p className="font-medium text-sm">Drag & drop your video here</p>
                     <p className="text-xs text-surface-200 mt-1">
                       MP4, MOV, AVI, WebM — any size (processed on your device)
                     </p>
@@ -420,7 +485,7 @@ export default function UploadPage() {
             </div>
           </div>
 
-          {/* Frame Preview (shown after extraction) */}
+          {/* Frame Preview */}
           <AnimatePresence>
             {extractedFrames.length > 0 && (
               <motion.div
@@ -495,9 +560,7 @@ export default function UploadPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Studio Name
-            </label>
+            <label className="block text-sm font-medium mb-2">Studio Name</label>
             <input
               type="text"
               value={studioName}
@@ -521,13 +584,9 @@ export default function UploadPage() {
                 disabled={isProcessing}
                 className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none disabled:opacity-50"
               >
-                <option value="" className="bg-surface-900">
-                  Select...
-                </option>
+                <option value="" className="bg-surface-900">Select...</option>
                 {ageGroups.map((ag) => (
-                  <option key={ag} value={ag} className="bg-surface-900">
-                    {ag}
-                  </option>
+                  <option key={ag} value={ag} className="bg-surface-900">{ag}</option>
                 ))}
               </select>
             </div>
@@ -543,13 +602,9 @@ export default function UploadPage() {
                 disabled={isProcessing}
                 className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none disabled:opacity-50"
               >
-                <option value="" className="bg-surface-900">
-                  Select...
-                </option>
+                <option value="" className="bg-surface-900">Select...</option>
                 {danceStyles.map((s) => (
-                  <option key={s} value={s} className="bg-surface-900">
-                    {s}
-                  </option>
+                  <option key={s} value={s} className="bg-surface-900">{s}</option>
                 ))}
               </select>
             </div>
@@ -564,17 +619,122 @@ export default function UploadPage() {
                 disabled={isProcessing}
                 className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none disabled:opacity-50"
               >
-                <option value="" className="bg-surface-900">
-                  Select...
-                </option>
+                <option value="" className="bg-surface-900">Select...</option>
                 {entryTypes.map((et) => (
-                  <option key={et} value={et} className="bg-surface-900">
-                    {et}
-                  </option>
+                  <option key={et} value={et} className="bg-surface-900">{et}</option>
                 ))}
               </select>
             </div>
           </div>
+
+          {/* ── Routine Tracking ───────────────────────────────────────────── */}
+          {previousRoutines.length > 0 && !isProcessing && (
+            <AnimatePresence>
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl border border-primary-500/20 bg-primary-500/5 p-4 space-y-3"
+              >
+                <div className="flex items-start gap-3">
+                  <RotateCw className="h-4 w-4 text-primary-400 mt-0.5 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-white">
+                      Have you analyzed this routine before?
+                    </p>
+                    <p className="text-xs text-surface-200 mt-0.5">
+                      If yes, the AI will compare your progress and give coaching-forward feedback.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Yes / No toggle */}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsTracking(true);
+                      setSelectedParentId("");
+                    }}
+                    className={`flex-1 rounded-xl py-2 text-sm font-medium transition-all ${
+                      isTracking === true
+                        ? "bg-primary-500 text-white"
+                        : "bg-white/5 text-surface-200 hover:bg-white/10 border border-white/10"
+                    }`}
+                  >
+                    Yes, I&apos;m tracking this routine
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsTracking(false);
+                      setSelectedParentId("");
+                    }}
+                    className={`flex-1 rounded-xl py-2 text-sm font-medium transition-all ${
+                      isTracking === false
+                        ? "bg-white/15 text-white"
+                        : "bg-white/5 text-surface-200 hover:bg-white/10 border border-white/10"
+                    }`}
+                  >
+                    No, this is standalone
+                  </button>
+                </div>
+
+                {/* Routine picker — shown only when "Yes" is selected */}
+                <AnimatePresence>
+                  {isTracking === true && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="pt-1">
+                        <label className="block text-xs text-surface-200 mb-1.5">
+                          Which routine is this a follow-up to?
+                        </label>
+                        <div className="relative">
+                          <select
+                            value={selectedParentId}
+                            onChange={(e) => setSelectedParentId(e.target.value)}
+                            className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none pr-10"
+                          >
+                            <option value="" className="bg-surface-900">Select a previous routine...</option>
+                            {previousRoutines.map((r) => (
+                              <option key={r.id} value={r.id} className="bg-surface-900">
+                                {r.routineName}{r.dancerName ? ` • ${r.dancerName}` : ""} — {r.awardLevel} {r.totalScore}/300 ({r.analyzedAt})
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-200 pointer-events-none" />
+                        </div>
+
+                        {/* Show selected routine summary */}
+                        {selectedRoutine && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-primary-500/10 border border-primary-500/20"
+                          >
+                            <CheckCircle className="h-3.5 w-3.5 text-primary-400 shrink-0" />
+                            <p className="text-xs text-surface-200">
+                              Comparing against{" "}
+                              <span className="text-white font-medium">{selectedRoutine.routineName}</span>
+                              {selectedRoutine.dancerName && (
+                                <> for <span className="text-white font-medium">{selectedRoutine.dancerName}</span></>
+                              )}
+                              {" "}— scored{" "}
+                              <span className="text-primary-300 font-medium">{selectedRoutine.totalScore}/300</span>{" "}
+                              on {selectedRoutine.analyzedAt}
+                            </p>
+                          </motion.div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            </AnimatePresence>
+          )}
 
           {/* Error */}
           <AnimatePresence>
@@ -612,7 +772,6 @@ export default function UploadPage() {
                 exit={{ opacity: 0 }}
                 className="space-y-3"
               >
-                {/* Progress bar */}
                 <div className="h-2 rounded-full bg-surface-800 overflow-hidden">
                   <motion.div
                     className="h-full rounded-full bg-gradient-to-r from-primary-500 to-accent-400"
@@ -622,7 +781,6 @@ export default function UploadPage() {
                   />
                 </div>
 
-                {/* Status */}
                 <div className="flex items-center justify-center gap-2 text-xs text-surface-200">
                   {stage === "done" ? (
                     <CheckCircle className="h-3.5 w-3.5 text-green-400" />
@@ -632,7 +790,6 @@ export default function UploadPage() {
                   <span>{statusMessage || stageLabel()}</span>
                 </div>
 
-                {/* Stage indicators */}
                 <div className="flex justify-between px-2">
                   {[
                     { key: "extracting", label: "Extract Frames" },
@@ -640,12 +797,7 @@ export default function UploadPage() {
                     { key: "analyzing", label: "AI Analysis" },
                     { key: "done", label: "Done" },
                   ].map((s, i) => {
-                    const stages: UploadStage[] = [
-                      "extracting",
-                      "uploading",
-                      "analyzing",
-                      "done",
-                    ];
+                    const stages: UploadStage[] = ["extracting", "uploading", "analyzing", "done"];
                     const currentIdx = stages.indexOf(stage);
                     const thisIdx = i;
                     const isActive = thisIdx === currentIdx;
@@ -655,20 +807,12 @@ export default function UploadPage() {
                       <div key={s.key} className="flex flex-col items-center gap-1">
                         <div
                           className={`w-2 h-2 rounded-full transition-colors ${
-                            isComplete
-                              ? "bg-green-400"
-                              : isActive
-                              ? "bg-primary-400"
-                              : "bg-surface-600"
+                            isComplete ? "bg-green-400" : isActive ? "bg-primary-400" : "bg-surface-600"
                           }`}
                         />
                         <span
                           className={`text-[10px] ${
-                            isActive
-                              ? "text-primary-400 font-medium"
-                              : isComplete
-                              ? "text-green-400"
-                              : "text-surface-400"
+                            isActive ? "text-primary-400 font-medium" : isComplete ? "text-green-400" : "text-surface-400"
                           }`}
                         >
                           {s.label}
