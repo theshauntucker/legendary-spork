@@ -51,8 +51,12 @@ export async function POST(request: NextRequest) {
     const serviceClient = await createServiceClient();
 
     const paymentType = session.metadata?.payment_type || "beta_access";
+    const referralCode = session.metadata?.referral_code || null;
     const isBeta = paymentType === "beta_access";
-    const creditsToGrant = isBeta ? BETA_CREDITS : 1;
+    const isPack = paymentType === "video_analysis";
+    // single = 1 credit, pack = 5 credits, beta = BETA_CREDITS
+    const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : 1;
+    const amountFallback = isPack ? 2999 : isBeta ? 999 : 899;
 
     // Try to record payment (may already exist from webhook — that's fine)
     const { error: insertError } = await serviceClient
@@ -65,10 +69,11 @@ export async function POST(request: NextRequest) {
             ? session.payment_intent
             : null,
         payment_type: paymentType,
-        amount_cents: session.amount_total || (isBeta ? 999 : 399),
+        amount_cents: session.amount_total || amountFallback,
         currency: session.currency || "usd",
         status: "completed",
         credits_granted: creditsToGrant,
+        referral_code: referralCode,
       });
 
     if (insertError && insertError.code !== "23505") {
