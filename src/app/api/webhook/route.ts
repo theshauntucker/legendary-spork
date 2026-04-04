@@ -82,6 +82,7 @@ export async function POST(request: NextRequest) {
 
     // Record payment and grant credits
     try {
+      const amountFallback = isPack ? 2999 : isBeta ? 999 : 899;
       const { error: insertError } = await serviceClient
         .from("payments")
         .insert({
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
               ? session.payment_intent
               : null,
           payment_type: paymentType,
-          amount_cents: session.amount_total || (isBeta ? 999 : 899),
+          amount_cents: session.amount_total || amountFallback,
           currency: session.currency || "usd",
           status: "completed",
           credits_granted: creditsToGrant,

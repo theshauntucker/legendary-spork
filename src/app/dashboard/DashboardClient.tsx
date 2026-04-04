@@ -14,6 +14,8 @@ import {
   AlertCircle,
   ArrowRight,
   LogOut,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -326,71 +328,219 @@ export default function DashboardClient({
           <ArrowRight className="h-5 w-5 text-surface-200 group-hover:text-white group-hover:translate-x-1 transition-all" />
         </motion.a>
 
-        {/* Videos List */}
+        {/* Your Routines — Grouped by routine_name */}
         {videos.length > 0 ? (
           <div>
             <h2 className="text-lg font-bold mb-4">Your Routines</h2>
-            <div className="space-y-3">
-              {videos.map((video, i) => {
-                const status = statusConfig[video.status] || statusConfig.uploaded;
-                const StatusIcon = status.icon;
-                const analysis = video.analyses?.[0];
-
-                return (
-                  <motion.a
-                    key={video.id}
-                    href={
-                      analysis
-                        ? `/analysis/${video.id}`
-                        : video.status === "processing"
-                        ? `/processing/${video.id}`
-                        : "#"
-                    }
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: i * 0.05 }}
-                    className="flex items-center gap-4 glass rounded-2xl p-4 hover:border-primary-500/20 transition-colors"
-                  >
-                    {/* Thumbnail placeholder */}
-                    <div className="shrink-0 w-16 h-16 rounded-xl bg-white/5 flex items-center justify-center">
-                      <Video className="h-6 w-6 text-surface-200" />
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">
-                        {video.routine_name}
-                      </p>
-                      <p className="text-xs text-surface-200 mt-0.5">
-                        {video.style} {video.entry_type} &bull;{" "}
-                        {video.age_group} &bull;{" "}
-                        {new Date(video.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-
-                    {/* Status */}
-                    <div
-                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
-                    >
-                      <StatusIcon
-                        className={`h-3 w-3 ${video.status === "processing" ? "animate-spin" : ""}`}
-                      />
-                      {status.label}
-                    </div>
-
-                    {/* Score (if analyzed) */}
-                    {analysis && (
-                      <div className="text-right hidden sm:block">
-                        <p className="text-lg font-bold gradient-text">
-                          {analysis.total_score}
-                        </p>
-                        <p className="text-[10px] text-surface-200">/ 300</p>
-                      </div>
-                    )}
-                  </motion.a>
+            {(() => {
+              // Group by routine_name
+              const groups: Record<string, VideoRecord[]> = {};
+              for (const v of videos) {
+                if (!groups[v.routine_name]) groups[v.routine_name] = [];
+                groups[v.routine_name].push(v);
+              }
+              // Sort each group oldest→newest
+              for (const key of Object.keys(groups)) {
+                groups[key].sort(
+                  (a, b) =>
+                    new Date(a.created_at).getTime() -
+                    new Date(b.created_at).getTime()
                 );
-              })}
-            </div>
+              }
+              // Sort groups by most-recent submission
+              const sortedNames = Object.keys(groups).sort((a, b) => {
+                const latestA =
+                  groups[a][groups[a].length - 1].created_at;
+                const latestB =
+                  groups[b][groups[b].length - 1].created_at;
+                return (
+                  new Date(latestB).getTime() - new Date(latestA).getTime()
+                );
+              });
+
+              const analyzedGroups = sortedNames.filter((name) =>
+                groups[name].some(
+                  (v) => v.status === "analyzed" && v.analyses?.length > 0
+                )
+              );
+              const pendingGroups = sortedNames.filter(
+                (name) =>
+                  !groups[name].some(
+                    (v) => v.status === "analyzed" && v.analyses?.length > 0
+                  )
+              );
+
+              const awardColors: Record<string, string> = {
+                Gold: "text-yellow-400 bg-yellow-400/10 border-yellow-400/30",
+                "High Gold":
+                  "text-amber-400 bg-amber-400/10 border-amber-400/30",
+                Platinum: "text-cyan-400 bg-cyan-400/10 border-cyan-400/30",
+                Diamond:
+                  "text-violet-400 bg-violet-400/10 border-violet-400/30",
+              };
+
+              return (
+                <>
+                  {/* Analyzed routines — progress cards */}
+                  {analyzedGroups.length > 0 && (
+                    <div className="space-y-4 mb-6">
+                      {analyzedGroups.map((name, i) => {
+                        const group = groups[name];
+                        const analyzed = group.filter(
+                          (v) =>
+                            v.status === "analyzed" && v.analyses?.length > 0
+                        );
+                        const latest = analyzed[analyzed.length - 1];
+                        const first = analyzed[0];
+                        const latestScore =
+                          latest.analyses[0]?.total_score ?? 0;
+                        const firstScore =
+                          first.analyses[0]?.total_score ?? 0;
+                        const delta = latestScore - firstScore;
+                        const awardLevel =
+                          latest.analyses[0]?.award_level ?? "";
+                        const awardStyle =
+                          awardColors[awardLevel] ||
+                          "text-primary-400 bg-primary-400/10 border-primary-400/30";
+
+                        return (
+                          <motion.a
+                            key={name}
+                            href={`/routines/${latest.id}`}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: i * 0.05 }}
+                            className="flex flex-col sm:flex-row sm:items-center gap-4 glass rounded-2xl p-5 hover:border-primary-500/30 transition-all group cursor-pointer"
+                          >
+                            {/* Left: info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                {awardLevel && (
+                                  <span
+                                    className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${awardStyle}`}
+                                  >
+                                    🏆 {awardLevel}
+                                  </span>
+                                )}
+                                <span className="text-xs text-surface-200">
+                                  {analyzed.length} submission
+                                  {analyzed.length !== 1 ? "s" : ""}
+                                </span>
+                              </div>
+                              <p className="font-bold text-white text-lg leading-tight truncate">
+                                {name}
+                              </p>
+                              <p className="text-xs text-surface-200 mt-0.5">
+                                {latest.style} {latest.entry_type} &bull;{" "}
+                                {latest.age_group}
+                              </p>
+                            </div>
+
+                            {/* Center: score + delta */}
+                            <div className="flex items-center gap-6 sm:gap-8">
+                              <div className="text-center">
+                                <p className="text-2xl font-extrabold gradient-text">
+                                  {latestScore}
+                                </p>
+                                <p className="text-[10px] text-surface-200">
+                                  / 300 latest
+                                </p>
+                              </div>
+                              {analyzed.length > 1 && (
+                                <div
+                                  className={`flex items-center gap-1 text-sm font-semibold ${
+                                    delta >= 0
+                                      ? "text-green-400"
+                                      : "text-red-400"
+                                  }`}
+                                >
+                                  {delta >= 0 ? (
+                                    <TrendingUp className="h-4 w-4" />
+                                  ) : (
+                                    <TrendingDown className="h-4 w-4" />
+                                  )}
+                                  {delta >= 0 ? "+" : ""}
+                                  {delta} pts
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Right: CTA */}
+                            <div className="flex items-center gap-2 text-sm text-primary-400 font-semibold group-hover:text-primary-300 transition-colors shrink-0">
+                              View Progress
+                              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                            </div>
+                          </motion.a>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Pending / processing routines */}
+                  {pendingGroups.length > 0 && (
+                    <div>
+                      {analyzedGroups.length > 0 && (
+                        <h3 className="text-sm font-semibold text-surface-200 mb-3 mt-6">
+                          In Progress
+                        </h3>
+                      )}
+                      <div className="space-y-3">
+                        {pendingGroups.map((name, i) => {
+                          const group = groups[name];
+                          const latest = group[group.length - 1];
+                          const status =
+                            statusConfig[latest.status] ||
+                            statusConfig.uploaded;
+                          const StatusIcon = status.icon;
+
+                          return (
+                            <motion.a
+                              key={name}
+                              href={
+                                latest.status === "processing"
+                                  ? `/processing/${latest.id}`
+                                  : "#"
+                              }
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{
+                                duration: 0.3,
+                                delay:
+                                  (analyzedGroups.length + i) * 0.05,
+                              }}
+                              className="flex items-center gap-4 glass rounded-2xl p-4 hover:border-primary-500/20 transition-colors"
+                            >
+                              <div className="shrink-0 w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
+                                <Video className="h-5 w-5 text-surface-200" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{name}</p>
+                                <p className="text-xs text-surface-200 mt-0.5">
+                                  {latest.style} {latest.entry_type} &bull;{" "}
+                                  {latest.age_group}
+                                </p>
+                              </div>
+                              <div
+                                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${status.color}`}
+                              >
+                                <StatusIcon
+                                  className={`h-3 w-3 ${
+                                    latest.status === "processing"
+                                      ? "animate-spin"
+                                      : ""
+                                  }`}
+                                />
+                                {status.label}
+                              </div>
+                            </motion.a>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         ) : (
           <div className="glass rounded-3xl p-12 text-center">

@@ -45,8 +45,11 @@ export default async function DashboardPage({
         ) {
           const paymentType =
             session.metadata?.payment_type || "beta_access";
+          const referralCode = session.metadata?.referral_code || null;
           const isBeta = paymentType === "beta_access";
-          const creditsToGrant = isBeta ? BETA_CREDITS : 1;
+          const isPack = paymentType === "video_analysis";
+          const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : 1;
+          const amountFallback = isPack ? 2999 : isBeta ? 999 : 899;
 
           const { error: insertError } = await serviceClient
             .from("payments")
@@ -58,10 +61,11 @@ export default async function DashboardPage({
                   ? session.payment_intent
                   : null,
               payment_type: paymentType,
-              amount_cents: session.amount_total || (isBeta ? 999 : 399),
+              amount_cents: session.amount_total || amountFallback,
               currency: session.currency || "usd",
               status: "completed",
               credits_granted: creditsToGrant,
+              referral_code: referralCode,
             });
 
           if (insertError && insertError.code !== "23505") {
