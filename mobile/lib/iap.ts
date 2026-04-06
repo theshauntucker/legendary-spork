@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { getAuthToken } from './api';
 
 // Product IDs — must match App Store Connect
@@ -10,17 +11,17 @@ export const IAP_PRODUCTS = {
 const PRODUCT_IDS = [IAP_PRODUCTS.SINGLE, IAP_PRODUCTS.PACK];
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE || 'https://routinex.org';
 
-// Lazy-load react-native-iap to avoid crashing in Expo Go
-// (NitroModules are only available in EAS/native builds)
+// Detect Expo Go — NitroModules (used by react-native-iap) crash in Expo Go
+// so we must NEVER require the module in that environment
+const isExpoGo = Constants.appOwnership === 'expo';
+
 let RNIap: any = null;
 
 function getIAP() {
+  // Short-circuit: never load native IAP module in Expo Go or non-iOS
+  if (isExpoGo || Platform.OS !== 'ios') return null;
   if (!RNIap) {
-    try {
-      RNIap = require('react-native-iap');
-    } catch {
-      console.warn('react-native-iap not available (Expo Go). Purchases disabled.');
-    }
+    RNIap = require('react-native-iap');
   }
   return RNIap;
 }
