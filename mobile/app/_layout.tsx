@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Alert, Linking, Platform, LogBox } from 'react-native';
 import { AuthProvider, useAuth } from '../lib/auth';
+import { initIAP, setupPurchaseListeners, cleanupIAP } from '../lib/iap';
 
 // Catch unhandled native promise rejections (e.g. PHPhotosErrorDomain)
 const originalHandler = (global as any).ErrorUtils?.getGlobalHandler?.();
@@ -56,6 +57,35 @@ function RootLayoutNav() {
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  // Initialize Apple In-App Purchases (iOS only)
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+
+    initIAP();
+
+    const cleanup = setupPurchaseListeners(
+      () => {
+        // Credits granted successfully — show confirmation
+        Alert.alert(
+          'Purchase Complete',
+          'Your credits have been added. You can now analyze a routine!',
+          [{ text: 'OK' }]
+        );
+      },
+      (message: string) => {
+        // Purchase error
+        if (message !== 'Purchase cancelled.') {
+          Alert.alert('Purchase Issue', message, [{ text: 'OK' }]);
+        }
+      },
+    );
+
+    return () => {
+      cleanup();
+      cleanupIAP();
+    };
+  }, []);
 
   useEffect(() => {
     if (loading) return;

@@ -17,6 +17,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import * as WebBrowser from 'expo-web-browser';
 import { uploadFrames, getAuthToken } from '../../lib/api';
+import { purchaseSingle, purchasePack } from '../../lib/iap';
 import { colors, gradients, gradientProps, glass, glassElevated, inputStyle, labelStyle, screenGradient } from '../../lib/theme';
 
 const DANCE_STYLES = [
@@ -197,33 +198,54 @@ export default function UploadScreen() {
       const token = await getAuthToken();
 
       if (!hasCredits) {
-        const checkoutRes = await fetch(`${API_BASE}/api/checkout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ type: purchaseType }),
-        });
-        const checkoutData = await checkoutRes.json();
-
-        if (checkoutData.error) {
-          setError(checkoutData.message || checkoutData.error);
-          setUploading(false);
-          return;
-        }
-
-        if (checkoutData.url) {
-          const result = await WebBrowser.openBrowserAsync(checkoutData.url);
-          if (result.type === 'cancel') {
-            setError('Payment was cancelled. Please try again.');
+        if (Platform.OS === 'ios') {
+          // iOS: Use Apple In-App Purchase
+          try {
+            if (purchaseType === 'single') {
+              await purchaseSingle();
+            } else {
+              await purchasePack();
+            }
+            // Purchase is handled by the IAP listener in _layout.tsx
+            // It will verify the receipt, grant credits, and the user
+            // can then return to upload. Don't proceed to upload yet.
+            setUploading(false);
+            return;
+          } catch (err: any) {
+            setError(err?.message || 'Purchase failed. Please try again.');
             setUploading(false);
             return;
           }
         } else {
-          setError('Could not start checkout. Please try again.');
-          setUploading(false);
-          return;
+          // Android: Use Stripe web checkout
+          const checkoutRes = await fetch(`${API_BASE}/api/checkout`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ type: purchaseType }),
+          });
+          const checkoutData = await checkoutRes.json();
+
+          if (checkoutData.error) {
+            setError(checkoutData.message || checkoutData.error);
+            setUploading(false);
+            return;
+          }
+
+          if (checkoutData.url) {
+            const result = await WebBrowser.openBrowserAsync(checkoutData.url);
+            if (result.type === 'cancel') {
+              setError('Payment was cancelled. Please try again.');
+              setUploading(false);
+              return;
+            }
+          } else {
+            setError('Could not start checkout. Please try again.');
+            setUploading(false);
+            return;
+          }
         }
       }
 
