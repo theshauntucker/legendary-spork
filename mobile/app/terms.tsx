@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import BrandHeader from '../components/BrandHeader';
 import { colors, gradientProps, screenGradient } from '../lib/theme';
 
 const sections = [
@@ -53,11 +54,9 @@ export default function TermsScreen() {
   return (
     <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 56, paddingBottom: 48 }}>
-        <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 20 }}>
-          <Text style={{ color: colors.textSecondary, fontSize: 14 }}>← Back</Text>
-        </TouchableOpacity>
+        <BrandHeader showBack subtitle="Terms" />
 
-        <Text style={{ color: '#fff', fontSize: 30, fontWeight: '800', letterSpacing: -0.5, marginBottom: 6 }}>
+        <Text style={{ color: '#fff', fontSize: 28, fontWeight: '800', letterSpacing: -0.5, marginBottom: 6 }}>
           Terms of Service
         </Text>
         <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 24 }}>

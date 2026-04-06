@@ -1,69 +1,82 @@
 import { Tabs } from 'expo-router';
 import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '../../lib/auth';
 import { colors, gradients, gradientProps, headerGradient } from '../../lib/theme';
+
+const ADMIN_EMAIL = '22tucker22@comcast.net';
 
 function TabIcon({ label, focused }: { label: string; focused: boolean }) {
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center', width: 48 }}>
+    <View style={{ alignItems: 'center', justifyContent: 'center', width: 44 }}>
       {focused ? (
         <View style={{
           shadowColor: colors.primary[500],
           shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.5,
-          shadowRadius: 10,
-          elevation: 8,
+          shadowOpacity: 0.4,
+          shadowRadius: 8,
+          elevation: 6,
         }}>
           <LinearGradient
             colors={gradients.brand}
             {...gradientProps.diagonal}
             style={{
-              width: 38,
-              height: 38,
-              borderRadius: 12,
+              width: 36,
+              height: 36,
+              borderRadius: 11,
               justifyContent: 'center',
               alignItems: 'center',
             }}
           >
-            <Text style={{ fontSize: 18 }}>{label}</Text>
+            <Text style={{ fontSize: 16 }}>{label}</Text>
           </LinearGradient>
         </View>
       ) : (
-        <View
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: 12,
-            backgroundColor: 'transparent',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ fontSize: 18, opacity: 0.5 }}>{label}</Text>
+        <View style={{
+          width: 36,
+          height: 36,
+          borderRadius: 11,
+          backgroundColor: 'transparent',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          <Text style={{ fontSize: 16, opacity: 0.45 }}>{label}</Text>
         </View>
       )}
     </View>
   );
 }
 
+function BrandHeader() {
+  return (
+    <Text style={{ fontSize: 20, fontWeight: '800', color: '#fff', letterSpacing: -0.5 }}>
+      Routine<Text style={{ color: colors.gold[400] }}>X</Text>
+    </Text>
+  );
+}
+
 export default function TabLayout() {
+  const { user } = useAuth();
+  const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL;
+
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: '#fff',
         tabBarInactiveTintColor: colors.textTertiary,
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600',
-          marginTop: 2,
+          marginTop: 1,
+          letterSpacing: 0.3,
         },
         tabBarStyle: {
-          backgroundColor: colors.surface[900],
+          backgroundColor: 'rgba(24,24,27,0.95)',
           borderTopColor: 'transparent',
           borderTopWidth: 0,
-          height: 88,
-          paddingBottom: 28,
-          paddingTop: 10,
+          height: 82,
+          paddingBottom: 26,
+          paddingTop: 8,
           elevation: 0,
         },
         tabBarBackground: () => (
@@ -71,9 +84,9 @@ export default function TabLayout() {
             <LinearGradient
               colors={gradients.brand}
               {...gradientProps.leftToRight}
-              style={{ height: 2, opacity: 0.6 }}
+              style={{ height: 1.5, opacity: 0.5 }}
             />
-            <View style={{ flex: 1, backgroundColor: colors.surface[900] }} />
+            <View style={{ flex: 1, backgroundColor: 'rgba(24,24,27,0.95)' }} />
           </View>
         ),
         headerStyle: {
@@ -93,23 +106,15 @@ export default function TabLayout() {
           fontWeight: '700',
           fontSize: 18,
         },
-        headerTitle: () => (
-          <Text style={{ fontSize: 20, fontWeight: '800', color: '#fff' }}>
-            Routine<Text style={{ color: colors.primary[400] }}>X</Text>
-          </Text>
-        ),
+        headerTitle: () => <BrandHeader />,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
-          headerTitle: () => (
-            <Text style={{ fontSize: 20, fontWeight: '800', color: '#fff' }}>
-              Routine<Text style={{ color: colors.primary[400] }}>X</Text>
-            </Text>
-          ),
-          tabBarIcon: ({ focused }) => <TabIcon label="📊" focused={focused} />,
+          title: 'Home',
+          headerTitle: () => <BrandHeader />,
+          tabBarIcon: ({ focused }) => <TabIcon label="🏠" focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -125,14 +130,23 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="admin"
+        options={{
+          title: 'Admin',
+          headerTitle: () => (
+            <Text style={{ fontSize: 18, fontWeight: '700', color: '#fff' }}>
+              Admin Portal
+            </Text>
+          ),
+          tabBarIcon: ({ focused }) => <TabIcon label="⚙️" focused={focused} />,
+          href: isAdmin ? undefined : null, // Hide tab for non-admins
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          headerTitle: () => (
-            <Text style={{ fontSize: 18, fontWeight: '700', color: '#fff' }}>
-              Profile
-            </Text>
-          ),
+          headerTitle: () => <BrandHeader />,
           tabBarIcon: ({ focused }) => <TabIcon label="👤" focused={focused} />,
         }}
       />

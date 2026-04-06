@@ -21,11 +21,12 @@ import { purchaseSingle, purchasePack } from '../../lib/iap';
 import { colors, gradients, gradientProps, glass, glassElevated, inputStyle, labelStyle, screenGradient } from '../../lib/theme';
 
 const DANCE_STYLES = [
-  'Contemporary', 'Jazz', 'Lyrical', 'Hip Hop', 'Tap',
-  'Ballet', 'Acro', 'Musical Theater', 'Pom', 'Kick', 'Cheer',
+  'Jazz', 'Contemporary', 'Lyrical', 'Hip Hop', 'Tap',
+  'Ballet', 'Musical Theater', 'Pom', 'Acro', 'Cheer',
+  'Open/Freestyle', 'Clogging', 'Pointe', 'Character', 'Improvisation',
 ];
-const AGE_GROUPS = ['Mini (5-8)', 'Junior (9-11)', 'Teen (12-14)', 'Senior (15-18)', 'Adult (19+)'];
-const ENTRY_TYPES = ['Solo', 'Duo/Trio', 'Small Group', 'Large Group', 'Production'];
+const AGE_GROUPS = ['Mini (5-6)', 'Petite (6-9)', 'Junior (9-12)', 'Teen (12-15)', 'Senior (15-19)', 'Adult (19+)'];
+const ENTRY_TYPES = ['Solo', 'Duo/Trio', 'Small Group', 'Large Group', 'Line', 'Super Line', 'Extended Line', 'Production'];
 
 const FRAME_TIMESTAMPS = [1, 5, 10, 15, 20, 30, 45, 60, 75, 90, 105, 120];
 

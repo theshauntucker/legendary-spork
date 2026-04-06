@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import BrandHeader from '../components/BrandHeader';
 import { colors, gradientProps, glass, screenGradient } from '../lib/theme';
 
 const faqs = [
@@ -50,14 +51,9 @@ export default function FAQScreen() {
   return (
     <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 56, paddingBottom: 48 }}>
-        <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 20 }}>
-          <Text style={{ color: colors.textSecondary, fontSize: 14 }}>← Back</Text>
-        </TouchableOpacity>
+        <BrandHeader showBack subtitle="FAQ" />
 
-        <Text style={{ color: colors.primary[400], fontSize: 12, fontWeight: '600', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
-          FAQ
-        </Text>
-        <Text style={{ color: '#fff', fontSize: 30, fontWeight: '800', letterSpacing: -0.5, marginBottom: 24 }}>
+        <Text style={{ color: '#fff', fontSize: 28, fontWeight: '800', letterSpacing: -0.5, marginBottom: 24 }}>
           Questions? We've Got Answers.
         </Text>
 

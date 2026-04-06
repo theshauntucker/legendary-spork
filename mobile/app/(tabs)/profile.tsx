@@ -233,6 +233,18 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      {/* Purchases */}
+      <Text style={{ ...sectionHeader, color: colors.primary[400] }}>Purchases</Text>
+      <View style={{ ...glass, overflow: 'hidden', marginBottom: 24 }}>
+        <TouchableOpacity
+          onPress={() => Alert.alert('Restore Purchases', 'If you previously purchased credits, they are linked to your account and will be available after signing in.')}
+          style={menuItemStyle}
+        >
+          <Text style={{ color: '#e4e4e7', fontSize: 15, fontWeight: '500' }}>Restore Purchases</Text>
+          <Text style={{ color: colors.textTertiary, fontSize: 18 }}>›</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Account Actions */}
       <Text style={{ ...sectionHeader, color: colors.primary[400] }}>Account</Text>
       <View style={{ ...glass, overflow: 'hidden', marginBottom: 24 }}>

@@ -174,9 +174,9 @@ export default function DashboardScreen() {
   return (
     <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
       {/* Background decorative blurs */}
-      <View style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.22)' }} />
-      <View style={{ position: 'absolute', bottom: 100, left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.15)' }} />
-      <View style={{ position: 'absolute', top: 200, left: '40%', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(245,158,11,0.08)' }} />
+      <View style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.18)' }} />
+      <View style={{ position: 'absolute', bottom: 120, left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.14)' }} />
+      <View style={{ position: 'absolute', top: 250, left: '35%', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(245,158,11,0.10)' }} />
 
       <FlatList
         data={recentAnalyses}

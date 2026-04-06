@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import BrandHeader from '../components/BrandHeader';
 import { colors, gradients, gradientProps, glass, screenGradient } from '../lib/theme';
 
 export default function AboutScreen() {
@@ -10,13 +11,12 @@ export default function AboutScreen() {
   return (
     <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
       {/* Decorative blurs */}
-      <View style={{ position: 'absolute', top: -40, left: -40, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.20)' }} />
-      <View style={{ position: 'absolute', top: 400, right: -60, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(245,158,11,0.10)' }} />
+      <View style={{ position: 'absolute', top: -40, left: -40, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.18)' }} />
+      <View style={{ position: 'absolute', top: 300, right: -60, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(236,72,153,0.12)' }} />
+      <View style={{ position: 'absolute', top: 600, left: -30, width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(245,158,11,0.10)' }} />
 
       <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 56, paddingBottom: 48 }}>
-        <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 20 }}>
-          <Text style={{ color: colors.textSecondary, fontSize: 14 }}>← Back</Text>
-        </TouchableOpacity>
+        <BrandHeader showBack subtitle="About" />
 
         <Text style={{ color: colors.primary[400], fontSize: 12, fontWeight: '600', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
           Our Story
