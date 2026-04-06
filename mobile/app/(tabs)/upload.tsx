@@ -275,9 +275,9 @@ export default function UploadScreen() {
     return (
       <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
         {/* Background blurs */}
-        <View style={{ position: 'absolute', top: '15%', right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.22)' }} />
-        <View style={{ position: 'absolute', bottom: '20%', left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.14)' }} />
-        <View style={{ position: 'absolute', top: '50%', left: '30%', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(245,158,11,0.10)' }} />
+        <View style={{ position: 'absolute', top: '15%', right: -60, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(147,51,234,0.30)' }} />
+        <View style={{ position: 'absolute', bottom: '20%', left: -50, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(236,72,153,0.20)' }} />
+        <View style={{ position: 'absolute', top: '50%', left: '25%', width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(245,158,11,0.14)' }} />
 
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>
           <Text style={{ color: '#fff', fontSize: 28, fontWeight: '800', textAlign: 'center', marginBottom: 8, letterSpacing: -0.5 }}>
@@ -384,7 +384,8 @@ export default function UploadScreen() {
   if (step === 'frames') {
     return (
       <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
-        <View style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(147,51,234,0.18)' }} />
+        <View style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(147,51,234,0.28)' }} />
+        <View style={{ position: 'absolute', bottom: 60, left: -30, width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(236,72,153,0.16)' }} />
 
         <ScrollView contentContainerStyle={{ padding: 24 }}>
           <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800', marginBottom: 6, letterSpacing: -0.5 }}>
@@ -461,7 +462,9 @@ export default function UploadScreen() {
       contentContainerStyle={{ padding: 24 }}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={{ position: 'absolute', top: -40, right: -60, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(147,51,234,0.18)' }} />
+      <View style={{ position: 'absolute', top: -40, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.28)' }} />
+      <View style={{ position: 'absolute', bottom: 80, left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.18)' }} />
+      <View style={{ position: 'absolute', top: '40%', left: '50%', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(245,158,11,0.12)' }} />
 
       <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800', marginBottom: 20, letterSpacing: -0.5 }}>
         Routine Details

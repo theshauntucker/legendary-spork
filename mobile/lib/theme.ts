@@ -72,24 +72,25 @@ export const gradientProps = {
   leftToRight: { start: { x: 0, y: 0.5 }, end: { x: 1, y: 0.5 } },
 };
 
-// Screen-level gradient background (brand: purple -> pink -> gold hint -> black)
+// Screen-level gradient background (rich brand: purple -> pink -> gold -> black)
+// Matches the landing page hero vibe across ALL screens
 export const screenGradient = [
-  'rgba(147,51,234,0.22)',
-  'rgba(236,72,153,0.12)',
-  'rgba(245,158,11,0.05)',
-  '#09090b',
-] as const;
-
-// Rich section gradient for marketing/landing sections
-export const sectionGradient = [
-  'rgba(147,51,234,0.30)',
-  'rgba(236,72,153,0.15)',
+  'rgba(147,51,234,0.32)',
+  'rgba(236,72,153,0.16)',
   'rgba(245,158,11,0.06)',
   '#09090b',
 ] as const;
 
-// Header bar gradient (subtle brand hint)
-export const headerGradient = ['rgba(147,51,234,0.10)', 'rgba(236,72,153,0.04)', colors.surface[950]] as const;
+// Rich section gradient for featured content blocks
+export const sectionGradient = [
+  'rgba(147,51,234,0.35)',
+  'rgba(236,72,153,0.18)',
+  'rgba(245,158,11,0.08)',
+  '#09090b',
+] as const;
+
+// Header bar gradient (brand hint)
+export const headerGradient = ['rgba(147,51,234,0.14)', 'rgba(236,72,153,0.06)', colors.surface[950]] as const;
 
 // Card accent line height
 export const CARD_ACCENT_HEIGHT = 3;

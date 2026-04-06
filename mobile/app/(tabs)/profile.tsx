@@ -54,8 +54,9 @@ export default function ProfileScreen() {
       contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
     >
       {/* Background blurs */}
-      <View style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(147,51,234,0.18)' }} />
-      <View style={{ position: 'absolute', bottom: 100, left: -40, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(236,72,153,0.10)' }} />
+      <View style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.28)' }} />
+      <View style={{ position: 'absolute', bottom: 100, left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.20)' }} />
+      <View style={{ position: 'absolute', top: 300, left: '50%', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(245,158,11,0.12)' }} />
 
       {/* Profile Card */}
       <View style={{ ...glass, overflow: 'hidden', marginBottom: 24 }}>

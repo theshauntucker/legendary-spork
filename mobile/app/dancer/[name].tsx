@@ -75,8 +75,9 @@ export default function DancerProfileScreen() {
     <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
     <ScrollView style={{ flex: 1 }}>
       {/* Background blurs */}
-      <View style={{ position: 'absolute', top: -40, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.20)' }} />
-      <View style={{ position: 'absolute', top: 300, left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.12)' }} />
+      <View style={{ position: 'absolute', top: -40, right: -60, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(147,51,234,0.28)' }} />
+      <View style={{ position: 'absolute', top: 300, left: -50, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(236,72,153,0.20)' }} />
+      <View style={{ position: 'absolute', top: 550, right: -30, width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(245,158,11,0.14)' }} />
 
       {/* Back button */}
       <TouchableOpacity

@@ -120,9 +120,9 @@ export default function SignupScreen() {
   return (
     <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
       {/* Decorative gradient blurs */}
-      <View style={{ position: 'absolute', top: -60, right: -40, width: 240, height: 240, borderRadius: 120, backgroundColor: 'rgba(147,51,234,0.28)' }} />
-      <View style={{ position: 'absolute', top: 220, left: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(236,72,153,0.18)' }} />
-      <View style={{ position: 'absolute', bottom: 60, right: -30, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(245,158,11,0.12)' }} />
+      <View style={{ position: 'absolute', top: -60, right: -40, width: 260, height: 260, borderRadius: 130, backgroundColor: 'rgba(147,51,234,0.30)' }} />
+      <View style={{ position: 'absolute', top: 220, left: -60, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(236,72,153,0.20)' }} />
+      <View style={{ position: 'absolute', bottom: 60, right: -30, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(245,158,11,0.14)' }} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
