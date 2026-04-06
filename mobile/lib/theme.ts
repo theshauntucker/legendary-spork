@@ -33,6 +33,11 @@ export const colors = {
     900: '#18181b',
     950: '#09090b',
   },
+  // Free/promo green
+  freeGreen: '#10b981',
+  freeGreenLight: '#6ee7b7',
+  freeGreenBg: 'rgba(16,185,129,0.20)',
+  freeGreenBorder: 'rgba(16,185,129,0.40)',
   // Semantic
   success: '#10b981',
   successLight: '#6ee7b7',
@@ -67,11 +72,18 @@ export const gradientProps = {
   leftToRight: { start: { x: 0, y: 0.5 }, end: { x: 1, y: 0.5 } },
 };
 
-// Screen-level gradient background (purple tint at top → black)
+// Screen-level gradient background (purple tint at top -> black)
 export const screenGradient = [
-  'rgba(147,51,234,0.15)',
-  'rgba(147,51,234,0.06)',
+  'rgba(147,51,234,0.25)',
+  'rgba(147,51,234,0.10)',
   '#09090b',
+  '#09090b',
+] as const;
+
+// Rich section gradient for marketing/landing sections
+export const sectionGradient = [
+  'rgba(147,51,234,0.35)',
+  'rgba(147,51,234,0.15)',
   '#09090b',
 ] as const;
 

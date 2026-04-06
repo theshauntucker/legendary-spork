@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,14 +6,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { getUserAnalyses } from '../../lib/api';
-import { colors, gradients, gradientProps, glass, screenGradient, CARD_ACCENT_HEIGHT } from '../../lib/theme';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import { getUserAnalyses, getUserCredits, UserCredits } from '../../lib/api';
+import { colors, gradients, gradientProps, glass, glassElevated, screenGradient, CARD_ACCENT_HEIGHT } from '../../lib/theme';
 
 interface AnalysisItem {
   id: string;
@@ -25,6 +22,14 @@ interface AnalysisItem {
     overallScore?: number;
   };
   created_at: string;
+}
+
+interface DancerSummary {
+  name: string;
+  bestScore: number;
+  bestAward: ReturnType<typeof getAwardLevel>;
+  analysisCount: number;
+  styles: string[];
 }
 
 function getAwardLevel(score: number) {
@@ -44,15 +49,20 @@ function formatDate(dateStr: string) {
 export default function DashboardScreen() {
   const router = useRouter();
   const [analyses, setAnalyses] = useState<AnalysisItem[]>([]);
+  const [credits, setCredits] = useState<UserCredits>({ remaining: 0, total: 0, used: 0 });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadAnalyses = useCallback(async () => {
+  const loadData = useCallback(async () => {
     try {
-      const data = await getUserAnalyses();
-      setAnalyses(data as unknown as AnalysisItem[]);
+      const [analysesData, creditsData] = await Promise.all([
+        getUserAnalyses(),
+        getUserCredits(),
+      ]);
+      setAnalyses(analysesData as unknown as AnalysisItem[]);
+      setCredits(creditsData);
     } catch (err) {
-      console.error('Failed to load analyses:', err);
+      console.error('Failed to load data:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -60,15 +70,40 @@ export default function DashboardScreen() {
   }, []);
 
   useEffect(() => {
-    loadAnalyses();
-  }, [loadAnalyses]);
+    loadData();
+  }, [loadData]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    loadAnalyses();
-  }, [loadAnalyses]);
+    loadData();
+  }, [loadData]);
 
-  const renderItem = ({ item }: { item: AnalysisItem }) => {
+  // Build dancer summaries from analyses
+  const dancers = useMemo(() => {
+    const map: Record<string, DancerSummary> = {};
+    for (const a of analyses) {
+      const name = a.dancer_name;
+      if (!name || a.status !== 'analyzed' || !a.analysis_data?.overallScore) continue;
+      if (!map[name]) {
+        map[name] = { name, bestScore: 0, bestAward: getAwardLevel(0), analysisCount: 0, styles: [] };
+      }
+      const d = map[name];
+      const score = a.analysis_data.overallScore;
+      if (score > d.bestScore) {
+        d.bestScore = score;
+        d.bestAward = getAwardLevel(score);
+      }
+      d.analysisCount++;
+      if (!d.styles.includes(a.dance_style)) {
+        d.styles.push(a.dance_style);
+      }
+    }
+    return Object.values(map);
+  }, [analyses]);
+
+  const recentAnalyses = analyses.slice(0, 5);
+
+  const renderAnalysisItem = ({ item }: { item: AnalysisItem }) => {
     const score = item.analysis_data?.overallScore;
     const award = score ? getAwardLevel(score) : null;
     const isProcessing = item.status === 'processing';
@@ -84,81 +119,36 @@ export default function DashboardScreen() {
           }
         }}
         activeOpacity={0.7}
-        style={{ marginBottom: 14 }}
+        style={{ marginBottom: 12 }}
       >
         <View style={{ ...glass, overflow: 'hidden' }}>
-          {/* Gradient top accent */}
-          <LinearGradient
-            colors={gradients.brand}
-            {...gradientProps.leftToRight}
-            style={{ height: CARD_ACCENT_HEIGHT }}
-          />
-          <View style={{ padding: 18 }}>
+          <LinearGradient colors={gradients.brand} {...gradientProps.leftToRight} style={{ height: CARD_ACCENT_HEIGHT }} />
+          <View style={{ padding: 16 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <View style={{ flex: 1, marginRight: 16 }}>
-                <Text style={{ color: '#fff', fontSize: 17, fontWeight: '700', letterSpacing: -0.3 }}>
-                  {title}
-                </Text>
-                <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 6 }}>
+              <View style={{ flex: 1, marginRight: 14 }}>
+                <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: -0.3 }}>{title}</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 4 }}>
                   {item.dancer_name || 'Unknown'} · {item.dance_style || 'Dance'}
                 </Text>
-                <Text style={{ color: colors.textTertiary, fontSize: 12, marginTop: 4 }}>
+                <Text style={{ color: colors.textTertiary, fontSize: 11, marginTop: 2 }}>
                   {formatDate(item.created_at)}
                 </Text>
               </View>
 
               {isProcessing ? (
-                <View style={{
-                  alignItems: 'center',
-                  backgroundColor: 'rgba(147,51,234,0.15)',
-                  borderRadius: 14,
-                  paddingVertical: 10,
-                  paddingHorizontal: 14,
-                }}>
+                <View style={{ alignItems: 'center', backgroundColor: 'rgba(147,51,234,0.15)', borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12 }}>
                   <ActivityIndicator size="small" color={colors.primary[400]} />
-                  <Text style={{ color: colors.primary[400], fontSize: 10, marginTop: 4, fontWeight: '600' }}>
-                    Analyzing
-                  </Text>
+                  <Text style={{ color: colors.primary[400], fontSize: 9, marginTop: 3, fontWeight: '600' }}>Analyzing</Text>
                 </View>
               ) : score ? (
                 <View style={{ alignItems: 'center' }}>
-                  <Text style={{ color: colors.gold[400], fontSize: 32, fontWeight: '800', letterSpacing: -1 }}>
-                    {score}
-                  </Text>
-                  <View style={{
-                    backgroundColor: award!.color + '30',
-                    borderRadius: 999,
-                    paddingVertical: 3,
-                    paddingHorizontal: 10,
-                    marginTop: 4,
-                  }}>
-                    <Text style={{ color: award!.color, fontSize: 10, fontWeight: '700' }}>
-                      {award!.label.toUpperCase()}
-                    </Text>
+                  <Text style={{ color: colors.gold[400], fontSize: 28, fontWeight: '800', letterSpacing: -1 }}>{score}</Text>
+                  <View style={{ backgroundColor: award!.color + '30', borderRadius: 999, paddingVertical: 2, paddingHorizontal: 8, marginTop: 2 }}>
+                    <Text style={{ color: award!.color, fontSize: 9, fontWeight: '700' }}>{award!.label.toUpperCase()}</Text>
                   </View>
                 </View>
               ) : null}
             </View>
-
-            {/* Score progress bar */}
-            {score && (
-              <View style={{ marginTop: 14 }}>
-                <View style={{ height: 4, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
-                  <LinearGradient
-                    colors={gradients.scoreBar}
-                    {...gradientProps.leftToRight}
-                    style={{
-                      height: 4,
-                      borderRadius: 2,
-                      width: `${(score / 300) * 100}%`,
-                    }}
-                  />
-                </View>
-                <Text style={{ color: colors.textTertiary, fontSize: 10, marginTop: 4, textAlign: 'right' }}>
-                  {score} / 300
-                </Text>
-              </View>
-            )}
           </View>
         </View>
       </TouchableOpacity>
@@ -168,14 +158,7 @@ export default function DashboardScreen() {
   if (loading) {
     return (
       <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <View style={{
-          width: 64,
-          height: 64,
-          borderRadius: 32,
-          backgroundColor: 'rgba(147,51,234,0.20)',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
+        <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(147,51,234,0.20)', justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size="large" color={colors.primary[400]} />
         </View>
       </LinearGradient>
@@ -185,67 +168,120 @@ export default function DashboardScreen() {
   return (
     <LinearGradient colors={screenGradient as unknown as string[]} {...gradientProps.topToBottom} style={{ flex: 1 }}>
       {/* Background decorative blurs */}
-      <View style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.20)' }} />
+      <View style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(147,51,234,0.22)' }} />
       <View style={{ position: 'absolute', bottom: 100, left: -40, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(236,72,153,0.15)' }} />
       <View style={{ position: 'absolute', top: 200, left: '40%', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(245,158,11,0.08)' }} />
 
       <FlatList
-        data={analyses}
+        data={recentAnalyses}
         keyExtractor={(item) => item.id}
-        renderItem={renderItem}
+        renderItem={renderAnalysisItem}
         contentContainerStyle={{ padding: 16, paddingTop: 12 }}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.primary[400]}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary[400]} />
         }
         ListHeaderComponent={
-          analyses.length > 0 ? (
-            <View style={{ marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={{ overflow: 'hidden', borderRadius: 8 }}>
-                <LinearGradient
-                  colors={gradients.brand}
-                  {...gradientProps.diagonal}
-                  style={{ paddingVertical: 3, paddingHorizontal: 8, borderRadius: 8 }}
-                >
-                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>{analyses.length}</Text>
-                </LinearGradient>
+          <View>
+            {/* Credits Bar */}
+            {credits.total > 0 && (
+              <View style={{ ...glass, borderColor: 'rgba(16,185,129,0.25)', backgroundColor: 'rgba(16,185,129,0.06)', padding: 14, marginBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ color: colors.successLight, fontSize: 14, fontWeight: '600' }}>
+                  {credits.remaining} credit{credits.remaining !== 1 ? 's' : ''} remaining
+                </Text>
+                <Text style={{ color: colors.textTertiary, fontSize: 12 }}>
+                  {credits.used} used of {credits.total}
+                </Text>
               </View>
-              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
-                routine{analyses.length !== 1 ? 's' : ''} analyzed
-              </Text>
-            </View>
-          ) : null
+            )}
+
+            {/* Your Dancers Section */}
+            {dancers.length > 0 && (
+              <View style={{ marginBottom: 20 }}>
+                <Text style={{ color: colors.primary[400], fontSize: 12, fontWeight: '600', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12, marginLeft: 4 }}>
+                  Your Dancers
+                </Text>
+                {dancers.map((dancer) => (
+                  <TouchableOpacity
+                    key={dancer.name}
+                    onPress={() => router.push(`/dancer/${encodeURIComponent(dancer.name)}`)}
+                    activeOpacity={0.7}
+                    style={{ marginBottom: 10 }}
+                  >
+                    <View style={{ ...glassElevated, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                      {/* Avatar */}
+                      <View style={{ overflow: 'hidden', borderRadius: 14, width: 48, height: 48 }}>
+                        <LinearGradient
+                          colors={gradients.brand}
+                          {...gradientProps.diagonal}
+                          style={{ width: 48, height: 48, justifyContent: 'center', alignItems: 'center' }}
+                        >
+                          <Text style={{ color: '#fff', fontSize: 18, fontWeight: '800' }}>
+                            {dancer.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
+                          </Text>
+                        </LinearGradient>
+                      </View>
+
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>{dancer.name}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                          <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                            {dancer.analysisCount} {dancer.analysisCount === 1 ? 'analysis' : 'analyses'}
+                          </Text>
+                          <Text style={{ color: colors.textTertiary, fontSize: 10 }}>·</Text>
+                          <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                            {dancer.styles.slice(0, 2).join(', ')}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={{ alignItems: 'center' }}>
+                        <Text style={{ color: dancer.bestAward.color, fontSize: 22, fontWeight: '800' }}>{dancer.bestScore}</Text>
+                        <View style={{ backgroundColor: dancer.bestAward.color + '25', borderRadius: 999, paddingVertical: 2, paddingHorizontal: 8, marginTop: 2 }}>
+                          <Text style={{ color: dancer.bestAward.color, fontSize: 8, fontWeight: '700' }}>
+                            {dancer.bestAward.label.toUpperCase()}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {/* Recent Analyses Header */}
+            {analyses.length > 0 && (
+              <View style={{ marginBottom: 14, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={{ color: colors.primary[400], fontSize: 12, fontWeight: '600', letterSpacing: 1.5, textTransform: 'uppercase', marginLeft: 4 }}>
+                  Recent Analyses
+                </Text>
+                <View style={{ overflow: 'hidden', borderRadius: 8 }}>
+                  <LinearGradient
+                    colors={gradients.brand}
+                    {...gradientProps.diagonal}
+                    style={{ paddingVertical: 2, paddingHorizontal: 7, borderRadius: 8 }}
+                  >
+                    <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}>{analyses.length}</Text>
+                  </LinearGradient>
+                </View>
+              </View>
+            )}
+          </View>
         }
         ListEmptyComponent={
-          <View style={{ alignItems: 'center', marginTop: 80 }}>
+          <View style={{ alignItems: 'center', marginTop: 60 }}>
             {/* Decorative gradient circle */}
-            <View style={{
-              width: 100,
-              height: 100,
-              borderRadius: 50,
-              overflow: 'hidden',
-              marginBottom: 24,
-            }}>
+            <View style={{ width: 100, height: 100, borderRadius: 50, overflow: 'hidden', marginBottom: 24 }}>
               <LinearGradient
                 colors={[...gradients.brand]}
                 {...gradientProps.diagonal}
-                style={{
-                  width: 100,
-                  height: 100,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  opacity: 0.2,
-                }}
+                style={{ width: 100, height: 100, justifyContent: 'center', alignItems: 'center', opacity: 0.2 }}
               >
                 <Text style={{ fontSize: 40, opacity: 1 }}>✨</Text>
               </LinearGradient>
             </View>
 
             <Text style={{ color: '#fff', fontSize: 22, fontWeight: '700', marginBottom: 8, letterSpacing: -0.5 }}>
-              No analyses yet
+              Welcome to RoutineX
             </Text>
             <Text style={{ color: colors.textSecondary, fontSize: 15, textAlign: 'center', marginBottom: 28, lineHeight: 22, maxWidth: 280 }}>
               Upload your first routine to get AI-powered competition scoring and feedback.
@@ -259,11 +295,7 @@ export default function DashboardScreen() {
               <LinearGradient
                 colors={gradients.brand}
                 {...gradientProps.diagonal}
-                style={{
-                  borderRadius: 999,
-                  paddingVertical: 16,
-                  paddingHorizontal: 36,
-                }}
+                style={{ borderRadius: 999, paddingVertical: 16, paddingHorizontal: 36 }}
               >
                 <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
                   Analyze a Routine
@@ -273,18 +305,16 @@ export default function DashboardScreen() {
 
             {/* Trust badges */}
             <View style={{ marginTop: 32, gap: 12, alignItems: 'center' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ fontSize: 13 }}>🛡️</Text>
-                <Text style={{ color: colors.textTertiary, fontSize: 12 }}>Competition-Calibrated Scoring</Text>
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ fontSize: 13 }}>⚡</Text>
-                <Text style={{ color: colors.textTertiary, fontSize: 12 }}>Results in Minutes</Text>
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ fontSize: 13 }}>🔒</Text>
-                <Text style={{ color: colors.textTertiary, fontSize: 12 }}>Video Never Leaves Your Device</Text>
-              </View>
+              {[
+                { icon: '🛡️', text: 'Competition-Calibrated Scoring' },
+                { icon: '⚡', text: 'Results in Minutes' },
+                { icon: '🔒', text: 'Video Never Leaves Your Device' },
+              ].map((badge) => (
+                <View key={badge.text} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={{ fontSize: 13 }}>{badge.icon}</Text>
+                  <Text style={{ color: colors.textTertiary, fontSize: 12 }}>{badge.text}</Text>
+                </View>
+              ))}
             </View>
           </View>
         }

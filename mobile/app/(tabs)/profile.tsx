@@ -109,10 +109,20 @@ export default function ProfileScreen() {
       <Text style={{ ...sectionHeader, color: colors.primary[400] }}>Privacy & Data</Text>
       <View style={{ ...glass, overflow: 'hidden', marginBottom: 24 }}>
         <TouchableOpacity
-          onPress={() => Linking.openURL('https://routinex.org/privacy')}
+          onPress={() => router.push('/privacy')}
           style={menuItemStyle}
         >
           <Text style={{ color: '#e4e4e7', fontSize: 15, fontWeight: '500' }}>Privacy Policy</Text>
+          <Text style={{ color: colors.textTertiary, fontSize: 18 }}>›</Text>
+        </TouchableOpacity>
+
+        <View style={dividerStyle} />
+
+        <TouchableOpacity
+          onPress={() => router.push('/terms')}
+          style={menuItemStyle}
+        >
+          <Text style={{ color: '#e4e4e7', fontSize: 15, fontWeight: '500' }}>Terms of Service</Text>
           <Text style={{ color: colors.textTertiary, fontSize: 18 }}>›</Text>
         </TouchableOpacity>
 
@@ -177,15 +187,28 @@ export default function ProfileScreen() {
       {/* About Section */}
       <Text style={{ ...sectionHeader, color: colors.primary[400] }}>About</Text>
       <View style={{ ...glass, overflow: 'hidden', marginBottom: 24 }}>
-        <View style={menuItemStyle}>
-          <Text style={{ color: '#e4e4e7', fontSize: 15, fontWeight: '500' }}>Version</Text>
-          <Text style={{ color: colors.textTertiary, fontSize: 14 }}>1.0.0</Text>
-        </View>
+        <TouchableOpacity
+          onPress={() => router.push('/about')}
+          style={menuItemStyle}
+        >
+          <Text style={{ color: '#e4e4e7', fontSize: 15, fontWeight: '500' }}>About RoutineX</Text>
+          <Text style={{ color: colors.textTertiary, fontSize: 18 }}>›</Text>
+        </TouchableOpacity>
 
         <View style={dividerStyle} />
 
         <TouchableOpacity
-          onPress={() => Linking.openURL('mailto:22tucker22@comcast.net')}
+          onPress={() => router.push('/faq')}
+          style={menuItemStyle}
+        >
+          <Text style={{ color: '#e4e4e7', fontSize: 15, fontWeight: '500' }}>FAQ</Text>
+          <Text style={{ color: colors.textTertiary, fontSize: 18 }}>›</Text>
+        </TouchableOpacity>
+
+        <View style={dividerStyle} />
+
+        <TouchableOpacity
+          onPress={() => Linking.openURL('mailto:danceroutinex@gmail.com')}
           style={menuItemStyle}
         >
           <Text style={{ color: '#e4e4e7', fontSize: 15, fontWeight: '500' }}>Contact Support</Text>
@@ -201,6 +224,13 @@ export default function ProfileScreen() {
           <Text style={{ color: '#e4e4e7', fontSize: 15, fontWeight: '500' }}>Visit Website</Text>
           <Text style={{ color: colors.textTertiary, fontSize: 18 }}>›</Text>
         </TouchableOpacity>
+
+        <View style={dividerStyle} />
+
+        <View style={menuItemStyle}>
+          <Text style={{ color: '#e4e4e7', fontSize: 15, fontWeight: '500' }}>Version</Text>
+          <Text style={{ color: colors.textTertiary, fontSize: 14 }}>1.0.0</Text>
+        </View>
       </View>
 
       {/* Account Actions */}

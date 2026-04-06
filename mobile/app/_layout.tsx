@@ -61,10 +61,14 @@ function RootLayoutNav() {
     if (loading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const inTabsGroup = segments[0] === '(tabs)';
+    const isLanding = segments[0] === 'landing';
+    // Legal/info pages are accessible to everyone
+    const isPublicPage = ['privacy', 'terms', 'about', 'faq'].includes(segments[0] as string);
 
-    if (!user && !inAuthGroup) {
-      router.replace('/(auth)/login');
-    } else if (user && inAuthGroup) {
+    if (!user && !inAuthGroup && !isLanding && !isPublicPage) {
+      router.replace('/landing');
+    } else if (user && (inAuthGroup || isLanding)) {
       router.replace('/(tabs)');
     }
   }, [user, loading, segments]);

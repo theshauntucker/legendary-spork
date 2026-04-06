@@ -159,10 +159,9 @@ export default function UploadScreen() {
     setStep('frames');
   };
 
-  const [purchaseType, setPurchaseType] = useState<'trial' | 'pack'>('trial');
+  const [purchaseType, setPurchaseType] = useState<'single' | 'pack'>('single');
   const [hasCredits, setHasCredits] = useState(false);
   const [creditsRemaining, setCreditsRemaining] = useState(0);
-  const [trialUsed, setTrialUsed] = useState(false);
   const [checkingCredits, setCheckingCredits] = useState(true);
 
   React.useEffect(() => {
@@ -177,7 +176,6 @@ export default function UploadScreen() {
           const data = await res.json();
           setHasCredits(data.remaining > 0);
           setCreditsRemaining(data.remaining);
-          setTrialUsed(data.trialUsed || false);
         }
       } catch {}
       setCheckingCredits(false);
@@ -209,10 +207,8 @@ export default function UploadScreen() {
         });
         const checkoutData = await checkoutRes.json();
 
-        if (checkoutData.error === 'trial_used') {
-          setTrialUsed(true);
-          setPurchaseType('pack');
-          setError(checkoutData.message);
+        if (checkoutData.error) {
+          setError(checkoutData.message || checkoutData.error);
           setUploading(false);
           return;
         }
@@ -581,24 +577,22 @@ export default function UploadScreen() {
             Choose a plan to continue:
           </Text>
 
-          {!trialUsed && (
-            <TouchableOpacity onPress={() => setPurchaseType('trial')}>
-              <View style={{
-                ...glass,
-                borderColor: purchaseType === 'trial' ? colors.primary[500] : 'rgba(255,255,255,0.1)',
-                borderWidth: purchaseType === 'trial' ? 2 : 1,
-                backgroundColor: purchaseType === 'trial' ? 'rgba(147,51,234,0.20)' : 'rgba(255,255,255,0.06)',
-                padding: 18,
-              }}>
-                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
-                  First Analysis — $4.99
-                </Text>
-                <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 4 }}>
-                  One-time trial offer — 1 full AI analysis
-                </Text>
-              </View>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity onPress={() => setPurchaseType('single')}>
+            <View style={{
+              ...glass,
+              borderColor: purchaseType === 'single' ? colors.primary[500] : 'rgba(255,255,255,0.1)',
+              borderWidth: purchaseType === 'single' ? 2 : 1,
+              backgroundColor: purchaseType === 'single' ? 'rgba(147,51,234,0.20)' : 'rgba(255,255,255,0.06)',
+              padding: 18,
+            }}>
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
+                Single Analysis — $8.99
+              </Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 4 }}>
+                1 full AI analysis for any routine
+              </Text>
+            </View>
+          </TouchableOpacity>
 
           <TouchableOpacity onPress={() => setPurchaseType('pack')}>
             <View style={{
@@ -610,11 +604,11 @@ export default function UploadScreen() {
             }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
-                  Competition Pack — $24.99
+                  Competition Pack — $29.99
                 </Text>
                 <View style={{ borderRadius: 999, overflow: 'hidden' }}>
                   <LinearGradient
-                    colors={[colors.gold[500], colors.gold[400]]}
+                    colors={gradients.brand}
                     {...gradientProps.leftToRight}
                     style={{ paddingVertical: 3, paddingHorizontal: 10, borderRadius: 999 }}
                   >
@@ -622,8 +616,11 @@ export default function UploadScreen() {
                   </LinearGradient>
                 </View>
               </View>
-              <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 4 }}>
-                5 analyses — only $5 each
+              <Text style={{ color: colors.primary[400], fontSize: 12, fontWeight: '600', marginTop: 4 }}>
+                Only $6/analysis — save $15 vs buying singles
+              </Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 2 }}>
+                5 analyses — use on different routines or track progress
               </Text>
             </View>
           </TouchableOpacity>
@@ -678,9 +675,9 @@ export default function UploadScreen() {
               <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
                 {hasCredits
                   ? 'Analyze Now'
-                  : purchaseType === 'trial'
-                    ? 'Analyze — $4.99'
-                    : 'Analyze — $24.99'}
+                  : purchaseType === 'single'
+                    ? 'Get 1 Analysis — $8.99'
+                    : 'Get 5 Analyses — $29.99'}
               </Text>
             )}
           </LinearGradient>

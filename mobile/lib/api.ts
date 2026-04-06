@@ -185,6 +185,41 @@ export async function getScoreHistory(dancerName?: string): Promise<ScoreHistory
   return data.history || [];
 }
 
+export interface UserCredits {
+  remaining: number;
+  total: number;
+  used: number;
+}
+
+export async function getUserCredits(): Promise<UserCredits> {
+  const token = await getAuthToken();
+  const res = await fetch(`${API_BASE}/api/credits`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return { remaining: 0, total: 0, used: 0 };
+  const data = await res.json();
+  return {
+    remaining: data.remaining ?? 0,
+    total: data.totalCredits ?? 0,
+    used: data.usedCredits ?? 0,
+  };
+}
+
+export async function createCheckoutSession(
+  type: 'single' | 'pack',
+): Promise<{ url?: string; error?: string; message?: string }> {
+  const token = await getAuthToken();
+  const res = await fetch(`${API_BASE}/api/checkout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ type }),
+  });
+  return res.json();
+}
+
 export async function storeConsentRecord(
   consentType: string,
   userAgent: string,

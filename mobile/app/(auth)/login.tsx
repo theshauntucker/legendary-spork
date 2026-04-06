@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -178,14 +177,14 @@ export default function LoginScreen() {
               By signing in, you agree to our{' '}
               <Text
                 style={{ color: colors.primary[400], textDecorationLine: 'underline' }}
-                onPress={() => Linking.openURL('https://routinex.org/terms')}
+                onPress={() => router.push('/terms')}
               >
                 Terms
               </Text>{' '}
               and{' '}
               <Text
                 style={{ color: colors.primary[400], textDecorationLine: 'underline' }}
-                onPress={() => Linking.openURL('https://routinex.org/privacy')}
+                onPress={() => router.push('/privacy')}
               >
                 Privacy Policy
               </Text>

@@ -335,7 +335,7 @@ export default function SignupScreen() {
             </View>
 
             <TouchableOpacity
-              onPress={() => Linking.openURL('https://routinex.org/privacy')}
+              onPress={() => router.push('/privacy')}
               style={{ marginTop: 14 }}
             >
               <Text style={{ color: colors.primary[400], fontSize: 13, textDecorationLine: 'underline' }}>
@@ -350,7 +350,7 @@ export default function SignupScreen() {
               By signing up, you agree to our{' '}
               <Text
                 style={{ color: colors.primary[400], textDecorationLine: 'underline' }}
-                onPress={() => Linking.openURL('https://routinex.org/terms')}
+                onPress={() => router.push('/terms')}
               >
                 Terms of Service
               </Text>.
