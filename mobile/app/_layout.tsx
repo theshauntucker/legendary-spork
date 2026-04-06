@@ -58,32 +58,38 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
 
-  // Initialize Apple In-App Purchases (iOS only)
+  // Initialize Apple In-App Purchases (iOS only, native builds only)
   useEffect(() => {
     if (Platform.OS !== 'ios') return;
 
-    initIAP();
-
-    const cleanup = setupPurchaseListeners(
-      () => {
-        // Credits granted successfully — show confirmation
-        Alert.alert(
-          'Purchase Complete',
-          'Your credits have been added. You can now analyze a routine!',
-          [{ text: 'OK' }]
-        );
-      },
-      (message: string) => {
-        // Purchase error
-        if (message !== 'Purchase cancelled.') {
-          Alert.alert('Purchase Issue', message, [{ text: 'OK' }]);
-        }
-      },
-    );
+    let cleanup = () => {};
+    try {
+      initIAP();
+      cleanup = setupPurchaseListeners(
+        () => {
+          Alert.alert(
+            'Purchase Complete',
+            'Your credits have been added. You can now analyze a routine!',
+            [{ text: 'OK' }]
+          );
+        },
+        (message: string) => {
+          if (message !== 'Purchase cancelled.') {
+            Alert.alert('Purchase Issue', message, [{ text: 'OK' }]);
+          }
+        },
+      );
+    } catch {
+      // IAP not available (Expo Go) — skip silently
+    }
 
     return () => {
-      cleanup();
-      cleanupIAP();
+      try {
+        cleanup();
+        cleanupIAP();
+      } catch {
+        // Ignore cleanup errors
+      }
     };
   }, []);
 

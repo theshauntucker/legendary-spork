@@ -10,6 +10,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { getUserAnalyses, getUserCredits, UserCredits } from '../../lib/api';
+import { useAuth } from '../../lib/auth';
 import { colors, gradients, gradientProps, glass, glassElevated, screenGradient, CARD_ACCENT_HEIGHT } from '../../lib/theme';
 
 interface AnalysisItem {
@@ -48,12 +49,17 @@ function formatDate(dateStr: string) {
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [analyses, setAnalyses] = useState<AnalysisItem[]>([]);
   const [credits, setCredits] = useState<UserCredits>({ remaining: 0, total: 0, used: 0 });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     try {
       const [analysesData, creditsData] = await Promise.all([
         getUserAnalyses(),
@@ -67,7 +73,7 @@ export default function DashboardScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     loadData();

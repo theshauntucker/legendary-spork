@@ -1,17 +1,4 @@
 import { Platform } from 'react-native';
-import {
-  initConnection,
-  endConnection,
-  getProducts,
-  requestPurchase,
-  finishTransaction,
-  purchaseUpdatedListener,
-  purchaseErrorListener,
-  type ProductPurchase,
-  type PurchaseError,
-  type Subscription,
-  flushFailedPurchasesCachedAsPendingAndroid,
-} from 'react-native-iap';
 import { getAuthToken } from './api';
 
 // Product IDs — must match App Store Connect
@@ -23,29 +10,49 @@ export const IAP_PRODUCTS = {
 const PRODUCT_IDS = [IAP_PRODUCTS.SINGLE, IAP_PRODUCTS.PACK];
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE || 'https://routinex.org';
 
-// Store listeners for cleanup
-let purchaseUpdateSubscription: Subscription | null = null;
-let purchaseErrorSubscription: Subscription | null = null;
+// Lazy-load react-native-iap to avoid crashing in Expo Go
+// (NitroModules are only available in EAS/native builds)
+let RNIap: any = null;
 
-// Callback for when credits are successfully granted
+function getIAP() {
+  if (!RNIap) {
+    try {
+      RNIap = require('react-native-iap');
+    } catch {
+      console.warn('react-native-iap not available (Expo Go). Purchases disabled.');
+    }
+  }
+  return RNIap;
+}
+
+// Store listeners for cleanup
+let purchaseUpdateSubscription: any = null;
+let purchaseErrorSubscription: any = null;
+
+// Callbacks
 let onCreditsGranted: (() => void) | null = null;
-// Callback for purchase errors
 let onPurchaseError: ((message: string) => void) | null = null;
 
 /**
- * Initialize IAP connection and load products.
+ * Check if IAP is available (native build, not Expo Go)
+ */
+export function isIAPAvailable(): boolean {
+  if (Platform.OS !== 'ios') return false;
+  return !!getIAP();
+}
+
+/**
+ * Initialize IAP connection.
  * Call once on app start (in _layout.tsx).
  */
 export async function initIAP(): Promise<void> {
-  if (Platform.OS !== 'ios') return; // Only iOS uses IAP
+  if (Platform.OS !== 'ios') return;
+
+  const iap = getIAP();
+  if (!iap) return;
 
   try {
-    await initConnection();
-
-    // Clear any pending Android purchases (no-op on iOS, but safe to call)
-    if (Platform.OS === 'android') {
-      await flushFailedPurchasesCachedAsPendingAndroid();
-    }
+    await iap.initConnection();
   } catch (err) {
     console.warn('IAP init failed:', err);
   }
@@ -59,14 +66,16 @@ export function setupPurchaseListeners(
   onSuccess: () => void,
   onError: (message: string) => void,
 ): () => void {
+  const iap = getIAP();
+  if (!iap) return () => {};
+
   onCreditsGranted = onSuccess;
   onPurchaseError = onError;
 
   // Listen for successful purchases
-  purchaseUpdateSubscription = purchaseUpdatedListener(
-    async (purchase: ProductPurchase) => {
+  purchaseUpdateSubscription = iap.purchaseUpdatedListener(
+    async (purchase: any) => {
       try {
-        // Send receipt to our backend for validation and credit granting
         const receipt = purchase.transactionReceipt;
         if (!receipt) {
           console.error('No transaction receipt');
@@ -91,8 +100,7 @@ export function setupPurchaseListeners(
         const data = await res.json();
 
         if (res.ok && data.verified) {
-          // Credits granted — finish the transaction with Apple
-          await finishTransaction({ purchase, isConsumable: true });
+          await iap.finishTransaction({ purchase, isConsumable: true });
           onCreditsGranted?.();
         } else {
           console.error('Receipt verification failed:', data.error);
@@ -106,8 +114,8 @@ export function setupPurchaseListeners(
   );
 
   // Listen for purchase errors
-  purchaseErrorSubscription = purchaseErrorListener(
-    (error: PurchaseError) => {
+  purchaseErrorSubscription = iap.purchaseErrorListener(
+    (error: any) => {
       if (error.code === 'E_USER_CANCELLED') {
         onPurchaseError?.('Purchase cancelled.');
       } else {
@@ -117,7 +125,6 @@ export function setupPurchaseListeners(
     },
   );
 
-  // Return cleanup function
   return () => {
     purchaseUpdateSubscription?.remove();
     purchaseErrorSubscription?.remove();
@@ -130,14 +137,13 @@ export function setupPurchaseListeners(
 
 /**
  * Load available IAP products from the App Store.
- * Returns product details (price, title, etc.).
  */
 export async function loadProducts() {
-  if (Platform.OS !== 'ios') return [];
+  const iap = getIAP();
+  if (!iap || Platform.OS !== 'ios') return [];
 
   try {
-    const products = await getProducts({ skus: PRODUCT_IDS });
-    return products;
+    return await iap.getProducts({ skus: PRODUCT_IDS });
   } catch (err) {
     console.error('Failed to load IAP products:', err);
     return [];
@@ -146,28 +152,31 @@ export async function loadProducts() {
 
 /**
  * Request purchase of a single analysis ($8.99).
- * The purchase listener handles the rest.
  */
 export async function purchaseSingle(): Promise<void> {
-  await requestPurchase({ sku: IAP_PRODUCTS.SINGLE });
+  const iap = getIAP();
+  if (!iap) throw new Error('In-App Purchases not available. Please use a native build.');
+  await iap.requestPurchase({ sku: IAP_PRODUCTS.SINGLE });
 }
 
 /**
  * Request purchase of the competition pack ($29.99).
- * The purchase listener handles the rest.
  */
 export async function purchasePack(): Promise<void> {
-  await requestPurchase({ sku: IAP_PRODUCTS.PACK });
+  const iap = getIAP();
+  if (!iap) throw new Error('In-App Purchases not available. Please use a native build.');
+  await iap.requestPurchase({ sku: IAP_PRODUCTS.PACK });
 }
 
 /**
- * Clean up IAP connection. Call on app shutdown.
+ * Clean up IAP connection.
  */
 export async function cleanupIAP(): Promise<void> {
-  if (Platform.OS !== 'ios') return;
+  const iap = getIAP();
+  if (!iap || Platform.OS !== 'ios') return;
 
   try {
-    await endConnection();
+    await iap.endConnection();
   } catch {
     // Ignore cleanup errors
   }
