@@ -271,7 +271,7 @@ export default async function DancerSeasonPage({
   const winRate = entries.length > 0 ? Math.round((topTierCount / entries.length) * 100) : 0;
 
   // Next award level
-  const next = nextAwardInfo(bestScore);
+  const nextLevel = nextAwardInfo(bestScore);
 
   // Milestones
   const isNewPB = entries.length >= 2 && latestEntry.score === bestScore;
@@ -481,34 +481,34 @@ export default async function DancerSeasonPage({
         </div>
 
         {/* ── Next Award Level Progress ──────────────── */}
-        {next ? (
+        {(() => { if (!nextLevel) return null; return (
           <div className="glass rounded-3xl p-6 mb-6 border border-gold-500/20 bg-gold-500/5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-gold-400" />
                 <h2 className="text-lg font-bold">Next Milestone</h2>
               </div>
-              <span className="text-2xl">{next.emoji}</span>
+              <span className="text-2xl">{nextLevel.emoji}</span>
             </div>
             <p className="text-surface-200 text-sm mb-4">
-              <span className="text-white font-semibold text-base">{next.pointsNeeded} more points</span>
-              {" "}to reach <span className="text-white font-semibold">{next.name}</span>
-              {next.pointsNeeded <= 5 && <span className="text-gold-300 font-bold"> — SO CLOSE! 🎯</span>}
-              {next.pointsNeeded <= 15 && next.pointsNeeded > 5 && <span className="text-accent-300"> — within reach! 💪</span>}
+              <span className="text-white font-semibold text-base">{nextLevel.pointsNeeded} more points</span>
+              {" "}to reach <span className="text-white font-semibold">{nextLevel.name}</span>
+              {nextLevel.pointsNeeded <= 5 && <span className="text-gold-300 font-bold"> — SO CLOSE! 🎯</span>}
+              {nextLevel.pointsNeeded <= 15 && nextLevel.pointsNeeded > 5 && <span className="text-accent-300"> — within reach! 💪</span>}
             </p>
             <div className="h-3 rounded-full bg-white/10 overflow-hidden mb-2">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-primary-500 via-accent-400 to-gold-400 transition-all"
-                style={{ width: `${next.pct}%` }}
+                style={{ width: `${nextLevel.pct}%` }}
               />
             </div>
             <div className="flex justify-between text-xs text-surface-200/60">
               <span>Current best: {bestScore}</span>
-              <span>{next.pct}% of the way there</span>
-              <span>Goal: {next.threshold}</span>
+              <span>{nextLevel.pct}% of the way there</span>
+              <span>Goal: {nextLevel.threshold}</span>
             </div>
           </div>
-        ) : null}
+        ); })()}
 
         {/* ── Trophy Wall ───────────────────────────── */}
         <div className="glass rounded-3xl p-6 mb-6">
@@ -709,7 +709,7 @@ export default async function DancerSeasonPage({
         </div>
 
         {/* ── Focus for Next Competition ───────────── */}
-        {latestEntry.improvementPriorities && Array.isArray(latestEntry.improvementPriorities) && latestEntry.improvementPriorities.length > 0 && (
+        {Boolean(latestEntry.improvementPriorities) && Array.isArray(latestEntry.improvementPriorities) && latestEntry.improvementPriorities.length > 0 && (
           <div className="glass rounded-3xl p-6 mb-6">
             <h2 className="text-lg font-bold mb-1 flex items-center gap-2">
               <Zap className="h-5 w-5 text-accent-400" />
