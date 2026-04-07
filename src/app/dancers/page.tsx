@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { Trophy, Star, TrendingUp, Calendar, ChevronRight, Sparkles } from "lucide-react";
+import { Trophy, Star, TrendingUp, Calendar, ChevronRight, Sparkles, Zap } from "lucide-react";
 
 export const metadata = {
   title: "Season Tracker — RoutineX",
@@ -10,22 +10,42 @@ export const metadata = {
 
 function awardColor(level: string): string {
   const l = (level ?? "").toLowerCase();
-  if (l.includes("titanium"))                        return "text-cyan-300 bg-cyan-400/15 border-cyan-400/30";
+  if (l.includes("titanium"))                              return "text-cyan-300 bg-cyan-400/15 border-cyan-400/30";
   if (l.includes("platinum star") || l.includes("diamond")) return "text-purple-300 bg-purple-400/15 border-purple-400/30";
-  if (l.includes("platinum"))                        return "text-violet-300 bg-violet-400/15 border-violet-400/30";
-  if (l.includes("high gold"))                       return "text-yellow-200 bg-yellow-400/15 border-yellow-400/30";
-  if (l.includes("gold"))                            return "text-amber-300 bg-amber-400/15 border-amber-400/30";
+  if (l.includes("platinum"))                              return "text-violet-300 bg-violet-400/15 border-violet-400/30";
+  if (l.includes("high gold"))                             return "text-yellow-200 bg-yellow-400/15 border-yellow-400/30";
+  if (l.includes("gold"))                                  return "text-amber-300 bg-amber-400/15 border-amber-400/30";
   return "text-surface-200 bg-white/5 border-white/10";
 }
 
 function awardEmoji(level: string): string {
   const l = (level ?? "").toLowerCase();
-  if (l.includes("titanium"))                        return "💎";
+  if (l.includes("titanium"))                              return "💎";
   if (l.includes("platinum star") || l.includes("diamond")) return "🌟";
-  if (l.includes("platinum"))                        return "🏆";
-  if (l.includes("high gold"))                       return "🥇";
-  if (l.includes("gold"))                            return "✨";
+  if (l.includes("platinum"))                              return "🏆";
+  if (l.includes("high gold"))                             return "🥇";
+  if (l.includes("gold"))                                  return "✨";
   return "🎭";
+}
+
+function awardRank(level: string): number {
+  const l = (level ?? "").toLowerCase();
+  if (l.includes("titanium"))      return 5;
+  if (l.includes("platinum star")) return 4;
+  if (l.includes("platinum"))      return 3;
+  if (l.includes("high gold"))     return 2;
+  if (l.includes("gold"))          return 1;
+  return 0;
+}
+
+// Next award level based on score
+function nextAwardInfo(bestScore: number): { name: string; emoji: string; threshold: number; pointsNeeded: number } | null {
+  if (bestScore >= 295) return null; // already at top
+  if (bestScore >= 285) return { name: "Titanium", emoji: "💎", threshold: 295, pointsNeeded: 295 - bestScore };
+  if (bestScore >= 270) return { name: "Platinum Star", emoji: "🌟", threshold: 285, pointsNeeded: 285 - bestScore };
+  if (bestScore >= 250) return { name: "Platinum", emoji: "🏆", threshold: 270, pointsNeeded: 270 - bestScore };
+  if (bestScore >= 220) return { name: "High Gold", emoji: "🥇", threshold: 250, pointsNeeded: 250 - bestScore };
+  return { name: "Gold", emoji: "✨", threshold: 220, pointsNeeded: 220 - bestScore };
 }
 
 interface DancerSummary {
@@ -34,6 +54,7 @@ interface DancerSummary {
   ageGroup: string;
   totalAnalyses: number;
   bestScore: number;
+  firstScore: number;
   latestScore: number;
   bestAward: string;
   latestAward: string;
@@ -71,9 +92,9 @@ export default async function DancersPage() {
     `)
     .eq("user_id", user.id)
     .eq("status", "analyzed")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
-  // Group by dancer name
+  // Group by dancer name (ascending so first = earliest)
   const dancerMap = new Map<string, DancerSummary>();
 
   for (const video of (videos ?? [])) {
@@ -92,6 +113,7 @@ export default async function DancersPage() {
         ageGroup: (video.age_group as string) || "—",
         totalAnalyses: 0,
         bestScore: 0,
+        firstScore: score,
         latestScore: score,
         bestAward: award,
         latestAward: award,
@@ -104,10 +126,13 @@ export default async function DancersPage() {
     const dancer = dancerMap.get(name)!;
     dancer.totalAnalyses += 1;
     dancer.scoreHistory.push(score);
+    dancer.latestScore = score;
+    dancer.latestAward = award;
     if (score > dancer.bestScore) {
       dancer.bestScore = score;
       dancer.bestAward = award;
     }
+    if ((video.competition_name as string)) dancer.latestCompetition = video.competition_name as string;
     const style = video.style as string;
     if (style && !dancer.styles.includes(style)) dancer.styles.push(style);
   }
@@ -116,6 +141,9 @@ export default async function DancersPage() {
   const totalAnalyses = dancers.reduce((s, d) => s + d.totalAnalyses, 0);
   const topScore = dancers.reduce((s, d) => Math.max(s, d.bestScore), 0);
   const allStyles = [...new Set(dancers.flatMap(d => d.styles))];
+
+  // How many are trending up?
+  const trendingUp = dancers.filter(d => d.scoreHistory.length >= 2 && d.latestScore > d.firstScore).length;
 
   return (
     <div className="min-h-screen py-12 px-4">
@@ -147,9 +175,23 @@ export default async function DancersPage() {
               <h1 className="text-3xl sm:text-4xl font-bold font-[family-name:var(--font-display)]">
                 Season Tracker
               </h1>
-              <p className="text-surface-200 text-sm mt-0.5">Every score. Every award. Every step forward. 🏆</p>
+              <p className="text-surface-200 text-sm mt-0.5">
+                Every score. Every award. Every step forward. 🏆
+              </p>
             </div>
           </div>
+
+          {/* Motivational banner if trending up */}
+          {trendingUp > 0 && dancers.length > 0 && (
+            <div className="mt-4 flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-2.5 w-fit">
+              <TrendingUp className="h-4 w-4 text-green-400 shrink-0" />
+              <p className="text-sm text-green-300 font-medium">
+                {trendingUp === dancers.length
+                  ? "🔥 Everyone is trending up this season!"
+                  : `🔥 ${trendingUp} dancer${trendingUp > 1 ? "s are" : " is"} trending up this season!`}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Season Summary Stats */}
@@ -175,8 +217,11 @@ export default async function DancersPage() {
           <div className="glass rounded-3xl p-16 text-center">
             <Trophy className="mx-auto h-14 w-14 text-gold-400/40 mb-4" />
             <h2 className="text-2xl font-bold mb-2">Your Season Story Starts Here</h2>
-            <p className="text-surface-200 mb-6 max-w-md mx-auto">
+            <p className="text-surface-200 mb-2 max-w-md mx-auto">
               Upload your first routine with a dancer name and we&apos;ll build a full season timeline — every score, every award, every improvement tracked automatically.
+            </p>
+            <p className="text-surface-200/60 text-sm mb-6 max-w-sm mx-auto italic">
+              &quot;Every champion was once a beginner who refused to give up.&quot;
             </p>
             <Link
               href="/upload"
@@ -193,9 +238,14 @@ export default async function DancersPage() {
             </h2>
             {dancers.map((dancer) => {
               const trend = dancer.scoreHistory.length >= 2
-                ? dancer.scoreHistory[0] - dancer.scoreHistory[dancer.scoreHistory.length - 1]
+                ? dancer.scoreHistory[dancer.scoreHistory.length - 1] - dancer.scoreHistory[0]
                 : null;
               const barPct = Math.min(100, Math.round((dancer.bestScore / 300) * 100));
+              const improvePct = dancer.firstScore > 0 && dancer.scoreHistory.length >= 2
+                ? Math.round(((dancer.bestScore - dancer.firstScore) / dancer.firstScore) * 100)
+                : null;
+              const next = nextAwardInfo(dancer.bestScore);
+              const isNewPB = dancer.latestScore === dancer.bestScore && dancer.totalAnalyses > 1;
 
               return (
                 <Link
@@ -205,14 +255,19 @@ export default async function DancersPage() {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      {/* Name + Best Award */}
-                      <div className="flex flex-wrap items-center gap-3 mb-1">
+                      {/* Name + Best Award + milestone */}
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
                         <h3 className="text-xl font-bold group-hover:text-primary-300 transition-colors">
                           {dancer.name}
                         </h3>
                         <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${awardColor(dancer.bestAward)}`}>
                           {awardEmoji(dancer.bestAward)} {dancer.bestAward}
                         </span>
+                        {isNewPB && (
+                          <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/30 text-green-300">
+                            🎉 New PB!
+                          </span>
+                        )}
                       </div>
 
                       {/* Meta */}
@@ -229,7 +284,7 @@ export default async function DancersPage() {
                       </div>
 
                       {/* Score bar */}
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 mb-3">
                         <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
                           <div
                             className="h-full rounded-full bg-gradient-to-r from-primary-500 via-accent-400 to-gold-400 transition-all"
@@ -240,18 +295,34 @@ export default async function DancersPage() {
                           {dancer.bestScore} <span className="text-surface-200 font-normal text-xs">/ 300</span>
                         </span>
                       </div>
+
+                      {/* Next level teaser */}
+                      {next && (
+                        <div className="flex items-center gap-1.5 text-xs text-surface-200">
+                          <Zap className="h-3 w-3 text-gold-400 shrink-0" />
+                          <span>
+                            <span className="text-white font-semibold">{next.pointsNeeded} more pts</span>
+                            {" "}to {next.emoji} {next.name}!
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Right stats */}
-                    <div className="shrink-0 text-right space-y-1.5">
+                    <div className="shrink-0 text-right space-y-2">
                       <div className="flex items-center gap-1.5 justify-end text-surface-200">
                         <Calendar className="h-3.5 w-3.5" />
                         <span className="text-xs">{dancer.totalAnalyses} {dancer.totalAnalyses === 1 ? "analysis" : "analyses"}</span>
                       </div>
                       {trend !== null && (
-                        <div className={`flex items-center gap-1 justify-end text-xs font-semibold ${trend > 0 ? "text-green-400" : trend < 0 ? "text-red-400" : "text-surface-200"}`}>
+                        <div className={`flex items-center gap-1 justify-end text-xs font-bold ${trend > 0 ? "text-green-400" : trend < 0 ? "text-red-400" : "text-surface-200"}`}>
                           <TrendingUp className={`h-3.5 w-3.5 ${trend < 0 ? "rotate-180" : ""}`} />
                           {trend > 0 ? `+${trend}` : trend} pts
+                        </div>
+                      )}
+                      {improvePct !== null && improvePct > 0 && (
+                        <div className="text-xs font-semibold text-green-400">
+                          ↑ {improvePct}% growth
                         </div>
                       )}
                       {dancer.latestCompetition && (
@@ -266,7 +337,7 @@ export default async function DancersPage() {
 
             <div className="pt-2 text-center">
               <Link href="/upload" className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-3 text-sm font-semibold hover:bg-white/5 transition-colors">
-                + Upload Another Routine
+                + Analyze Another Routine
               </Link>
             </div>
           </div>
