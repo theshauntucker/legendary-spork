@@ -481,7 +481,7 @@ export default async function DancerSeasonPage({
         </div>
 
         {/* ── Next Award Level Progress ──────────────── */}
-        {next != null && (
+        {next ? (
           <div className="glass rounded-3xl p-6 mb-6 border border-gold-500/20 bg-gold-500/5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -508,7 +508,7 @@ export default async function DancerSeasonPage({
               <span>Goal: {next.threshold}</span>
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* ── Trophy Wall ───────────────────────────── */}
         <div className="glass rounded-3xl p-6 mb-6">
