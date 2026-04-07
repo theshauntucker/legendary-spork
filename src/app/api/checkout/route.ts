@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
           payment_type: "video_analysis",
         }
       : {
-          name: "RoutineX — Single Analysis",
-          description: "1 AI-powered dance routine analysis. Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.",
+          name: "RoutineX — Launch Offer: 2 Analyses for $8.99",
+          description: "BOGO launch offer — get 2 full AI-powered dance routine analyses for $8.99. Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.",
           unit_amount: 899, // $8.99
           payment_type: "single",
         };
