@@ -42,7 +42,7 @@ export default function TermsPage() {
 
           <h2 className="text-lg font-semibold text-white">4. Payments & Refunds</h2>
           <p>
-            Your first analysis is free — DM us on Instagram @routinex.ai to claim it. After that, single analyses are $8.99 USD each, or you can purchase a Competition Pack of 5 analyses for $29.99 USD. All payments are processed through Stripe. Refunds are handled on a case-by-case basis — contact us at the email below.
+            We currently offer a Launch Offer: 2 full analyses for $8.99 USD (buy one, get one free). Single analyses are $8.99 USD each, and the Competition Pack offers 5 analyses for $29.99 USD. All payments are processed through Stripe. Refunds are handled on a case-by-case basis — contact us at the email below.
           </p>
 
           <h2 className="text-lg font-semibold text-white">5. User Content</h2>

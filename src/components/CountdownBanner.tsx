@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { Clock, Zap } from "lucide-react";
 
-// Launch weekend deadline: Monday March 30, 2026 at 11:59:59 PM PT
-const DEADLINE = new Date("2026-03-31T07:59:59Z"); // midnight PT = 7:59:59 AM UTC next day
+// Launch offer deadline: Sunday April 20, 2026 at 11:59:59 PM PT
+const DEADLINE = new Date("2026-04-21T07:59:59Z"); // midnight PT = 7:59:59 AM UTC next day
 
 function pad(n: number) {
   return n.toString().padStart(2, "0");
@@ -46,7 +46,7 @@ export default function CountdownBanner() {
         <div className="flex items-center gap-2 font-semibold">
           <Zap className="h-4 w-4 text-gold-300 shrink-0" />
           <span>
-            Launch Weekend: <span className="text-gold-200">First Analysis FREE</span> + Special Pricing
+            Launch Offer: <span className="text-gold-200">2 Analyses for $8.99</span> — Buy One, Get One Free
           </span>
         </div>
 
@@ -81,7 +81,7 @@ export default function CountdownBanner() {
           href="/signup"
           className="hidden sm:inline-flex items-center gap-1 bg-white text-gray-900 text-xs font-bold rounded-full px-3 py-1 hover:bg-gray-100 transition-colors"
         >
-          Claim Free Analysis
+          Claim Launch Offer
         </a>
       </div>
     </div>
