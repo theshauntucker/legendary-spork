@@ -1,5 +1,5 @@
 # RoutineX — Current Development State
-**Last updated:** March 27, 2026 (Friday, Launch Weekend prep)
+**Last updated:** April 7, 2026
 
 ## Source of Truth
 - **GitHub repo:** github.com/theshauntucker/legendary-spork
@@ -7,58 +7,89 @@
 - **Vercel team:** team_6VhhY3LmjXUw5SaS8V87EPtV
 - **Live domain:** routinex.org
 - **Production branch:** claude/clarify-task-dsVIo
-- **Production commit:** d7a4591 (Fix TypeScript build error in anonymization code)
 
 ## Branches
 | Branch | Status | Purpose |
 |--------|--------|---------|
 | claude/clarify-task-dsVIo | PRODUCTION (live on routinex.org) | Main website code |
-| feature/affiliate-tracking | LOCAL ONLY — needs push | Launch weekend: new pricing, affiliates, countdown timer, scoring fixes |
-| claude/plan-mobile-app-structure-2gH8n | On GitHub (preview only) | Mobile Expo/React Native app |
+| claude/plan-mobile-app-structure-2gH8n | Preview only | Mobile Expo/React Native app |
 
-## Launch Weekend Changes (feature/affiliate-tracking)
-All changes compiled and build-tested. Commit 10892d0.
+---
 
-### What changed:
-1. **Pricing:** FREE first analysis on signup, $8.99 single, $29.99 competition pack (5)
-2. **Affiliate/Referral System:** Full tracking — database tables, API routes, admin dashboard, signup capture, Stripe attribution
-3. **Countdown Timer:** Banner at top of landing page, deadline Monday March 30 midnight PT, auto-hides after
-4. **Scoring Fix:** Removed 3.5% artificial inflation. Prompt rewritten to "encouraging judge" approach — realistic but warm
-5. **Report Quality:** Doubled feedback lengths (4-6 sentences/category), always includes growth areas, actionable training tips
-6. **Free Credit:** Auto-granted on signup via /api/free-credit endpoint
+## 🏆 DANCER SEASON TRACKING — Ready to Deploy (NOT PUSHED YET)
 
-### Files changed (16 total):
-- src/app/admin/AdminClient.tsx (affiliate tab in admin portal)
-- src/app/admin/page.tsx (affiliate data fetching)
-- src/app/api/admin/affiliates/route.ts (NEW — CRUD API)
-- src/app/api/checkout/route.ts (new pricing, referral metadata)
-- src/app/api/free-credit/route.ts (NEW — grants 1 free credit on signup)
-- src/app/api/process/route.ts (scoring + report detail overhaul)
-- src/app/api/referral/route.ts (NEW — records referral code)
-- src/app/api/webhook/route.ts (affiliate revenue attribution)
-- src/app/dashboard/DashboardClient.tsx (new pricing cards)
-- src/app/page.tsx (countdown banner added)
-- src/app/signup/page.tsx (referral code capture, free credit grant)
-- src/components/CountdownBanner.tsx (NEW — launch weekend timer)
-- src/components/Hero.tsx (CTA text + padding for banner)
-- src/components/Navbar.tsx (top offset for banner)
-- src/components/Pricing.tsx (3-column layout with free tier)
-- supabase-affiliates.sql (NEW — database migration)
+All files written locally. Awaiting review + push approval from Shaun.
 
-### Pre-deployment requirements:
-1. Run supabase-affiliates.sql in Supabase SQL editor (creates affiliates table, adds referral columns, creates RPC functions)
-2. Push feature/affiliate-tracking to GitHub
-3. Verify Vercel preview deployment works
-4. Promote to production when ready
+### What was built:
+A full **Season Tracking Portal** for dance moms and dancers to track every score,
+award, and improvement across the entire competition season.
 
-### Rollback plan:
-- Go to Vercel dashboard → Deployments → find dpl_2FhShg5eAxw7wvCMT89ocNbizoCq → Promote to Production
-- Or revert the merge on GitHub — Vercel auto-redeploys
+### New Files
+| File | Purpose |
+|------|---------|
+| `supabase-dancer-tracking.sql` | DB migration — run in Supabase before pushing |
+| `src/app/dancers/page.tsx` | Season Tracker hub — lists all dancers with stats |
+| `src/app/dancers/[dancerName]/page.tsx` | Individual dancer season view — trophy wall, score chart, full competition history |
 
-## Key Architecture Notes
+### Modified Files
+| File | Change |
+|------|--------|
+| `src/app/upload/page.tsx` | Added "Competition Info" section — competition name (with autocomplete) + competition date |
+| `src/app/api/analyze/route.ts` | Saves `competition_name` and `competition_date` to `videos` table |
+| `src/app/dashboard/DashboardClient.tsx` | Added Season Tracker card with trophy icon, shows dancer count |
+
+### Database Changes (supabase-dancer-tracking.sql)
+- `ALTER TABLE videos ADD COLUMN competition_name TEXT`
+- `ALTER TABLE videos ADD COLUMN competition_date DATE`
+- `CREATE TABLE dancers` — optional dancer profiles
+- Performance indexes on `dancer_name`, `competition_name/date`, `analyses.created_at`
+
+### Deployment Steps (when ready)
+1. **Run SQL migration first:** Supabase Dashboard → SQL Editor → paste supabase-dancer-tracking.sql → Run
+2. **Review all changed files** (git diff)
+3. **Commit:** `git add -A && git commit -m "feat: full dancer season tracking system"`
+4. **Push:** `git push origin claude/clarify-task-dsVIo`
+5. Vercel auto-deploys to routinex.org
+
+---
+
+## Feature: Season Tracker — Full Details
+
+### Entry Point
+- Dashboard now shows a gold **Season Tracker** card that links to `/dancers`
+- Shows live count of dancers being tracked
+
+### /dancers — Season Hub
+- Stats: Dancers tracked, Total analyses, Season best score, Styles covered
+- Each dancer card shows: name, studio, age group, styles, best score bar, best award badge, trend (↑+12 pts)
+- Empty state CTA if no analyses yet
+
+### /dancers/[name] — Dancer Season Page
+- **Hero header:** Full name, studio, age group, best award badge, season progress trend
+- **Award Journey strip:** Visual progression e.g. Gold → High Gold → Platinum
+- **Stats grid:** Season best score, average score, total analyses, competitions attended
+- **Score Timeline:** SVG bar chart (no external deps) showing scores across competitions
+- **Category Averages:** Technique, Performance, Choreography, Overall — with color-coded progress bars and labels (🔥 Excellent / ✨ Strong / 📈 Growing / 💪 Focus Area)
+- **Competition History:** Full table (desktop) + cards (mobile) with date, competition, routine, style, score, award, link to full report
+- **Focus for Next Competition:** Top improvement priorities from latest analysis
+- **Actions:** Analyze another routine / View best performance
+
+### Upload Page — Competition Info Section
+- New gold-bordered section: "Competition Info — Tracked in your Season Tracker"
+- Competition Name field with autocomplete (15 popular competitions pre-loaded)
+- Competition Date field (date picker)
+- Helper text explaining why it matters
+
+---
+
+## Architecture Notes
 - Next.js 16 App Router on Vercel
 - Supabase for auth + database + storage
 - Stripe for payments (checkout sessions + webhooks)
-- Claude Vision API (claude-sonnet-4-20250514) for dance analysis
+- Claude Vision API for dance analysis
 - Admin portal at /admin (email-gated)
-- Referral flow: signup captures code → stored in user_credits → passed through Stripe metadata → webhook attributes revenue
+
+## Pricing (current)
+- Single: $8.99 (1 analysis)
+- Pack: $29.99 (5 analyses)
+- BOGO offer active sitewide

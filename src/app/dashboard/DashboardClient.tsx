@@ -16,12 +16,15 @@ import {
   LogOut,
   TrendingUp,
   TrendingDown,
+  Trophy,
+  Star,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface VideoRecord {
   id: string;
   routine_name: string;
+  dancer_name: string | null;
   style: string;
   age_group: string;
   entry_type: string;
@@ -326,6 +329,39 @@ export default function DashboardClient({
             </div>
           </div>
           <ArrowRight className="h-5 w-5 text-surface-200 group-hover:text-white group-hover:translate-x-1 transition-all" />
+        </motion.a>
+
+        {/* Season Tracker CTA */}
+        <motion.a
+          href="/dancers"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="mb-10 flex items-center justify-between rounded-2xl p-6 hover:border-gold-500/40 transition-all cursor-pointer group border border-gold-500/20 bg-gradient-to-r from-gold-500/8 via-accent-500/5 to-primary-600/8"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-gold-500/30 to-accent-500/30">
+              <Trophy className="h-6 w-6 text-gold-400" />
+            </div>
+            <div>
+              <p className="font-bold flex items-center gap-2">
+                Season Tracker
+                <span className="text-[10px] font-semibold uppercase tracking-wider bg-gold-500/20 text-gold-300 px-2 py-0.5 rounded-full">New</span>
+              </p>
+              <p className="text-sm text-surface-200">
+                Every score, every award, every competition — all in one place 🏆
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {videos.filter(v => v.analyses?.length > 0 && v.dancer_name).length > 0 && (
+              <span className="hidden sm:flex items-center gap-1 text-xs text-gold-300 font-medium">
+                <Star className="h-3 w-3" />
+                {new Set(videos.filter(v => v.analyses?.length > 0 && v.dancer_name).map(v => v.dancer_name)).size} dancer{new Set(videos.filter(v => v.analyses?.length > 0 && v.dancer_name).map(v => v.dancer_name)).size !== 1 ? "s" : ""} tracked
+              </span>
+            )}
+            <ArrowRight className="h-5 w-5 text-gold-400 group-hover:text-gold-300 group-hover:translate-x-1 transition-all" />
+          </div>
         </motion.a>
 
         {/* Your Routines — Grouped by routine_name */}
