@@ -40,7 +40,7 @@ export default function Hero() {
             <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500" />
           </span>
           <span className="text-sm text-primary-200">
-            Now Live — Start Analyzing Today
+            For competitive dancers, dance moms &amp; studio owners
           </span>
         </motion.div>
 
@@ -51,12 +51,8 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] font-[family-name:var(--font-display)]"
         >
-          Know What Judges{" "}
-          <span className="gradient-text">Will Say</span>
-          <br />
-          <span className="text-3xl sm:text-4xl lg:text-5xl font-bold text-surface-200 mt-2 block">
-            Before Competition Day
-          </span>
+          Score Every Routine.{" "}
+          <span className="gradient-text">Track the Whole Season.</span>
         </motion.h1>
 
         {/* Subheadline */}
@@ -66,11 +62,9 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mx-auto mt-6 max-w-2xl text-lg sm:text-xl text-surface-200 leading-relaxed"
         >
-          AI-powered scoring trained on real judging rubrics from Star Power, JUMP, UCA &amp; more.{" "}
-          <span className="text-white font-semibold">
-            Get a full scorecard, timestamped notes, and an improvement roadmap
-          </span>{" "}
-          — in under 5 minutes.
+          Upload any routine and get{" "}
+          <span className="text-white font-semibold">competition-standard scoring, timestamped judge notes, and a Coach&apos;s Playbook</span>{" "}
+          in under 5 minutes — then track every re-submission all season long as your dancer improves.
         </motion.p>
 
         {/* Trust badges */}
@@ -82,15 +76,15 @@ export default function Hero() {
         >
           <div className="flex items-center gap-1.5">
             <Shield className="h-4 w-4 text-primary-400" />
-            <span>Competition-Calibrated</span>
+            <span>Competition-Calibrated Scoring</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Zap className="h-4 w-4 text-accent-400" />
-            <span>Results in Minutes</span>
+            <span>Results in Under 5 Minutes</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Trophy className="h-4 w-4 text-gold-400" />
-            <span>Used by Studio Owners</span>
+            <span>Full Season Progress Tracking</span>
           </div>
         </motion.div>
 

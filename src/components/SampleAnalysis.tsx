@@ -430,13 +430,13 @@ export default function SampleAnalysis() {
               Want this for your dancer&apos;s routine?
             </p>
             <p className="text-sm text-surface-200 mt-1 mb-4">
-              Sign up and upload your first routine to get this level of detail.
+              Your first full analysis is completely free. No credit card required.
             </p>
             <a
               href="/signup"
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-6 py-3 font-semibold text-white hover:opacity-90 transition-opacity"
             >
-              Get 2 Analyses — $8.99
+              Try It Free — Start Now
               <ChevronRight className="h-4 w-4" />
             </a>
           </div>
