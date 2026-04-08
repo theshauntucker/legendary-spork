@@ -6,7 +6,6 @@ import { Play, ArrowRight, Users, Star, Shield, Zap, Trophy } from "lucide-react
 export default function Hero() {
   return (
     <section className="relative min-h-screen overflow-hidden pt-[130px]">
-      {/* Background effects */}
       <div className="absolute inset-0">
         <div className="absolute top-0 right-0 w-80 h-80 bg-primary-400/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent-600/20 rounded-full blur-3xl" />
@@ -16,7 +15,6 @@ export default function Hero() {
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 pb-20 text-center">
-        {/* Brand name */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -28,7 +26,6 @@ export default function Hero() {
           </h2>
         </motion.div>
 
-        {/* Launch badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -40,41 +37,31 @@ export default function Hero() {
             <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500" />
           </span>
           <span className="text-sm text-primary-200">
-            Now Live — Start Analyzing Today
+            For competitive dancers, dance moms &amp; studio owners
           </span>
         </motion.div>
 
-        {/* Main headline */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
           className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] font-[family-name:var(--font-display)]"
         >
-          AI-Powered{" "}
-          <span className="gradient-text">Dance Scoring</span>
-          <br />
-          <span className="text-3xl sm:text-4xl lg:text-5xl font-bold text-surface-200 mt-2 block">
-            for Competitive Dancers
-          </span>
+          Score Every Routine.{" "}
+          <span className="gradient-text">Track the Whole Season.</span>
         </motion.h1>
 
-        {/* Subheadline */}
         <motion.p
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mx-auto mt-6 max-w-2xl text-lg sm:text-xl text-surface-200 leading-relaxed"
         >
-          Upload your routine and get{" "}
-          <span className="text-white font-semibold">
-            competition-standard scoring
-          </span>{" "}
-          with detailed, actionable feedback — powered by AI trained on
-          real judging rubrics from Star Power, JUMP, UCA &amp; more.
+          Upload any routine and get{" "}
+          <span className="text-white font-semibold">competition-standard scoring, timestamped judge notes, and a Coach&apos;s Playbook</span>{" "}
+          in under 5 minutes — then track every re-submission all season long as your dancer improves.
         </motion.p>
 
-        {/* Trust badges */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -83,26 +70,24 @@ export default function Hero() {
         >
           <div className="flex items-center gap-1.5">
             <Shield className="h-4 w-4 text-primary-400" />
-            <span>Competition-Calibrated</span>
+            <span>Competition-Calibrated Scoring</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Zap className="h-4 w-4 text-accent-400" />
-            <span>Results in Minutes</span>
+            <span>Results in Under 5 Minutes</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Trophy className="h-4 w-4 text-gold-400" />
-            <span>Used by Studio Owners</span>
+            <span>Full Season Progress Tracking</span>
           </div>
         </motion.div>
 
-        {/* CTA Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          {/* BOGO CTA */}
           <div className="flex flex-col items-center gap-1">
             <a
               href="/signup"
@@ -113,8 +98,6 @@ export default function Hero() {
             </a>
             <span className="text-xs text-gold-300 font-semibold">⚡ Buy One, Get One Free — Limited Time</span>
           </div>
-
-          {/* Pack CTA */}
           <div className="flex flex-col items-center gap-1">
             <a
               href="/signup"
@@ -126,13 +109,11 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        {/* Small login link for returning users — not a CTA */}
         <p className="mt-2 text-xs text-surface-200">
           Already have an account?{" "}
           <a href="/login" className="underline hover:text-white transition-colors">Log in</a>
         </p>
 
-        {/* Privacy trust badge — DIRECTLY below buttons, impossible to miss */}
         <div className="mt-6 mx-auto max-w-2xl">
           <div className="bg-white/10 border border-gold-400/50 rounded-2xl px-6 py-4 text-center">
             <p className="text-base font-bold text-white mb-1">🔒 Your video never leaves your phone.</p>
@@ -140,23 +121,18 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* See Sample link */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.4 }}
           className="mt-4"
         >
-          <a
-            href="#sample-analysis"
-            className="inline-flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors"
-          >
+          <a href="#sample-analysis" className="inline-flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors">
             <Play className="h-4 w-4 text-primary-400" />
             See a sample analysis first
           </a>
         </motion.div>
 
-        {/* Social proof */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -165,29 +141,19 @@ export default function Hero() {
         >
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-primary-400" />
-            <span>
-              
-            </span>
+            <span>Early access — join our first users</span>
           </div>
           <div className="hidden sm:block h-4 w-px bg-surface-800" />
           <div className="flex items-center gap-1">
             {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className="h-4 w-4 fill-gold-400 text-gold-400"
-              />
+              <Star key={i} className="h-4 w-4 fill-gold-400 text-gold-400" />
             ))}
             <span className="ml-1">from studio owners nationwide</span>
           </div>
           <div className="hidden sm:block h-4 w-px bg-surface-800" />
-          <div>
-            Works with{" "}
-            <span className="text-white font-semibold">every</span> major
-            competition
-          </div>
+          <div>Works with <span className="text-white font-semibold">every</span> major competition</div>
         </motion.div>
 
-        {/* Floating analysis preview card */}
         <motion.div
           initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
@@ -197,12 +163,8 @@ export default function Hero() {
           <div className="glass rounded-2xl p-6 sm:p-8 text-left">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-xs text-primary-400 font-semibold uppercase tracking-wider">
-                  Sample Analysis Preview
-                </p>
-                <p className="text-lg font-bold mt-1">
-                  Teen Jazz Solo — &quot;Into the Light&quot;
-                </p>
+                <p className="text-xs text-primary-400 font-semibold uppercase tracking-wider">Sample Analysis Preview</p>
+                <p className="text-lg font-bold mt-1">Teen Jazz Solo — &quot;Into the Light&quot;</p>
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold gradient-text">274</p>
@@ -216,40 +178,22 @@ export default function Hero() {
                 { label: "Choreography", score: 18.3, max: 20 },
                 { label: "Overall", score: 9.0, max: 10 },
               ].map((cat) => (
-                <div
-                  key={cat.label}
-                  className="rounded-xl bg-white/5 p-3 text-center"
-                >
+                <div key={cat.label} className="rounded-xl bg-white/5 p-3 text-center">
                   <p className="text-xs text-surface-200">{cat.label}</p>
-                  <p className="text-xl font-bold text-white mt-1">
-                    {cat.score}
-                  </p>
+                  <p className="text-xl font-bold text-white mt-1">{cat.score}</p>
                   <div className="mt-2 h-1.5 rounded-full bg-surface-800 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-primary-500 to-accent-400"
-                      style={{
-                        width: `${(cat.score / cat.max) * 100}%`,
-                      }}
-                    />
+                    <div className="h-full rounded-full bg-gradient-to-r from-primary-500 to-accent-400" style={{ width: `${(cat.score / cat.max) * 100}%` }} />
                   </div>
-                  <p className="text-[10px] text-surface-200 mt-1">
-                    / {cat.max}
-                  </p>
+                  <p className="text-[10px] text-surface-200 mt-1">/ {cat.max}</p>
                 </div>
               ))}
             </div>
             <p className="mt-4 text-xs text-center text-surface-200">
-              <a
-                href="#sample-analysis"
-                className="text-primary-400 hover:underline"
-              >
-                See the full detailed analysis below &darr;
-              </a>
+              <a href="#sample-analysis" className="text-primary-400 hover:underline">See the full detailed analysis below &darr;</a>
             </p>
           </div>
         </motion.div>
       </div>
-
     </section>
   );
 }

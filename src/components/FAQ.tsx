@@ -35,7 +35,7 @@ const faqs = [
   },
   {
     q: "What do I get when I sign up?",
-    a: "When you sign up, you automatically get your first analysis FREE. After that, single analyses are $8.99 each, or grab our Competition Pack — 5 analyses for $29.99 (just $6 each).",
+    a: "Sign up and grab our Launch Offer: 2 full AI-powered analyses for just $8.99 — that's buy one, get one free. Or go big with the Competition Pack — 5 analyses for $29.99 (just $6 each).",
   },
   {
     q: "Can I get a refund?",
