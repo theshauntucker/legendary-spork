@@ -26,6 +26,8 @@
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "framer-motion": "^12.37.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "lucide-react": "^0.577.0",
     "next": "^16.1.7",
     "postcss": "^8.5.8",
@@ -33,9 +35,7 @@
     "react-dom": "^19.2.4",
     "resend": "^6.9.4",
     "stripe": "^20.4.1",
-    "tailwindcss": "^4.2.1",
-    "html2canvas": "^1.4.1",
-    "jspdf": "^4.2.1"
+    "tailwindcss": "^4.2.1"
   },
   "devDependencies": {
     "typescript": "5.9.3"
