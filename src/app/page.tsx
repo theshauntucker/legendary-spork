@@ -11,6 +11,7 @@ import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
 import PrivacyTrust from "@/components/PrivacyTrust";
 import Footer from "@/components/Footer";
+import StickyBottomCTA from "@/components/StickyBottomCTA";
 
 export const metadata: Metadata = {
   alternates: {
@@ -32,6 +33,7 @@ export default function Home() {
       <Testimonials />
       <FAQ />
       <Footer />
+      <StickyBottomCTA />
     </main>
   );
 }

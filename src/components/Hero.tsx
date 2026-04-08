@@ -5,7 +5,7 @@ import { Play, ArrowRight, Users, Star, Shield, Zap, Trophy } from "lucide-react
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-28">
+    <section className="relative min-h-screen overflow-hidden pt-[130px]">
       {/* Background effects */}
       <div className="absolute inset-0">
         <div className="absolute top-0 right-0 w-80 h-80 bg-primary-400/20 rounded-full blur-3xl" />
@@ -15,7 +15,7 @@ export default function Hero() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gold-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0.5s' }} />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 text-center">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 pb-20 text-center">
         {/* Brand name */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -51,11 +51,11 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] font-[family-name:var(--font-display)]"
         >
-          AI-Powered{" "}
-          <span className="gradient-text">Dance Scoring</span>
+          Know What Judges{" "}
+          <span className="gradient-text">Will Say</span>
           <br />
           <span className="text-3xl sm:text-4xl lg:text-5xl font-bold text-surface-200 mt-2 block">
-            for Competitive Dancers
+            Before Competition Day
           </span>
         </motion.h1>
 
@@ -66,12 +66,11 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mx-auto mt-6 max-w-2xl text-lg sm:text-xl text-surface-200 leading-relaxed"
         >
-          Upload your routine and get{" "}
+          AI-powered scoring trained on real judging rubrics from Star Power, JUMP, UCA &amp; more.{" "}
           <span className="text-white font-semibold">
-            competition-standard scoring
+            Get a full scorecard, timestamped notes, and an improvement roadmap
           </span>{" "}
-          with detailed, actionable feedback — powered by AI trained on
-          real judging rubrics from Star Power, JUMP, UCA &amp; more.
+          — in under 5 minutes.
         </motion.p>
 
         {/* Trust badges */}
@@ -161,13 +160,11 @@ export default function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="mt-16 flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-surface-200"
+          className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-surface-200"
         >
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-primary-400" />
-            <span>
-              
-            </span>
+            <span>500+ routines analyzed</span>
           </div>
           <div className="hidden sm:block h-4 w-px bg-surface-800" />
           <div className="flex items-center gap-1">
@@ -192,7 +189,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          className="mt-16 mx-auto max-w-4xl"
+          className="mt-8 mx-auto max-w-4xl"
         >
           <div className="glass rounded-2xl p-6 sm:p-8 text-left">
             <div className="flex items-center justify-between mb-4">
