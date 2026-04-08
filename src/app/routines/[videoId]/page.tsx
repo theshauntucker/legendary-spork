@@ -17,7 +17,7 @@ export default async function RoutineProgressPage({
   // Get the anchor video to find the routine name
   const { data: anchorVideo } = await serviceClient
     .from("videos")
-    .select("id, routine_name, style, entry_type, age_group, user_id")
+    .select("id, routine_name, style, entry_type, age_group, user_id, choreographer")
     .eq("id", videoId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -62,6 +62,7 @@ export default async function RoutineProgressPage({
       style={anchorVideo.style}
       entryType={anchorVideo.entry_type}
       ageGroup={anchorVideo.age_group}
+      choreographer={anchorVideo.choreographer ?? undefined}
       submissions={submissions.map((s) => ({
         videoId: s.video.id,
         date: s.video.created_at,

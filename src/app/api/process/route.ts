@@ -20,13 +20,28 @@ interface PreprocessingMetadata {
   frames: Array<{ timestamp: number; label: string; path: string }>;
 }
 
-// Previous analysis context for routine tracking
+// Full routine history for progression-aware analysis
+interface SubmissionHistory {
+  submissionNumber: number;
+  totalScore: number;
+  awardLevel: string;
+  analyzedAt: string;
+  improvementPriorities: Array<{ priority: number; item: string }>;
+}
+
 interface ParentAnalysisContext {
+  // Most recent submission data (for score boost baseline)
   totalScore: number;
   awardLevel: string;
   analyzedAt: string;
   judgeScores: Array<{ category: string; avg: number; max: number }>;
   improvementPriorities: Array<{ priority: number; item: string }>;
+  // Full history across all submissions
+  allSubmissions: SubmissionHistory[];
+  totalSubmissions: number;
+  firstScore: number;
+  bestScore: number;
+  totalPointsGained: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -75,37 +90,69 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No frames available" }, { status: 400 });
     }
 
-    // ── Fetch parent analysis context if this is a tracked routine ────────────
+    // ── Fetch FULL routine history for progression-aware analysis ──────────────
     let parentContext: ParentAnalysisContext | null = null;
     if (parentVideoId) {
       try {
-        const { data: parentAnalysis } = await serviceClient
-          .from("analyses")
-          .select("total_score, award_level, judge_scores, improvement_priorities, created_at")
-          .eq("video_id", parentVideoId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        // Find all analyzed videos with the same routine name for this user
+        const { data: siblingVideos } = await serviceClient
+          .from("videos")
+          .select("id, created_at")
+          .eq("user_id", userId)
+          .eq("routine_name", video.routine_name)
+          .eq("status", "analyzed")
+          .neq("id", videoId)
+          .order("created_at", { ascending: true });
 
-        if (parentAnalysis) {
-          parentContext = {
-            totalScore: parentAnalysis.total_score,
-            awardLevel: parentAnalysis.award_level,
-            analyzedAt: new Date(parentAnalysis.created_at).toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            }),
-            judgeScores: (parentAnalysis.judge_scores as Array<{ category: string; avg: number; max: number }>)
-              .map(s => ({ category: s.category, avg: s.avg, max: s.max })),
-            improvementPriorities: (parentAnalysis.improvement_priorities as Array<{ priority: number; item: string }>)
-              .slice(0, 3)
-              .map(p => ({ priority: p.priority, item: p.item })),
-          };
+        if (siblingVideos && siblingVideos.length > 0) {
+          const siblingIds = siblingVideos.map(v => v.id);
+
+          // Fetch all analyses for sibling videos
+          const { data: allAnalyses } = await serviceClient
+            .from("analyses")
+            .select("video_id, total_score, award_level, judge_scores, improvement_priorities, created_at")
+            .in("video_id", siblingIds)
+            .order("created_at", { ascending: true });
+
+          if (allAnalyses && allAnalyses.length > 0) {
+            const latestAnalysis = allAnalyses[allAnalyses.length - 1];
+            const firstAnalysis = allAnalyses[0];
+            const bestScore = Math.max(...allAnalyses.map(a => a.total_score));
+
+            const allSubmissions: SubmissionHistory[] = allAnalyses.map((a, idx) => ({
+              submissionNumber: idx + 1,
+              totalScore: a.total_score,
+              awardLevel: a.award_level,
+              analyzedAt: new Date(a.created_at).toLocaleDateString("en-US", {
+                month: "long", day: "numeric", year: "numeric",
+              }),
+              improvementPriorities: (a.improvement_priorities as Array<{ priority: number; item: string }>)
+                .slice(0, 3)
+                .map(p => ({ priority: p.priority, item: p.item })),
+            }));
+
+            parentContext = {
+              totalScore: latestAnalysis.total_score,
+              awardLevel: latestAnalysis.award_level,
+              analyzedAt: new Date(latestAnalysis.created_at).toLocaleDateString("en-US", {
+                month: "long", day: "numeric", year: "numeric",
+              }),
+              judgeScores: (latestAnalysis.judge_scores as Array<{ category: string; avg: number; max: number }>)
+                .map(s => ({ category: s.category, avg: s.avg, max: s.max })),
+              improvementPriorities: (latestAnalysis.improvement_priorities as Array<{ priority: number; item: string }>)
+                .slice(0, 3)
+                .map(p => ({ priority: p.priority, item: p.item })),
+              allSubmissions,
+              totalSubmissions: allAnalyses.length,
+              firstScore: firstAnalysis.total_score,
+              bestScore,
+              totalPointsGained: latestAnalysis.total_score - firstAnalysis.total_score,
+            };
+          }
         }
       } catch (parentErr) {
         // Non-fatal — proceed without parent context if fetch fails
-        console.warn("Could not fetch parent analysis context:", parentErr);
+        console.warn("Could not fetch routine history:", parentErr);
       }
     }
 
@@ -141,12 +188,13 @@ export async function POST(request: NextRequest) {
     // When a dancer comes back with the same routine, we guarantee their score
     // improves to show progress and build confidence — regardless of AI output.
     if (parentContext && typeof analysis.totalScore === "number") {
-      const minProgress = 2;   // Always at least 2 pts above previous score
+      const minProgress = 2;   // Always at least 2 pts above the best ever score
       const extraBoost = Math.floor(Math.random() * 7) + 2; // +2 to +8 extra
+      // Use bestScore as baseline — never let a new submission score below their best
       const targetScore = Math.min(
         298,
         Math.max(
-          parentContext.totalScore + minProgress,
+          parentContext.bestScore + minProgress,
           analysis.totalScore + extraBoost
         )
       );
@@ -359,27 +407,32 @@ async function analyzeWithClaude(
   const routineHistorySection = parentContext
     ? `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ROUTINE HISTORY — THIS IS A RE-SUBMISSION
+ROUTINE HISTORY — SUBMISSION #${parentContext.totalSubmissions + 1}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-This dancer has submitted this routine for analysis before. They came back — that commitment deserves to be rewarded. Here is their previous result:
+This dancer has been submitting this routine for ongoing coaching. They have come back ${parentContext.totalSubmissions} time${parentContext.totalSubmissions !== 1 ? "s" : ""} — that commitment and dedication deserves to be celebrated and rewarded.
 
-Previous Analysis Date: ${parentContext.analyzedAt}
-Previous Total Score: ${parentContext.totalScore}/300 (${parentContext.awardLevel})
+FULL PROGRESSION HISTORY:
+${parentContext.allSubmissions.map(s => `  Submission ${s.submissionNumber} (${s.analyzedAt}): ${s.totalScore}/300 — ${s.awardLevel}
+    Working on: ${s.improvementPriorities.map(p => p.item).join(", ")}`).join("\n")}
 
-Previous Category Scores:
-${parentContext.judgeScores.map(s => `  - ${s.category}: ${s.avg}/${s.max}`).join("\n")}
+TRAJECTORY SUMMARY:
+  • Started at: ${parentContext.firstScore}/300 (${parentContext.allSubmissions[0]?.awardLevel ?? ""})
+  • Best score: ${parentContext.bestScore}/300
+  • Total improvement: +${parentContext.totalPointsGained} points over ${parentContext.totalSubmissions} submission${parentContext.totalSubmissions !== 1 ? "s" : ""}
 
-Areas the dancer was working on since last submission:
-${parentContext.improvementPriorities.map(p => `  ${p.priority}. ${p.item}`).join("\n")}
+Most Recent Analysis (${parentContext.analyzedAt}):
+  Score: ${parentContext.totalScore}/300 (${parentContext.awardLevel})
+  Category breakdown: ${parentContext.judgeScores.map(s => `${s.category} ${s.avg}/${s.max}`).join(", ")}
+  Was working on: ${parentContext.improvementPriorities.map(p => `${p.priority}. ${p.item}`).join("; ")}
 
-YOUR TASK FOR THIS RE-SUBMISSION:
-1. Be generous. This dancer put in the work to come back and re-submit. Score higher than you would for a first-time submission — reward their commitment and dedication.
-2. In your feedback for EACH category, explicitly reference the progression. Highlight what has improved, celebrate the wins, and frame remaining areas as exciting next steps.
-3. Frame improvement priorities as the NEXT STEP in their ongoing development journey — not a fresh critique. Use language like "building on your strong foundation..." and "your next breakthrough..."
-4. Give scores that show clear improvement over the previous submission. The dancer and their parent are watching their progress arc — make them feel proud of the work they've put in.
-5. The dancer and their parent will read BOTH reports side-by-side — this report should feel like continuity from a coach who has been watching them grow and is excited about where they are headed.
+YOUR TASK FOR THIS SUBMISSION #${parentContext.totalSubmissions + 1}:
+1. You are their ongoing coach who has watched every submission. Write feedback that references this ENTIRE journey, not just the last one.
+2. Be generous and encouraging — this dancer has proven their dedication by coming back repeatedly. Score higher than you would for a first-time submission.
+3. In each category's feedback, speak to specific improvements you see over the course of their ${parentContext.totalSubmissions}-submission arc. Name specific things from their history.
+4. Frame improvement priorities as the NEXT chapter of their growth — they've already come so far.
+5. The dancer and their parent see the full history side-by-side — make this report feel like the continuation of an ongoing coaching relationship.
 
-This dancer came back. Reward that with encouragement, higher scores, and coaching language that builds confidence.
+This dancer has been putting in the work for ${parentContext.totalSubmissions} submission${parentContext.totalSubmissions !== 1 ? "s" : ""}. Every time you analyze them, acknowledge that arc. Make them proud of the journey.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `
     : "";

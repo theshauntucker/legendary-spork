@@ -12,6 +12,7 @@ interface RoutineMetadata {
   routineName: string;
   dancerName?: string;
   studioName?: string;
+  choreographer?: string;
   competitionName?: string;
   competitionDate?: string;
   ageGroup: string;
@@ -68,6 +69,7 @@ export async function POST(request: NextRequest) {
         routine_name: metadata.routineName,
         dancer_name: metadata.dancerName || null,
         studio_name: metadata.studioName || null,
+        choreographer: metadata.choreographer || null,
         competition_name: metadata.competitionName || null,
         competition_date: parsedCompDate,
         age_group: metadata.ageGroup,

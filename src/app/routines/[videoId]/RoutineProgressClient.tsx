@@ -85,6 +85,7 @@ interface Props {
   style: string;
   entryType: string;
   ageGroup: string;
+  choreographer?: string;
   submissions: Submission[];
 }
 
@@ -295,7 +296,7 @@ function JudgeTipCard({ tip, index }: { tip: string; index: number }) {
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
-export default function RoutineProgressClient({ routineName, style, entryType, ageGroup, submissions }: Props) {
+export default function RoutineProgressClient({ routineName, style, entryType, ageGroup, choreographer, submissions }: Props) {
   const latest = submissions[submissions.length - 1];
   const first = submissions[0];
   const prev = submissions.length > 1 ? submissions[submissions.length - 2] : null;
@@ -343,6 +344,7 @@ export default function RoutineProgressClient({ routineName, style, entryType, a
               </h1>
               <p className="text-surface-200 mt-1 text-sm">
                 {style} · {entryType} · {ageGroup} · {submissions.length} submission{submissions.length !== 1 ? "s" : ""}
+                {choreographer && <span className="text-surface-200"> · Choreo: <span className="text-white font-medium">{choreographer}</span></span>}
               </p>
             </div>
             <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${award.bg} ${award.border}`}>

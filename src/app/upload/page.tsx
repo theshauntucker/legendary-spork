@@ -44,6 +44,7 @@ export default function UploadPage() {
   const [entryType, setEntryType] = useState("");
   const [dancerName, setDancerName] = useState("");
   const [studioName, setStudioName] = useState("");
+  const [choreographer, setChoreographer] = useState("");
   const [competitionName, setCompetitionName] = useState("");
   const [competitionDate, setCompetitionDate] = useState("");
   const [showCompSuggestions, setShowCompSuggestions] = useState(false);
@@ -126,6 +127,7 @@ export default function UploadPage() {
           routineName,
           dancerName: dancerName || undefined,
           studioName: studioName || undefined,
+          choreographer: choreographer || undefined,
           competitionName: competitionName || undefined,
           competitionDate: competitionDate || undefined,
           ageGroup, style, entryType,
@@ -308,6 +310,13 @@ export default function UploadPage() {
             <label className="block text-sm font-medium mb-2">Studio Name</label>
             <input type="text" value={studioName} onChange={(e) => setStudioName(e.target.value)}
               placeholder="e.g., Elite Dance Academy" disabled={isProcessing}
+              className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors disabled:opacity-50" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Choreographer</label>
+            <input type="text" value={choreographer} onChange={(e) => setChoreographer(e.target.value)}
+              placeholder="e.g., Ms. Sarah, John Kim" disabled={isProcessing}
               className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors disabled:opacity-50" />
           </div>
 
