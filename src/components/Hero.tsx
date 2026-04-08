@@ -164,7 +164,7 @@ export default function Hero() {
         >
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-primary-400" />
-            <span>500+ routines analyzed</span>
+            <span>Early access — join our first users</span>
           </div>
           <div className="hidden sm:block h-4 w-px bg-surface-800" />
           <div className="flex items-center gap-1">

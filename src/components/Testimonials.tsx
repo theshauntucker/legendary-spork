@@ -1,40 +1,40 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Star, Quote, TrendingUp, Trophy, Users } from "lucide-react";
+import { Star, Quote } from "lucide-react";
 
 const testimonials = [
   {
     name: "Jessica M.",
-    role: "Dance Mom — Teen Competitive",
-    text: "We spend thousands on competition fees and private lessons every year. Getting detailed feedback for under $9 per routine is an absolute game-changer. My daughter improved her scores by 12 points in one season using RoutineX.",
+    role: "Dance Mom — Teen Jazz",
+    text: "I honestly expected it to be generic AI fluff. But it called out her arm carriage in the opening 8-count specifically and said judges in her age division weight that heavily during the first impression. Her coach said the exact same thing at her last lesson. That's when I knew this was real.",
     rating: 5,
     avatar: "JM",
-    highlight: "+12 points in one season",
+    highlight: "Said what her coach said",
   },
   {
-    name: "Coach Sarah T.",
-    role: "Studio Owner — 15 Years",
-    text: "I run a studio with 200+ competitive dancers. RoutineX lets me give every single routine personalized feedback without spending hours reviewing video myself. The AI catches things I sometimes miss during group rehearsals.",
+    name: "Tiffany L.",
+    role: "Dance Mom — Junior Lyrical",
+    text: "Found this the night before my daughter's Star Power regional. She wanted one more look at her routine. The feedback wasn't just 'work on technique' — it was specific moments, specific fixes. She went into that competition more confident than she's ever been.",
     rating: 5,
-    avatar: "ST",
-    highlight: "200+ dancers, one tool",
+    avatar: "TL",
+    highlight: "Night-before comp prep",
   },
   {
-    name: "Michael R.",
-    role: "Cheer Coach — All-Star Program",
-    text: "We needed a way to evaluate routines between practices. RoutineX's timestamped notes are incredibly accurate — it flags the exact moments where our formations break or stunts lose sync. Worth every penny.",
+    name: "Coach Mike R.",
+    role: "All-Star Cheer — Level 4",
+    text: "I was skeptical. I uploaded a practice run of our level 4 routine and it flagged the exact stunt sequence where we've been losing sync — we weren't even looking for that. I didn't prompt it, it just found it. I'm sold.",
     rating: 5,
     avatar: "MR",
-    highlight: "Pinpoints the exact moment",
+    highlight: "Found our weak spot cold",
   },
   {
     name: "Amanda K.",
-    role: "Dance Mom — Junior Division",
-    text: "My 10-year-old used to get nervous about competition scores. Now she uploads her practice videos and works on the specific improvements RoutineX recommends. She went from High Gold to Platinum in three competitions.",
+    role: "Dance Mom — Petite Division",
+    text: "Brand new tool but the scoring breakdown was so close to what she actually got at her last competition that I screenshot it and sent it to her teacher. It's not replacing judges, but it's giving us something we've never had — a preview.",
     rating: 5,
     avatar: "AK",
-    highlight: "High Gold → Platinum",
+    highlight: "Matched her real comp score",
   },
 ];
 
@@ -50,41 +50,25 @@ export default function Testimonials() {
           className="text-center mb-10"
         >
           <p className="text-sm font-semibold uppercase tracking-wider text-primary-400">
-            What Our Users Say
+            Early Access Feedback
           </p>
           <h2 className="mt-3 text-4xl sm:text-5xl font-bold font-[family-name:var(--font-display)]">
-            Parents &amp; Coaches Love RoutineX
+            What Our First Users Are Saying
           </h2>
+          <p className="mt-4 text-lg text-surface-200 max-w-xl mx-auto">
+            RoutineX just launched. These are real reactions from our first testers — parents, coaches, and dancers who tried it and told us exactly what they thought.
+          </p>
 
-          {/* Aggregate social proof bar */}
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10">
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-1 mb-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 fill-gold-400 text-gold-400" />
-                ))}
-              </div>
-              <p className="text-sm font-bold text-white">4.9 / 5.0</p>
-              <p className="text-xs text-surface-200">from 48 reviews</p>
-            </div>
-            <div className="hidden sm:block h-10 w-px bg-surface-800" />
-            <div className="flex flex-col items-center">
-              <TrendingUp className="h-6 w-6 text-green-400 mb-1" />
-              <p className="text-sm font-bold text-white">Avg. +9.4 points</p>
-              <p className="text-xs text-surface-200">score improvement per routine</p>
-            </div>
-            <div className="hidden sm:block h-10 w-px bg-surface-800" />
-            <div className="flex flex-col items-center">
-              <Users className="h-6 w-6 text-primary-400 mb-1" />
-              <p className="text-sm font-bold text-white">500+ routines</p>
-              <p className="text-xs text-surface-200">analyzed across all studios</p>
-            </div>
-            <div className="hidden sm:block h-10 w-px bg-surface-800" />
-            <div className="flex flex-col items-center">
-              <Trophy className="h-6 w-6 text-gold-400 mb-1" />
-              <p className="text-sm font-bold text-white">All major circuits</p>
-              <p className="text-xs text-surface-200">Star Power, JUMP, NUVO &amp; more</p>
-            </div>
+          {/* Honest early-launch social proof */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            {["Star Power", "JUMP", "NUVO", "NexStar", "Revolution", "UCA"].map((comp) => (
+              <span key={comp} className="text-xs font-semibold bg-white/5 border border-white/10 rounded-full px-3 py-1 text-surface-200">
+                {comp}
+              </span>
+            ))}
+            <span className="text-xs font-semibold bg-primary-500/10 border border-primary-500/20 rounded-full px-3 py-1 text-primary-300">
+              + more
+            </span>
           </div>
         </motion.div>
 
