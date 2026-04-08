@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     const isBeta = paymentType === "beta_access";
     const isPack = paymentType === "video_analysis";
     const isSingle = paymentType === "single";
-    const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : 1;
+    const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : isSingle ? 2 : 1;
 
     const serviceClient = await createServiceClient();
 

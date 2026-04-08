@@ -59,7 +59,7 @@ export default function SuccessClient({ sessionId }: { sessionId?: string }) {
             <div>
               <p className="font-medium text-sm">RoutineX Member</p>
               <p className="text-xs text-surface-200">
-                Ready to upload? Head to your dashboard and use your 1 analysis credit.
+                Ready to upload? Head to your dashboard and use your 2 BOGO analysis credits.
               </p>
             </div>
           </div>

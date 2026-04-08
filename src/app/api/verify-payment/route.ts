@@ -54,8 +54,9 @@ export async function POST(request: NextRequest) {
     const referralCode = session.metadata?.referral_code || null;
     const isBeta = paymentType === "beta_access";
     const isPack = paymentType === "video_analysis";
+    const isSingle = paymentType === "single";
     // single = 1 credit, pack = 5 credits, beta = BETA_CREDITS
-    const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : 1;
+    const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : isSingle ? 2 : 1;
     const amountFallback = isPack ? 2999 : isBeta ? 999 : 899;
 
     // Try to record payment (may already exist from webhook — that's fine)
