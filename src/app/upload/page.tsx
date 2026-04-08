@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload, Video, X, Sparkles, ArrowRight, CheckCircle, Loader2,
-  Music, Users, ImageIcon, AlertCircle, RotateCcw, Trophy, Calendar,
+  Music, Users, ImageIcon, AlertCircle, RotateCcw, Trophy, Calendar, Link,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import UploadTrustBadge from "@/components/UploadTrustBadge";
@@ -49,6 +50,32 @@ export default function UploadPage() {
   const [competitionDate, setCompetitionDate] = useState("");
   const [showCompSuggestions, setShowCompSuggestions] = useState(false);
   const [parentConsent, setParentConsent] = useState(false);
+  const [parentVideoId, setParentVideoId] = useState<string | null>(null);
+  const [isLinkedResubmission, setIsLinkedResubmission] = useState(false);
+  const searchParams = useSearchParams();
+
+  // Pre-fill form from URL params when arriving via "Submit Improved Routine"
+  useEffect(() => {
+    const pid = searchParams.get("parentVideoId");
+    const rn = searchParams.get("routineName");
+    const st = searchParams.get("style");
+    const et = searchParams.get("entryType");
+    const ag = searchParams.get("ageGroup");
+    const dn = searchParams.get("dancerName");
+    const sn = searchParams.get("studioName");
+    const ch = searchParams.get("choreographer");
+    if (pid) {
+      setParentVideoId(pid);
+      setIsLinkedResubmission(true);
+    }
+    if (rn) setRoutineName(rn);
+    if (st) setStyle(st);
+    if (et) setEntryType(et);
+    if (ag) setAgeGroup(ag);
+    if (dn) setDancerName(dn);
+    if (sn) setStudioName(sn);
+    if (ch) setChoreographer(ch);
+  }, [searchParams]);
 
   // Upload/processing state
   const [stage, setStage] = useState<UploadStage>("idle");
@@ -123,6 +150,8 @@ export default function UploadPage() {
       setProgress(45); setStatusMessage("Uploading frames — this can take a minute for longer routines...");
       const payload = JSON.stringify({
         frames: base64Frames,
+        // parentVideoId is passed explicitly when arriving via "Submit Improved Routine" from the tracker
+        ...(parentVideoId ? { parentVideoId } : {}),
         metadata: {
           routineName,
           dancerName: dancerName || undefined,
@@ -226,6 +255,21 @@ export default function UploadPage() {
           onSubmit={handleSubmit}
           className="glass rounded-3xl p-6 sm:p-8 space-y-6"
         >
+          {/* Linked re-submission banner */}
+          {isLinkedResubmission && (
+            <div className="mb-6 flex items-center gap-3 p-4 rounded-xl border border-primary-500/30 bg-primary-500/8">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-500/20">
+                <Link className="h-4 w-4 text-primary-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-primary-300">Linked Re-Submission</p>
+                <p className="text-xs text-surface-200 mt-0.5">
+                  This analysis will be added to your existing routine&apos;s history. Score history, coach feedback, and progression tracking all carry forward automatically.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Video Upload Zone */}
           <div>
             <label className="block text-sm font-medium mb-2">

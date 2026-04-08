@@ -27,7 +27,7 @@ export default async function RoutineProgressPage({
   // Fetch ALL videos for this user with the same routine name
   const { data: allVideos } = await serviceClient
     .from("videos")
-    .select("id, routine_name, style, entry_type, age_group, status, created_at")
+    .select("id, routine_name, style, entry_type, age_group, status, created_at, dancer_name, studio_name")
     .eq("user_id", user.id)
     .eq("routine_name", anchorVideo.routine_name)
     .eq("status", "analyzed")
@@ -68,6 +68,8 @@ export default async function RoutineProgressPage({
         date: s.video.created_at,
         totalScore: s.analysis.total_score,
         awardLevel: s.analysis.award_level,
+        dancerName: s.video.dancer_name ?? undefined,
+        studioName: s.video.studio_name ?? undefined,
         judgeScores: s.analysis.judge_scores as Array<{ category: string; avg: number; max: number }> ?? [],
         improvementPriorities: s.analysis.improvement_priorities as Array<{ priority: number; item: string; impact?: string; timeToFix?: string; trainingTip?: string }> ?? [],
         timelineNotes: s.analysis.timeline_notes as Array<{ time: string; note: string }> ?? [],

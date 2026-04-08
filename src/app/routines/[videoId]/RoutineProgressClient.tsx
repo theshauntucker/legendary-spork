@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, TrendingUp, TrendingDown, Minus, Award, Target, BarChart3, Sparkles, Lightbulb, Zap, Clock, ChevronRight } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown, Minus, Award, Target, BarChart3, Sparkles, Lightbulb, Zap, Clock, ChevronRight, RefreshCw } from "lucide-react";
 
 interface ImprovementPriority {
   priority: number;
@@ -17,6 +17,8 @@ interface Submission {
   date: string;
   totalScore: number;
   awardLevel: string;
+  dancerName?: string;
+  studioName?: string;
   judgeScores: Array<{ category: string; avg: number; max: number }>;
   improvementPriorities: ImprovementPriority[];
   timelineNotes: Array<{ time: string; note: string }>;
@@ -305,6 +307,19 @@ export default function RoutineProgressClient({ routineName, style, entryType, a
   const award = awardConfig(latest.awardLevel);
 
   const roadmap = ["Gold", "High Gold", "Platinum", "Diamond"];
+
+  // Build the "Submit Improved Routine" URL — everything pre-filled + parent linked
+  const uploadParams = new URLSearchParams({
+    parentVideoId: submissions[submissions.length - 1].videoId,
+    routineName,
+    style,
+    entryType,
+    ageGroup,
+    ...(choreographer ? { choreographer } : {}),
+    ...(submissions[submissions.length - 1].dancerName ? { dancerName: submissions[submissions.length - 1].dancerName! } : {}),
+    ...(submissions[submissions.length - 1].studioName ? { studioName: submissions[submissions.length - 1].studioName! } : {}),
+  });
+  const improvedUploadUrl = `/upload?${uploadParams.toString()}`;
   const currentLevel = roadmap.indexOf(latest.awardLevel);
 
   // Next milestone
@@ -377,6 +392,29 @@ export default function RoutineProgressClient({ routineName, style, entryType, a
             </div>
           ))}
         </motion.div>
+
+        {/* Submit Improved Routine CTA */}
+        <motion.a
+          href={improvedUploadUrl}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
+          className="mb-6 flex items-center justify-between rounded-2xl p-5 border border-primary-500/30 bg-gradient-to-r from-primary-500/10 via-accent-500/5 to-primary-500/10 hover:border-primary-500/60 transition-all group cursor-pointer"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 shrink-0">
+              <RefreshCw className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="font-bold text-white text-sm">Submit Improved Routine</p>
+              <p className="text-xs text-surface-200 mt-0.5">
+                Routine pre-linked · All fields auto-filled · Score history carried forward
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-primary-400 group-hover:text-primary-300 transition-colors shrink-0">
+            Submit
+            <ChevronRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </motion.a>
 
         {/* Score Chart */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}

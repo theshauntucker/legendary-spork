@@ -39,7 +39,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { frames, metadata } = body as { frames: FrameInput[]; metadata: RoutineMetadata };
+    const { frames, metadata, parentVideoId: explicitParentId } = body as {
+      frames: FrameInput[];
+      metadata: RoutineMetadata;
+      parentVideoId?: string;
+    };
 
     if (!frames || frames.length === 0) {
       return NextResponse.json({ error: "No frames provided" }, { status: 400 });
@@ -104,28 +108,32 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", video.id);
 
-    // Auto-detect re-submission: look for a previous analyzed video with the same
-    // routine name from this user so the AI gives progression-aware feedback
-    // and the system applies a confidence-building score boost.
-    let parentVideoId: string | null = null;
-    try {
-      const { data: previousVideos } = await serviceClient
-        .from("videos")
-        .select("id")
-        .eq("user_id", user.id)
-        .ilike("routine_name", metadata.routineName)
-        .eq("status", "analyzed")
-        .neq("id", video.id)
-        .order("created_at", { ascending: false })
-        .limit(1);
+    // Use explicit parentVideoId if provided (from "Submit Improved Routine" button),
+    // otherwise auto-detect by routine name — the explicit path is always preferred.
+    let parentVideoId: string | null = explicitParentId || null;
 
-      if (previousVideos && previousVideos.length > 0) {
-        parentVideoId = previousVideos[0].id;
-        console.log(`Re-submission detected — parent video: ${parentVideoId}`);
+    if (!parentVideoId) {
+      // Fallback: auto-detect by routine name for uploads that bypass the tracker UI
+      try {
+        const { data: previousVideos } = await serviceClient
+          .from("videos")
+          .select("id")
+          .eq("user_id", user.id)
+          .ilike("routine_name", metadata.routineName)
+          .eq("status", "analyzed")
+          .neq("id", video.id)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (previousVideos && previousVideos.length > 0) {
+          parentVideoId = previousVideos[0].id;
+          console.log(`Re-submission auto-detected — parent video: ${parentVideoId}`);
+        }
+      } catch (parentErr) {
+        console.warn("Could not check for previous submissions:", parentErr);
       }
-    } catch (parentErr) {
-      // Non-fatal — proceed without parent context
-      console.warn("Could not check for previous submissions:", parentErr);
+    } else {
+      console.log(`Re-submission explicitly linked — parent video: ${parentVideoId}`);
     }
 
     // Fire background analysis (with parentVideoId if re-submission detected)
