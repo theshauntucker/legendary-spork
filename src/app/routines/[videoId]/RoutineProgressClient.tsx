@@ -2,7 +2,15 @@
 
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, TrendingUp, TrendingDown, Minus, Award, Target, BarChart3, Sparkles } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown, Minus, Award, Target, BarChart3, Sparkles, Lightbulb, Zap, Clock, ChevronRight } from "lucide-react";
+
+interface ImprovementPriority {
+  priority: number;
+  item: string;
+  impact?: string;
+  timeToFix?: string;
+  trainingTip?: string;
+}
 
 interface Submission {
   videoId: string;
@@ -10,8 +18,66 @@ interface Submission {
   totalScore: number;
   awardLevel: string;
   judgeScores: Array<{ category: string; avg: number; max: number }>;
-  improvementPriorities: Array<{ priority: number; item: string }>;
+  improvementPriorities: ImprovementPriority[];
   timelineNotes: Array<{ time: string; note: string }>;
+}
+
+// ── Judge Tips by style ─────────────────────────────────────────────────────
+const JUDGE_TIPS: Record<string, string[]> = {
+  "Jazz": [
+    "Your energy should peak at every musical accent — judges feel it when you nail the hit.",
+    "Clean transitions score higher than flashy tricks with sloppy exits.",
+    "Spot your turns — every wobble is a deduction in a judge's mind.",
+    "Jazz hands are technique, not an afterthought — every finger tells the story.",
+  ],
+  "Contemporary": [
+    "The floor is part of your stage — use levels with intention, not just habit.",
+    "Breath is visible from the front row. Let your phrase endings land.",
+    "Judges notice when you're 'doing' the movement vs. living it — be in it.",
+    "Your stillness is as powerful as your movement. Own every pause.",
+  ],
+  "Lyrical": [
+    "Connect to the lyric before the movement — your face should tell the story first.",
+    "Your arms should have a beginning, middle, and end — incomplete lines lose points.",
+    "The moment before you move is scored just as much as the movement itself.",
+    "Judges want to feel something. If you're not feeling it, they won't either.",
+  ],
+  "Hip Hop": [
+    "Find the pocket — groove is felt, not just seen. Rushing is the #1 deduction.",
+    "Hit every 8-count with intention. Judges reward commitment over tricks.",
+    "Your whole body should reflect the style — even your face is part of the vibe.",
+    "Cleaner is always better. Lock it before you layer complexity on top.",
+  ],
+  "Tap": [
+    "Every sound is a note — your feet are the instrument. Judges are listening.",
+    "Weight placement is everything. Most mistakes start with where your weight is.",
+    "Clarity over speed. A clean slow combination beats muddy fast footwork.",
+    "Your arms and upper body frame the sound — don't neglect them.",
+  ],
+  "Ballet": [
+    "Your line continues past your fingertips and pointed toe — extend everything.",
+    "Judges follow the line of your head, neck, and spine before your legs.",
+    "Epaulement is not optional — it's what separates ballet from gymnastics.",
+    "Placement first, everything else second. Technique is the foundation judges build on.",
+  ],
+  "Musical Theater": [
+    "If your face doesn't say it, your body can't save it. Commit to the character.",
+    "Project to the back of the house — every movement should read from row 20.",
+    "Your exit is as important as your entrance. Stay in character until you're offstage.",
+    "Judges want a story. Give them a beginning, a conflict, and a resolution.",
+  ],
+  "default": [
+    "Your entrance and exit are scored — be 'on' before you hit your opening position.",
+    "Judges watch the corners and wings. Don't throw away movements near the edges.",
+    "The best technique in the room means nothing without performance energy behind it.",
+    "Consistency beats brilliance in competition — clean and consistent wins divisions.",
+  ],
+};
+
+function getJudgeTips(style: string): string[] {
+  const tips = JUDGE_TIPS[style] || JUDGE_TIPS["default"];
+  // Always return exactly 3 tips
+  return tips.slice(0, 3);
 }
 
 interface Props {
@@ -163,6 +229,67 @@ function CategoryBar({ label, prev, curr, max }: { label: string; prev?: number;
         <div className="absolute h-full bg-gradient-to-r from-primary-500 to-accent-500 rounded-full transition-all"
           style={{ width: `${pct}%` }} />
       </div>
+    </div>
+  );
+}
+
+// ── Coach Card ──────────────────────────────────────────────────────────────
+function CoachCard({ priority, isFirst }: { priority: ImprovementPriority; isFirst: boolean }) {
+  const impactColor =
+    priority.impact === "High" ? "text-red-400 bg-red-400/10 border-red-400/20" :
+    priority.impact === "Medium" ? "text-amber-400 bg-amber-400/10 border-amber-400/20" :
+    "text-green-400 bg-green-400/10 border-green-400/20";
+
+  return (
+    <div className={`rounded-2xl p-5 border transition-all ${isFirst ? "border-primary-500/30 bg-primary-500/5" : "border-white/8 bg-white/[0.03]"}`}>
+      <div className="flex items-start gap-4">
+        {/* Priority number */}
+        <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-black ${isFirst ? "bg-primary-500/30 text-primary-300" : "bg-white/8 text-surface-200"}`}>
+          {priority.priority}
+        </div>
+        <div className="flex-1 min-w-0">
+          {/* Item title */}
+          <p className="font-semibold text-white text-sm leading-snug mb-2">{priority.item}</p>
+          {/* Badges */}
+          <div className="flex items-center gap-2 flex-wrap mb-3">
+            {priority.impact && (
+              <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${impactColor}`}>
+                <Zap className="h-2.5 w-2.5" />
+                {priority.impact} Impact
+              </span>
+            )}
+            {priority.timeToFix && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border border-white/10 text-surface-200">
+                <Clock className="h-2.5 w-2.5" />
+                {priority.timeToFix}
+              </span>
+            )}
+          </div>
+          {/* Training tip */}
+          {priority.trainingTip && (
+            <div className="flex items-start gap-2 p-3 rounded-xl bg-white/5 border border-white/8">
+              <Lightbulb className="h-3.5 w-3.5 text-gold-400 shrink-0 mt-0.5" />
+              <p className="text-xs text-surface-200 leading-relaxed">{priority.trainingTip}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Judge Tip Card ───────────────────────────────────────────────────────────
+function JudgeTipCard({ tip, index }: { tip: string; index: number }) {
+  const accents = [
+    "border-primary-500/20 bg-primary-500/5",
+    "border-accent-500/20 bg-accent-500/5",
+    "border-gold-500/20 bg-gold-500/5",
+  ];
+  const icons = ["👁️", "⭐", "🎯"];
+  return (
+    <div className={`rounded-xl p-4 border ${accents[index % 3]}`}>
+      <div className="text-lg mb-2">{icons[index % 3]}</div>
+      <p className="text-xs text-surface-100 leading-relaxed">{tip}</p>
     </div>
   );
 }
@@ -375,28 +502,47 @@ export default function RoutineProgressClient({ routineName, style, entryType, a
           </div>
         </motion.div>
 
-        {/* Latest coaching priorities */}
+        {/* Coach's Playbook — full priority cards with training tips */}
         {latest.improvementPriorities.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-            className="glass rounded-2xl p-6 border border-primary-500/20">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-surface-200 mb-4 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-gold-400" /> Current Focus Areas
-            </h2>
+            className="mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="h-4 w-4 text-gold-400" />
+              <h2 className="text-sm font-bold uppercase tracking-widest text-surface-200">Coach&apos;s Playbook</h2>
+              <span className="text-[10px] bg-primary-500/20 text-primary-400 px-2 py-0.5 rounded-full font-bold ml-1">From your latest analysis</span>
+            </div>
             <p className="text-xs text-surface-200 mb-4">
-              Based on your most recent analysis — work these in order for maximum score improvement.
+              These are your coach&apos;s specific notes from the last analysis. Work through them in order — #1 will move your score the most.
             </p>
             <div className="space-y-3">
-              {latest.improvementPriorities.map((p) => (
-                <div key={p.priority} className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary-500/20 text-primary-400 text-[10px] font-bold flex items-center justify-center">
-                    {p.priority}
-                  </span>
-                  <p className="text-sm text-surface-100">{p.item}</p>
-                </div>
+              {latest.improvementPriorities.map((p, i) => (
+                <motion.div key={p.priority}
+                  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.35 + i * 0.05 }}>
+                  <CoachCard priority={p} isFirst={i === 0} />
+                </motion.div>
               ))}
             </div>
           </motion.div>
         )}
+
+        {/* Judge Tips — style-specific reminders */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+          className="mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <ChevronRight className="h-4 w-4 text-accent-400" />
+            <h2 className="text-sm font-bold uppercase tracking-widest text-surface-200">What Judges Notice</h2>
+            <span className="text-[10px] bg-accent-500/20 text-accent-400 px-2 py-0.5 rounded-full font-bold ml-1">{style}</span>
+          </div>
+          <p className="text-xs text-surface-200 mb-4">
+            3 things judges always notice in {style}. Keep these in your head every time you run it.
+          </p>
+          <div className="grid sm:grid-cols-3 gap-3">
+            {getJudgeTips(style).map((tip, i) => (
+              <JudgeTipCard key={i} tip={tip} index={i} />
+            ))}
+          </div>
+        </motion.div>
       </div>
     </div>
   );

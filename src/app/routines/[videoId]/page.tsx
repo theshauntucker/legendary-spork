@@ -68,7 +68,7 @@ export default async function RoutineProgressPage({
         totalScore: s.analysis.total_score,
         awardLevel: s.analysis.award_level,
         judgeScores: s.analysis.judge_scores as Array<{ category: string; avg: number; max: number }> ?? [],
-        improvementPriorities: s.analysis.improvement_priorities as Array<{ priority: number; item: string }> ?? [],
+        improvementPriorities: s.analysis.improvement_priorities as Array<{ priority: number; item: string; impact?: string; timeToFix?: string; trainingTip?: string }> ?? [],
         timelineNotes: s.analysis.timeline_notes as Array<{ time: string; note: string }> ?? [],
       }))}
     />
