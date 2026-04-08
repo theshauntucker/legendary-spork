@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -36,7 +36,7 @@ const popularCompetitions = [
 
 type UploadStage = "idle" | "extracting" | "uploading" | "analyzing" | "done" | "error";
 
-export default function UploadPage() {
+function UploadPageInner() {
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [routineName, setRoutineName] = useState("");
@@ -536,5 +536,13 @@ export default function UploadPage() {
         </motion.form>
       </div>
     </div>
+  );
+}
+
+export default function UploadPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 rounded-full border-2 border-primary-400 border-t-transparent" /></div>}>
+      <UploadPageInner />
+    </Suspense>
   );
 }
