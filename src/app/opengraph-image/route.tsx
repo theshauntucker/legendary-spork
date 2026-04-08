@@ -122,7 +122,7 @@ export async function GET() {
               fontFamily: "Arial, sans-serif",
             }}
           >
-            Get Your Free Analysis
+            Get 2 Analyses — $8.99
           </div>
         </div>
 

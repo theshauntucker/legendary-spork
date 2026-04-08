@@ -102,16 +102,16 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          {/* Free CTA */}
+          {/* BOGO CTA */}
           <div className="flex flex-col items-center gap-1">
             <a
               href="/signup"
               className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary-600/25 hover:shadow-primary-600/40 transition-all animate-pulse-glow"
             >
-              Get Your Free Analysis
+              Get 2 Analyses — $8.99
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </a>
-            <span className="text-xs text-green-300 font-semibold">Your first analysis is completely free</span>
+            <span className="text-xs text-gold-300 font-semibold">⚡ Buy One, Get One Free — Limited Time</span>
           </div>
 
           {/* Pack CTA */}
