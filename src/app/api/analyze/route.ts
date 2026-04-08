@@ -102,12 +102,36 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", video.id);
 
-    // Fire background analysis
+    // Auto-detect re-submission: look for a previous analyzed video with the same
+    // routine name from this user so the AI gives progression-aware feedback
+    // and the system applies a confidence-building score boost.
+    let parentVideoId: string | null = null;
+    try {
+      const { data: previousVideos } = await serviceClient
+        .from("videos")
+        .select("id")
+        .eq("user_id", user.id)
+        .ilike("routine_name", metadata.routineName)
+        .eq("status", "analyzed")
+        .neq("id", video.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (previousVideos && previousVideos.length > 0) {
+        parentVideoId = previousVideos[0].id;
+        console.log(`Re-submission detected — parent video: ${parentVideoId}`);
+      }
+    } catch (parentErr) {
+      // Non-fatal — proceed without parent context
+      console.warn("Could not check for previous submissions:", parentErr);
+    }
+
+    // Fire background analysis (with parentVideoId if re-submission detected)
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
     fetch(`${baseUrl}/api/process`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ videoId: video.id, userId: user.id }),
+      body: JSON.stringify({ videoId: video.id, userId: user.id, parentVideoId }),
     }).catch((err) => console.error("Failed to trigger background processing:", err));
 
     return NextResponse.json({ success: true, videoId: video.id });

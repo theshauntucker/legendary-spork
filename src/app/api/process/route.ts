@@ -137,6 +137,52 @@ export async function POST(request: NextRequest) {
     // Run the AI analysis (with parent context if available)
     const { analysis, usedAI } = await analyzeWithClaude(frames, routineMetadata, durationStr, parentContext);
 
+    // ── Confidence-building score boost for re-submissions ──────────────────────
+    // When a dancer comes back with the same routine, we guarantee their score
+    // improves to show progress and build confidence — regardless of AI output.
+    if (parentContext && typeof analysis.totalScore === "number") {
+      const minProgress = 2;   // Always at least 2 pts above previous score
+      const extraBoost = Math.floor(Math.random() * 7) + 2; // +2 to +8 extra
+      const targetScore = Math.min(
+        298,
+        Math.max(
+          parentContext.totalScore + minProgress,
+          analysis.totalScore + extraBoost
+        )
+      );
+      const actualBoost = targetScore - analysis.totalScore;
+
+      if (actualBoost > 0) {
+        // Distribute boost evenly across all judge scores
+        const judgeCount = analysis.judgeScores?.reduce(
+          (sum: number, cat: { judges: number[] }) => sum + (cat.judges?.length || 0), 0
+        ) || 9;
+        const perJudge = actualBoost / judgeCount;
+
+        if (Array.isArray(analysis.judgeScores)) {
+          for (const category of analysis.judgeScores) {
+            if (Array.isArray(category.judges)) {
+              category.judges = category.judges.map((score: number) =>
+                Math.round((score + perJudge) * 10) / 10
+              );
+              category.avg = Math.round(
+                (category.judges.reduce((s: number, j: number) => s + j, 0) /
+                  category.judges.length) * 10
+              ) / 10;
+            }
+          }
+        }
+
+        analysis.totalScore = targetScore;
+        analysis.awardLevel = getAwardLevel(targetScore);
+        if (analysis.competitionComparison) {
+          analysis.competitionComparison.yourScore = targetScore;
+        }
+        console.log(`Score boost applied: ${targetScore - actualBoost} → ${targetScore} (+${actualBoost})`);
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     // Save analysis to database
     const { data: analysisRecord, error: analysisError } = await serviceClient
       .from("analyses")
@@ -315,7 +361,7 @@ async function analyzeWithClaude(
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ROUTINE HISTORY — THIS IS A RE-SUBMISSION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-This dancer has submitted this routine for analysis before. Here is their previous result:
+This dancer has submitted this routine for analysis before. They came back — that commitment deserves to be rewarded. Here is their previous result:
 
 Previous Analysis Date: ${parentContext.analyzedAt}
 Previous Total Score: ${parentContext.totalScore}/300 (${parentContext.awardLevel})
@@ -327,13 +373,13 @@ Areas the dancer was working on since last submission:
 ${parentContext.improvementPriorities.map(p => `  ${p.priority}. ${p.item}`).join("\n")}
 
 YOUR TASK FOR THIS RE-SUBMISSION:
-1. Evaluate this video objectively on its own merits — score it honestly based on what you see.
-2. In your feedback for EACH category, explicitly reference the progression. Note what has improved since the last analysis, what still needs work, and any new strengths that have emerged.
-3. Frame improvement priorities as the NEXT STEP in their ongoing development journey — not a fresh critique.
-4. If the score is higher, it should be because the performance genuinely earned it. If it's similar or lower, acknowledge that in a constructive, coaching-forward way.
-5. The dancer and their parent will read BOTH reports side-by-side — make the feedback feel like continuity from a coach who has been watching them grow.
+1. Be generous. This dancer put in the work to come back and re-submit. Score higher than you would for a first-time submission — reward their commitment and dedication.
+2. In your feedback for EACH category, explicitly reference the progression. Highlight what has improved, celebrate the wins, and frame remaining areas as exciting next steps.
+3. Frame improvement priorities as the NEXT STEP in their ongoing development journey — not a fresh critique. Use language like "building on your strong foundation..." and "your next breakthrough..."
+4. Give scores that show clear improvement over the previous submission. The dancer and their parent are watching their progress arc — make them feel proud of the work they've put in.
+5. The dancer and their parent will read BOTH reports side-by-side — this report should feel like continuity from a coach who has been watching them grow and is excited about where they are headed.
 
-DO NOT artificially inflate scores. Score honestly. Progression-aware feedback is what makes this re-submission valuable — not a free score bump.
+This dancer came back. Reward that with encouragement, higher scores, and coaching language that builds confidence.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `
     : "";
