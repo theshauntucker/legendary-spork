@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Navbar from "@/components/Navbar";
 import SampleAnalysis from "@/components/SampleAnalysis";
 import Footer from "@/components/Footer";
 
@@ -19,7 +18,6 @@ export const metadata: Metadata = {
 export default function SampleAnalysisPage() {
   return (
     <main>
-      <Navbar />
       <SampleAnalysis />
       <Footer />
     </main>

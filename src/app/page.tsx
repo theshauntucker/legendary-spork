@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import CountdownBanner from "@/components/CountdownBanner";
-import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import VideoDemo from "@/components/VideoDemo";
 import HowItWorks from "@/components/HowItWorks";
@@ -21,8 +19,6 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <main>
-      <CountdownBanner />
-      <Navbar />
       <Hero />
       <PrivacyTrust />
       <HowItWorks />

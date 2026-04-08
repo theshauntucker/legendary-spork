@@ -5,6 +5,9 @@ import "./globals.css";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
 
+import Navbar from "@/components/Navbar";
+import CountdownBanner from "@/components/CountdownBanner";
+
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
@@ -160,6 +163,8 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <CountdownBanner />
+        <Navbar />
         {children}
         <Analytics />
         <SpeedInsights />
