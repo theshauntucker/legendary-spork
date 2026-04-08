@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getUserCredits } from "@/lib/credits";
 
@@ -54,6 +55,40 @@ export async function POST(request: NextRequest) {
 
     const durationStr = formatDuration(metadata.duration);
 
+    // ── Duplicate frame detection ────────────────────────────────────────────
+    // Fingerprint the first 3 frames to catch re-uploads of the same video
+    const fingerprintInput = frames
+      .slice(0, 3)
+      .map(f => f.base64.slice(0, 200))
+      .join("|");
+    const frameFingerprint = crypto
+      .createHash("md5")
+      .update(fingerprintInput)
+      .digest("hex");
+
+    // Check if this user has already submitted a video with this exact fingerprint
+    const { data: existingMatch } = await serviceClient
+      .from("videos")
+      .select("id, routine_name, status, created_at")
+      .eq("user_id", user.id)
+      .eq("frame_fingerprint", frameFingerprint)
+      .in("status", ["analyzed", "processing", "uploaded"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existingMatch) {
+      return NextResponse.json({
+        error: "DUPLICATE_VIDEO",
+        code: "DUPLICATE_VIDEO",
+        existingVideoId: existingMatch.id,
+        existingRoutineName: existingMatch.routine_name,
+        existingStatus: existingMatch.status,
+        message: `This video has already been submitted as "${existingMatch.routine_name}". If you want to track a new submission, record a new version of the routine.`,
+      }, { status: 409 });
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
     // Parse competition date safely
     let parsedCompDate: string | null = null;
     if (metadata.competitionDate) {
@@ -81,6 +116,7 @@ export async function POST(request: NextRequest) {
         entry_type: metadata.entryType,
         file_size: metadata.originalFileSize || null,
         status: "processing",
+        frame_fingerprint: frameFingerprint,
       })
       .select("id")
       .single();

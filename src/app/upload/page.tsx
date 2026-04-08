@@ -82,6 +82,11 @@ function UploadPageInner() {
   const [progress, setProgress] = useState(0);
   const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState("");
+  const [duplicateInfo, setDuplicateInfo] = useState<{
+    existingVideoId: string;
+    existingRoutineName: string;
+    message: string;
+  } | null>(null);
   const [extractedFrames, setExtractedFrames] = useState<ExtractedFrame[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef(false);
@@ -190,6 +195,16 @@ function UploadPageInner() {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
+        if (response.status === 409 && data.code === "DUPLICATE_VIDEO") {
+          // Same video already submitted — show smart duplicate warning
+          setStage("idle"); setProgress(0);
+          setDuplicateInfo({
+            existingVideoId: data.existingVideoId,
+            existingRoutineName: data.existingRoutineName,
+            message: data.message,
+          });
+          return;
+        }
         if (response.status === 402 && data.code === "NO_CREDITS") {
           setStage("idle"); setProgress(0);
           const checkoutRes = await fetch("/api/checkout", {
@@ -462,6 +477,46 @@ function UploadPageInner() {
               </div>
             </div>
           </div>
+
+          {/* Duplicate video warning */}
+          <AnimatePresence>
+            {duplicateInfo && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                className="p-5 rounded-2xl border border-amber-500/30 bg-amber-500/8"
+              >
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 text-sm">
+                    ⚠️
+                  </div>
+                  <div>
+                    <p className="font-semibold text-amber-300 text-sm">We&apos;ve seen this video before</p>
+                    <p className="text-xs text-surface-200 mt-1 leading-relaxed">
+                      This exact video was already submitted as <span className="text-white font-medium">&ldquo;{duplicateInfo.existingRoutineName}&rdquo;</span>. Submitting the same video twice won&apos;t show real improvement — judges and coaches can tell.
+                    </p>
+                    <p className="text-xs text-surface-200 mt-2 leading-relaxed">
+                      To show genuine progress, record a new version of the routine and submit that instead.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <a
+                    href={`/routines/${duplicateInfo.existingVideoId}`}
+                    className="flex-1 text-center py-2.5 rounded-xl border border-primary-500/40 bg-primary-500/10 text-primary-300 text-sm font-semibold hover:bg-primary-500/20 transition-colors"
+                  >
+                    View Existing Analysis →
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setDuplicateInfo(null)}
+                    className="flex-1 py-2.5 rounded-xl border border-white/10 bg-white/5 text-surface-200 text-sm hover:bg-white/10 transition-colors"
+                  >
+                    Upload Different Video
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Error */}
           <AnimatePresence>
