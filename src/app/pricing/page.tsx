@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Navbar from "@/components/Navbar";
 import Pricing from "@/components/Pricing";
 import Footer from "@/components/Footer";
 
@@ -19,7 +18,6 @@ export const metadata: Metadata = {
 export default function PricingPage() {
   return (
     <main>
-      <Navbar />
       <Pricing />
       <Footer />
     </main>

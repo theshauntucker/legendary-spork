@@ -522,8 +522,8 @@ export default function AdminClient({ users: initialUsers, affiliates: initialAf
             <div className="grid sm:grid-cols-3 gap-4">
               {[
                 { label: "Total Revenue", value: `$${(stats.totalRevenue/100).toFixed(2)}`, color: "text-green-400" },
-                { label: "Single Sales ($8.99)", value: `${stats.singleCount} × $8.99 = $${(stats.singleRevenue/100).toFixed(2)}`, color: "text-accent-400" },
-                { label: "Pack Sales ($29.99)", value: `${stats.packCount} × $29.99 = $${(stats.packRevenue/100).toFixed(2)}`, color: "text-gold-400" },
+                { label: "Single Sales ($8.99)", value: `${stats.singleCount} sale${stats.singleCount !== 1 ? 's' : ''} — $${(stats.singleRevenue/100).toFixed(2)}`, color: "text-accent-400" },
+                { label: "Pack Sales ($29.99)", value: `${stats.packCount} sale${stats.packCount !== 1 ? 's' : ''} — $${(stats.packRevenue/100).toFixed(2)}`, color: "text-gold-400" },
               ].map(s => (
                 <div key={s.label} className="glass rounded-2xl p-5">
                   <div className={`text-xl font-bold ${s.color}`}>{s.value}</div>

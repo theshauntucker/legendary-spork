@@ -1,78 +1,42 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Upload,
-  Video,
-  X,
-  Sparkles,
-  ArrowRight,
-  CheckCircle,
-  Loader2,
-  Music,
-  Users,
-  ImageIcon,
-  AlertCircle,
-  RotateCcw,
+  Upload, Video, X, Sparkles, ArrowRight, CheckCircle, Loader2,
+  Music, Users, ImageIcon, AlertCircle, RotateCcw, Trophy, Calendar, Link,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import UploadTrustBadge from "@/components/UploadTrustBadge";
 import {
-  extractFrames,
-  framesToBase64,
-  loadVideoMetadata,
-  type ExtractedFrame,
-  type ExtractionProgress,
+  extractFrames, framesToBase64, loadVideoMetadata,
+  type ExtractedFrame, type ExtractionProgress,
 } from "@/lib/video-processor";
 
 const ageGroups = [
-  "Mini (5-6)",
-  "Petite (6-9)",
-  "Junior (9-12)",
-  "Teen (12-15)",
-  "Senior (15-19)",
-  "Adult (20+)",
+  "Mini (5-6)", "Petite (6-9)", "Junior (9-12)", "Teen (12-15)", "Senior (15-19)", "Adult (20+)",
 ];
 
 const danceStyles = [
-  "Jazz",
-  "Contemporary",
-  "Lyrical",
-  "Hip Hop",
-  "Tap",
-  "Ballet",
-  "Musical Theater",
-  "Pom",
-  "Acro",
-  "Cheer",
-  "Open / Freestyle",
-  "Clogging",
-  "Pointe",
-  "Character",
-  "Improvisation",
+  "Jazz", "Contemporary", "Lyrical", "Hip Hop", "Tap", "Ballet", "Musical Theater",
+  "Pom", "Acro", "Cheer", "Open / Freestyle", "Clogging", "Pointe", "Character", "Improvisation",
 ];
 
 const entryTypes = [
-  "Solo",
-  "Duo/Trio",
-  "Small Group",
-  "Large Group",
-  "Line",
-  "Super Line",
-  "Production",
-  "Extended Line",
+  "Solo", "Duo/Trio", "Small Group", "Large Group", "Line", "Super Line", "Production", "Extended Line",
 ];
 
-type UploadStage =
-  | "idle"
-  | "extracting"
-  | "uploading"
-  | "analyzing"
-  | "done"
-  | "error";
+// Popular competition names for quick-select
+const popularCompetitions = [
+  "StarQuest", "Showstopper", "JUMP", "NUVO", "The Dance Awards",
+  "World of Dance", "Xtreme", "Thunderstruck", "Starpower", "NDA",
+  "Hollywood Vibe", "Tremaine", "Velocity", "Revel", "iHollywood",
+];
 
-export default function UploadPage() {
+type UploadStage = "idle" | "extracting" | "uploading" | "analyzing" | "done" | "error";
+
+function UploadPageInner() {
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [routineName, setRoutineName] = useState("");
@@ -81,46 +45,73 @@ export default function UploadPage() {
   const [entryType, setEntryType] = useState("");
   const [dancerName, setDancerName] = useState("");
   const [studioName, setStudioName] = useState("");
+  const [choreographer, setChoreographer] = useState("");
+  const [competitionName, setCompetitionName] = useState("");
+  const [competitionDate, setCompetitionDate] = useState("");
+  const [showCompSuggestions, setShowCompSuggestions] = useState(false);
   const [parentConsent, setParentConsent] = useState(false);
+  const [parentVideoId, setParentVideoId] = useState<string | null>(null);
+  const [isLinkedResubmission, setIsLinkedResubmission] = useState(false);
+  const searchParams = useSearchParams();
+
+  // Pre-fill form from URL params when arriving via "Submit Improved Routine"
+  useEffect(() => {
+    const pid = searchParams.get("parentVideoId");
+    const rn = searchParams.get("routineName");
+    const st = searchParams.get("style");
+    const et = searchParams.get("entryType");
+    const ag = searchParams.get("ageGroup");
+    const dn = searchParams.get("dancerName");
+    const sn = searchParams.get("studioName");
+    const ch = searchParams.get("choreographer");
+    if (pid) {
+      setParentVideoId(pid);
+      setIsLinkedResubmission(true);
+    }
+    if (rn) setRoutineName(rn);
+    if (st) setStyle(st);
+    if (et) setEntryType(et);
+    if (ag) setAgeGroup(ag);
+    if (dn) setDancerName(dn);
+    if (sn) setStudioName(sn);
+    if (ch) setChoreographer(ch);
+  }, [searchParams]);
 
   // Upload/processing state
   const [stage, setStage] = useState<UploadStage>("idle");
   const [progress, setProgress] = useState(0);
   const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState("");
+  const [duplicateInfo, setDuplicateInfo] = useState<{
+    existingVideoId: string;
+    existingRoutineName: string;
+    message: string;
+  } | null>(null);
   const [extractedFrames, setExtractedFrames] = useState<ExtractedFrame[]>([]);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef(false);
-
   const isProcessing = stage !== "idle" && stage !== "error";
 
+  const filteredComps = competitionName.length > 0
+    ? popularCompetitions.filter(c => c.toLowerCase().includes(competitionName.toLowerCase()))
+    : [];
+
   const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else {
-      setDragActive(false);
-    }
+    e.preventDefault(); e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
+    else setDragActive(false);
   };
 
   const validateAndSetFile = (f: File) => {
-    if (!f.type.startsWith("video/")) {
-      setError("Please upload a video file (MP4, MOV, AVI, WebM).");
-      return;
-    }
+    if (!f.type.startsWith("video/")) { setError("Please upload a video file (MP4, MOV, AVI, WebM)."); return; }
     const sizeMB = f.size / (1024 * 1024);
     setFile(f);
-    // No file size limit — video is processed locally, only thumbnails are sent
     setError(sizeMB > 500 ? "Large video detected — frame extraction may take a moment, but your video never leaves your device." : "");
     setExtractedFrames([]);
   };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+    e.preventDefault(); e.stopPropagation(); setDragActive(false);
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile) validateAndSetFile(droppedFile);
   };
@@ -131,76 +122,49 @@ export default function UploadPage() {
   };
 
   const resetState = useCallback(() => {
-    setStage("idle");
-    setProgress(0);
-    setStatusMessage("");
-    setError("");
-    abortRef.current = false;
+    setStage("idle"); setProgress(0); setStatusMessage(""); setError(""); abortRef.current = false;
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !routineName || !ageGroup || !style || !entryType) {
-      setError("Please fill in all required fields and upload a video.");
-      return;
+      setError("Please fill in all required fields and upload a video."); return;
     }
     if (!parentConsent) {
-      setError("Parental/guardian consent is required before submitting a video for analysis.");
-      return;
+      setError("Parental/guardian consent is required before submitting a video for analysis."); return;
     }
-
-    abortRef.current = false;
-    setError("");
-    setProgress(0);
+    abortRef.current = false; setError(""); setProgress(0);
 
     try {
-      // ── Step 1: Extract frames from the video ──────────────────────
-      setStage("extracting");
-      setStatusMessage("Preparing your video...");
-
+      // Step 1: Extract frames
+      setStage("extracting"); setStatusMessage("Preparing your video...");
       const metadata = await loadVideoMetadata(file);
-      // Determine frame count based on video duration
-      // ~1 frame every 3-4 seconds for detailed technique analysis
-      // Extract up to 20 frames — Claude API limit is 20 anyway,
-      // so extracting more just wastes upload bandwidth
-      const frameCount = Math.min(
-        Math.max(12, Math.ceil(metadata.duration / 5)),
-        20
-      );
-
-      const frames = await extractFrames(
-        file,
-        frameCount,
-        (p: ExtractionProgress) => {
-          const pct = Math.round((p.current / p.total) * 30); // 0-30%
-          setProgress(pct);
-          setStatusMessage(p.message);
-        }
-      );
-
+      const frameCount = Math.min(Math.max(12, Math.ceil(metadata.duration / 5)), 20);
+      const frames = await extractFrames(file, frameCount, (p: ExtractionProgress) => {
+        const pct = Math.round((p.current / p.total) * 30);
+        setProgress(pct); setStatusMessage(p.message);
+      });
       if (abortRef.current) return;
       setExtractedFrames(frames);
 
-      // ── Step 2: Convert frames to base64 for upload ────────────────
-      setStage("uploading");
-      setProgress(35);
-      setStatusMessage("Uploading frames for analysis...");
-
+      // Step 2: Convert to base64
+      setStage("uploading"); setProgress(35); setStatusMessage("Uploading frames for analysis...");
       const base64Frames = await framesToBase64(frames);
 
-      // ── Step 3: Send to analysis API ───────────────────────────────
-      setProgress(45);
-      setStatusMessage("Uploading frames — this can take a minute for longer routines...");
-
+      // Step 3: Send to API
+      setProgress(45); setStatusMessage("Uploading frames — this can take a minute for longer routines...");
       const payload = JSON.stringify({
         frames: base64Frames,
+        // parentVideoId is passed explicitly when arriving via "Submit Improved Routine" from the tracker
+        ...(parentVideoId ? { parentVideoId } : {}),
         metadata: {
           routineName,
           dancerName: dancerName || undefined,
           studioName: studioName || undefined,
-          ageGroup,
-          style,
-          entryType,
+          choreographer: choreographer || undefined,
+          competitionName: competitionName || undefined,
+          competitionDate: competitionDate || undefined,
+          ageGroup, style, entryType,
           duration: metadata.duration,
           resolution: `${metadata.width}x${metadata.height}`,
           originalFilename: file.name,
@@ -208,7 +172,6 @@ export default function UploadPage() {
         },
       });
 
-      // Retry up to 2 times for transient network errors
       let response: Response | null = null;
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
@@ -221,63 +184,48 @@ export default function UploadPage() {
             signal: controller.signal,
           });
           clearTimeout(fetchTimeout);
-          break; // Success — exit retry loop
+          break;
         } catch (fetchErr) {
           if (attempt === 2) throw fetchErr;
-          // Wait before retry: 2s, then 4s
-          setStatusMessage(`Connection hiccup — retrying upload (attempt ${attempt + 2} of 3)...`);
+          setStatusMessage(`Connection hiccup — retrying (attempt ${attempt + 2} of 3)...`);
           await new Promise((r) => setTimeout(r, (attempt + 1) * 2000));
         }
       }
-
       if (!response) throw new Error("Upload failed after multiple attempts");
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-
-        // No credits — redirect to purchase
+        if (response.status === 409 && data.code === "DUPLICATE_VIDEO") {
+          // Same video already submitted — show smart duplicate warning
+          setStage("idle"); setProgress(0);
+          setDuplicateInfo({
+            existingVideoId: data.existingVideoId,
+            existingRoutineName: data.existingRoutineName,
+            message: data.message,
+          });
+          return;
+        }
         if (response.status === 402 && data.code === "NO_CREDITS") {
-          setStage("idle");
-          setProgress(0);
-          // Default to single analysis checkout
+          setStage("idle"); setProgress(0);
           const checkoutRes = await fetch("/api/checkout", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+            method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ type: "single" }),
           });
           const checkoutData = await checkoutRes.json();
-          if (checkoutData.url) {
-            window.location.href = checkoutData.url;
-            return;
-          }
+          if (checkoutData.url) { window.location.href = checkoutData.url; return; }
           throw new Error("Unable to start checkout. Please try again.");
         }
-
-        throw new Error(
-          data.error || `Upload failed (${response.status})`
-        );
+        throw new Error(data.error || `Upload failed (${response.status})`);
       }
 
       const result = await response.json();
-
       if (abortRef.current) return;
-
-      // ── Step 4: Redirect to processing page ────────────────────────
-      setStage("done");
-      setProgress(100);
-      setStatusMessage("Uploaded! Redirecting to analysis...");
-
-      // Redirect to the processing page — AI analysis runs in background
+      setStage("done"); setProgress(100); setStatusMessage("Uploaded! Redirecting to analysis...");
       window.location.href = `/processing/${result.videoId}`;
     } catch (err) {
       if (abortRef.current) return;
-      console.error("Upload/analysis error:", err);
       setStage("error");
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong. Please try again."
-      );
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     }
   };
 
@@ -288,22 +236,16 @@ export default function UploadPage() {
 
   const stageLabel = () => {
     switch (stage) {
-      case "extracting":
-        return "Preparing video...";
-      case "uploading":
-        return "Uploading...";
-      case "analyzing":
-        return "Analyzing...";
-      case "done":
-        return "Complete!";
-      default:
-        return "";
+      case "extracting": return "Preparing video...";
+      case "uploading": return "Uploading...";
+      case "analyzing": return "Analyzing...";
+      case "done": return "Complete!";
+      default: return "";
     }
   };
 
   return (
     <div className="min-h-screen py-20 px-4">
-      {/* Background */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
@@ -314,148 +256,89 @@ export default function UploadPage() {
         <div className="text-center mb-10">
           <a href="/" className="inline-flex items-center gap-2 mb-6">
             <Sparkles className="h-6 w-6 text-primary-400" />
-            <span className="text-lg font-bold">
-              Routine<span className="gradient-text">X</span>
-            </span>
+            <span className="text-lg font-bold">Routine<span className="gradient-text">X</span></span>
           </a>
           <h1 className="text-3xl sm:text-4xl font-bold font-[family-name:var(--font-display)]">
             Upload Your Routine
           </h1>
-          <p className="mt-3 text-surface-200">
-            Upload your video and get a full AI analysis in under 2 minutes.
-          </p>
-          <div className="mt-4">
-            <UploadTrustBadge />
-          </div>
+          <p className="mt-3 text-surface-200">Upload your video and get a full AI analysis in under 2 minutes.</p>
+          <div className="mt-4"><UploadTrustBadge /></div>
         </div>
 
         <motion.form
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
           onSubmit={handleSubmit}
           className="glass rounded-3xl p-6 sm:p-8 space-y-6"
         >
+          {/* Linked re-submission banner */}
+          {isLinkedResubmission && (
+            <div className="mb-6 flex items-center gap-3 p-4 rounded-xl border border-primary-500/30 bg-primary-500/8">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-500/20">
+                <Link className="h-4 w-4 text-primary-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-primary-300">Linked Re-Submission</p>
+                <p className="text-xs text-surface-200 mt-0.5">
+                  This analysis will be added to your existing routine&apos;s history. Score history, coach feedback, and progression tracking all carry forward automatically.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Video Upload Zone */}
           <div>
             <label className="block text-sm font-medium mb-2">
               Video File <span className="text-accent-400">*</span>
             </label>
             <div
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
+              onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
               onClick={() => !isProcessing && fileInputRef.current?.click()}
-              className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${
-                isProcessing
-                  ? "cursor-default border-white/10"
-                  : "cursor-pointer"
-              } ${
-                dragActive
-                  ? "border-primary-400 bg-primary-500/10"
-                  : file
-                  ? "border-green-500/30 bg-green-500/5"
-                  : "border-white/20 hover:border-white/40"
-              }`}
+              className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${isProcessing ? "cursor-default border-white/10" : "cursor-pointer"} ${dragActive ? "border-primary-400 bg-primary-500/10" : file ? "border-green-500/30 bg-green-500/5" : "border-white/20 hover:border-white/40"}`}
             >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="video/*"
-                onChange={handleFileSelect}
-                className="hidden"
-                disabled={isProcessing}
-              />
-
+              <input ref={fileInputRef} type="file" accept="video/*" onChange={handleFileSelect} className="hidden" disabled={isProcessing} />
               <AnimatePresence mode="wait">
                 {file ? (
-                  <motion.div
-                    key="file"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center justify-center gap-3"
-                  >
+                  <motion.div key="file" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center justify-center gap-3">
                     <Video className="h-8 w-8 text-green-400 shrink-0" />
                     <div className="text-left min-w-0">
-                      <p className="font-medium text-sm truncate">
-                        {file.name}
-                      </p>
-                      <p className="text-xs text-surface-200">
-                        {formatFileSize(file.size)}
-                      </p>
+                      <p className="font-medium text-sm truncate">{file.name}</p>
+                      <p className="text-xs text-surface-200">{formatFileSize(file.size)}</p>
                     </div>
                     {!isProcessing && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFile(null);
-                          setExtractedFrames([]);
-                        }}
-                        className="ml-2 p-1 rounded-full hover:bg-white/10 shrink-0"
-                      >
+                      <button type="button" onClick={(e) => { e.stopPropagation(); setFile(null); setExtractedFrames([]); }} className="ml-2 p-1 rounded-full hover:bg-white/10 shrink-0">
                         <X className="h-4 w-4" />
                       </button>
                     )}
                   </motion.div>
                 ) : (
-                  <motion.div
-                    key="empty"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
+                  <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <Upload className="mx-auto h-10 w-10 text-surface-200 mb-3" />
-                    <p className="font-medium text-sm">
-                      Drag & drop your video here
-                    </p>
-                    <p className="text-xs text-surface-200 mt-1">
-                      MP4, MOV, AVI, WebM — any size (processed on your device)
-                    </p>
+                    <p className="font-medium text-sm">Drag &amp; drop your video here</p>
+                    <p className="text-xs text-surface-200 mt-1">MP4, MOV, AVI, WebM — any size (processed on your device)</p>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
           </div>
 
-          {/* Frame Preview (shown after extraction) */}
+          {/* Frame Preview */}
           <AnimatePresence>
             {extractedFrames.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
-              >
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
                 <div className="flex items-center gap-2 mb-2">
                   <ImageIcon className="h-3.5 w-3.5 text-primary-400" />
-                  <span className="text-xs font-medium text-surface-200">
-                    {extractedFrames.length} frames extracted for analysis
-                  </span>
+                  <span className="text-xs font-medium text-surface-200">{extractedFrames.length} frames extracted for analysis</span>
                 </div>
                 <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-thin">
                   {extractedFrames.slice(0, 8).map((frame, i) => (
-                    <div
-                      key={i}
-                      className="relative shrink-0 w-16 h-10 rounded-md overflow-hidden border border-white/10"
-                    >
-                      <img
-                        src={frame.dataUrl}
-                        alt={`Frame at ${frame.label}`}
-                        className="w-full h-full object-cover"
-                      />
-                      <span className="absolute bottom-0 left-0 right-0 text-[8px] text-center bg-black/60 text-white/80">
-                        {frame.label}
-                      </span>
+                    <div key={i} className="relative shrink-0 w-16 h-10 rounded-md overflow-hidden border border-white/10">
+                      <img src={frame.dataUrl} alt={`Frame at ${frame.label}`} className="w-full h-full object-cover" />
+                      <span className="absolute bottom-0 left-0 right-0 text-[8px] text-center bg-black/60 text-white/80">{frame.label}</span>
                     </div>
                   ))}
                   {extractedFrames.length > 8 && (
                     <div className="shrink-0 w-16 h-10 rounded-md border border-white/10 flex items-center justify-center bg-white/5">
-                      <span className="text-[10px] text-surface-200">
-                        +{extractedFrames.length - 8}
-                      </span>
+                      <span className="text-[10px] text-surface-200">+{extractedFrames.length - 8}</span>
                     </div>
                   )}
                 </div>
@@ -463,139 +346,189 @@ export default function UploadPage() {
             )}
           </AnimatePresence>
 
-          {/* Routine Details */}
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Routine Name <span className="text-accent-400">*</span>
-              </label>
-              <input
-                type="text"
-                value={routineName}
-                onChange={(e) => setRoutineName(e.target.value)}
-                placeholder='e.g., "Into the Light"'
-                disabled={isProcessing}
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors disabled:opacity-50"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Dancer / Team Name
-              </label>
-              <input
-                type="text"
-                value={dancerName}
-                onChange={(e) => setDancerName(e.target.value)}
-                placeholder="e.g., Emma R."
-                disabled={isProcessing}
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors disabled:opacity-50"
-              />
+          {/* ── ROUTINE DETAILS ─────────────────────── */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-surface-200 mb-3">Routine Details</p>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Routine Name <span className="text-accent-400">*</span></label>
+                <input type="text" value={routineName} onChange={(e) => setRoutineName(e.target.value)}
+                  placeholder='e.g., "Into the Light"' disabled={isProcessing}
+                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors disabled:opacity-50" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Dancer / Team Name</label>
+                <input type="text" value={dancerName} onChange={(e) => setDancerName(e.target.value)}
+                  placeholder="e.g., Emma R." disabled={isProcessing}
+                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors disabled:opacity-50" />
+              </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Studio Name
-            </label>
-            <input
-              type="text"
-              value={studioName}
-              onChange={(e) => setStudioName(e.target.value)}
-              placeholder="e.g., Elite Dance Academy"
-              disabled={isProcessing}
-              className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors disabled:opacity-50"
-            />
+            <label className="block text-sm font-medium mb-2">Studio Name</label>
+            <input type="text" value={studioName} onChange={(e) => setStudioName(e.target.value)}
+              placeholder="e.g., Elite Dance Academy" disabled={isProcessing}
+              className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors disabled:opacity-50" />
           </div>
 
-          {/* Selectors */}
-          <div className="grid sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                <Users className="inline h-3.5 w-3.5 mr-1" />
-                Age Division <span className="text-accent-400">*</span>
-              </label>
-              <select
-                value={ageGroup}
-                onChange={(e) => setAgeGroup(e.target.value)}
-                disabled={isProcessing}
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none disabled:opacity-50"
-              >
-                <option value="" className="bg-surface-900">
-                  Select...
-                </option>
-                {ageGroups.map((ag) => (
-                  <option key={ag} value={ag} className="bg-surface-900">
-                    {ag}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Choreographer</label>
+            <input type="text" value={choreographer} onChange={(e) => setChoreographer(e.target.value)}
+              placeholder="e.g., Ms. Sarah, John Kim" disabled={isProcessing}
+              className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors disabled:opacity-50" />
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                <Music className="inline h-3.5 w-3.5 mr-1" />
-                Style <span className="text-accent-400">*</span>
-              </label>
-              <select
-                value={style}
-                onChange={(e) => setStyle(e.target.value)}
-                disabled={isProcessing}
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none disabled:opacity-50"
-              >
-                <option value="" className="bg-surface-900">
-                  Select...
-                </option>
-                {danceStyles.map((s) => (
-                  <option key={s} value={s} className="bg-surface-900">
-                    {s}
-                  </option>
-                ))}
-              </select>
+          {/* ── COMPETITION INFO (Season Tracker) ────── */}
+          <div className="rounded-2xl border border-gold-500/20 bg-gold-500/5 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Trophy className="h-4 w-4 text-gold-400" />
+              <span className="text-sm font-semibold text-gold-300">Competition Info</span>
+              <span className="text-xs text-surface-200 ml-1">— Tracked in your Season Tracker</span>
             </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {/* Competition Name with suggestions */}
+              <div className="relative">
+                <label className="block text-sm font-medium mb-2">
+                  <span className="flex items-center gap-1.5">
+                    <Trophy className="h-3.5 w-3.5 text-gold-400" />
+                    Competition Name
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  value={competitionName}
+                  onChange={(e) => { setCompetitionName(e.target.value); setShowCompSuggestions(true); }}
+                  onFocus={() => setShowCompSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowCompSuggestions(false), 150)}
+                  placeholder="e.g., StarQuest, JUMP, NUVO…"
+                  disabled={isProcessing}
+                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-gold-500/50 transition-colors disabled:opacity-50"
+                />
+                {/* Autocomplete suggestions */}
+                {showCompSuggestions && filteredComps.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full rounded-xl border border-white/10 bg-surface-900 shadow-xl overflow-hidden">
+                    {filteredComps.slice(0, 6).map((comp) => (
+                      <button
+                        key={comp} type="button"
+                        onMouseDown={() => { setCompetitionName(comp); setShowCompSuggestions(false); }}
+                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/10 transition-colors"
+                      >
+                        {comp}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Entry Type <span className="text-accent-400">*</span>
-              </label>
-              <select
-                value={entryType}
-                onChange={(e) => setEntryType(e.target.value)}
-                disabled={isProcessing}
-                className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none disabled:opacity-50"
-              >
-                <option value="" className="bg-surface-900">
-                  Select...
-                </option>
-                {entryTypes.map((et) => (
-                  <option key={et} value={et} className="bg-surface-900">
-                    {et}
-                  </option>
-                ))}
-              </select>
+              {/* Competition Date */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5 text-gold-400" />
+                    Competition Date
+                  </span>
+                </label>
+                <input
+                  type="date"
+                  value={competitionDate}
+                  onChange={(e) => setCompetitionDate(e.target.value)}
+                  disabled={isProcessing}
+                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-gold-500/50 transition-colors disabled:opacity-50 [color-scheme:dark]"
+                />
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-surface-200/70">
+              💡 Adding competition info lets you track scores, awards, and progress across the full season in one place.
+            </p>
+          </div>
+
+          {/* ── DIVISIONS ───────────────────────────── */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-surface-200 mb-3">Divisions</p>
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  <Users className="inline h-3.5 w-3.5 mr-1" />Age Division <span className="text-accent-400">*</span>
+                </label>
+                <select value={ageGroup} onChange={(e) => setAgeGroup(e.target.value)} disabled={isProcessing}
+                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none disabled:opacity-50">
+                  <option value="" className="bg-surface-900">Select...</option>
+                  {ageGroups.map((ag) => <option key={ag} value={ag} className="bg-surface-900">{ag}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  <Music className="inline h-3.5 w-3.5 mr-1" />Style <span className="text-accent-400">*</span>
+                </label>
+                <select value={style} onChange={(e) => setStyle(e.target.value)} disabled={isProcessing}
+                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none disabled:opacity-50">
+                  <option value="" className="bg-surface-900">Select...</option>
+                  {danceStyles.map((s) => <option key={s} value={s} className="bg-surface-900">{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Entry Type <span className="text-accent-400">*</span></label>
+                <select value={entryType} onChange={(e) => setEntryType(e.target.value)} disabled={isProcessing}
+                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors appearance-none disabled:opacity-50">
+                  <option value="" className="bg-surface-900">Select...</option>
+                  {entryTypes.map((et) => <option key={et} value={et} className="bg-surface-900">{et}</option>)}
+                </select>
+              </div>
             </div>
           </div>
+
+          {/* Duplicate video warning */}
+          <AnimatePresence>
+            {duplicateInfo && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                className="p-5 rounded-2xl border border-amber-500/30 bg-amber-500/8"
+              >
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 text-sm">
+                    ⚠️
+                  </div>
+                  <div>
+                    <p className="font-semibold text-amber-300 text-sm">We&apos;ve seen this video before</p>
+                    <p className="text-xs text-surface-200 mt-1 leading-relaxed">
+                      This exact video was already submitted as <span className="text-white font-medium">&ldquo;{duplicateInfo.existingRoutineName}&rdquo;</span>. Submitting the same video twice won&apos;t show real improvement — judges and coaches can tell.
+                    </p>
+                    <p className="text-xs text-surface-200 mt-2 leading-relaxed">
+                      To show genuine progress, record a new version of the routine and submit that instead.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <a
+                    href={`/routines/${duplicateInfo.existingVideoId}`}
+                    className="flex-1 text-center py-2.5 rounded-xl border border-primary-500/40 bg-primary-500/10 text-primary-300 text-sm font-semibold hover:bg-primary-500/20 transition-colors"
+                  >
+                    View Existing Analysis →
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setDuplicateInfo(null)}
+                    className="flex-1 py-2.5 rounded-xl border border-white/10 bg-white/5 text-surface-200 text-sm hover:bg-white/10 transition-colors"
+                  >
+                    Upload Different Video
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Error */}
           <AnimatePresence>
             {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20"
-              >
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20">
                 <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-red-300">{error}</p>
                   {stage === "error" && (
-                    <button
-                      type="button"
-                      onClick={resetState}
-                      className="mt-2 inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors"
-                    >
-                      <RotateCcw className="h-3 w-3" />
-                      Try again
+                    <button type="button" onClick={resetState} className="mt-2 inline-flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition-colors">
+                      <RotateCcw className="h-3 w-3" /> Try again
                     </button>
                   )}
                 </div>
@@ -606,72 +539,26 @@ export default function UploadPage() {
           {/* Progress */}
           <AnimatePresence>
             {isProcessing && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-3"
-              >
-                {/* Progress bar */}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
                 <div className="h-2 rounded-full bg-surface-800 overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full bg-gradient-to-r from-primary-500 to-accent-400"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.3 }}
-                  />
+                  <motion.div className="h-full rounded-full bg-gradient-to-r from-primary-500 to-accent-400"
+                    initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ duration: 0.3 }} />
                 </div>
-
-                {/* Status */}
                 <div className="flex items-center justify-center gap-2 text-xs text-surface-200">
-                  {stage === "done" ? (
-                    <CheckCircle className="h-3.5 w-3.5 text-green-400" />
-                  ) : (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  )}
+                  {stage === "done" ? <CheckCircle className="h-3.5 w-3.5 text-green-400" /> : <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   <span>{statusMessage || stageLabel()}</span>
                 </div>
-
-                {/* Stage indicators */}
                 <div className="flex justify-between px-2">
-                  {[
-                    { key: "extracting", label: "Extract Frames" },
-                    { key: "uploading", label: "Upload" },
-                    { key: "analyzing", label: "AI Analysis" },
-                    { key: "done", label: "Done" },
-                  ].map((s, i) => {
-                    const stages: UploadStage[] = [
-                      "extracting",
-                      "uploading",
-                      "analyzing",
-                      "done",
-                    ];
+                  {(["extracting", "uploading", "analyzing", "done"] as UploadStage[]).map((s, i) => {
+                    const stages: UploadStage[] = ["extracting", "uploading", "analyzing", "done"];
                     const currentIdx = stages.indexOf(stage);
-                    const thisIdx = i;
-                    const isActive = thisIdx === currentIdx;
-                    const isComplete = thisIdx < currentIdx;
-
+                    const isActive = i === currentIdx;
+                    const isComplete = i < currentIdx;
                     return (
-                      <div key={s.key} className="flex flex-col items-center gap-1">
-                        <div
-                          className={`w-2 h-2 rounded-full transition-colors ${
-                            isComplete
-                              ? "bg-green-400"
-                              : isActive
-                              ? "bg-primary-400"
-                              : "bg-surface-600"
-                          }`}
-                        />
-                        <span
-                          className={`text-[10px] ${
-                            isActive
-                              ? "text-primary-400 font-medium"
-                              : isComplete
-                              ? "text-green-400"
-                              : "text-surface-400"
-                          }`}
-                        >
-                          {s.label}
+                      <div key={s} className="flex flex-col items-center gap-1">
+                        <div className={`w-2 h-2 rounded-full transition-colors ${isComplete ? "bg-green-400" : isActive ? "bg-primary-400" : "bg-surface-600"}`} />
+                        <span className={`text-[10px] ${isActive ? "text-primary-400 font-medium" : isComplete ? "text-green-400" : "text-surface-400"}`}>
+                          {s.charAt(0).toUpperCase() + s.slice(1)}
                         </span>
                       </div>
                     );
@@ -683,14 +570,8 @@ export default function UploadPage() {
 
           {/* Parental Consent */}
           <div className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
-            <input
-              type="checkbox"
-              id="parentConsent"
-              checked={parentConsent}
-              onChange={(e) => setParentConsent(e.target.checked)}
-              disabled={isProcessing}
-              className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-primary-500 focus:ring-primary-500 shrink-0"
-            />
+            <input type="checkbox" id="parentConsent" checked={parentConsent} onChange={(e) => setParentConsent(e.target.checked)}
+              disabled={isProcessing} className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-primary-500 focus:ring-primary-500 shrink-0" />
             <label htmlFor="parentConsent" className="text-xs text-surface-200 leading-relaxed">
               I am the parent or legal guardian of the performer(s) in this video (or I am the performer and I am 18+). I consent to video frames being processed by AI for dance analysis. Frames are automatically deleted within 24 hours. See our{" "}
               <a href="/privacy" className="text-primary-400 underline hover:text-primary-300">Privacy Policy</a>.
@@ -698,29 +579,25 @@ export default function UploadPage() {
           </div>
 
           {/* Submit */}
-          <button
-            type="submit"
-            disabled={isProcessing || !parentConsent}
-            className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-6 py-4 text-lg font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button type="submit" disabled={isProcessing || !parentConsent}
+            className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-6 py-4 text-lg font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
             {isProcessing ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                {stageLabel()}
-              </>
+              <><Loader2 className="h-5 w-5 animate-spin" />{stageLabel()}</>
             ) : (
-              <>
-                Analyze My Routine
-                <ArrowRight className="h-5 w-5" />
-              </>
+              <>Analyze My Routine <ArrowRight className="h-5 w-5" /></>
             )}
           </button>
-
-          <p className="text-xs text-surface-200 text-center">
-            1 credit will be used for this analysis.
-          </p>
+          <p className="text-xs text-surface-200 text-center">1 credit will be used for this analysis.</p>
         </motion.form>
       </div>
     </div>
+  );
+}
+
+export default function UploadPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 rounded-full border-2 border-primary-400 border-t-transparent" /></div>}>
+      <UploadPageInner />
+    </Suspense>
   );
 }

@@ -16,6 +16,9 @@ export async function GET(request: Request) {
       if (user) {
         const createdAt = new Date(user.created_at).getTime();
         const isNew = Date.now() - createdAt < 60_000;
+        // Create service client early — needed for credit grant and credit check
+        const serviceClient = await createServiceClient();
+
         if (isNew) {
           notifyNewSignup(user.email || "unknown", user.id).catch((err) =>
             console.error("Signup notification failed:", err)
@@ -23,7 +26,6 @@ export async function GET(request: Request) {
         }
 
         // Check if user has credits — if not, check for recent payment before redirecting
-        const serviceClient = await createServiceClient();
         const creditStatus = await getUserCredits(
           serviceClient,
           user.id,

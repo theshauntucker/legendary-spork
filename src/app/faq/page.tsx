@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Navbar from "@/components/Navbar";
 import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
 
@@ -19,7 +18,6 @@ export const metadata: Metadata = {
 export default function FAQPage() {
   return (
     <main>
-      <Navbar />
       <FAQ />
       <Footer />
     </main>

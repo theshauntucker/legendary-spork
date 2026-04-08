@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getUserCredits } from "@/lib/credits";
-import { notifyAnalysisComplete, notifyAnalysisError } from "@/lib/notifications";
 
 interface FrameInput {
   timestamp: number;
@@ -13,71 +13,92 @@ interface RoutineMetadata {
   routineName: string;
   dancerName?: string;
   studioName?: string;
+  choreographer?: string;
+  competitionName?: string;
+  competitionDate?: string;
   ageGroup: string;
   style: string;
   entryType: string;
-  duration: number; // seconds
+  duration: number;
   resolution: string;
   originalFilename: string;
   originalFileSize: number;
 }
 
-export const maxDuration = 60; // Allow up to 60s for large uploads
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-    if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
-
-    // Check credits before proceeding
     const serviceClient = await createServiceClient();
-    const creditStatus = await getUserCredits(
-      serviceClient,
-      user.id,
-      user.email
-    );
-
+    const creditStatus = await getUserCredits(serviceClient, user.id, user.email);
     if (!creditStatus.hasCredits) {
-      return NextResponse.json(
-        {
-          error: "No credits remaining",
-          code: "NO_CREDITS",
-        },
-        { status: 402 }
-      );
+      return NextResponse.json({ error: "No credits remaining", code: "NO_CREDITS" }, { status: 402 });
     }
 
     const body = await request.json();
-    const { frames, metadata } = body as {
+    const { frames, metadata, parentVideoId: explicitParentId } = body as {
       frames: FrameInput[];
       metadata: RoutineMetadata;
+      parentVideoId?: string;
     };
 
     if (!frames || frames.length === 0) {
-      return NextResponse.json(
-        { error: "No frames provided" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No frames provided" }, { status: 400 });
     }
-
     if (!metadata?.routineName || !metadata?.ageGroup || !metadata?.style || !metadata?.entryType) {
-      return NextResponse.json(
-        { error: "Missing required metadata" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing required metadata" }, { status: 400 });
     }
 
-    // Format duration from seconds
     const durationStr = formatDuration(metadata.duration);
 
-    // Create video record in the database
+    // ── Duplicate frame detection ────────────────────────────────────────────
+    // Fingerprint the first 3 frames to catch re-uploads of the same video
+    const fingerprintInput = frames
+      .slice(0, 3)
+      .map(f => f.base64.slice(0, 200))
+      .join("|");
+    const frameFingerprint = crypto
+      .createHash("md5")
+      .update(fingerprintInput)
+      .digest("hex");
+
+    // Check if this user has already submitted a video with this exact fingerprint
+    const { data: existingMatch } = await serviceClient
+      .from("videos")
+      .select("id, routine_name, status, created_at")
+      .eq("user_id", user.id)
+      .eq("frame_fingerprint", frameFingerprint)
+      .in("status", ["analyzed", "processing", "uploaded"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existingMatch) {
+      return NextResponse.json({
+        error: "DUPLICATE_VIDEO",
+        code: "DUPLICATE_VIDEO",
+        existingVideoId: existingMatch.id,
+        existingRoutineName: existingMatch.routine_name,
+        existingStatus: existingMatch.status,
+        message: `This video has already been submitted as "${existingMatch.routine_name}". If you want to track a new submission, record a new version of the routine.`,
+      }, { status: 409 });
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
+    // Parse competition date safely
+    let parsedCompDate: string | null = null;
+    if (metadata.competitionDate) {
+      try {
+        const d = new Date(metadata.competitionDate);
+        if (!isNaN(d.getTime())) parsedCompDate = d.toISOString().split("T")[0];
+      } catch { /* ignore invalid dates */ }
+    }
+
+    // Create video record — including new competition fields
     const { data: video, error: videoError } = await serviceClient
       .from("videos")
       .insert({
@@ -87,32 +108,28 @@ export async function POST(request: NextRequest) {
         routine_name: metadata.routineName,
         dancer_name: metadata.dancerName || null,
         studio_name: metadata.studioName || null,
+        choreographer: metadata.choreographer || null,
+        competition_name: metadata.competitionName || null,
+        competition_date: parsedCompDate,
         age_group: metadata.ageGroup,
         style: metadata.style,
         entry_type: metadata.entryType,
         file_size: metadata.originalFileSize || null,
         status: "processing",
+        frame_fingerprint: frameFingerprint,
       })
       .select("id")
       .single();
 
     if (videoError || !video) {
       console.error("DB error creating video:", videoError);
-      return NextResponse.json(
-        { error: "Failed to create video record" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to create video record" }, { status: 500 });
     }
 
-    // Save frames to storage immediately (before AI analysis)
-    const frameUrls = await saveFramesToStorage(
-      serviceClient,
-      frames,
-      user.id,
-      video.id
-    );
+    // Save frames to storage
+    const frameUrls = await saveFramesToStorage(serviceClient, frames, user.id, video.id);
 
-    // Store frame data and metadata so the background process can access it
+    // Store frame data + metadata for background processing
     await serviceClient
       .from("videos")
       .update({
@@ -127,31 +144,46 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", video.id);
 
-    // Fire off the background analysis — only send IDs, process reads frames from storage
-    // Credit is deducted in /api/process AFTER successful analysis (not here)
+    // Use explicit parentVideoId if provided (from "Submit Improved Routine" button),
+    // otherwise auto-detect by routine name — the explicit path is always preferred.
+    let parentVideoId: string | null = explicitParentId || null;
+
+    if (!parentVideoId) {
+      // Fallback: auto-detect by routine name for uploads that bypass the tracker UI
+      try {
+        const { data: previousVideos } = await serviceClient
+          .from("videos")
+          .select("id")
+          .eq("user_id", user.id)
+          .ilike("routine_name", metadata.routineName)
+          .eq("status", "analyzed")
+          .neq("id", video.id)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (previousVideos && previousVideos.length > 0) {
+          parentVideoId = previousVideos[0].id;
+          console.log(`Re-submission auto-detected — parent video: ${parentVideoId}`);
+        }
+      } catch (parentErr) {
+        console.warn("Could not check for previous submissions:", parentErr);
+      }
+    } else {
+      console.log(`Re-submission explicitly linked — parent video: ${parentVideoId}`);
+    }
+
+    // Fire background analysis (with parentVideoId if re-submission detected)
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
     fetch(`${baseUrl}/api/process`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        videoId: video.id,
-        userId: user.id,
-      }),
-    }).catch((err) => {
-      console.error("Failed to trigger background processing:", err);
-    });
+      body: JSON.stringify({ videoId: video.id, userId: user.id, parentVideoId }),
+    }).catch((err) => console.error("Failed to trigger background processing:", err));
 
-    // Return immediately — client redirects to processing page
-    return NextResponse.json({
-      success: true,
-      videoId: video.id,
-    });
+    return NextResponse.json({ success: true, videoId: video.id });
   } catch (err) {
     console.error("Analyze route error:", err);
-    return NextResponse.json(
-      { error: "Something went wrong during upload" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Something went wrong during upload" }, { status: 500 });
   }
 }
 
@@ -161,49 +193,22 @@ function formatDuration(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-function selectEvenlySpaced<T>(arr: T[], count: number): T[] {
-  if (arr.length <= count) return arr;
-  const step = (arr.length - 1) / (count - 1);
-  return Array.from({ length: count }, (_, i) => arr[Math.round(i * step)]);
-}
-
-/**
- * Save a subset of key frames to Supabase Storage so they can be
- * displayed alongside the AI's timeline notes on the analysis report.
- */
 async function saveFramesToStorage(
-  serviceClient: ReturnType<typeof createServiceClient> extends Promise<infer T> ? T : never,
+  serviceClient: Awaited<ReturnType<typeof createServiceClient>>,
   frames: FrameInput[],
   userId: string,
   videoId: string
 ): Promise<Array<{ timestamp: number; label: string; path: string }>> {
-  // Save ALL frames so each timeline note can match a unique thumbnail
-  const selected = frames;
   const results: Array<{ timestamp: number; label: string; path: string }> = [];
-
-  for (const frame of selected) {
+  for (const frame of frames) {
     try {
       const buffer = Buffer.from(frame.base64, "base64");
       const filePath = `analysis-frames/${userId}/${videoId}/${frame.timestamp.toFixed(1)}.jpg`;
-
       const { error } = await serviceClient.storage
         .from("videos")
-        .upload(filePath, buffer, {
-          contentType: "image/jpeg",
-          upsert: true,
-        });
-
-      if (!error) {
-        results.push({
-          timestamp: frame.timestamp,
-          label: frame.label,
-          path: filePath,
-        });
-      }
-    } catch {
-      // Skip failed frames — non-critical
-    }
+        .upload(filePath, buffer, { contentType: "image/jpeg", upsert: true });
+      if (!error) results.push({ timestamp: frame.timestamp, label: frame.label, path: filePath });
+    } catch { /* skip failed frames */ }
   }
-
   return results;
 }

@@ -35,13 +35,19 @@ export default async function SuccessPage({
         // Payment recorded — but were credits actually granted?
         const hasCredits = await hasCreditsInDb(serviceClient, user.id);
         if (!hasCredits) {
-          const paymentType = "beta_access"; // safe default for recovery
-          const isBeta = true;
-          const creditsToGrant = BETA_CREDITS;
-          await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
-          console.log(
-            `Success page: Recovered missing credits for ${user.id}`
-          );
+          // Look up the actual payment to grant the correct number of credits
+          const { data: paymentRow } = await serviceClient
+            .from("payments")
+            .select("payment_type, credits_granted")
+            .eq("stripe_session_id", sessionId)
+            .maybeSingle();
+          const recoveryType = paymentRow?.payment_type || "beta_access";
+          const isBetaRecovery = recoveryType === "beta_access";
+          const recoveryCredits =
+            paymentRow?.credits_granted ||
+            (isBetaRecovery ? BETA_CREDITS : recoveryType === "video_analysis" ? 5 : 1);
+          await grantCredits(serviceClient, user.id, recoveryCredits, isBetaRecovery);
+          console.log(`Success page: Recovered ${recoveryCredits} missing credits for ${user.id}`);
         }
       } else {
         // Not yet processed by webhook — verify with Stripe and grant credits
@@ -54,8 +60,11 @@ export default async function SuccessPage({
         ) {
           const paymentType =
             session.metadata?.payment_type || "beta_access";
+          const referralCode = session.metadata?.referral_code || null;
           const isBeta = paymentType === "beta_access";
-          const creditsToGrant = isBeta ? BETA_CREDITS : 1;
+          const isPack = paymentType === "video_analysis";
+          const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : 1;
+          const amountFallback = isPack ? 2999 : isBeta ? 999 : 899;
 
           const { error: insertError } = await serviceClient
             .from("payments")
@@ -67,10 +76,11 @@ export default async function SuccessPage({
                   ? session.payment_intent
                   : null,
               payment_type: paymentType,
-              amount_cents: session.amount_total || (isBeta ? 999 : 399),
+              amount_cents: session.amount_total || amountFallback,
               currency: session.currency || "usd",
               status: "completed",
               credits_granted: creditsToGrant,
+              referral_code: referralCode,
             });
 
           if (insertError && insertError.code !== "23505") {
@@ -78,10 +88,9 @@ export default async function SuccessPage({
           }
 
           // Always try to grant credits — even if payment insert was a duplicate.
-          // The webhook may have recorded the payment but failed to grant credits.
           await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
           console.log(
-            `Success page: Granted ${creditsToGrant} credits to ${user.id} (webhook fallback)`
+            `Success page: Granted ${creditsToGrant} credits to ${user.id} (${paymentType} — webhook fallback)`
           );
         }
       }
