@@ -42,7 +42,7 @@ export default function CountdownBanner() {
   return (
     <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-primary-700 via-accent-600 to-gold-600 shadow-lg shadow-primary-900/50">
       <div className="mx-auto max-w-7xl px-4 py-2.5 flex flex-row items-center justify-center gap-2 sm:gap-4 text-white text-sm">
-        {/* Offer text — single row at all screen sizes */}
+        {/* Offer text */}
         <div className="flex items-center gap-1.5 font-semibold shrink-0">
           <Zap className="h-3.5 w-3.5 text-gold-300 shrink-0" />
           <span className="text-xs sm:text-sm">
