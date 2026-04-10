@@ -611,11 +611,16 @@ export default function UploadScreen() {
               backgroundColor: purchaseType === 'single' ? 'rgba(147,51,234,0.20)' : 'rgba(255,255,255,0.06)',
               padding: 18,
             }}>
-              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
-                Single Analysis — $8.99
-              </Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
+                  2 Analyses — $8.99
+                </Text>
+                <View style={{ backgroundColor: 'rgba(236,72,153,0.20)', borderRadius: 999, paddingVertical: 3, paddingHorizontal: 10 }}>
+                  <Text style={{ color: colors.accent[400], fontSize: 10, fontWeight: '800' }}>BOGO</Text>
+                </View>
+              </View>
               <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 4 }}>
-                1 full AI analysis for any routine
+                2 full AI analyses — buy one, get one free!
               </Text>
             </View>
           </TouchableOpacity>
@@ -702,7 +707,7 @@ export default function UploadScreen() {
                 {hasCredits
                   ? 'Analyze Now'
                   : purchaseType === 'single'
-                    ? 'Get 1 Analysis — $8.99'
+                    ? 'Get 2 Analyses — $8.99'
                     : 'Get 5 Analyses — $29.99'}
               </Text>
             )}

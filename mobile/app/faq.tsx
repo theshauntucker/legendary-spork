@@ -36,7 +36,7 @@ const faqs = [
   },
   {
     q: 'What does it cost?',
-    a: 'Single analyses are $8.99 each, or grab our Competition Pack — 5 analyses for $29.99 (just $6 each). Follow us on Instagram @routinex.ai for occasional free analysis giveaways!',
+    a: 'Right now we have a BOGO launch offer: $8.99 gets you 2 full analyses (buy one, get one free). Or grab our Competition Pack — 5 analyses for $29.99 (just $6 each). Follow us on Instagram @routinex.ai for updates and special offers!',
   },
   {
     q: 'Can I get a refund?',

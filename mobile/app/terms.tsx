@@ -20,7 +20,7 @@ const sections = [
   },
   {
     title: '4. Payments & Refunds',
-    body: 'Single analyses are $8.99 USD each, or you can purchase a Competition Pack of 5 analyses for $29.99 USD. All payments are processed through Stripe. Refunds are handled on a case-by-case basis — contact us at the email below.',
+    body: 'Our BOGO launch offer gives you 2 analyses for $8.99 USD, or you can purchase a Competition Pack of 5 analyses for $29.99 USD. All payments are processed securely. Refunds are handled on a case-by-case basis — contact us at the email below.',
   },
   {
     title: '5. User Content',

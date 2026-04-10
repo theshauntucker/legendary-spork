@@ -7,8 +7,8 @@ export const dynamic = "force-dynamic";
 // Product ID → credits mapping (must match App Store Connect)
 const PRODUCT_CREDITS: Record<string, { credits: number; paymentType: string }> =
   {
-    routinex_single: { credits: 1, paymentType: "iap_single" },
-    routinex_pack: { credits: 5, paymentType: "iap_pack" },
+    routinex_single: { credits: 2, paymentType: "iap_single" },  // BOGO: $8.99 = 2 analyses
+    routinex_pack: { credits: 5, paymentType: "iap_pack" },      // $29.99 = 5 analyses
   };
 
 /**

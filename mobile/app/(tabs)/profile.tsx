@@ -32,14 +32,14 @@ export default function ProfileScreen() {
   const handleDeleteAccount = () => {
     Alert.alert(
       'Delete Account',
-      'To delete your account and all associated data, please contact us at 22tucker22@comcast.net. We will process your request within 48 hours.',
+      'To delete your account and all associated data, please contact us at danceroutinex@gmail.com. We will process your request within 48 hours.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Send Email',
           onPress: () => {
             Linking.openURL(
-              `mailto:22tucker22@comcast.net?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20RoutineX%20account.%0A%0AEmail:%20${user?.email}`
+              `mailto:danceroutinex@gmail.com?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20RoutineX%20account.%0A%0AEmail:%20${user?.email}`
             );
           },
         },

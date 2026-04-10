@@ -163,17 +163,38 @@ export default function LandingScreen() {
           A private coaching session costs $75+. RoutineX gives you detailed feedback for a fraction of the price.
         </Text>
 
-        {/* Single Analysis */}
-        <View style={{ ...glass, padding: 22, marginTop: 20 }}>
-          <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700' }}>Single Analysis</Text>
+        {/* BOGO Launch Offer */}
+        <View style={{
+          ...glass,
+          borderColor: 'rgba(236,72,153,0.30)',
+          borderWidth: 1,
+          padding: 22,
+          marginTop: 20,
+        }}>
+          <View style={{
+            position: 'absolute', top: -12, left: 20,
+            borderRadius: 999, overflow: 'hidden',
+          }}>
+            <LinearGradient
+              colors={[colors.accent[500], colors.accent[600]]}
+              {...gradientProps.leftToRight}
+              style={{ paddingVertical: 4, paddingHorizontal: 14, borderRadius: 999 }}
+            >
+              <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 }}>BOGO LAUNCH</Text>
+            </LinearGradient>
+          </View>
+          <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700', marginTop: 4 }}>2 Analyses</Text>
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4, marginTop: 8 }}>
             <Text style={{ color: '#fff', fontSize: 40, fontWeight: '800' }}>$8.99</Text>
-            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>1 analysis</Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>2 analyses</Text>
           </View>
-          <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 6 }}>
-            Full AI analysis for any routine. Competition-standard scoring and feedback.
+          <Text style={{ color: colors.accent[400], fontSize: 13, fontWeight: '600', marginTop: 4 }}>
+            Buy one, get one free!
           </Text>
-          {['Full AI analysis', 'Competition-standard scoring', 'Timestamped judge notes', 'Improvement roadmap', 'Results in under 5 minutes'].map((item) => (
+          <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 6 }}>
+            2 full AI analyses for any routine. Competition-standard scoring and detailed feedback.
+          </Text>
+          {['2 full AI analyses', 'Competition-standard scoring', 'Timestamped judge notes', 'Improvement roadmap', 'Results in under 5 minutes'].map((item) => (
             <View key={item} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
               <Text style={{ color: colors.primary[400], fontSize: 12 }}>✓</Text>
               <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{item}</Text>
@@ -243,7 +264,7 @@ export default function LandingScreen() {
           <Text style={{ color: colors.textTertiary, fontSize: 12, textDecorationLine: 'line-through' }}>Competition entry: $80-$120</Text>
         </View>
         <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600', textAlign: 'center', marginTop: 8 }}>
-          RoutineX: from <Text style={{ color: colors.primary[400] }}>$6/analysis</Text>
+          RoutineX: from <Text style={{ color: colors.accent[400] }}>$4.50/analysis</Text> with BOGO
         </Text>
       </LinearGradient>
 
