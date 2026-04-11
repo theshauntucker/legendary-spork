@@ -11,6 +11,7 @@ import FAQ from "@/components/FAQ";
 import PrivacyTrust from "@/components/PrivacyTrust";
 import Footer from "@/components/Footer";
 import StickyBottomCTA from "@/components/StickyBottomCTA";
+import SocialProofTicker from "@/components/SocialProofTicker";
 
 export const metadata: Metadata = {
   alternates: {
@@ -32,6 +33,7 @@ export default function Home() {
       <FAQ />
       <Footer />
       <StickyBottomCTA />
+      <SocialProofTicker />
     </main>
   );
 }
