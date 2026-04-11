@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { notifyNewSignup } from "@/lib/notifications";
-import { getUserCredits } from "@/lib/credits";
+import { getUserCredits, grantCredits } from "@/lib/credits";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -23,6 +23,12 @@ export async function GET(request: Request) {
           notifyNewSignup(user.email || "unknown", user.id).catch((err) =>
             console.error("Signup notification failed:", err)
           );
+          // Grant 1 free analysis on signup — permanently builds trust with new users
+          try {
+            await grantCredits(serviceClient, user.id, 1, false);
+          } catch (err) {
+            console.error("Free credit grant failed:", err);
+          }
         }
 
         // Check if user has credits — if not, check for recent payment before redirecting

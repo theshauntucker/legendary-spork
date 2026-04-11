@@ -29,14 +29,14 @@ export default function StickyBottomCTA() {
         >
           <div className="mx-auto max-w-lg glass border border-white/10 rounded-2xl px-4 py-3 flex items-center justify-between gap-3 shadow-2xl">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate">BOGO launch offer 🎉</p>
-              <p className="text-xs text-surface-200 truncate">2 analyses for $8.99 — limited time</p>
+              <p className="text-sm font-bold text-white truncate">✨ First analysis is always free</p>
+              <p className="text-xs text-surface-200 truncate">No card required — see real judge feedback instantly</p>
             </div>
             <a
               href="/signup"
               className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-4 py-2 text-sm font-bold text-white hover:opacity-90 transition-opacity"
             >
-              Get 2 for $8.99
+              Try Free
               <ArrowRight className="h-3.5 w-3.5" />
             </a>
             <button

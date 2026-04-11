@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Play, ArrowRight, Users, Star, Shield, Zap, Trophy } from "lucide-react";
+import { Play, ArrowRight, Users, Star, Shield, Zap, Trophy, Gift } from "lucide-react";
 
 export default function Hero() {
   return (
@@ -82,34 +82,49 @@ export default function Hero() {
           </div>
         </motion.div>
 
+        {/* PRIMARY CTA — Free first analysis */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+          className="mt-10 flex flex-col items-center gap-3"
         >
           <div className="flex flex-col items-center gap-1">
             <a
               href="/signup"
-              className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary-600/25 hover:shadow-primary-600/40 transition-all animate-pulse-glow"
+              className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-10 py-4 text-xl font-bold text-white shadow-lg shadow-primary-600/25 hover:shadow-primary-600/40 transition-all animate-pulse-glow"
             >
-              Get 2 Analyses — $8.99
+              <Gift className="h-5 w-5" />
+              Try It Free — No Card Required
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </a>
-            <span className="text-xs text-gold-300 font-semibold">⚡ Buy One, Get One Free — Limited Time</span>
+            <span className="text-sm text-gold-300 font-semibold">✨ Your first analysis is on us — always</span>
           </div>
-          <div className="flex flex-col items-center gap-1">
-            <a
-              href="/signup"
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-4 text-base font-medium text-white hover:bg-white/5 transition-colors"
-            >
-              Get 5 Analyses — $29.99
-            </a>
-            <span className="text-xs text-gray-400">Only $6 each — save $15</span>
+
+          {/* Secondary options */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-2">
+            <div className="flex flex-col items-center gap-0.5">
+              <a
+                href="/signup"
+                className="inline-flex items-center gap-2 rounded-full border border-gold-500/40 bg-gold-500/10 px-6 py-3 text-sm font-semibold text-white hover:bg-gold-500/20 transition-colors"
+              >
+                ⚡ BOGO — Get 2 for $8.99
+              </a>
+              <span className="text-xs text-surface-200">Buy one, get one free</span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
+              <a
+                href="/signup"
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 px-6 py-3 text-sm font-medium text-surface-200 hover:bg-white/5 transition-colors"
+              >
+                Get 5 Analyses — $29.99
+              </a>
+              <span className="text-xs text-surface-200">Only $6 each</span>
+            </div>
           </div>
         </motion.div>
 
-        <p className="mt-2 text-xs text-surface-200">
+        <p className="mt-3 text-xs text-surface-200">
           Already have an account?{" "}
           <a href="/login" className="underline hover:text-white transition-colors">Log in</a>
         </p>
