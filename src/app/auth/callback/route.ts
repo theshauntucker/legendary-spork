@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { notifyNewSignup } from "@/lib/notifications";
-import { getUserCredits } from "@/lib/credits";
+import { getUserCredits, grantCredits } from "@/lib/credits";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -23,6 +23,24 @@ export async function GET(request: Request) {
           notifyNewSignup(user.email || "unknown", user.id).catch((err) =>
             console.error("Signup notification failed:", err)
           );
+        }
+
+        // Grant free credit if this user has NO credits record yet.
+        // Intentionally NOT tied to isNew — email confirmation can take minutes,
+        // so the 60s window was silently failing for almost everyone.
+        // Idempotent: if a credits row already exists (paid or previously granted), skip.
+        const { data: existingCredits } = await serviceClient
+          .from("user_credits")
+          .select("user_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (!existingCredits) {
+          try {
+            await grantCredits(serviceClient, user.id, 1, false);
+          } catch (err) {
+            console.error("Free credit grant failed:", err);
+          }
         }
 
         // Check if user has credits — if not, check for recent payment before redirecting

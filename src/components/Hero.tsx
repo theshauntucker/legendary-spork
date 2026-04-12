@@ -1,12 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Play, ArrowRight, Users, Star, Shield, Zap, Trophy } from "lucide-react";
+import { Play, ArrowRight, Users, Star, Shield, Zap, Trophy, Gift } from "lucide-react";
 
 export default function Hero() {
   return (
     <section className="relative min-h-screen overflow-hidden pt-[130px]">
-      {/* Background effects */}
       <div className="absolute inset-0">
         <div className="absolute top-0 right-0 w-80 h-80 bg-primary-400/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent-600/20 rounded-full blur-3xl" />
@@ -16,7 +15,6 @@ export default function Hero() {
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 pb-20 text-center">
-        {/* Brand name */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -28,7 +26,6 @@ export default function Hero() {
           </h2>
         </motion.div>
 
-        {/* Launch badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -44,7 +41,6 @@ export default function Hero() {
           </span>
         </motion.div>
 
-        {/* Main headline */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -55,7 +51,6 @@ export default function Hero() {
           <span className="gradient-text">Track the Whole Season.</span>
         </motion.h1>
 
-        {/* Subheadline */}
         <motion.p
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -67,7 +62,6 @@ export default function Hero() {
           in under 5 minutes — then track every re-submission all season long as your dancer improves.
         </motion.p>
 
-        {/* Trust badges */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -88,44 +82,53 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        {/* CTA Buttons */}
+        {/* PRIMARY CTA — Free first analysis */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+          className="mt-10 flex flex-col items-center gap-3"
         >
-          {/* BOGO CTA */}
           <div className="flex flex-col items-center gap-1">
             <a
               href="/signup"
-              className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary-600/25 hover:shadow-primary-600/40 transition-all animate-pulse-glow"
+              className="group relative inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-10 py-4 text-xl font-bold text-white shadow-lg shadow-primary-600/25 hover:shadow-primary-600/40 transition-all animate-pulse-glow"
             >
-              Get 2 Analyses — $8.99
+              <Gift className="h-5 w-5" />
+              Try It Free — No Card Required
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </a>
-            <span className="text-xs text-gold-300 font-semibold">⚡ Buy One, Get One Free — Limited Time</span>
+            <span className="text-sm text-gold-300 font-semibold">✨ Your first analysis is on us — always</span>
           </div>
 
-          {/* Pack CTA */}
-          <div className="flex flex-col items-center gap-1">
-            <a
-              href="/signup"
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-6 py-4 text-base font-medium text-white hover:bg-white/5 transition-colors"
-            >
-              Get 5 Analyses — $29.99
-            </a>
-            <span className="text-xs text-gray-400">Only $6 each — save $15</span>
+          {/* Secondary options */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-2">
+            <div className="flex flex-col items-center gap-0.5">
+              <a
+                href="/signup"
+                className="inline-flex items-center gap-2 rounded-full border border-gold-500/40 bg-gold-500/10 px-6 py-3 text-sm font-semibold text-white hover:bg-gold-500/20 transition-colors"
+              >
+                ⚡ BOGO — Get 2 for $8.99
+              </a>
+              <span className="text-xs text-surface-200">Buy one, get one free</span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
+              <a
+                href="/signup"
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 px-6 py-3 text-sm font-medium text-surface-200 hover:bg-white/5 transition-colors"
+              >
+                Get 5 Analyses — $29.99
+              </a>
+              <span className="text-xs text-surface-200">Only $6 each</span>
+            </div>
           </div>
         </motion.div>
 
-        {/* Small login link for returning users — not a CTA */}
-        <p className="mt-2 text-xs text-surface-200">
+        <p className="mt-3 text-xs text-surface-200">
           Already have an account?{" "}
           <a href="/login" className="underline hover:text-white transition-colors">Log in</a>
         </p>
 
-        {/* Privacy trust badge — DIRECTLY below buttons, impossible to miss */}
         <div className="mt-6 mx-auto max-w-2xl">
           <div className="bg-white/10 border border-gold-400/50 rounded-2xl px-6 py-4 text-center">
             <p className="text-base font-bold text-white mb-1">🔒 Your video never leaves your phone.</p>
@@ -133,23 +136,18 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* See Sample link */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.4 }}
           className="mt-4"
         >
-          <a
-            href="#sample-analysis"
-            className="inline-flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors"
-          >
+          <a href="#sample-analysis" className="inline-flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors">
             <Play className="h-4 w-4 text-primary-400" />
             See a sample analysis first
           </a>
         </motion.div>
 
-        {/* Social proof */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -163,22 +161,14 @@ export default function Hero() {
           <div className="hidden sm:block h-4 w-px bg-surface-800" />
           <div className="flex items-center gap-1">
             {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className="h-4 w-4 fill-gold-400 text-gold-400"
-              />
+              <Star key={i} className="h-4 w-4 fill-gold-400 text-gold-400" />
             ))}
             <span className="ml-1">from studio owners nationwide</span>
           </div>
           <div className="hidden sm:block h-4 w-px bg-surface-800" />
-          <div>
-            Works with{" "}
-            <span className="text-white font-semibold">every</span> major
-            competition
-          </div>
+          <div>Works with <span className="text-white font-semibold">every</span> major competition</div>
         </motion.div>
 
-        {/* Floating analysis preview card */}
         <motion.div
           initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
@@ -188,12 +178,8 @@ export default function Hero() {
           <div className="glass rounded-2xl p-6 sm:p-8 text-left">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-xs text-primary-400 font-semibold uppercase tracking-wider">
-                  Sample Analysis Preview
-                </p>
-                <p className="text-lg font-bold mt-1">
-                  Teen Jazz Solo — &quot;Into the Light&quot;
-                </p>
+                <p className="text-xs text-primary-400 font-semibold uppercase tracking-wider">Sample Analysis Preview</p>
+                <p className="text-lg font-bold mt-1">Teen Jazz Solo — &quot;Into the Light&quot;</p>
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold gradient-text">274</p>
@@ -207,40 +193,22 @@ export default function Hero() {
                 { label: "Choreography", score: 18.3, max: 20 },
                 { label: "Overall", score: 9.0, max: 10 },
               ].map((cat) => (
-                <div
-                  key={cat.label}
-                  className="rounded-xl bg-white/5 p-3 text-center"
-                >
+                <div key={cat.label} className="rounded-xl bg-white/5 p-3 text-center">
                   <p className="text-xs text-surface-200">{cat.label}</p>
-                  <p className="text-xl font-bold text-white mt-1">
-                    {cat.score}
-                  </p>
+                  <p className="text-xl font-bold text-white mt-1">{cat.score}</p>
                   <div className="mt-2 h-1.5 rounded-full bg-surface-800 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-primary-500 to-accent-400"
-                      style={{
-                        width: `${(cat.score / cat.max) * 100}%`,
-                      }}
-                    />
+                    <div className="h-full rounded-full bg-gradient-to-r from-primary-500 to-accent-400" style={{ width: `${(cat.score / cat.max) * 100}%` }} />
                   </div>
-                  <p className="text-[10px] text-surface-200 mt-1">
-                    / {cat.max}
-                  </p>
+                  <p className="text-[10px] text-surface-200 mt-1">/ {cat.max}</p>
                 </div>
               ))}
             </div>
             <p className="mt-4 text-xs text-center text-surface-200">
-              <a
-                href="#sample-analysis"
-                className="text-primary-400 hover:underline"
-              >
-                See the full detailed analysis below &darr;
-              </a>
+              <a href="#sample-analysis" className="text-primary-400 hover:underline">See the full detailed analysis below &darr;</a>
             </p>
           </div>
         </motion.div>
       </div>
-
     </section>
   );
 }

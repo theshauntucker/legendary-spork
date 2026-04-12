@@ -269,7 +269,7 @@ export default function DashboardClient({
               <p className="text-surface-200 text-sm max-w-lg mx-auto">
                 {credits.used > 0
                   ? "Pick up more credits to keep improving your routines all season long."
-                  : "Grab a BOGO ($8.99 for 2) or a Competition Pack to get started."}
+                  : "Get 2 analyses for $8.99 (BOGO) or a 5-pack for $29.99 to keep tracking all season."}
               </p>
               {/* Privacy statement */}
               <div className="mt-3 flex items-center justify-center gap-2 text-xs text-gray-400">
@@ -280,16 +280,16 @@ export default function DashboardClient({
 
             {/* Pricing options */}
             <div className="grid sm:grid-cols-2 gap-4">
-              {/* Single Analysis */}
+              {/* BOGO */}
               <PurchaseCard
-                badge="⚡ Single Analysis"
-                badgeColor="text-accent-300 bg-accent-500/20"
-                title="Single Analysis"
+                badge="⚡ Buy One Get One"
+                badgeColor="text-gold-300 bg-gold-500/20"
+                title="BOGO — 2 Analyses"
                 price="$8.99"
-                description="Get one full AI analysis for any routine."
-                features={["1 full AI analysis", "Competition-standard scoring", "Timestamped judge notes", "Improvement roadmap"]}
-                buttonText="Get 1 Analysis — $8.99"
-                buttonStyle="border-2 border-accent-500 hover:bg-accent-500/20"
+                description="Buy one analysis, get one free. Only $4.50 each."
+                features={["2 full AI analyses included", "Competition-standard scoring", "Timestamped judge notes", "Improvement roadmap", "Re-submission score tracking"]}
+                buttonText="Get 2 Analyses — $8.99"
+                buttonStyle="border-2 border-gold-500 hover:bg-gold-500/20"
                 type="single"
               />
 

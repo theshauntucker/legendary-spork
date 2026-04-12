@@ -21,6 +21,7 @@ import {
   Cpu,
   Trash2,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 
 interface JudgeScore {
@@ -613,19 +614,32 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
             </p>
           </div>
 
-          {/* Bottom CTA */}
-          <div className="bg-gradient-to-r from-primary-700/30 to-accent-600/30 p-6 sm:p-8 text-center" data-print-hide>
-            <p className="text-lg font-bold">Ready to analyze another routine?</p>
-            <p className="text-sm text-surface-200 mt-1 mb-4">
-              Track progress over time by analyzing routines regularly.
+          {/* Bottom CTA — re-submission + tracker */}
+          <div className="bg-gradient-to-r from-primary-700/30 to-accent-600/30 p-6 sm:p-8" data-print-hide>
+            <p className="text-center text-lg font-bold mb-1">Keep the momentum going</p>
+            <p className="text-center text-sm text-surface-200 mb-5">
+              Submit an improved version to track your score growth — or view your full season history.
             </p>
-            <a
-              href="/upload"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-6 py-3 font-semibold text-white hover:opacity-90 transition-opacity"
-            >
-              Upload Another Routine
-              <ChevronRight className="h-4 w-4" />
-            </a>
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Primary: Submit Improved Routine */}
+              <a
+                href={`/upload?parentVideoId=${analysis.id}&routineName=${encodeURIComponent(analysis.routineName)}&style=${encodeURIComponent(analysis.style)}&entryType=${encodeURIComponent(analysis.entryType)}&ageGroup=${encodeURIComponent(analysis.ageGroup)}&dancerName=${encodeURIComponent(analysis.dancerName)}`}
+                className="flex-1 flex flex-col items-center gap-1.5 rounded-2xl bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-4 hover:opacity-90 transition-opacity text-center group"
+              >
+                <RefreshCw className="h-5 w-5 text-white group-hover:rotate-180 transition-transform duration-500" />
+                <p className="font-bold text-white text-sm">Submit Improved Routine</p>
+                <p className="text-xs text-white/80">Upload a new recording — we track the score boost</p>
+              </a>
+              {/* Secondary: View Progress Tracker */}
+              <a
+                href={`/routines/${analysis.id}`}
+                className="flex-1 flex flex-col items-center gap-1.5 rounded-2xl border border-white/15 bg-white/5 px-5 py-4 hover:bg-white/10 transition-colors text-center"
+              >
+                <TrendingUp className="h-5 w-5 text-primary-400" />
+                <p className="font-bold text-white text-sm">View Season Tracker</p>
+                <p className="text-xs text-surface-200">See your full score history &amp; progression</p>
+              </a>
+            </div>
           </div>
         </motion.div>
       </div>

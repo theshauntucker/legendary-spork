@@ -35,7 +35,7 @@ const faqs = [
   },
   {
     q: "What do I get when I sign up?",
-    a: "When you sign up at routinex.org, your first full AI analysis is completely free — no credit card required. Just create your account, upload your routine, and get your results in under 5 minutes.\n\nAfter your free analysis, you can purchase single analyses for $8.99 each, or grab our Competition Pack — 5 analyses for $29.99 (just $6 each, saving you $15 vs buying singles).\n\nDuring our launch period we're also running a Buy One Get One offer — 2 analyses for $8.99. Check the banner at the top of the page for the current offer.",
+    a: "Sign up and grab our Launch Offer: 2 full AI-powered analyses for just $8.99 — that's buy one, get one free. Or go big with the Competition Pack — 5 analyses for $29.99 (just $6 each).",
   },
   {
     q: "Can I get a refund?",
@@ -44,7 +44,7 @@ const faqs = [
 ];
 
 export default function FAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
     <section id="faq" className="relative py-14 sm:py-20">

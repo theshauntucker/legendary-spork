@@ -6,13 +6,12 @@
 - **Vercel project:** routinex (prj_3Df2waKNXC5XeBflBaHhTwvD45EV)
 - **Vercel team:** team_6VhhY3LmjXUw5SaS8V87EPtV
 - **Live domain:** routinex.org
-- **Production branch:** claude/clarify-task-dsVIo
+- **Production branch:** `main` — always work here, always push here
 
 ## Branches
 | Branch | Status | Purpose |
 |--------|--------|---------|
-| claude/clarify-task-dsVIo | PRODUCTION (live on routinex.org) | Main website code |
-| claude/plan-mobile-app-structure-2gH8n | Preview only | Mobile Expo/React Native app |
+| main | PRODUCTION (live on routinex.org) | All work goes here |
 
 ---
 
@@ -89,7 +88,9 @@ award, and improvement across the entire competition season.
 - Claude Vision API for dance analysis
 - Admin portal at /admin (email-gated)
 
-## Pricing (current)
-- Single: $8.99 (1 analysis)
-- Pack: $29.99 (5 analyses)
-- BOGO offer active sitewide
+## Pricing (current — as of April 2026)
+- **Free:** 1 analysis — granted automatically on every new signup (permanent, not a promo)
+- **BOGO:** $8.99 = 2 analyses (buy one get one) — `payment_type: "single"` in Stripe
+- **Competition Pack:** $29.99 = 5 analyses ($6 each) — `payment_type: "video_analysis"` in Stripe
+
+**Last updated:** April 11, 2026

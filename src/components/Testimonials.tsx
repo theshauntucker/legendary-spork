@@ -59,7 +59,6 @@ export default function Testimonials() {
             RoutineX just launched. These are real reactions from our first testers — parents, coaches, and dancers who tried it and told us exactly what they thought.
           </p>
 
-          {/* Honest early-launch social proof */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             {["Star Power", "JUMP", "NUVO", "NexStar", "Revolution", "UCA"].map((comp) => (
               <span key={comp} className="text-xs font-semibold bg-white/5 border border-white/10 rounded-full px-3 py-1 text-surface-200">
@@ -83,7 +82,6 @@ export default function Testimonials() {
               className="glass rounded-2xl p-6 relative"
             >
               <Quote className="absolute top-4 right-4 h-8 w-8 text-primary-500/20" />
-
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-accent-500 text-sm font-bold shrink-0">
                   {t.avatar}
@@ -98,19 +96,12 @@ export default function Testimonials() {
                   </span>
                 )}
               </div>
-
               <div className="flex gap-0.5 mb-3">
                 {[...Array(t.rating)].map((_, j) => (
-                  <Star
-                    key={j}
-                    className="h-3.5 w-3.5 fill-gold-400 text-gold-400"
-                  />
+                  <Star key={j} className="h-3.5 w-3.5 fill-gold-400 text-gold-400" />
                 ))}
               </div>
-
-              <p className="text-sm text-surface-200 leading-relaxed">
-                &ldquo;{t.text}&rdquo;
-              </p>
+              <p className="text-sm text-surface-200 leading-relaxed">&ldquo;{t.text}&rdquo;</p>
             </motion.div>
           ))}
         </div>
