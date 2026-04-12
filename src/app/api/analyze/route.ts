@@ -148,27 +148,9 @@ export async function POST(request: NextRequest) {
     // otherwise auto-detect by routine name — the explicit path is always preferred.
     let parentVideoId: string | null = explicitParentId || null;
 
-    if (!parentVideoId) {
-      // Fallback: auto-detect by routine name for uploads that bypass the tracker UI
-      try {
-        const { data: previousVideos } = await serviceClient
-          .from("videos")
-          .select("id")
-          .eq("user_id", user.id)
-          .ilike("routine_name", metadata.routineName)
-          .eq("status", "analyzed")
-          .neq("id", video.id)
-          .order("created_at", { ascending: false })
-          .limit(1);
-
-        if (previousVideos && previousVideos.length > 0) {
-          parentVideoId = previousVideos[0].id;
-          console.log(`Re-submission auto-detected — parent video: ${parentVideoId}`);
-        }
-      } catch (parentErr) {
-        console.warn("Could not check for previous submissions:", parentErr);
-      }
-    } else {
+    // parentVideoId is ONLY set via explicit URL param from "Submit Improved Routine" button.
+    // Auto-detection by routine name has been removed — routines must be deliberately linked.
+    if (parentVideoId) {
       console.log(`Re-submission explicitly linked — parent video: ${parentVideoId}`);
     }
 
