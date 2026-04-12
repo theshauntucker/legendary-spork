@@ -40,10 +40,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { frames, metadata, parentVideoId: explicitParentId } = body as {
+    const { frames, metadata, parentVideoId: explicitParentId, forceUpload } = body as {
       frames: FrameInput[];
       metadata: RoutineMetadata;
       parentVideoId?: string;
+      forceUpload?: boolean;
     };
 
     if (!frames || frames.length === 0) {
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
       .limit(1)
       .maybeSingle();
 
-    if (existingMatch) {
+    if (existingMatch && !forceUpload) {
       return NextResponse.json({
         error: "DUPLICATE_VIDEO",
         code: "DUPLICATE_VIDEO",

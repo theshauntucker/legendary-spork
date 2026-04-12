@@ -87,10 +87,19 @@ function UploadPageInner() {
     existingRoutineName: string;
     message: string;
   } | null>(null);
+  const [forceUpload, setForceUpload] = useState(false);
   const [extractedFrames, setExtractedFrames] = useState<ExtractedFrame[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const abortRef = useRef(false);
   const isProcessing = stage !== "idle" && stage !== "error";
+
+  // When "Upload Anyway" is clicked, forceUpload flips to true — auto-resubmit the form
+  useEffect(() => {
+    if (forceUpload && stage === "idle") {
+      formRef.current?.requestSubmit();
+    }
+  }, [forceUpload, stage]);
 
   const filteredComps = competitionName.length > 0
     ? popularCompetitions.filter(c => c.toLowerCase().includes(competitionName.toLowerCase()))
@@ -122,7 +131,7 @@ function UploadPageInner() {
   };
 
   const resetState = useCallback(() => {
-    setStage("idle"); setProgress(0); setStatusMessage(""); setError(""); abortRef.current = false;
+    setStage("idle"); setProgress(0); setStatusMessage(""); setError(""); setForceUpload(false); abortRef.current = false;
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -157,6 +166,8 @@ function UploadPageInner() {
         frames: base64Frames,
         // parentVideoId is passed explicitly when arriving via "Submit Improved Routine" from the tracker
         ...(parentVideoId ? { parentVideoId } : {}),
+        // forceUpload bypasses the duplicate fingerprint check — used for testing / admin re-runs
+        ...(forceUpload ? { forceUpload: true } : {}),
         metadata: {
           routineName,
           dancerName: dancerName || undefined,
@@ -266,6 +277,7 @@ function UploadPageInner() {
         </div>
 
         <motion.form
+          ref={formRef}
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
           onSubmit={handleSubmit}
           className="glass rounded-3xl p-6 sm:p-8 space-y-6"
@@ -512,6 +524,22 @@ function UploadPageInner() {
                     className="flex-1 py-2.5 rounded-xl border border-white/10 bg-white/5 text-surface-200 text-sm hover:bg-white/10 transition-colors"
                   >
                     Upload Different Video
+                  </button>
+                </div>
+                {/* Upload anyway — for testing or admin re-runs */}
+                <div className="mt-3 pt-3 border-t border-white/5">
+                  <p className="text-xs text-surface-200/50 mb-2">
+                    ⚠️ Uploading the same video twice uses a credit and may produce an identical score. Only do this for testing purposes.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForceUpload(true);
+                      setDuplicateInfo(null);
+                    }}
+                    className="w-full py-2 rounded-xl border border-white/10 bg-white/3 text-surface-200/60 text-xs hover:bg-white/8 hover:text-surface-200 transition-colors"
+                  >
+                    Upload Anyway (testing only)
                   </button>
                 </div>
               </motion.div>
