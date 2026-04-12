@@ -1,184 +1,156 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Sparkles, User, LogOut } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import type { User as SupabaseUser } from "@supabase/supabase-js";
-
-const navLinks = [
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Sample Analysis", href: "#sample-analysis" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "FAQ", href: "#faq" },
-];
+import Link from "next/link";
+import { useState } from "react";
 
 export default function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const supabase = createClient();
-
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    setUser(null);
-    window.location.href = "/";
-  };
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <nav className="fixed top-10 left-0 right-0 z-50 glass">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <a href="/" className="flex items-center gap-2">
-            <Sparkles className="h-7 w-7 text-primary-400" />
-            <span className="text-xl font-bold tracking-tight">
-              Routine<span className="gradient-text">X</span>
+    <nav className="bg-white border-b border-surface-200 sticky top-0 z-50">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-16">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="text-2xl">&#9776;</span>
+            <span className="text-xl font-bold text-surface-900">
+              FaithLens
             </span>
-          </a>
+          </Link>
 
-          {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-sm text-surface-200 hover:text-white transition-colors"
-              >
-                {link.label}
-              </a>
-            ))}
-
-            {loading ? (
-              <div className="w-24 h-9 rounded-full bg-white/5 animate-pulse" />
-            ) : user ? (
-              <div className="flex items-center gap-3">
-                <a
-                  href="/dashboard"
-                  className="inline-flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors"
-                >
-                  <User className="h-4 w-4" />
-                  Dashboard
-                </a>
-                <button
-                  onClick={handleLogout}
-                  className="inline-flex items-center gap-1.5 text-sm text-surface-200 hover:text-white transition-colors"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <a
-                  href="/login"
-                  className="text-sm text-surface-200 hover:text-white transition-colors"
-                >
-                  Log In
-                </a>
-                <a
-                  href="/signup"
-                  className="rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-                >
-                  Get Started
-                </a>
-              </div>
-            )}
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-6 text-sm font-medium">
+            <Link
+              href="/topics/mormonism"
+              className="text-surface-600 hover:text-primary-600 transition-colors"
+            >
+              Mormonism
+            </Link>
+            <Link
+              href="/topics/christianity"
+              className="text-surface-600 hover:text-primary-600 transition-colors"
+            >
+              Christianity
+            </Link>
+            <Link
+              href="/topics/islam"
+              className="text-surface-600 hover:text-primary-600 transition-colors"
+            >
+              Islam
+            </Link>
+            <Link
+              href="/topics/catholicism"
+              className="text-surface-600 hover:text-primary-600 transition-colors"
+            >
+              Catholicism
+            </Link>
+            <Link
+              href="/topics/jehovahs-witnesses"
+              className="text-surface-600 hover:text-primary-600 transition-colors"
+            >
+              Jehovah&#39;s Witnesses
+            </Link>
+            <Link
+              href="/resources"
+              className="text-surface-600 hover:text-primary-600 transition-colors"
+            >
+              Resources
+            </Link>
+            <Link
+              href="/donate"
+              className="bg-warm-500 text-white px-4 py-2 rounded-lg hover:bg-warm-600 transition-colors text-sm"
+            >
+              Buy Me a Coffee
+            </Link>
           </div>
 
-          {/* Mobile toggle */}
+          {/* Mobile menu button */}
           <button
-            className="md:hidden text-white"
-            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden p-2 text-surface-600"
+            onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle menu"
           >
-            {mobileOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              {menuOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
           </button>
         </div>
-      </div>
 
-      {/* Mobile menu */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden glass border-t border-white/10"
-          >
-            <div className="px-4 py-4 space-y-3">
-              {navLinks.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className="block text-sm text-surface-200 hover:text-white transition-colors"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {link.label}
-                </a>
-              ))}
-
-              {user ? (
-                <>
-                  <a
-                    href="/dashboard"
-                    className="block text-sm text-surface-200 hover:text-white transition-colors"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Dashboard
-                  </a>
-                  <button
-                    onClick={() => {
-                      setMobileOpen(false);
-                      handleLogout();
-                    }}
-                    className="block w-full text-left text-sm text-surface-200 hover:text-white transition-colors"
-                  >
-                    Log Out
-                  </button>
-                </>
-              ) : (
-                <>
-                  <a
-                    href="/login"
-                    className="block text-sm text-surface-200 hover:text-white transition-colors"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Log In
-                  </a>
-                  <a
-                    href="/signup"
-                    className="block w-full text-center rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-2.5 text-sm font-semibold text-white"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Get Started
-                  </a>
-                </>
-              )}
+        {/* Mobile menu */}
+        {menuOpen && (
+          <div className="md:hidden pb-4 border-t border-surface-200">
+            <div className="flex flex-col gap-2 pt-3">
+              <Link
+                href="/topics/mormonism"
+                className="px-3 py-2 text-surface-600 hover:bg-surface-100 rounded-lg"
+                onClick={() => setMenuOpen(false)}
+              >
+                Mormonism
+              </Link>
+              <Link
+                href="/topics/christianity"
+                className="px-3 py-2 text-surface-600 hover:bg-surface-100 rounded-lg"
+                onClick={() => setMenuOpen(false)}
+              >
+                Christianity
+              </Link>
+              <Link
+                href="/topics/islam"
+                className="px-3 py-2 text-surface-600 hover:bg-surface-100 rounded-lg"
+                onClick={() => setMenuOpen(false)}
+              >
+                Islam
+              </Link>
+              <Link
+                href="/topics/catholicism"
+                className="px-3 py-2 text-surface-600 hover:bg-surface-100 rounded-lg"
+                onClick={() => setMenuOpen(false)}
+              >
+                Catholicism
+              </Link>
+              <Link
+                href="/topics/jehovahs-witnesses"
+                className="px-3 py-2 text-surface-600 hover:bg-surface-100 rounded-lg"
+                onClick={() => setMenuOpen(false)}
+              >
+                Jehovah&#39;s Witnesses
+              </Link>
+              <Link
+                href="/resources"
+                className="px-3 py-2 text-surface-600 hover:bg-surface-100 rounded-lg"
+                onClick={() => setMenuOpen(false)}
+              >
+                Resources
+              </Link>
+              <Link
+                href="/donate"
+                className="mx-3 mt-2 bg-warm-500 text-white px-4 py-2 rounded-lg hover:bg-warm-600 text-center"
+                onClick={() => setMenuOpen(false)}
+              >
+                Buy Me a Coffee
+              </Link>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </nav>
   );
 }

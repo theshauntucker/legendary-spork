@@ -1,69 +1,55 @@
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
 import "./globals.css";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
-
 import Navbar from "@/components/Navbar";
-import CountdownBanner from "@/components/CountdownBanner";
+import Footer from "@/components/Footer";
+
+const BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL || "https://faithlens.org";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
-    template: "%s | RoutineX",
+    default:
+      "FaithLens — Explore the World's Religions Without Bias",
+    template: "%s | FaithLens",
   },
   description:
-    "Get competition-standard scoring and actionable feedback on every routine. Upload your video, receive detailed AI analysis of technique, performance, choreography & more. Built for competitive dancers, cheer teams, parents & coaches.",
+    "An unbiased, all-encompassing guide to the world's religions. Explore Mormonism, Christianity, Islam, Catholicism, Jehovah's Witnesses and more. Every faith gets equal space — no bias, just information.",
   keywords: [
-    "dance competition",
-    "cheer competition",
-    "dance video analysis",
-    "dance scoring",
-    "AI dance analysis",
-    "dance feedback",
-    "competitive dance",
-    "dance routine scoring",
-    "cheer routine analysis",
-    "dance judge scoring",
-    "Star Power dance",
-    "JUMP dance convention",
-    "NUVO dance convention",
-    "UCA cheer",
-    "NCA cheer",
-    "dance competition prep",
-    "dance technique feedback",
-    "dance parent tools",
-    "dance coach tools",
-    "routine improvement",
-    "dance score calculator",
+    "religion",
+    "mormonism",
+    "christianity",
+    "islam",
+    "catholicism",
+    "jehovah's witnesses",
+    "CES letter",
+    "book of mormon",
+    "bible",
+    "quran",
+    "religious comparison",
+    "world religions",
+    "LDS church",
+    "church of jesus christ",
+    "faith exploration",
+    "religious studies",
+    "comparative religion",
   ],
-  alternates: {},
   openGraph: {
-    title: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
+    title: "FaithLens — Explore the World's Religions Without Bias",
     description:
-      "Competition-standard scoring and feedback for every routine. Upload your video and get detailed AI analysis in under 5 minutes.",
+      "An unbiased guide to every major religion. Documents, official links, missionary info, critical analysis — all viewpoints represented fairly.",
     type: "website",
-    siteName: "RoutineX",
+    siteName: "FaithLens",
     url: BASE_URL,
     locale: "en_US",
-    images: [
-      {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "RoutineX — Your Dancer's Secret Weapon",
+    title: "FaithLens — Explore the World's Religions Without Bias",
     description:
-      "AI-powered video analysis for competitive dancers & cheer teams. First analysis FREE — then from $6/video.",
-    images: ["/opengraph-image"],
+      "An unbiased, all-encompassing guide to the world's religions. Every faith gets equal space.",
   },
   robots: {
     index: true,
@@ -71,27 +57,21 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
-      "max-video-preview": -1,
       "max-image-preview": "large",
       "max-snippet": -1,
     },
   },
-  verification: {
-    // Add your Google Search Console verification code here
-    // google: "your-verification-code",
-  },
 };
 
-// JSON-LD Structured Data
 const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
     {
       "@type": "WebSite",
-      name: "RoutineX",
+      name: "FaithLens",
       url: BASE_URL,
       description:
-        "AI-powered dance and cheer video analysis with competition-standard scoring.",
+        "An unbiased, all-encompassing guide to the world's religions.",
       potentialAction: {
         "@type": "SearchAction",
         target: `${BASE_URL}/?q={search_term_string}`,
@@ -99,42 +79,9 @@ const jsonLd = {
       },
     },
     {
-      "@type": "SoftwareApplication",
-      name: "RoutineX",
-      applicationCategory: "SportApplication",
-      operatingSystem: "Web",
-      description:
-        "Upload any dance or cheer routine and get competition-standard scoring with detailed, actionable feedback powered by AI trained on real judging rubrics.",
-      offers: [
-        {
-          "@type": "Offer",
-          name: "Single Analysis",
-          price: "8.99",
-          priceCurrency: "USD",
-          description: "One AI-powered competition-standard dance routine analysis",
-        },
-        {
-          "@type": "Offer",
-          name: "Competition Pack (5 Analyses)",
-          price: "29.99",
-          priceCurrency: "USD",
-          description: "5 AI-powered dance routine analyses — only $6 each",
-        },
-      ],
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "5",
-        ratingCount: "48",
-        bestRating: "5",
-        worstRating: "1",
-      },
-    },
-    {
       "@type": "Organization",
-      name: "RoutineX",
+      name: "FaithLens",
       url: BASE_URL,
-      logo: `${BASE_URL}/logo.svg`,
-      sameAs: [],
     },
   ],
 };
@@ -144,10 +91,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const adsenseClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
+
   return (
     <html lang="en" className="antialiased">
       <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
@@ -155,7 +103,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:wght@400;700&display=swap"
           rel="stylesheet"
         />
         <script
@@ -163,20 +111,18 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body>
-        <CountdownBanner />
+      <body className="flex flex-col min-h-screen">
         <Navbar />
-        {children}
-        <Analytics />
-        <SpeedInsights />
-        {/* TikTok Pixel */}
-        <Script id="tiktok-pixel" strategy="afterInteractive">{`
-          !function (w, d, t) {
-            w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script");n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
-            ttq.load('D7BUDSRC77UDSGCDVMLG');
-            ttq.page();
-          }(window, document, 'ttq');
-        `}</Script>
+        <main className="flex-1">{children}</main>
+        <Footer />
+        {adsenseClientId && (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
       </body>
     </html>
   );
