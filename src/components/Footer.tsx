@@ -2,12 +2,16 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-ink-900 text-cream-200 mt-16">
+    <footer className="bg-ink-900 text-cream-200 mt-16 relative">
+      {/* Ornamental divider */}
+      <div className="absolute -top-px left-0 right-0 flex justify-center">
+        <div className="w-16 h-px bg-gradient-to-r from-transparent via-cream-200/30 to-transparent" />
+      </div>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand + mission */}
           <div className="md:col-span-1">
-            <h3 className="text-white text-lg font-serif font-semibold mb-3">
+            <h3 className="text-white text-lg font-serif font-semibold mb-3 tracking-wide">
               [SiteName]
             </h3>
             <p className="text-sm leading-relaxed">
@@ -19,7 +23,7 @@ export default function Footer() {
 
           {/* Traditions */}
           <div>
-            <h4 className="text-white font-semibold mb-3 text-sm uppercase tracking-wider">
+            <h4 className="text-white font-serif font-medium mb-3 text-sm">
               Traditions
             </h4>
             <ul className="space-y-2 text-sm">
@@ -68,7 +72,7 @@ export default function Footer() {
 
           {/* Tools */}
           <div>
-            <h4 className="text-white font-semibold mb-3 text-sm uppercase tracking-wider">
+            <h4 className="text-white font-serif font-medium mb-3 text-sm">
               Tools
             </h4>
             <ul className="space-y-2 text-sm">
@@ -109,7 +113,7 @@ export default function Footer() {
 
           {/* Community */}
           <div>
-            <h4 className="text-white font-semibold mb-3 text-sm uppercase tracking-wider">
+            <h4 className="text-white font-serif font-medium mb-3 text-sm">
               Community
             </h4>
             <ul className="space-y-2 text-sm">

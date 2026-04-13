@@ -16,7 +16,7 @@ export default function ResourceCard({ resource }: ResourceCardProps) {
   return (
     <Link
       href={`/traditions/${resource.traditionSlug}/resources/${resource.slug}`}
-      className="block bg-cream-50 border border-cream-200 rounded-2xl p-5 hover:shadow-md hover:border-primary-500/30 transition-all"
+      className="group block bg-cream-50 border border-cream-200 rounded-2xl p-5 hover:shadow-sm hover:-translate-y-px hover:border-primary-500/30 transition-all duration-200"
     >
       <div className="flex items-center gap-2 mb-2">
         <span

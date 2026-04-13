@@ -86,7 +86,6 @@ export default function LibraryFilter({
               className={`${pillBase} ${selectedTradition === t.slug ? pillActive : pillInactive}`}
               onClick={() => setSelectedTradition(t.slug)}
             >
-              {t.iconEmoji ? `${t.iconEmoji} ` : ""}
               {t.name}
             </button>
           ))}

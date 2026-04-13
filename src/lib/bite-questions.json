@@ -1,0 +1,129 @@
+{
+  "title": "BITE Model Assessment Quiz",
+  "attribution": "Based on Steven Hassan's BITE Model of Undue Influence",
+  "disclaimer": "This quiz is educational and not diagnostic. Scoring does not diagnose cult involvement. Consult a mental health professional for concerns about undue influence.",
+  "categories": {
+    "behavior": {
+      "name": "Behavior Control",
+      "description": "Control over physical actions, finances, dress, diet, sleep, and daily activities",
+      "questions": [
+        {"id": 1, "text": "Are members expected to dress in specific ways or follow strict appearance codes?"},
+        {"id": 2, "text": "Does the group control what you eat, drink, or consume?"},
+        {"id": 3, "text": "Are financial decisions made by leadership rather than individuals?"},
+        {"id": 4, "text": "Is there pressure to give money, possessions, or property to the group?"},
+        {"id": 5, "text": "Are members required to live in communal housing?"},
+        {"id": 6, "text": "Is there control over sleep, work schedules, or free time?"},
+        {"id": 7, "text": "Are relationships and marriages arranged or heavily influenced by leadership?"},
+        {"id": 8, "text": "Is there punishment for breaking rules or not following directives?"},
+        {"id": 9, "text": "Are members monitored or tracked regarding their activities?"},
+        {"id": 10, "text": "Is participation in group activities mandatory or strongly coerced?"},
+        {"id": 11, "text": "Must members ask permission for major life decisions?"},
+        {"id": 12, "text": "Is sexual behavior controlled or restricted by the group?"},
+        {"id": 13, "text": "Are children required to engage in adult group activities?"},
+        {"id": 14, "text": "Must members separate from family members who don't approve?"},
+        {"id": 15, "text": "Is there control over who you can spend time with or befriend?"},
+        {"id": 16, "text": "Are members required to participate in public rituals or ceremonies?"},
+        {"id": 17, "text": "Must members work for the group without fair compensation?"},
+        {"id": 18, "text": "Is there prohibition on using modern technology or outside media?"},
+        {"id": 19, "text": "Are members punished for expressing doubts or questioning practices?"},
+        {"id": 20, "text": "Is leaving the group made practically or emotionally difficult?"}
+      ]
+    },
+    "information": {
+      "name": "Information Control",
+      "description": "Control over information, media access, education, and critical thinking",
+      "questions": [
+        {"id": 21, "text": "Are members discouraged from reading outside materials or non-group sources?"},
+        {"id": 22, "text": "Does the group restrict access to news, internet, or media?"},
+        {"id": 23, "text": "Is the group portrayed as the only source of truth?"},
+        {"id": 24, "text": "Are members taught not to trust outside experts or authority figures?"},
+        {"id": 25, "text": "Are criticisms or negative information about the group forbidden?"},
+        {"id": 26, "text": "Does the group use special language or terminology outsiders don't understand?"},
+        {"id": 27, "text": "Is critical thinking or asking questions discouraged?"},
+        {"id": 28, "text": "Are members given different information based on their rank or tenure?"},
+        {"id": 29, "text": "Is education redirected away from secular subjects to group doctrine?"},
+        {"id": 30, "text": "Are members taught that the outside world is dangerous or corrupt?"},
+        {"id": 31, "text": "Is doubt presented as a personal moral failing?"},
+        {"id": 32, "text": "Are historical facts rewritten or reinterpreted by the group?"},
+        {"id": 33, "text": "Is there pressure to accept group beliefs without evidence or logic?"},
+        {"id": 34, "text": "Are scientific findings contradicted by group teachings?"},
+        {"id": 35, "text": "Must members defend group teachings to non-members?"},
+        {"id": 36, "text": "Are members taught that they cannot understand the group's teachings alone?"},
+        {"id": 37, "text": "Is confession of doubts used to reinforce group loyalty?"},
+        {"id": 38, "text": "Are members discouraged from pursuing higher education outside the group?"},
+        {"id": 39, "text": "Is information about finances, decisions, or practices kept secret?"},
+        {"id": 40, "text": "Are members expected to spy on or report other members' thoughts?"}
+      ]
+    },
+    "thought": {
+      "name": "Thought Control",
+      "description": "Control over beliefs, decision-making, and internal mental processes",
+      "questions": [
+        {"id": 41, "text": "Are members required to believe specific doctrines without question?"},
+        {"id": 42, "text": "Is doubt about group teachings considered a moral or spiritual failure?"},
+        {"id": 43, "text": "Are personal experiences reinterpreted to fit group ideology?"},
+        {"id": 44, "text": "Is black-and-white thinking encouraged (us vs. them, good vs. evil)?"},
+        {"id": 45, "text": "Must decisions be made based on group guidance rather than individual judgment?"},
+        {"id": 46, "text": "Are members discouraged from pursuing personal interests or ambitions?"},
+        {"id": 47, "text": "Is meditation, hypnosis, or altered consciousness used for indoctrination?"},
+        {"id": 48, "text": "Are members taught that staying in the group is the only path to safety or salvation?"},
+        {"id": 49, "text": "Is independent thinking framed as selfish or prideful?"},
+        {"id": 50, "text": "Are paradoxes or contradictions explained away rather than addressed?"},
+        {"id": 51, "text": "Is fear used to maintain obedience and belief?"},
+        {"id": 52, "text": "Are members taught to suppress their own intuition or instincts?"},
+        {"id": 53, "text": "Is the group's purpose presented as the only meaningful thing in life?"},
+        {"id": 54, "text": "Must members filter all information through group interpretations?"},
+        {"id": 55, "text": "Are prophecies or predictions used to maintain belief?"},
+        {"id": 56, "text": "Is leaving the group portrayed as resulting in disaster or punishment?"},
+        {"id": 57, "text": "Are members taught that opposing thoughts are demonic or evil?"},
+        {"id": 58, "text": "Is special knowledge or revelation claimed by the leadership only?"},
+        {"id": 59, "text": "Must members rationalize their doubts rather than address them?"},
+        {"id": 60, "text": "Is the group's philosophy presented as scientifically proven?"}
+      ]
+    },
+    "emotional": {
+      "name": "Emotional Control",
+      "description": "Manipulation of emotions, identity, and psychological states",
+      "questions": [
+        {"id": 61, "text": "Are members made to feel special or chosen compared to outsiders?"},
+        {"id": 62, "text": "Is there manipulation through guilt or shame?"},
+        {"id": 63, "text": "Are relationships used as leverage to maintain compliance?"},
+        {"id": 64, "text": "Is leaving the group used as a threat to control behavior?"},
+        {"id": 65, "text": "Are members' fears used to increase dependence on the group?"},
+        {"id": 66, "text": "Is identity merged with group membership?"},
+        {"id": 67, "text": "Are members taught to fear abandoning the group?"},
+        {"id": 68, "text": "Is love or approval withheld when members disobey?"},
+        {"id": 69, "text": "Are emotional crises or vulnerabilities exploited for recruitment or control?"},
+        {"id": 70, "text": "Does leadership control your sense of what is real or true?"},
+        {"id": 71, "text": "Are members emotionally dependent on the leader or group?"},
+        {"id": 72, "text": "Is there punishment through isolation, shunning, or excommunication?"},
+        {"id": 73, "text": "Are members taught that their worth depends on their loyalty?"},
+        {"id": 74, "text": "Does the group use intermittent reinforcement (unpredictable rewards/punishments)?"},
+        {"id": 75, "text": "Are members required to confess personal information used for control?"},
+        {"id": 76, "text": "Is happiness or contentment only possible within the group?"},
+        {"id": 77, "text": "Are members made to feel responsible for the group's well-being?"},
+        {"id": 78, "text": "Does the group manufacture crises to increase emotional bonding?"},
+        {"id": 79, "text": "Is love presented conditionally on adherence to group rules?"},
+        {"id": 80, "text": "Are members' personal relationships sacrificed for group loyalty?"}
+      ]
+    }
+  },
+  "scoringBands": [
+    {
+      "level": "Low (0-40 points)",
+      "description": "Minimal signs of undue influence. Group appears relatively healthy."
+    },
+    {
+      "level": "Moderate (41-80 points)",
+      "description": "Some concerning control patterns. Warrant further investigation and caution."
+    },
+    {
+      "level": "High (81-160 points)",
+      "description": "Significant control dynamics present. Consistent with high-control group characteristics."
+    },
+    {
+      "level": "Very High (161-240 points)",
+      "description": "Extensive undue influence across multiple domains. Strong indicators of cult-like control."
+    }
+  ]
+}

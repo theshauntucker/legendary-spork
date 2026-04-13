@@ -89,11 +89,9 @@ export default function TraditionComparePage() {
                     &nbsp;
                   </th>
                   <th className="text-left text-sm font-semibold text-ink-900 py-3 px-4 border-b border-cream-200">
-                    {traditionA.iconEmoji ? `${traditionA.iconEmoji} ` : ""}
                     {traditionA.name}
                   </th>
                   <th className="text-left text-sm font-semibold text-ink-900 py-3 px-4 border-b border-cream-200">
-                    {traditionB.iconEmoji ? `${traditionB.iconEmoji} ` : ""}
                     {traditionB.name}
                   </th>
                 </tr>

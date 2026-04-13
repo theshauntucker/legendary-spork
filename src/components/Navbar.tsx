@@ -21,7 +21,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <span className="text-xl font-serif font-semibold text-ink-900">
+            <span className="text-xl font-serif font-semibold text-ink-900 tracking-wide">
               [SiteName]
             </span>
           </Link>
@@ -32,7 +32,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-ink-500 hover:text-primary-600 transition-colors"
+                className="text-ink-500 hover:text-ink-800 underline-offset-4 decoration-transparent hover:decoration-primary-500 decoration-1 underline transition-all duration-200"
               >
                 {link.label}
               </Link>

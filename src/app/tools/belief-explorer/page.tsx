@@ -6,8 +6,10 @@ import AdUnit from "@/components/AdUnit";
 import EmailCapture from "@/components/EmailCapture";
 
 /* ────────────────────────────────────────────
-   Quiz data
+   Quiz data — loaded from BITE Model questions JSON
    ──────────────────────────────────────────── */
+
+import biteData from "@/lib/bite-questions.json";
 
 interface Question {
   id: number;
@@ -21,172 +23,37 @@ interface Category {
   questions: Question[];
 }
 
-const categories: Category[] = [
-  {
-    key: "behavior",
-    label: "Behavior",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-        />
-      </svg>
-    ),
-    questions: [
-      {
-        id: 1,
-        text: "Members are expected to devote significant time to group activities",
-      },
-      {
-        id: 2,
-        text: "There are strict rules about diet, clothing, or personal appearance",
-      },
-      {
-        id: 3,
-        text: "Members need permission or approval for major life decisions",
-      },
-      {
-        id: 4,
-        text: "Leaving or reducing involvement carries social consequences",
-      },
-      {
-        id: 5,
-        text: "Financial contributions are strongly expected or required",
-      },
-    ],
-  },
-  {
-    key: "information",
-    label: "Information",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-        />
-      </svg>
-    ),
-    questions: [
-      {
-        id: 6,
-        text: "Members are discouraged from reading critical or outside perspectives",
-      },
-      {
-        id: 7,
-        text: "The group has its own terminology or redefined common words",
-      },
-      {
-        id: 8,
-        text: "Information about the group\u2019s history or leadership is tightly controlled",
-      },
-      {
-        id: 9,
-        text: "Former members\u2019 perspectives are dismissed or discouraged",
-      },
-      {
-        id: 10,
-        text: "Members are encouraged to report concerns about other members to leadership",
-      },
-    ],
-  },
-  {
-    key: "thought",
-    label: "Thought",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-        />
-      </svg>
-    ),
-    questions: [
-      {
-        id: 11,
-        text: "The group\u2019s teachings are presented as the only correct worldview",
-      },
-      {
-        id: 12,
-        text: "Doubt or critical questioning is framed as a personal or spiritual failing",
-      },
-      {
-        id: 13,
-        text: "An us-vs-them mentality is promoted regarding outsiders",
-      },
-      {
-        id: 14,
-        text: "Members are taught that leaving will result in spiritual or existential harm",
-      },
-      {
-        id: 15,
-        text: "Complex issues are reduced to simple, black-and-white answers",
-      },
-    ],
-  },
-  {
-    key: "emotional",
-    label: "Emotional",
-    icon: (
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-        />
-      </svg>
-    ),
-    questions: [
-      {
-        id: 16,
-        text: "Guilt or shame is used to influence members\u2019 behavior",
-      },
-      {
-        id: 17,
-        text: "Love and acceptance appear conditional on compliance",
-      },
-      {
-        id: 18,
-        text: "Fear of supernatural punishment is used as motivation",
-      },
-      {
-        id: 19,
-        text: "Members\u2019 personal boundaries are not consistently respected",
-      },
-      {
-        id: 20,
-        text: "Emotional highs from group activities are framed as spiritual confirmation",
-      },
-    ],
-  },
-];
+const icons = {
+  behavior: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+    </svg>
+  ),
+  information: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+    </svg>
+  ),
+  thought: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+    </svg>
+  ),
+  emotional: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+    </svg>
+  ),
+};
+
+const categories: Category[] = (["behavior", "information", "thought", "emotional"] as const).map(
+  (key) => ({
+    key,
+    label: biteData.categories[key].name,
+    icon: icons[key],
+    questions: biteData.categories[key].questions,
+  })
+);
 
 const SLIDER_LABELS: Record<number, string> = {
   1: "Not at all",
@@ -209,29 +76,29 @@ interface Band {
 
 const bands: Band[] = [
   {
-    min: 20,
-    max: 35,
+    min: 80,
+    max: 140,
     label: "Low structural influence",
     description:
       "This group appears to encourage significant personal autonomy and openness.",
   },
   {
-    min: 36,
-    max: 50,
+    min: 141,
+    max: 200,
     label: "Moderate structural influence",
     description:
       "This group has some structured expectations. This is common across many organizations and faith traditions.",
   },
   {
-    min: 51,
-    max: 70,
+    min: 201,
+    max: 300,
     label: "High structural influence",
     description:
       "This group exhibits notable patterns of structural control. Consider exploring perspectives from both current and former members.",
   },
   {
-    min: 71,
-    max: 100,
+    min: 301,
+    max: 400,
     label: "Very high structural influence",
     description:
       "This group shows significant patterns associated with high-control environments. We encourage exploring multiple perspectives and speaking with trusted individuals outside the group.",
@@ -253,7 +120,7 @@ export default function BeliefExplorerPage() {
   const [expandFramework, setExpandFramework] = useState(false);
 
   /* derived state */
-  const totalQuestions = 20;
+  const totalQuestions = categories.reduce((sum, c) => sum + c.questions.length, 0);
   const answeredCount = Object.keys(answers).length;
   const progressPercent = Math.round((answeredCount / totalQuestions) * 100);
   const allAnswered = answeredCount === totalQuestions;
@@ -330,7 +197,7 @@ export default function BeliefExplorerPage() {
           <div className="bg-cream-100 border border-cream-200 rounded-2xl p-8 mb-8 text-center">
             <p className="text-6xl font-serif font-bold text-primary-500 mb-2">
               {totalScore}
-              <span className="text-2xl text-ink-400 font-normal"> / 100</span>
+              <span className="text-2xl text-ink-400 font-normal"> / {totalQuestions * 5}</span>
             </p>
             <p className="text-xl font-serif font-semibold text-ink-900 mb-2">
               {band.label}
@@ -348,7 +215,8 @@ export default function BeliefExplorerPage() {
             <div className="space-y-5">
               {categories.map((cat) => {
                 const score = categoryScore(cat);
-                const pct = Math.round((score / 25) * 100);
+                const maxCatScore = cat.questions.length * 5;
+                const pct = Math.round((score / maxCatScore) * 100);
                 return (
                   <div key={cat.key}>
                     <div className="flex items-center justify-between mb-1.5">
@@ -357,7 +225,7 @@ export default function BeliefExplorerPage() {
                         {cat.label}
                       </span>
                       <span className="text-sm text-ink-500">
-                        {score} / 25
+                        {score} / {maxCatScore}
                       </span>
                     </div>
                     <div className="w-full h-3 bg-cream-200 rounded-full overflow-hidden">
@@ -570,7 +438,7 @@ export default function BeliefExplorerPage() {
               >
                 <p className="text-ink-800 font-medium mb-5 leading-relaxed">
                   <span className="text-ink-400 mr-2 text-sm">
-                    {activeCategoryIndex * 5 + qIdx + 1}.
+                    {categories.slice(0, activeCategoryIndex).reduce((s, c) => s + c.questions.length, 0) + qIdx + 1}.
                   </span>
                   {q.text}
                 </p>

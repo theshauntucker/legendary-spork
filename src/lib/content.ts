@@ -159,3 +159,95 @@ export function getAllArticleSlugs(): string[] {
 export function getAllTopicSlugs(): string[] {
   return getAllTopics().map((t) => t.slug);
 }
+
+/* ── Blog posts ── */
+
+export interface BlogMeta {
+  slug: string;
+  title: string;
+  date: string;
+  tags: string[];
+  author: string;
+}
+
+export interface BlogData extends BlogMeta {
+  contentHtml: string;
+}
+
+export function getAllBlogPosts(): BlogMeta[] {
+  const blogDir = path.join(contentDirectory, "blog");
+  if (!fs.existsSync(blogDir)) return [];
+  const files = fs.readdirSync(blogDir).filter((f) => f.endsWith(".md"));
+  return files
+    .map((filename) => {
+      const slug = filename.replace(/\.md$/, "");
+      const filePath = path.join(blogDir, filename);
+      const fileContents = fs.readFileSync(filePath, "utf8");
+      const { data } = matter(fileContents);
+      return {
+        slug,
+        title: data.title || slug,
+        date: data.date ? String(data.date) : "",
+        tags: data.tags || [],
+        author: data.author || "[SiteName]",
+      };
+    })
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
+export async function getBlogPostBySlug(slug: string): Promise<BlogData | null> {
+  const filePath = path.join(contentDirectory, "blog", `${slug}.md`);
+  if (!fs.existsSync(filePath)) return null;
+  const fileContents = fs.readFileSync(filePath, "utf8");
+  const { data, content } = matter(fileContents);
+  const processedContent = await remark().use(html).process(content);
+  return {
+    slug,
+    title: data.title || slug,
+    date: data.date ? String(data.date) : "",
+    tags: data.tags || [],
+    author: data.author || "[SiteName]",
+    contentHtml: processedContent.toString(),
+  };
+}
+
+export function getAllBlogSlugs(): string[] {
+  return getAllBlogPosts().map((p) => p.slug);
+}
+
+/* ── Static pages (legal, about, etc.) ── */
+
+export interface PageMeta {
+  slug: string;
+  title: string;
+}
+
+export interface PageData extends PageMeta {
+  contentHtml: string;
+}
+
+export function getAllPages(): PageMeta[] {
+  const pagesDir = path.join(contentDirectory, "pages");
+  if (!fs.existsSync(pagesDir)) return [];
+  const files = fs.readdirSync(pagesDir).filter((f) => f.endsWith(".md"));
+  return files.map((filename) => {
+    const slug = filename.replace(/\.md$/, "");
+    const filePath = path.join(pagesDir, filename);
+    const fileContents = fs.readFileSync(filePath, "utf8");
+    const { data } = matter(fileContents);
+    return { slug, title: data.title || slug };
+  });
+}
+
+export async function getPageBySlug(slug: string): Promise<PageData | null> {
+  const filePath = path.join(contentDirectory, "pages", `${slug}.md`);
+  if (!fs.existsSync(filePath)) return null;
+  const fileContents = fs.readFileSync(filePath, "utf8");
+  const { data, content } = matter(fileContents);
+  const processedContent = await remark().use(html).process(content);
+  return {
+    slug,
+    title: data.title || slug,
+    contentHtml: processedContent.toString(),
+  };
+}

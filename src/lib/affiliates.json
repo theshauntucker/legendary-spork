@@ -1,0 +1,91 @@
+{
+  "therapy": [
+    {
+      "name": "BetterHelp",
+      "url": "https://www.betterhelp.com",
+      "network": "Impact Radius",
+      "minPayout": 100,
+      "maxPayout": 200,
+      "currency": "USD",
+      "structure": "per_lead",
+      "description": "Online therapy and counseling"
+    },
+    {
+      "name": "Talkspace",
+      "url": "https://www.talkspace.com",
+      "network": "FlexOffers",
+      "minPayout": 100,
+      "maxPayout": 150,
+      "currency": "USD",
+      "structure": "per_lead",
+      "description": "Therapy messaging platform"
+    },
+    {
+      "name": "Online-Therapy.com",
+      "url": "https://online-therapy.com",
+      "network": "Direct",
+      "commission": "50%",
+      "cookieDuration": 90,
+      "currency": "USD",
+      "structure": "revenue_share",
+      "description": "Affordable online therapy"
+    }
+  ],
+  "books": [
+    {
+      "name": "Amazon Associates",
+      "url": "https://associates.amazon.com",
+      "network": "Amazon",
+      "commission": "4.5%",
+      "cookieDuration": 24,
+      "currency": "USD",
+      "description": "General book and media sales"
+    }
+  ],
+  "donations": [
+    {
+      "name": "Ko-fi",
+      "url": "https://ko-fi.com",
+      "fee": "0%",
+      "currency": "USD",
+      "description": "Direct supporter donations"
+    },
+    {
+      "name": "Buy Me a Coffee",
+      "url": "https://www.buymeacoffee.com",
+      "fee": "5%",
+      "currency": "USD",
+      "description": "Monthly and one-time supporter donations"
+    }
+  ],
+  "adNetworks": [
+    {
+      "name": "Google AdSense",
+      "url": "https://adsense.google.com",
+      "minThreshold": "None",
+      "payoutCycle": "Monthly",
+      "description": "Display advertising"
+    },
+    {
+      "name": "Monumetric",
+      "url": "https://www.monumetric.com",
+      "minThreshold": "10,000 pageviews/month",
+      "payoutCycle": "Monthly",
+      "description": "Premium ad network for creators"
+    },
+    {
+      "name": "Mediavine",
+      "url": "https://www.mediavine.com",
+      "minThreshold": "1,000 sessions/month",
+      "payoutCycle": "Monthly",
+      "description": "Premium display and video ads"
+    },
+    {
+      "name": "Raptive",
+      "url": "https://www.raptive.com",
+      "minThreshold": "25,000 pageviews/month",
+      "payoutCycle": "Monthly",
+      "description": "Premium ad tech for creators"
+    }
+  ]
+}

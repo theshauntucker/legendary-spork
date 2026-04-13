@@ -9,15 +9,16 @@ export default function TraditionCard({ tradition }: TraditionCardProps) {
   return (
     <Link
       href={`/traditions/${tradition.slug}`}
-      className="block bg-cream-50 border border-cream-200 rounded-2xl p-6 hover:shadow-md hover:border-primary-500/30 transition-all"
+      className="group block bg-cream-50 border border-cream-200 border-l-4 rounded-r-lg p-5 hover:bg-cream-100 hover:border-l-[6px] transition-all duration-200"
+      style={{ borderLeftColor: tradition.accentColor }}
     >
-      {tradition.iconEmoji && (
-        <span className="text-3xl mb-3 block">{tradition.iconEmoji}</span>
-      )}
-      <h3 className="font-serif font-semibold text-lg text-ink-900 mb-1">
+      <h3 className="font-serif font-semibold text-lg text-ink-900 mb-1 group-hover:text-primary-600 transition-colors">
         {tradition.name}
       </h3>
-      <p className="text-sm text-ink-500 leading-relaxed">
+      {tradition.adherentCount && (
+        <p className="text-xs text-ink-400 mb-2">{tradition.adherentCount}</p>
+      )}
+      <p className="text-sm text-ink-500 leading-relaxed line-clamp-2">
         {tradition.summary}
       </p>
     </Link>
