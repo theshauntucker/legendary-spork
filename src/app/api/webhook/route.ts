@@ -33,6 +33,48 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
+  // ── Subscription renewal — grant 10 credits each billing cycle ─────────────
+  if (event.type === "invoice.payment_succeeded") {
+    const invoice = event.data.object as {
+      subscription?: string;
+      customer_email?: string;
+      amount_paid?: number;
+      billing_reason?: string;
+      subscription_details?: { metadata?: Record<string, string> };
+    };
+
+    // Only process subscription renewals (not the first invoice — that's handled by checkout.session.completed)
+    if (invoice.billing_reason === "subscription_cycle") {
+      const subMetadata = invoice.subscription_details?.metadata || {};
+      const userId = subMetadata.user_id;
+
+      if (userId) {
+        const serviceClient = await createServiceClient();
+        try {
+          await grantCredits(serviceClient, userId, 10, false);
+          console.log(`Webhook: Granted 10 renewal credits to ${userId} (subscription cycle)`);
+
+          // Record renewal payment
+          await serviceClient.from("payments").insert({
+            user_id: userId,
+            stripe_session_id: invoice.subscription || `renewal_${Date.now()}`,
+            payment_type: "subscription_renewal",
+            amount_cents: invoice.amount_paid || 1299,
+            currency: "usd",
+            status: "completed",
+            credits_granted: 10,
+          }).then(({ error }) => {
+            if (error && error.code !== "23505") console.error("Renewal payment insert error:", error);
+          });
+        } catch (err) {
+          console.error("Webhook: Failed to grant renewal credits:", err);
+          return NextResponse.json({ error: "Renewal credit grant failed" }, { status: 500 });
+        }
+      }
+    }
+    return NextResponse.json({ received: true });
+  }
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
 
@@ -46,14 +88,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine credits to grant based on payment type
-    // single = $8.99 = 1 credit
+    // subscription = $12.99/month = 10 credits (first month)
+    // single = $8.99 = 2 credits (BOGO)
     // video_analysis / pack = $29.99 = 5 credits
-    // trial (legacy) = 1 credit
     // beta_access (legacy) = 3 credits
     const isBeta = paymentType === "beta_access";
     const isPack = paymentType === "video_analysis";
     const isSingle = paymentType === "single";
-    const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : isSingle ? 2 : 1;
+    const isSubscription = paymentType === "subscription";
+    const creditsToGrant = isSubscription ? 10 : isBeta ? BETA_CREDITS : isPack ? 5 : isSingle ? 2 : 1;
 
     const serviceClient = await createServiceClient();
 

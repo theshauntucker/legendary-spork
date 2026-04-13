@@ -279,7 +279,20 @@ export default function DashboardClient({
             </div>
 
             {/* Pricing options */}
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid sm:grid-cols-3 gap-4">
+              {/* Season Member subscription — featured */}
+              <PurchaseCard
+                badge="👑 Most Popular"
+                badgeColor="text-primary-300 bg-primary-500/20"
+                title="Season Member"
+                price="$12.99/mo"
+                description="10 analyses/month. Intro rate — locked in forever."
+                features={["10 analyses per month", "Full season tracking", "Cancel anytime", "🔒 Rate locked at intro price"]}
+                buttonText="Subscribe — $12.99/mo"
+                buttonStyle="bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 hover:opacity-90"
+                type="subscription"
+              />
+
               {/* BOGO */}
               <PurchaseCard
                 badge="⚡ Buy One Get One"
@@ -287,7 +300,7 @@ export default function DashboardClient({
                 title="BOGO — 2 Analyses"
                 price="$8.99"
                 description="Buy one analysis, get one free. Only $4.50 each."
-                features={["2 full AI analyses included", "Competition-standard scoring", "Timestamped judge notes", "Improvement roadmap", "Re-submission score tracking"]}
+                features={["2 full AI analyses", "Competition-standard scoring", "Timestamped judge notes", "Re-submission tracking"]}
                 buttonText="Get 2 Analyses — $8.99"
                 buttonStyle="border-2 border-gold-500 hover:bg-gold-500/20"
                 type="single"
@@ -299,10 +312,10 @@ export default function DashboardClient({
                 badgeColor="text-gold-300 bg-gold-500/20"
                 title="Competition Pack"
                 price="$29.99"
-                description="5 analyses — track progress all season long."
-                features={["5 full AI analyses", "Only $6 each — save $15", "All styles supported", "Use any time, never expire"]}
+                description="5 analyses — only $6 each, never expire."
+                features={["5 full AI analyses", "Only $6 each — save $15", "All styles supported", "Never expire"]}
                 buttonText="Get 5 Analyses — $29.99"
-                buttonStyle="bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 hover:opacity-90"
+                buttonStyle="border-2 border-primary-500 hover:bg-primary-500/20"
                 type="pack"
               />
             </div>

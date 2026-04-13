@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Sparkles, User, LogOut } from "lucide-react";
+import { Menu, X, Sparkles, User, LogOut, Calendar, Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 const navLinks = [
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Sample Analysis", href: "#sample-analysis" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "FAQ", href: "#faq" },
+  { label: "How It Works", href: "/#how-it-works" },
+  { label: "Events", href: "/events", icon: "calendar", badge: "New" },
+  { label: "Pricing", href: "/#pricing" },
+  { label: "FAQ", href: "/#faq" },
 ];
 
 export default function Navbar() {
@@ -55,14 +55,20 @@ export default function Navbar() {
           </a>
 
           {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-7">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="text-sm text-surface-200 hover:text-white transition-colors"
+                className="relative text-sm text-surface-200 hover:text-white transition-colors flex items-center gap-1.5"
               >
+                {link.icon === "calendar" && <Calendar className="h-3.5 w-3.5 text-primary-400" />}
                 {link.label}
+                {link.badge && (
+                  <span className="absolute -top-2 -right-5 text-[9px] font-bold bg-primary-500 text-white px-1.5 py-0.5 rounded-full leading-none">
+                    {link.badge}
+                  </span>
+                )}
               </a>
             ))}
 
@@ -70,6 +76,13 @@ export default function Navbar() {
               <div className="w-24 h-9 rounded-full bg-white/5 animate-pulse" />
             ) : user ? (
               <div className="flex items-center gap-3">
+                <a
+                  href="/dancers"
+                  className="inline-flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors"
+                >
+                  <Trophy className="h-4 w-4 text-gold-400" />
+                  Season
+                </a>
                 <a
                   href="/dashboard"
                   className="inline-flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors"
@@ -131,10 +144,14 @@ export default function Navbar() {
                 <a
                   key={link.href}
                   href={link.href}
-                  className="block text-sm text-surface-200 hover:text-white transition-colors"
+                  className="flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors"
                   onClick={() => setMobileOpen(false)}
                 >
+                  {link.icon === "calendar" && <Calendar className="h-3.5 w-3.5 text-primary-400" />}
                   {link.label}
+                  {link.badge && (
+                    <span className="text-[9px] font-bold bg-primary-500 text-white px-1.5 py-0.5 rounded-full">{link.badge}</span>
+                  )}
                 </a>
               ))}
 

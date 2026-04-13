@@ -1,9 +1,33 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, ArrowRight, Gift, Zap, Star } from "lucide-react";
+import { Check, ArrowRight, Gift, Zap, Star, Crown, Sparkles } from "lucide-react";
 
 export default function Pricing() {
+  const [subLoading, setSubLoading] = useState(false);
+
+  const handleSubscribe = async () => {
+    setSubLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "subscription" }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Something went wrong. Please try again.");
+        setSubLoading(false);
+      }
+    } catch {
+      alert("Something went wrong. Please try again.");
+      setSubLoading(false);
+    }
+  };
+
   return (
     <section id="pricing" className="relative py-14 sm:py-20">
       <div className="absolute inset-0">
@@ -11,7 +35,7 @@ export default function Pricing() {
         <div className="absolute bottom-1/3 left-1/4 w-96 h-96 bg-gold-500/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -27,40 +51,40 @@ export default function Pricing() {
             <span className="gradient-text">Always Free</span>
           </h2>
           <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
-            No credit card needed to get started. Sign up, upload your routine, and see real competition-standard feedback — on us. Come back for more whenever you&apos;re ready.
+            No credit card needed to start. Upgrade whenever you&apos;re ready — or lock in our introductory subscription rate before it goes up.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        {/* 4-column grid — stacks to 2-col on tablet, 1-col on mobile */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
-          {/* FREE TIER */}
+          {/* FREE */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.0 }}
-            className="relative glass rounded-3xl p-8 border border-primary-400/40"
+            className="relative glass rounded-3xl p-7 border border-primary-400/40 flex flex-col"
           >
-            <div className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-primary-500 to-accent-500 px-3 py-1 text-xs font-bold text-white">
+            <div className="absolute -top-3 left-5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-primary-500 to-accent-500 px-3 py-1 text-xs font-bold text-white">
               <Star className="h-3 w-3" />
               ALWAYS FREE
             </div>
-            <div className="mt-2">
-              <h3 className="text-xl font-bold">First Analysis</h3>
+            <div className="mt-3 mb-4">
+              <h3 className="text-lg font-bold">First Analysis</h3>
               <div className="flex items-baseline gap-1 mt-3 mb-1">
-                <span className="text-5xl font-extrabold">$0</span>
-                <span className="text-surface-200 text-sm">1 analysis</span>
+                <span className="text-4xl font-extrabold">$0</span>
+                <span className="text-surface-200 text-sm">forever</span>
               </div>
-              <p className="text-xs text-primary-300 font-semibold mb-3">No credit card — no strings attached</p>
-              <p className="text-sm text-surface-200 mb-6">Sign up and get your first full AI analysis free. See exactly what our judges see before you spend a dime.</p>
+              <p className="text-xs text-primary-300 font-semibold">No card — no strings</p>
             </div>
-            <ul className="space-y-3 mb-8">
+            <ul className="space-y-2.5 mb-7 flex-1">
               {[
-                "1 full AI analysis included",
+                "1 full AI analysis",
                 "Competition-standard scoring",
                 "Timestamped judge notes",
                 "Improvement roadmap",
-                "Results in under 5 minutes",
+                "Results in under 5 min",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2">
                   <Check className="h-4 w-4 text-primary-400 mt-0.5 shrink-0" />
@@ -70,13 +94,13 @@ export default function Pricing() {
             </ul>
             <a
               href="/signup"
-              className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-6 py-4 text-lg font-bold text-white hover:opacity-90 transition-opacity animate-pulse-glow"
+              className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-5 py-3.5 font-bold text-white hover:opacity-90 transition-opacity animate-pulse-glow text-sm"
             >
-              <Gift className="h-5 w-5" />
-              Start Free — No Card
-              <ArrowRight className="h-5 w-5" />
+              <Gift className="h-4 w-4" />
+              Start Free
+              <ArrowRight className="h-4 w-4" />
             </a>
-            <p className="mt-3 text-center text-xs text-primary-300 font-semibold">✨ Your first analysis is always on us</p>
+            <p className="mt-2.5 text-center text-xs text-primary-300">✨ Always on us</p>
           </motion.div>
 
           {/* BOGO */}
@@ -85,29 +109,28 @@ export default function Pricing() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="relative glass rounded-3xl p-8 border border-gold-500/30"
+            className="relative glass rounded-3xl p-7 border border-gold-500/30 flex flex-col"
           >
-            <div className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-gold-500 to-accent-500 px-3 py-1 text-xs font-bold text-white">
+            <div className="absolute -top-3 left-5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-gold-500 to-accent-500 px-3 py-1 text-xs font-bold text-white">
               <Zap className="h-3 w-3" />
-              COME BACK FOR MORE
+              BOGO
             </div>
-            <div className="mt-2">
-              <h3 className="text-xl font-bold">BOGO — Buy One Get One</h3>
+            <div className="mt-3 mb-4">
+              <h3 className="text-lg font-bold">Buy One Get One</h3>
               <div className="flex items-baseline gap-1 mt-3 mb-1">
-                <span className="text-5xl font-extrabold">$8.99</span>
+                <span className="text-4xl font-extrabold">$8.99</span>
                 <span className="text-surface-200 text-sm">2 analyses</span>
               </div>
-              <p className="text-xs text-gold-400 font-semibold mb-3">Only $4.50 each — buy one, get one free</p>
-              <p className="text-sm text-surface-200 mb-6">Loved your free analysis? Get two more. Use them on different routines or re-submit the same one to track improvement.</p>
+              <p className="text-xs text-gold-400 font-semibold">$4.50 each — BOGO deal</p>
             </div>
-            <ul className="space-y-3 mb-8">
+            <ul className="space-y-2.5 mb-7 flex-1">
               {[
-                "2 full AI analyses included",
+                "2 full AI analyses",
                 "Competition-standard scoring",
                 "Timestamped judge notes",
                 "Improvement roadmap",
-                "Re-submission score tracking",
-                "Results in under 5 minutes",
+                "Re-submission tracking",
+                "Results in under 5 min",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2">
                   <Check className="h-4 w-4 text-gold-400 mt-0.5 shrink-0" />
@@ -117,11 +140,58 @@ export default function Pricing() {
             </ul>
             <a
               href="/signup"
-              className="w-full flex items-center justify-center gap-2 rounded-full border-2 border-gold-500 px-6 py-4 text-lg font-bold text-white hover:bg-gold-500/20 transition-colors"
+              className="w-full flex items-center justify-center gap-2 rounded-full border-2 border-gold-500 px-5 py-3.5 font-bold text-white hover:bg-gold-500/20 transition-colors text-sm"
             >
               Claim BOGO — $8.99
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-4 w-4" />
             </a>
+          </motion.div>
+
+          {/* SEASON MEMBER — featured */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="relative glass rounded-3xl p-7 border-2 border-primary-500/60 flex flex-col ring-2 ring-primary-500/20 ring-offset-2 ring-offset-transparent"
+            style={{ boxShadow: "0 0 40px rgba(139,92,246,0.15)" }}
+          >
+            <div className="absolute -top-3 left-5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-primary-500 via-accent-500 to-gold-400 px-3 py-1 text-xs font-bold text-white">
+              <Crown className="h-3 w-3" />
+              MOST POPULAR
+            </div>
+            <div className="mt-3 mb-4">
+              <h3 className="text-lg font-bold">Season Member</h3>
+              <div className="flex items-baseline gap-1 mt-3">
+                <span className="text-4xl font-extrabold">$12.99</span>
+                <span className="text-surface-200 text-sm">/month</span>
+              </div>
+              <p className="text-xs text-primary-300 font-semibold mt-1">Introductory rate — locked in forever</p>
+            </div>
+            <ul className="space-y-2.5 mb-7 flex-1">
+              {[
+                "10 analyses per month",
+                "Competition-standard scoring",
+                "Timestamped judge notes",
+                "Full season tracking dashboard",
+                "Re-submission score tracking",
+                "Cancel anytime",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <Check className="h-4 w-4 text-primary-400 mt-0.5 shrink-0" />
+                  <span className="text-sm text-surface-200">{item}</span>
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={handleSubscribe}
+              disabled={subLoading}
+              className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-3.5 font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
+            >
+              <Sparkles className="h-4 w-4" />
+              {subLoading ? "Loading..." : "Subscribe — $12.99/mo"}
+            </button>
+            <p className="mt-2.5 text-center text-xs text-primary-300">🔒 Rate locked in at intro price</p>
           </motion.div>
 
           {/* COMPETITION PACK */}
@@ -129,31 +199,29 @@ export default function Pricing() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="relative glass rounded-3xl p-8 border border-primary-500/30"
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="relative glass rounded-3xl p-7 border border-primary-500/30 flex flex-col"
           >
-            <div className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-primary-600 to-gold-500 px-3 py-1 text-xs font-bold text-white">
+            <div className="absolute -top-3 left-5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-primary-600 to-gold-500 px-3 py-1 text-xs font-bold text-white">
               <Gift className="h-3 w-3" />
               BEST VALUE
             </div>
-            <div className="mt-2">
-              <h3 className="text-xl font-bold">Competition Pack</h3>
+            <div className="mt-3 mb-4">
+              <h3 className="text-lg font-bold">Competition Pack</h3>
               <div className="flex items-baseline gap-1 mt-3 mb-1">
-                <span className="text-5xl font-extrabold">$29.99</span>
+                <span className="text-4xl font-extrabold">$29.99</span>
                 <span className="text-surface-200 text-sm">5 analyses</span>
               </div>
-              <p className="text-xs text-primary-400 font-semibold mb-3">Only $6/analysis — save $15 vs single</p>
-              <p className="text-sm text-surface-200 mb-6">Cover multiple dancers or track one routine all season. The serious choice for studio owners and comp families.</p>
+              <p className="text-xs text-primary-400 font-semibold">$6 each — save $15 vs single</p>
             </div>
-            <ul className="space-y-3 mb-8">
+            <ul className="space-y-2.5 mb-7 flex-1">
               {[
-                "5 full AI analyses included",
+                "5 full AI analyses",
                 "Competition-standard scoring",
-                "Timestamped notes on every key moment",
+                "Timestamped notes on every moment",
                 "Technique, Performance & Choreography",
                 "Prioritized improvement roadmap",
                 "Re-submission score tracking",
-                "Results in under 5 minutes",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2">
                   <Check className="h-4 w-4 text-primary-400 mt-0.5 shrink-0" />
@@ -163,25 +231,26 @@ export default function Pricing() {
             </ul>
             <a
               href="/signup"
-              className="w-full flex items-center justify-center gap-2 rounded-full border-2 border-primary-500 px-6 py-4 text-lg font-bold text-white hover:bg-primary-500/20 transition-colors"
+              className="w-full flex items-center justify-center gap-2 rounded-full border-2 border-primary-500 px-5 py-3.5 font-bold text-white hover:bg-primary-500/20 transition-colors text-sm"
             >
               Get 5 Analyses — $29.99
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-4 w-4" />
             </a>
-            <p className="mt-3 text-center text-xs text-surface-200">Not satisfied? We&apos;ll make it right.</p>
+            <p className="mt-2.5 text-center text-xs text-surface-200">Not satisfied? We&apos;ll make it right.</p>
           </motion.div>
         </div>
 
+        {/* Bottom comparison line */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
           className="mt-12 text-center"
         >
           <div className="inline-flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-sm text-surface-200">
             <div><span className="line-through">Private lesson: $75–$150/hr</span></div>
-            <div><span className="line-through">Competition entry fee: $80–$120</span></div>
+            <div><span className="line-through">Competition entry: $80–$120</span></div>
             <div className="text-white font-semibold">RoutineX: <span className="text-gold-400">first analysis always free</span></div>
           </div>
         </motion.div>
