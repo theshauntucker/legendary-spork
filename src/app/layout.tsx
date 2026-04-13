@@ -4,6 +4,7 @@ import "./globals.css";
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ChatWidget from "@/components/ChatWidget";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "https://faithlens.org";
@@ -19,6 +20,7 @@ export const metadata: Metadata = {
     "An unbiased, all-encompassing guide to the world's religions. Explore Mormonism, Christianity, Islam, Catholicism, Jehovah's Witnesses and more. Every faith gets equal space — no bias, just information.",
   keywords: [
     "religion",
+    "religious deconstruction",
     "mormonism",
     "christianity",
     "islam",
@@ -30,10 +32,9 @@ export const metadata: Metadata = {
     "quran",
     "religious comparison",
     "world religions",
-    "LDS church",
-    "church of jesus christ",
-    "faith exploration",
-    "religious studies",
+    "faith crisis",
+    "deconstruction",
+    "apologetics",
     "comparative religion",
   ],
   openGraph: {
@@ -91,10 +92,10 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const adsenseClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
+  const ezoicId = process.env.NEXT_PUBLIC_EZOIC_ID;
 
   return (
-    <html lang="en" className="antialiased">
+    <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -103,7 +104,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:wght@400;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Source+Sans+3:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
         <script
@@ -115,11 +116,10 @@ export default function RootLayout({
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />
-        {adsenseClientId && (
+        <ChatWidget />
+        {ezoicId && (
           <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
-            crossOrigin="anonymous"
+            src={`//www.ezojs.com/ezoic/sa.min.js`}
             strategy="afterInteractive"
           />
         )}

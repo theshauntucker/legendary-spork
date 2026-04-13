@@ -11,11 +11,11 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-      <h1 className="text-3xl sm:text-4xl font-bold text-surface-900 mb-6">
+      <h1 className="text-3xl sm:text-4xl font-heading text-slate-900 mb-6">
         About FaithLens
       </h1>
 
-      <div className="space-y-6 text-surface-700 leading-relaxed">
+      <div className="space-y-6 text-slate-700 leading-relaxed">
         <p className="text-lg">
           FaithLens is an independent, non-denominational platform dedicated to
           presenting the world&#39;s religions fairly, accurately, and without
@@ -23,7 +23,7 @@ export default function AboutPage() {
           Jehovah&#39;s Witnesses — gets equal space and respectful treatment.
         </p>
 
-        <h2 className="text-2xl font-bold text-surface-900 pt-4">
+        <h2 className="text-2xl font-heading text-slate-900 pt-4">
           Our Mission
         </h2>
         <p>
@@ -34,7 +34,7 @@ export default function AboutPage() {
           form their own conclusions.
         </p>
 
-        <h2 className="text-2xl font-bold text-surface-900 pt-4">
+        <h2 className="text-2xl font-heading text-slate-900 pt-4">
           What Makes Us Different
         </h2>
         <ul className="list-disc pl-6 space-y-2">
@@ -61,7 +61,7 @@ export default function AboutPage() {
 
         <AdUnit slot="about-mid" format="horizontal" className="my-6" />
 
-        <h2 className="text-2xl font-bold text-surface-900 pt-4">
+        <h2 className="text-2xl font-heading text-slate-900 pt-4">
           How We&#39;re Funded
         </h2>
         <p>
@@ -71,7 +71,7 @@ export default function AboutPage() {
           advertisers.
         </p>
 
-        <h2 className="text-2xl font-bold text-surface-900 pt-4">
+        <h2 className="text-2xl font-heading text-slate-900 pt-4">
           Support Us
         </h2>
         <p>
@@ -81,10 +81,10 @@ export default function AboutPage() {
         </p>
         <DonateButton size="md" />
 
-        <h2 className="text-2xl font-bold text-surface-900 pt-4">
+        <h2 className="text-2xl font-heading text-slate-900 pt-4">
           Disclaimer
         </h2>
-        <p className="text-sm text-surface-500">
+        <p className="text-sm text-slate-500">
           FaithLens is an educational resource and is not affiliated with any
           church, denomination, or religious organization. All trademarks,
           church names, and logos belong to their respective owners. Content on

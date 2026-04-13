@@ -170,10 +170,10 @@ const resources: ResourceSection[] = [
 export default function ResourcesPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-      <h1 className="text-3xl sm:text-4xl font-bold text-surface-900 mb-3">
+      <h1 className="text-3xl sm:text-4xl font-heading text-slate-900 mb-3">
         Resources & Official Links
       </h1>
-      <p className="text-lg text-surface-600 mb-8">
+      <p className="text-lg text-slate-600 mb-8">
         Direct links to official church websites, missionary scheduling,
         scripture study tools, and more. We link to both official and
         independent sources for every faith.
@@ -184,7 +184,7 @@ export default function ResourcesPage() {
       <div className="space-y-10 mt-8">
         {resources.map((section) => (
           <section key={section.title}>
-            <h2 className="text-xl font-bold text-surface-900 mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-heading text-slate-900 mb-4 flex items-center gap-2">
               <span>{section.icon}</span> {section.title}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -194,12 +194,12 @@ export default function ResourcesPage() {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-white border border-surface-200 rounded-lg p-4 hover:shadow-md hover:border-primary-300 transition-all"
+                  className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md hover:border-accent-300 transition-all"
                 >
-                  <h3 className="font-semibold text-primary-700 text-sm mb-1">
+                  <h3 className="font-semibold text-accent-700 text-sm mb-1">
                     {link.name} &rarr;
                   </h3>
-                  <p className="text-xs text-surface-500">
+                  <p className="text-xs text-slate-500">
                     {link.description}
                   </p>
                 </a>

@@ -8,6 +8,8 @@ import {
 } from "@/lib/content";
 import AdUnit from "@/components/AdUnit";
 import ArticleCard from "@/components/ArticleCard";
+import EmailCapture from "@/components/EmailCapture";
+import TherapyCTA from "@/components/TherapyCTA";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -84,27 +86,27 @@ export default async function ArticlePage({ params }: PageProps) {
       />
 
       {/* Breadcrumb */}
-      <nav className="text-sm text-surface-400 mb-6">
-        <Link href="/" className="hover:text-primary-600">
+      <nav className="text-sm text-slate-400 mb-6">
+        <Link href="/" className="hover:text-accent-600">
           Home
         </Link>
         <span className="mx-2">/</span>
         <Link
           href={`/topics/${article.topic}`}
-          className="hover:text-primary-600 capitalize"
+          className="hover:text-accent-600 capitalize"
         >
           {article.topic}
         </Link>
         <span className="mx-2">/</span>
-        <span className="text-surface-600">{article.title}</span>
+        <span className="text-slate-600">{article.title}</span>
       </nav>
 
       {/* Article Header */}
       <header className="mb-8">
-        <h1 className="text-3xl sm:text-4xl font-bold text-surface-900 mb-3 leading-tight">
+        <h1 className="text-3xl sm:text-4xl font-heading text-slate-900 mb-3 leading-tight">
           {article.title}
         </h1>
-        <p className="text-lg text-surface-600 mb-4">
+        <p className="text-lg text-slate-600 mb-4">
           {article.description}
         </p>
         <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -117,12 +119,12 @@ export default async function ArticlePage({ params }: PageProps) {
           )}
           <Link
             href={`/topics/${article.topic}`}
-            className="text-primary-600 hover:text-primary-800 capitalize"
+            className="text-accent-600 hover:text-accent-800 capitalize"
           >
             {article.topic}
           </Link>
           {article.date && (
-            <span className="text-surface-400">
+            <span className="text-slate-400">
               {new Date(article.date).toLocaleDateString("en-US", {
                 month: "long",
                 day: "numeric",
@@ -145,11 +147,11 @@ export default async function ArticlePage({ params }: PageProps) {
 
       {/* Tags */}
       {article.tags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-surface-200">
+        <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-slate-200">
           {article.tags.map((tag) => (
             <span
               key={tag}
-              className="text-xs bg-surface-100 text-surface-600 px-3 py-1 rounded-full"
+              className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full"
             >
               #{tag}
             </span>
@@ -165,8 +167,8 @@ export default async function ArticlePage({ params }: PageProps) {
 
       {/* Related Articles */}
       {relatedArticles.length > 0 && (
-        <section className="mt-12 pt-8 border-t border-surface-200">
-          <h2 className="text-xl font-bold text-surface-900 mb-4">
+        <section className="mt-12 pt-8 border-t border-slate-200">
+          <h2 className="text-xl font-heading text-slate-900 mb-4">
             More on {article.topic}
           </h2>
           <div className="grid grid-cols-1 gap-4">
@@ -175,6 +177,18 @@ export default async function ArticlePage({ params }: PageProps) {
             ))}
           </div>
         </section>
+      )}
+
+      {/* Email capture */}
+      <div className="mt-10">
+        <EmailCapture />
+      </div>
+
+      {/* Therapy CTA for deconstruction articles */}
+      {article.perspective === "critical" && (
+        <div className="mt-8">
+          <TherapyCTA />
+        </div>
       )}
     </div>
   );

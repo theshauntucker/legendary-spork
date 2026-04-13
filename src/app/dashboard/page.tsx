@@ -1,15 +1,17 @@
 import { redirect } from "next/navigation";
-import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { getUserCredits, grantCredits, hasCreditsInDb, BETA_CREDITS } from "@/lib/credits";
-import { getStripe } from "@/lib/stripe";
-import DashboardClient from "./DashboardClient";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import LogoutButton from "./LogoutButton";
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  // Verify authentication with user's session
+const topics = [
+  { name: "Mormonism", slug: "mormonism", color: "bg-amber-50 border-amber-200 hover:border-amber-400" },
+  { name: "Christianity", slug: "christianity", color: "bg-sky-50 border-sky-200 hover:border-sky-400" },
+  { name: "Islam", slug: "islam", color: "bg-emerald-50 border-emerald-200 hover:border-emerald-400" },
+  { name: "Catholicism", slug: "catholicism", color: "bg-violet-50 border-violet-200 hover:border-violet-400" },
+  { name: "Jehovah's Witnesses", slug: "jehovahs-witnesses", color: "bg-rose-50 border-rose-200 hover:border-rose-400" },
+];
+
+export default async function DashboardPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -17,159 +19,88 @@ export default async function DashboardPage({
 
   if (!user) redirect("/login");
 
-  // Use service client for data reads (bypasses RLS issues)
-  const serviceClient = await createServiceClient();
-
-  // If returning from Stripe checkout, verify payment and grant credits as fallback
-  const params = await searchParams;
-  const sessionId =
-    typeof params.session_id === "string" ? params.session_id : undefined;
-
-  if (sessionId) {
-    try {
-      // Check if already processed
-      const { data: existingPayment } = await serviceClient
-        .from("payments")
-        .select("id")
-        .eq("stripe_session_id", sessionId)
-        .maybeSingle();
-
-      if (!existingPayment) {
-        // Not yet processed — verify with Stripe and grant credits
-        const stripe = getStripe();
-        const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-        if (
-          session.payment_status === "paid" &&
-          session.metadata?.user_id === user.id
-        ) {
-          const paymentType =
-            session.metadata?.payment_type || "beta_access";
-          const referralCode = session.metadata?.referral_code || null;
-          const isBeta = paymentType === "beta_access";
-          const isPack = paymentType === "video_analysis";
-          const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : 1;
-          const amountFallback = isPack ? 2999 : isBeta ? 999 : 899;
-
-          const { error: insertError } = await serviceClient
-            .from("payments")
-            .insert({
-              user_id: user.id,
-              stripe_session_id: sessionId,
-              stripe_payment_intent:
-                typeof session.payment_intent === "string"
-                  ? session.payment_intent
-                  : null,
-              payment_type: paymentType,
-              amount_cents: session.amount_total || amountFallback,
-              currency: session.currency || "usd",
-              status: "completed",
-              credits_granted: creditsToGrant,
-              referral_code: referralCode,
-            });
-
-          if (insertError && insertError.code !== "23505") {
-            console.error("Dashboard: Payment insert failed:", insertError.message);
-          }
-
-          // Always try to grant credits
-          await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
-          console.log(
-            `Dashboard: Granted ${creditsToGrant} credits to ${user.id} (webhook fallback)`
-          );
-        }
-      }
-    } catch (err) {
-      console.error("Dashboard: Payment verification failed:", err);
-      // Non-fatal — continue loading dashboard
-    }
-  }
-
-  // ALWAYS check: if user has completed payments but no credits, recover them.
-  // This catches cases where webhook, success page, and session_id fallbacks all failed.
-  try {
-    const hasCredits = await hasCreditsInDb(serviceClient, user.id);
-    if (!hasCredits) {
-      const { data: completedPayment } = await serviceClient
-        .from("payments")
-        .select("payment_type, credits_granted")
-        .eq("user_id", user.id)
-        .eq("status", "completed")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (completedPayment) {
-        const isBeta = completedPayment.payment_type === "beta_access";
-        const creditsToGrant = completedPayment.credits_granted || (isBeta ? BETA_CREDITS : 1);
-        await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
-        console.log(
-          `Dashboard: Recovered ${creditsToGrant} missing credits for ${user.id} from existing payment`
-        );
-      }
-    }
-  } catch (err) {
-    console.error("Dashboard: Credit recovery check failed:", err);
-  }
-
-  // Auto-fix videos stuck in "processing" for over 7 minutes
-  await serviceClient
-    .from("videos")
-    .update({ status: "error", updated_at: new Date().toISOString() })
-    .eq("user_id", user.id)
-    .eq("status", "processing")
-    .lt("updated_at", new Date(Date.now() - 7 * 60 * 1000).toISOString());
-
-  // Fetch user's videos
-  const { data: videos } = await serviceClient
-    .from("videos")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-
-  // Fetch analyses separately
-  const videoIds = (videos ?? []).map((v: { id: string }) => v.id);
-  const analysesMap: Record<string, { id: string; total_score: number; award_level: string }[]> = {};
-
-  if (videoIds.length > 0) {
-    const { data: analyses } = await serviceClient
-      .from("analyses")
-      .select("id, video_id, total_score, award_level")
-      .in("video_id", videoIds);
-
-    if (analyses) {
-      for (const a of analyses as { id: string; video_id: string; total_score: number; award_level: string }[]) {
-        if (!analysesMap[a.video_id]) analysesMap[a.video_id] = [];
-        analysesMap[a.video_id].push(a);
-      }
-    }
-  }
-
-  // Merge analyses into video records
-  const videosWithAnalyses = (videos ?? []).map((v) => ({
-    ...v,
-    analyses: analysesMap[v.id] ?? [],
-  }));
-
-  // Fetch actual credit balance from database
-  const creditStatus = await getUserCredits(
-    serviceClient,
-    user.id,
-    user.email
-  );
+  const displayName =
+    user.user_metadata?.full_name || user.email || "there";
 
   return (
-    <DashboardClient
-      user={{
-        email: user.email ?? "",
-        name: user.user_metadata?.full_name ?? "",
-      }}
-      videos={videosWithAnalyses}
-      credits={{
-        remaining: creditStatus.remaining,
-        total: creditStatus.totalCredits,
-        used: creditStatus.usedCredits,
-      }}
-    />
+    <div className="min-h-screen bg-gradient-to-br from-accent-50/30 via-white to-amber-50/30">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-10">
+          <div>
+            <h1 className="text-3xl font-heading text-slate-900">
+              Welcome, {displayName}
+            </h1>
+            <p className="mt-1 text-slate-500">
+              Your personal FaithLens dashboard
+            </p>
+          </div>
+          <LogoutButton />
+        </div>
+
+        {/* Your Activity */}
+        <section className="mb-10">
+          <h2 className="text-xl font-heading text-slate-800 mb-4">
+            Your Activity
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+              <h3 className="font-medium text-slate-800 mb-2">
+                Saved Articles
+              </h3>
+              <p className="text-sm text-slate-500">
+                You haven&apos;t saved any articles yet. Browse topics below to
+                get started.
+              </p>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+              <h3 className="font-medium text-slate-800 mb-2">
+                Forum Posts
+              </h3>
+              <p className="text-sm text-slate-500">
+                Join the community to share your thoughts and learn from others.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Browse Topics */}
+        <section className="mb-10">
+          <h2 className="text-xl font-heading text-slate-800 mb-4">
+            Browse Topics
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {topics.map((topic) => (
+              <Link
+                key={topic.slug}
+                href={`/topics/${topic.slug}`}
+                className={`border-2 rounded-2xl px-4 py-3 text-center font-medium text-slate-800 hover:shadow-md transition-all ${topic.color}`}
+              >
+                {topic.name}
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Community Link */}
+        <section>
+          <Link
+            href="/community"
+            className="block bg-white border border-slate-200 rounded-2xl shadow-sm p-6 hover:border-accent-400 hover:shadow-md transition-all"
+          >
+            <h2 className="text-xl font-heading text-slate-800 mb-1">
+              Community Forum
+            </h2>
+            <p className="text-sm text-slate-500">
+              Discuss world religions with fellow learners. Ask questions, share
+              insights, and explore diverse perspectives in a respectful space.
+            </p>
+            <span className="inline-block mt-3 bg-accent-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-accent-700 transition-colors">
+              Visit Community
+            </span>
+          </Link>
+        </section>
+      </div>
+    </div>
   );
 }
