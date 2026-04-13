@@ -126,11 +126,11 @@ export default function SearchBar({
     setQuery("");
   }
 
-  const typeLabels: Record<string, string> = {
-    tradition: "Tradition",
-    resource: "Resource",
-    tool: "Tool",
-    page: "Page",
+  const typeLabels: Record<string, { label: string; className: string }> = {
+    tradition: { label: "Tradition", className: "bg-emerald-100 text-emerald-700" },
+    resource: { label: "Resource", className: "bg-sky-100 text-sky-700" },
+    tool: { label: "Tool", className: "bg-amber-100 text-amber-700" },
+    page: { label: "Page", className: "bg-violet-100 text-violet-700" },
   };
 
   return (
@@ -157,7 +157,7 @@ export default function SearchBar({
           onKeyDown={handleKeyDown}
           onFocus={() => query.length >= 2 && results.length > 0 && setIsOpen(true)}
           placeholder={placeholder}
-          className={`w-full bg-cream-50 border border-cream-200 text-ink-800 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all ${
+          className={`w-full bg-white border border-cream-200 text-ink-800 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500/50 focus:shadow-lg focus:shadow-primary-500/5 transition-all ${
             large
               ? "pl-12 pr-4 py-4 text-lg rounded-2xl shadow-sm"
               : "pl-10 pr-4 py-2.5 text-sm rounded-xl"
@@ -181,8 +181,8 @@ export default function SearchBar({
                   <p className="text-xs text-ink-400 mt-0.5">{result.subtitle}</p>
                 )}
               </div>
-              <span className="text-xs text-ink-400 bg-cream-100 px-2 py-0.5 rounded-full">
-                {typeLabels[result.type]}
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${typeLabels[result.type]?.className || "bg-cream-100 text-ink-400"}`}>
+                {typeLabels[result.type]?.label || result.type}
               </span>
             </button>
           ))}

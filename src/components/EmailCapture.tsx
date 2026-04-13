@@ -47,7 +47,7 @@ export default function EmailCapture({ compact = false }: EmailCaptureProps) {
   }
 
   return (
-    <div className="bg-cream-100 border border-primary-500/20 rounded-xl p-6 transition-colors duration-300 has-[input:focus]:bg-cream-50 has-[input:focus]:border-primary-500/40">
+    <div className="rounded-xl p-6 transition-colors duration-300 border border-primary-500/20 has-[input:focus]:border-primary-500/40" style={{ background: "linear-gradient(135deg, #e8f4f4 0%, #f9f6ed 100%)" }}>
       <h3 className="text-lg font-serif font-semibold text-ink-900 mb-1">
         Stay Informed
       </h3>

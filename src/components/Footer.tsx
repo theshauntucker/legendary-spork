@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-ink-900 text-cream-200 mt-16 relative">
+    <footer className="text-cream-200 mt-16 relative" style={{ background: "linear-gradient(180deg, #0a3d3d 0%, #063838 100%)" }}>
       {/* Ornamental divider */}
       <div className="absolute -top-px left-0 right-0 flex justify-center">
         <div className="w-16 h-px bg-gradient-to-r from-transparent via-cream-200/30 to-transparent" />

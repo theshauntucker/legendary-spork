@@ -6,10 +6,10 @@ interface ResourceCardProps {
 }
 
 const perspectiveColors: Record<string, string> = {
-  devotional: "bg-primary-50 text-primary-700",
-  questioning: "bg-amber-50 text-amber-700",
-  academic: "bg-blue-50 text-blue-700",
-  personal: "bg-purple-50 text-purple-700",
+  devotional: "bg-emerald-100 text-emerald-800 border border-emerald-200",
+  questioning: "bg-amber-100 text-amber-800 border border-amber-200",
+  academic: "bg-sky-100 text-sky-800 border border-sky-200",
+  personal: "bg-violet-100 text-violet-800 border border-violet-200",
 };
 
 export default function ResourceCard({ resource }: ResourceCardProps) {
