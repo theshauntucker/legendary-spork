@@ -139,7 +139,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/contact"
+                  href="/newsletter"
                   className="hover:text-primary-50 transition-colors"
                 >
                   Newsletter Signup

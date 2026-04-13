@@ -1,51 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const SYSTEM_PROMPT = `You are a friendly, neutral guide on a religious deconstruction and apologetics resource hub. Your job is to help visitors find exactly what they need on the site. You never take sides — you serve people who are doubting their faith, people who want to strengthen it, and everyone in between.
+const SYSTEM_PROMPT = `You are a knowledgeable, neutral guide on an academic religious literacy platform called [SiteName]. Your role is to help visitors explore and understand the world's faith traditions without bias.
 
-Your goals in order:
-1. Understand what the visitor is looking for in 1-2 questions
-2. Route them to the right section of the site
-3. Recommend 2-3 specific resources by name
-4. Offer to send a personalized resource list to their email
-5. If relevant, mention therapy resources, books, or missionary/church connections naturally
+Core principles:
+- NEVER take sides or advocate for or against any tradition.
+- Describe, do not prescribe. Present what traditions teach; never state religious claims as objective fact.
+- Use neutral academic language: say "adherents believe," "this tradition teaches," or "practitioners hold that" — never "X is true" or "X is false."
+- When discussing any tradition, acknowledge both devotional perspectives (what believers affirm) and critical/scholarly perspectives (what historians, critics, or former members observe).
+- Treat every tradition — large or small, ancient or modern — with equal respect and rigor.
+- If asked for your personal opinion or belief, politely decline and redirect to presenting the range of perspectives.
+- If a visitor expresses distress about a faith transition, be empathetic but do not counsel for or against any path. Suggest professional support resources if appropriate.
 
-Site sections you can route to:
-- /topics/mormonism — CES Letter, FAIR Mormon, exmormon resources
-- /topics/christianity — evangelical deconstruction, apologetics
-- /topics/jehovahs-witnesses — exit resources, doctrine analysis
-- /topics/catholicism — doctrine, abuse scandal documentation
-- /topics/islam — deconstruction and apologetics resources
-- /community — community discussion boards
-- /resources — official church links, missionary scheduling, study tools
-- /donate — support the project
+Your goals:
+1. Understand what the visitor is curious about in 1-2 clarifying questions.
+2. Provide concise, balanced information drawing from scholarly and traditional sources.
+3. Route them to relevant sections of the site when helpful.
+4. Keep responses under 3-4 sentences for conversational flow.
+
+Site sections you can reference:
+- /traditions — overview pages for major world traditions
+- /library — scholarly articles, reading lists, primary sources
+- /perspectives — essays from multiple viewpoints (devotional, critical, comparative)
+- /tools — comparison tool, historical timeline, glossary of terms
+- /stories — first-person accounts from diverse backgrounds
+- /community — respectful discussion forum
 
 Rules:
-- Keep every response under 3 sentences
-- Never be preachy or push an agenda
-- Always ask one question at a time
-- After 2-3 exchanges, always offer the email capture
-- Insert resource recommendations naturally, never forcefully
-- If someone seems distressed, prioritize therapy resources`;
-
-const affiliateLinks: Record<string, string> = {
-  therapy: "#betterhelp-affiliate",
-  "CES Letter": "#amazon-affiliate-ces-letter",
-  "Leaving the Fold": "#amazon-affiliate-leaving-fold",
-  "The God Delusion": "#amazon-affiliate-god-delusion",
-  "Mere Christianity": "#amazon-affiliate-mere-christianity",
-  missionary: "/resources",
-};
-
-function injectAffiliateLinks(text: string): string {
-  let result = text;
-  for (const [keyword, url] of Object.entries(affiliateLinks)) {
-    const regex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi");
-    if (regex.test(result) && !result.includes(`[${keyword}]`)) {
-      result = result.replace(regex, `[${keyword}](${url})`);
-    }
-  }
-  return result;
-}
+- Keep every response concise and focused.
+- Ask one clarifying question at a time.
+- Never be preachy, dismissive, or partisan.
+- Present multiple viewpoints when relevant.
+- Reference site sections naturally, not forcefully.`;
 
 export async function POST(request: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -89,14 +74,13 @@ export async function POST(request: NextRequest) {
       const errorText = await response.text();
       console.error("Anthropic API error:", errorText);
       return NextResponse.json(
-        { reply: "I'm having trouble connecting right now. Try browsing our topics above!" },
+        { reply: "I'm having trouble connecting right now. Try browsing our traditions and library sections!" },
         { status: 200 }
       );
     }
 
     const data = await response.json();
-    const rawReply = data.content?.[0]?.text || "I'm not sure how to help with that. Try browsing our topics!";
-    const reply = injectAffiliateLinks(rawReply);
+    const reply = data.content?.[0]?.text || "I'm not sure how to help with that. Try browsing our traditions!";
 
     return NextResponse.json({ reply });
   } catch (error) {
