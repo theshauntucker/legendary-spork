@@ -7,50 +7,41 @@ import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL || "https://faithlens.org";
+  process.env.NEXT_PUBLIC_BASE_URL || "https://example.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default:
-      "FaithLens — Explore the World's Religions Without Bias",
-    template: "%s | FaithLens",
+    default: "[SiteName] — Explore the World's Faith Traditions",
+    template: "%s | [SiteName]",
   },
   description:
-    "An unbiased, all-encompassing guide to the world's religions. Explore Mormonism, Christianity, Islam, Catholicism, Jehovah's Witnesses and more. Every faith gets equal space — no bias, just information.",
+    "A neutral, academic platform for religious literacy. Explore the history, beliefs, and practices of the world's faith traditions with equal care and scholarly rigor.",
   keywords: [
-    "religion",
-    "religious deconstruction",
-    "mormonism",
-    "christianity",
-    "islam",
-    "catholicism",
-    "jehovah's witnesses",
-    "CES letter",
-    "book of mormon",
-    "bible",
-    "quran",
-    "religious comparison",
     "world religions",
-    "faith crisis",
-    "deconstruction",
-    "apologetics",
+    "religious literacy",
     "comparative religion",
+    "faith traditions",
+    "religious studies",
+    "theology",
+    "philosophy of religion",
+    "interfaith",
+    "religious history",
   ],
   openGraph: {
-    title: "FaithLens — Explore the World's Religions Without Bias",
+    title: "[SiteName] — Explore the World's Faith Traditions",
     description:
-      "An unbiased guide to every major religion. Documents, official links, missionary info, critical analysis — all viewpoints represented fairly.",
+      "A neutral, academic platform for religious literacy. Explore the history, beliefs, and practices of every major faith tradition with equal care.",
     type: "website",
-    siteName: "FaithLens",
+    siteName: "[SiteName]",
     url: BASE_URL,
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "FaithLens — Explore the World's Religions Without Bias",
+    title: "[SiteName] — Explore the World's Faith Traditions",
     description:
-      "An unbiased, all-encompassing guide to the world's religions. Every faith gets equal space.",
+      "A neutral, academic platform for religious literacy. Every tradition explored with equal care.",
   },
   robots: {
     index: true,
@@ -69,10 +60,10 @@ const jsonLd = {
   "@graph": [
     {
       "@type": "WebSite",
-      name: "FaithLens",
+      name: "[SiteName]",
       url: BASE_URL,
       description:
-        "An unbiased, all-encompassing guide to the world's religions.",
+        "A neutral, academic platform for religious literacy. Explore the world's faith traditions with equal care and scholarly rigor.",
       potentialAction: {
         "@type": "SearchAction",
         target: `${BASE_URL}/?q={search_term_string}`,
@@ -81,8 +72,10 @@ const jsonLd = {
     },
     {
       "@type": "Organization",
-      name: "FaithLens",
+      name: "[SiteName]",
       url: BASE_URL,
+      description:
+        "An educational platform presenting the world's faith traditions with neutrality and academic rigor.",
     },
   ],
 };
@@ -104,7 +97,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Source+Sans+3:wght@300;400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Inter:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
         <script
@@ -112,14 +105,14 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="flex flex-col min-h-screen">
+      <body className="bg-cream-50 text-ink-800 flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />
         <ChatWidget />
         {ezoicId && (
           <Script
-            src={`//www.ezojs.com/ezoic/sa.min.js`}
+            src="//www.ezojs.com/ezoic/sa.min.js"
             strategy="afterInteractive"
           />
         )}

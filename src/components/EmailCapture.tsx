@@ -40,18 +40,18 @@ export default function EmailCapture({ compact = false }: EmailCaptureProps) {
 
   if (status === "success") {
     return (
-      <div className="bg-accent-50 border border-accent-200 rounded-2xl p-6 text-center">
-        <p className="text-accent-700 font-medium">{message}</p>
+      <div className="bg-primary-50 border border-primary-500/20 rounded-2xl p-6 text-center">
+        <p className="text-primary-700 font-medium">{message}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-accent-50 border border-accent-200 rounded-2xl p-6">
-      <h3 className="text-lg font-heading text-slate-900 mb-1">
+    <div className="bg-cream-100 border border-primary-500/30 rounded-2xl p-6">
+      <h3 className="text-lg font-serif font-semibold text-ink-900 mb-1">
         Stay Informed
       </h3>
-      <p className="text-sm text-slate-600 mb-4">
+      <p className="text-sm text-ink-500 mb-4">
         Get weekly summaries of new resources, articles, and community discussions.
       </p>
 
@@ -65,12 +65,12 @@ export default function EmailCapture({ compact = false }: EmailCaptureProps) {
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent text-sm"
+          className="flex-1 px-4 py-2.5 rounded-xl border border-cream-200 bg-cream-50 text-ink-800 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
         />
         <button
           type="submit"
           disabled={status === "loading"}
-          className="px-6 py-2.5 bg-accent-600 text-white rounded-xl font-semibold text-sm hover:bg-accent-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          className="px-6 py-2.5 bg-primary-500 text-white rounded-xl font-semibold text-sm hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
         >
           {status === "loading" ? "Subscribing..." : "Subscribe"}
         </button>

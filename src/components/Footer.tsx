@@ -1,73 +1,107 @@
 import Link from "next/link";
-import DonateButton from "./DonateButton";
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-900 text-slate-400 mt-16">
+    <footer className="bg-ink-900 text-cream-200 mt-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand */}
+          {/* Brand + mission */}
           <div className="md:col-span-1">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-7 h-7 rounded-md bg-gradient-to-br from-accent-500 to-brand-500 flex items-center justify-center">
-                <span className="text-white text-xs font-bold">FL</span>
-              </div>
-              <h3 className="text-white text-lg font-heading">FaithLens</h3>
-            </div>
+            <h3 className="text-white text-lg font-serif font-semibold mb-3">
+              [SiteName]
+            </h3>
             <p className="text-sm leading-relaxed">
-              An unbiased, all-encompassing resource for exploring the
-              world&#39;s religions. Every faith gets equal space. No bias, just
-              information.
+              A neutral, academic platform for religious literacy. We present
+              the history, beliefs, and practices of every tradition with equal
+              care and scholarly rigor.
             </p>
-            <div className="mt-4">
-              <DonateButton />
-            </div>
           </div>
 
-          {/* Topics */}
+          {/* Traditions */}
           <div>
             <h4 className="text-white font-semibold mb-3 text-sm uppercase tracking-wider">
-              Topics
+              Traditions
             </h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  href="/topics/mormonism"
-                  className="hover:text-accent-400 transition-colors"
-                >
-                  Mormonism (LDS)
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/topics/christianity"
-                  className="hover:text-accent-400 transition-colors"
+                  href="/traditions/christianity"
+                  className="hover:text-primary-50 transition-colors"
                 >
                   Christianity
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/topics/islam"
-                  className="hover:text-accent-400 transition-colors"
+                  href="/traditions/islam"
+                  className="hover:text-primary-50 transition-colors"
                 >
                   Islam
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/topics/catholicism"
-                  className="hover:text-accent-400 transition-colors"
+                  href="/traditions/judaism"
+                  className="hover:text-primary-50 transition-colors"
                 >
-                  Catholicism
+                  Judaism
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/topics/jehovahs-witnesses"
-                  className="hover:text-accent-400 transition-colors"
+                  href="/traditions/hinduism"
+                  className="hover:text-primary-50 transition-colors"
                 >
-                  Jehovah&#39;s Witnesses
+                  Hinduism
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/traditions/buddhism"
+                  className="hover:text-primary-50 transition-colors"
+                >
+                  Buddhism
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Tools */}
+          <div>
+            <h4 className="text-white font-semibold mb-3 text-sm uppercase tracking-wider">
+              Tools
+            </h4>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link
+                  href="/tools/comparison"
+                  className="hover:text-primary-50 transition-colors"
+                >
+                  Tradition Comparison
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/tools/timeline"
+                  className="hover:text-primary-50 transition-colors"
+                >
+                  Historical Timeline
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/tools/glossary"
+                  className="hover:text-primary-50 transition-colors"
+                >
+                  Glossary of Terms
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/library"
+                  className="hover:text-primary-50 transition-colors"
+                >
+                  Reading Lists
                 </Link>
               </li>
             </ul>
@@ -82,80 +116,48 @@ export default function Footer() {
               <li>
                 <Link
                   href="/community"
-                  className="hover:text-accent-400 transition-colors"
+                  className="hover:text-primary-50 transition-colors"
                 >
                   Discussion Forum
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/resources"
-                  className="hover:text-accent-400 transition-colors"
+                  href="/stories"
+                  className="hover:text-primary-50 transition-colors"
                 >
-                  Official Church Links
+                  Personal Stories
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/resources"
-                  className="hover:text-accent-400 transition-colors"
-                >
-                  Meet with Missionaries
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/resources"
-                  className="hover:text-accent-400 transition-colors"
-                >
-                  Scripture Study Tools
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Site */}
-          <div>
-            <h4 className="text-white font-semibold mb-3 text-sm uppercase tracking-wider">
-              Site
-            </h4>
-            <ul className="space-y-2 text-sm">
               <li>
                 <Link
                   href="/about"
-                  className="hover:text-accent-400 transition-colors"
+                  className="hover:text-primary-50 transition-colors"
                 >
-                  About FaithLens
+                  About Us
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/signup"
-                  className="hover:text-accent-400 transition-colors"
+                  href="/contact"
+                  className="hover:text-primary-50 transition-colors"
                 >
-                  Create Account
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/donate"
-                  className="hover:text-accent-400 transition-colors"
-                >
-                  Support Us
+                  Newsletter Signup
                 </Link>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-slate-700 mt-10 pt-6 text-center text-sm text-slate-500">
+        {/* Bottom: disclaimer + copyright */}
+        <div className="border-t border-ink-700 mt-10 pt-6 text-center text-sm text-ink-400">
           <p>
-            FaithLens presents information from multiple perspectives for
-            educational purposes. We are not affiliated with any religious
-            organization. All trademarks belong to their respective owners.
+            [SiteName] is an educational platform. We present perspectives from
+            within, outside, and across every tradition with equal care. We are
+            not affiliated with any religious organization.
           </p>
           <p className="mt-2">
-            &copy; {new Date().getFullYear()} FaithLens. All rights reserved.
+            &copy; {new Date().getFullYear()} [SiteName]. All rights reserved.
           </p>
         </div>
       </div>

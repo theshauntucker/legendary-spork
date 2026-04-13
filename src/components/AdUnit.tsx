@@ -17,7 +17,7 @@ export default function AdUnit({
   if (!ezoicId) {
     return (
       <div
-        className={`bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center text-slate-400 text-sm ${className}`}
+        className={`bg-cream-100 border-2 border-dashed border-cream-200 rounded-xl flex items-center justify-center text-ink-400 text-sm ${className}`}
         style={{ minHeight: format === "horizontal" ? "90px" : "250px" }}
       >
         Ad Space
