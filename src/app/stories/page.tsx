@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import AdUnit from "@/components/AdUnit";
 import EmailCapture from "@/components/EmailCapture";
-import type { SeedStory } from "@/app/api/stories/route";
+import { seedStories, type SeedStory } from "@/app/api/stories/seed-data";
 
 export const metadata: Metadata = {
   title: "Real Stories of Faith Transition",
@@ -29,21 +29,14 @@ const RELIGION_COLORS: Record<string, string> = {
   other: "bg-slate-100 text-slate-600",
 };
 
-async function getStories(): Promise<SeedStory[]> {
-  // In production this would fetch from the DB.
-  // For SSR we fetch from our own API route.
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  try {
-    const res = await fetch(`${baseUrl}/api/stories`, { cache: "no-store" });
-    if (!res.ok) return [];
-    return res.json();
-  } catch {
-    return [];
-  }
+function getStories(): SeedStory[] {
+  // In production this would query the DB.
+  // For now, we use the seed data directly.
+  return seedStories;
 }
 
-export default async function StoriesPage() {
-  const stories = await getStories();
+export default function StoriesPage() {
+  const stories = getStories();
 
   return (
     <>
@@ -105,9 +98,7 @@ export default async function StoriesPage() {
                   })}
                 </span>
                 <span className="text-xs text-slate-400">
-                  {story.anonymous
-                    ? "Anonymous"
-                    : story.displayName}
+                  {story.anonymous ? "Anonymous" : story.displayName}
                 </span>
               </div>
 
