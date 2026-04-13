@@ -4,7 +4,7 @@ import AdUnit from "@/components/AdUnit";
 import EmailCapture from "@/components/EmailCapture";
 
 export const metadata: Metadata = {
-  title: "Tools — [SiteName]",
+  title: "Tools — Vibeproof",
   description:
     "Interactive tools for exploring faith traditions, comparing beliefs, and understanding group dynamics.",
 };

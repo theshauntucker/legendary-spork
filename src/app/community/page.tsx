@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description:
     "A space for respectful dialogue across all perspectives. Join conversations about religion, spirituality, faith transitions, and scholarly research.",
   openGraph: {
-    title: "Community | [SiteName]",
+    title: "Community | Vibeproof",
     description:
       "A space for respectful dialogue across all perspectives.",
     type: "website",

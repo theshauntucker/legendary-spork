@@ -12,7 +12,7 @@ export default function Footer() {
           {/* Brand + mission */}
           <div className="md:col-span-1">
             <h3 className="text-white text-lg font-serif font-semibold mb-3 tracking-wide">
-              [SiteName]
+              Vibeproof
             </h3>
             <p className="text-sm leading-relaxed">
               A neutral, academic platform for religious literacy. We present
@@ -156,12 +156,12 @@ export default function Footer() {
         {/* Bottom: disclaimer + copyright */}
         <div className="border-t border-ink-700 mt-10 pt-6 text-center text-sm text-ink-400">
           <p>
-            [SiteName] is an educational platform. We present perspectives from
+            Vibeproof is an educational platform. We present perspectives from
             within, outside, and across every tradition with equal care. We are
             not affiliated with any religious organization.
           </p>
           <p className="mt-2">
-            &copy; {new Date().getFullYear()} [SiteName]. All rights reserved.
+            &copy; {new Date().getFullYear()} Vibeproof. All rights reserved.
           </p>
         </div>
       </div>

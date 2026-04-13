@@ -26,7 +26,7 @@ export async function generateMetadata({
   const tradition = getTraditionBySlug(slug);
   if (!tradition) return {};
   return {
-    title: `${tradition.name} \u2014 [SiteName]`,
+    title: `${tradition.name} \u2014 Vibeproof`,
     description: tradition.summary,
   };
 }

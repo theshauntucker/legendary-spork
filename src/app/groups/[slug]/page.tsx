@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const group = getGroupBySlug(slug);
   if (!group) return { title: "Not Found" };
   return {
-    title: `${group.name} — Resources & Information — [SiteName]`,
+    title: `${group.name} — Resources & Information — Vibeproof`,
     description: `Explore resources, perspectives, and community discussions about ${group.name}. Books, documentaries, podcasts, and personal stories.`,
   };
 }

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description:
     "Real experiences from people at every stage of their faith journey — entering, deepening, questioning, leaving, and returning.",
   openGraph: {
-    title: "Personal Stories | [SiteName]",
+    title: "Personal Stories | Vibeproof",
     description:
       "Real experiences from people at every stage of their faith journey.",
     type: "website",

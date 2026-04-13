@@ -3,9 +3,9 @@ import AdUnit from "@/components/AdUnit";
 import EmailCapture from "@/components/EmailCapture";
 
 export const metadata: Metadata = {
-  title: "About [SiteName]",
+  title: "About Vibeproof",
   description:
-    "Learn about [SiteName], an academic platform for religious literacy presenting the world's faith traditions with equal care and scholarly rigor.",
+    "Learn about Vibeproof, an academic platform for religious literacy presenting the world's faith traditions with equal care and scholarly rigor.",
 };
 
 export default function AboutPage() {
@@ -15,7 +15,7 @@ export default function AboutPage() {
       <section className="bg-gradient-to-br from-cream-100 via-cream-50 to-primary-50 py-16 sm:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <h1 className="font-serif text-4xl sm:text-5xl text-ink-900 mb-5 leading-tight">
-            About [SiteName]
+            About Vibeproof
           </h1>
         </div>
       </section>
@@ -27,7 +27,7 @@ export default function AboutPage() {
             <p className="text-lg">
               We believe that understanding the world&rsquo;s faith traditions
               &mdash; from the inside and the outside &mdash; makes everyone
-              more informed, more empathetic, and more free. [SiteName] is an
+              more informed, more empathetic, and more free. Vibeproof is an
               academic platform for religious literacy. We present the history,
               beliefs, practices, and perspectives of every tradition with equal
               care and scholarly rigor.

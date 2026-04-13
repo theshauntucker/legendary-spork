@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const page = await getPageBySlug(slug);
   if (!page) return { title: "Not Found" };
   return {
-    title: `${page.title} — [SiteName]`,
+    title: `${page.title} — Vibeproof`,
   };
 }
 

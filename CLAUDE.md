@@ -199,7 +199,7 @@ Edit **`src/lib/stories.ts`**. Add to the `stories` array:
 
 ## Brand Name
 
-Currently **[SiteName]** throughout the codebase. When a name is chosen, find-and-replace `[SiteName]` globally.
+Currently **Vibeproof** throughout the codebase. When a name is chosen, find-and-replace `Vibeproof` globally.
 
 ---
 

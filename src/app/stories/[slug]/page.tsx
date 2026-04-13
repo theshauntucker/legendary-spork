@@ -33,7 +33,7 @@ export async function generateMetadata({
     title: story.title,
     description: story.excerpt,
     openGraph: {
-      title: `${story.title} | [SiteName]`,
+      title: `${story.title} | Vibeproof`,
       description: story.excerpt,
       type: "article",
     },

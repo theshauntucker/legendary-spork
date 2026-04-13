@@ -22,7 +22,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <span className="text-xl font-serif font-semibold text-ink-900 tracking-wide">
-              [SiteName]
+              Vibeproof
             </span>
           </Link>
 

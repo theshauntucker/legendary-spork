@@ -12,8 +12,8 @@ const BASE_URL =
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "[SiteName] — Explore the World's Faith Traditions",
-    template: "%s | [SiteName]",
+    default: "Vibeproof — Explore the World's Faith Traditions",
+    template: "%s | Vibeproof",
   },
   description:
     "A neutral, academic platform for religious literacy. Explore the history, beliefs, and practices of the world's faith traditions with equal care and scholarly rigor.",
@@ -29,17 +29,17 @@ export const metadata: Metadata = {
     "religious history",
   ],
   openGraph: {
-    title: "[SiteName] — Explore the World's Faith Traditions",
+    title: "Vibeproof — Explore the World's Faith Traditions",
     description:
       "A neutral, academic platform for religious literacy. Explore the history, beliefs, and practices of every major faith tradition with equal care.",
     type: "website",
-    siteName: "[SiteName]",
+    siteName: "Vibeproof",
     url: BASE_URL,
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "[SiteName] — Explore the World's Faith Traditions",
+    title: "Vibeproof — Explore the World's Faith Traditions",
     description:
       "A neutral, academic platform for religious literacy. Every tradition explored with equal care.",
   },
@@ -60,7 +60,7 @@ const jsonLd = {
   "@graph": [
     {
       "@type": "WebSite",
-      name: "[SiteName]",
+      name: "Vibeproof",
       url: BASE_URL,
       description:
         "A neutral, academic platform for religious literacy. Explore the world's faith traditions with equal care and scholarly rigor.",
@@ -72,7 +72,7 @@ const jsonLd = {
     },
     {
       "@type": "Organization",
-      name: "[SiteName]",
+      name: "Vibeproof",
       url: BASE_URL,
       description:
         "An educational platform presenting the world's faith traditions with neutrality and academic rigor.",
@@ -103,6 +103,14 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <meta name="google-adsense-account" content="ca-pub-7833856993657379" />
+        <Script
+          id="adsbygoogle-init"
+          async
+          strategy="afterInteractive"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7833856993657379"
+          crossOrigin="anonymous"
         />
       </head>
       <body className="bg-cream-50 text-ink-800 flex flex-col min-h-screen">

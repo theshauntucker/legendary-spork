@@ -77,7 +77,7 @@ export default async function ResourceDetailPage({
     url: `${BASE_URL}/traditions/${slug}/resources/${resource.slug}`,
     publisher: {
       "@type": "Organization",
-      name: "[SiteName]",
+      name: "Vibeproof",
     },
   };
 

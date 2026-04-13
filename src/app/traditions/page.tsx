@@ -4,7 +4,7 @@ import TraditionCard from "@/components/TraditionCard";
 import EmailCapture from "@/components/EmailCapture";
 
 export const metadata: Metadata = {
-  title: "[SiteName] \u2014 Browse Faith Traditions",
+  title: "Vibeproof \u2014 Browse Faith Traditions",
   description:
     "Explore the history, beliefs, and practices of the world\u2019s major faith traditions. Every tradition presented with equal dignity and academic rigor.",
 };

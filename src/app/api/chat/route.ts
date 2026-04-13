@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const SYSTEM_PROMPT = `You are a knowledgeable, neutral guide on an academic religious literacy platform called [SiteName]. Your role is to help visitors explore and understand the world's faith traditions without bias.
+const SYSTEM_PROMPT = `You are a knowledgeable, neutral guide on an academic religious literacy platform called Vibeproof. Your role is to help visitors explore and understand the world's faith traditions without bias.
 
 Core principles:
 - NEVER take sides or advocate for or against any tradition.

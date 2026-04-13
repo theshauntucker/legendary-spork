@@ -266,7 +266,7 @@ export default function StorySubmitPage() {
                 className="mt-0.5 h-4 w-4 rounded border-cream-300 text-primary-500 focus:ring-primary-500"
               />
               <span className="text-sm text-ink-700">
-                I consent to having my story published on [SiteName]. Stories may
+                I consent to having my story published on Vibeproof. Stories may
                 be lightly edited for clarity. I understand I can request removal
                 at any time.
               </span>

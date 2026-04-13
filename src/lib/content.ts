@@ -189,7 +189,7 @@ export function getAllBlogPosts(): BlogMeta[] {
         title: data.title || slug,
         date: data.date ? String(data.date) : "",
         tags: data.tags || [],
-        author: data.author || "[SiteName]",
+        author: data.author || "Vibeproof",
       };
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -206,7 +206,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogData | null> 
     title: data.title || slug,
     date: data.date ? String(data.date) : "",
     tags: data.tags || [],
-    author: data.author || "[SiteName]",
+    author: data.author || "Vibeproof",
     contentHtml: processedContent.toString(),
   };
 }

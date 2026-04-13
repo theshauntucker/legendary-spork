@@ -4,7 +4,7 @@ import { getAllBlogPosts } from "@/lib/content";
 import AdUnit from "@/components/AdUnit";
 
 export const metadata: Metadata = {
-  title: "Blog — [SiteName]",
+  title: "Blog — Vibeproof",
   description:
     "Articles on faith traditions, group dynamics, religious trauma, and spiritual exploration.",
 };
