@@ -1,97 +1,180 @@
 import type { Metadata } from "next";
 import AdUnit from "@/components/AdUnit";
-import DonateButton from "@/components/DonateButton";
+import EmailCapture from "@/components/EmailCapture";
 
 export const metadata: Metadata = {
-  title: "About FaithLens — Our Mission & Values",
+  title: "About [SiteName]",
   description:
-    "FaithLens is an unbiased religious education platform. Learn about our mission to give every faith equal representation.",
+    "Learn about [SiteName], an academic platform for religious literacy presenting the world's faith traditions with equal care and scholarly rigor.",
 };
 
 export default function AboutPage() {
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-      <h1 className="text-3xl sm:text-4xl font-heading text-slate-900 mb-6">
-        About FaithLens
-      </h1>
+    <>
+      {/* Header */}
+      <section className="bg-gradient-to-br from-cream-100 via-cream-50 to-primary-50 py-16 sm:py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <h1 className="font-serif text-4xl sm:text-5xl text-ink-900 mb-5 leading-tight">
+            About [SiteName]
+          </h1>
+        </div>
+      </section>
 
-      <div className="space-y-6 text-slate-700 leading-relaxed">
-        <p className="text-lg">
-          FaithLens is an independent, non-denominational platform dedicated to
-          presenting the world&#39;s religions fairly, accurately, and without
-          bias. Every faith — from Christianity to Islam, Mormonism to
-          Jehovah&#39;s Witnesses — gets equal space and respectful treatment.
-        </p>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-14 space-y-12">
+        {/* Mission */}
+        <section>
+          <div className="space-y-5 text-ink-700 leading-relaxed">
+            <p className="text-lg">
+              We believe that understanding the world&rsquo;s faith traditions
+              &mdash; from the inside and the outside &mdash; makes everyone
+              more informed, more empathetic, and more free. [SiteName] is an
+              academic platform for religious literacy. We present the history,
+              beliefs, practices, and perspectives of every tradition with equal
+              care and scholarly rigor.
+            </p>
 
-        <h2 className="text-2xl font-heading text-slate-900 pt-4">
-          Our Mission
-        </h2>
-        <p>
-          We believe that understanding different religions is essential for a
-          more informed, tolerant world. Our mission is to provide a single
-          destination where anyone can explore religious beliefs, read critical
-          and supportive perspectives, access official church resources, and
-          form their own conclusions.
-        </p>
+            <p className="text-lg font-medium text-ink-800">
+              Our guiding principles:
+            </p>
 
-        <h2 className="text-2xl font-heading text-slate-900 pt-4">
-          What Makes Us Different
-        </h2>
-        <ul className="list-disc pl-6 space-y-2">
-          <li>
-            <strong>No bias:</strong> We present supportive, critical, and
-            academic perspectives for every religion. We don&#39;t tell you what to
-            think.
-          </li>
-          <li>
-            <strong>Equal representation:</strong> Every faith gets the same
-            depth of coverage. No religion is favored or marginalized.
-          </li>
-          <li>
-            <strong>Direct links:</strong> We link directly to official church
-            websites, missionary scheduling, and scripture study tools — letting
-            you go straight to the source.
-          </li>
-          <li>
-            <strong>Scholarly approach:</strong> Our content draws from
-            academic research, official publications, and well-known critical
-            works to provide a complete picture.
-          </li>
-        </ul>
+            <ul className="space-y-3 list-none pl-0">
+              <li className="flex gap-3">
+                <span className="text-primary-500 font-bold shrink-0">&bull;</span>
+                <span>
+                  <strong className="text-ink-900">
+                    Describe, don&rsquo;t prescribe.
+                  </strong>{" "}
+                  We present what traditions teach. We don&rsquo;t tell you what
+                  to believe.
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-primary-500 font-bold shrink-0">&bull;</span>
+                <span>
+                  <strong className="text-ink-900">
+                    Present, don&rsquo;t persuade.
+                  </strong>{" "}
+                  Every critical resource is paired with its devotional
+                  counterpart.
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-primary-500 font-bold shrink-0">&bull;</span>
+                <span>
+                  <strong className="text-ink-900">Equal care.</strong> A devout
+                  member and a former member of any tradition should both feel
+                  this site treats them fairly.
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="text-primary-500 font-bold shrink-0">&bull;</span>
+                <span>
+                  <strong className="text-ink-900">Scholarly rigor.</strong> We
+                  cite sources, attribute perspectives, and distinguish between
+                  claims and evidence.
+                </span>
+              </li>
+            </ul>
+          </div>
+        </section>
 
-        <AdUnit slot="about-mid" format="horizontal" className="my-6" />
+        {/* Editorial Standards */}
+        <section>
+          <h2 className="font-serif text-3xl text-ink-900 mb-6">
+            Editorial Standards
+          </h2>
+          <ul className="space-y-4 text-ink-700 leading-relaxed">
+            <li className="flex gap-3">
+              <span className="text-primary-500 font-bold shrink-0">&bull;</span>
+              <span>
+                Every tradition page is reviewed for accuracy by both
+                practitioners and scholars.
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-primary-500 font-bold shrink-0">&bull;</span>
+              <span>
+                Resource summaries use neutral language: &ldquo;adherents
+                believe,&rdquo; &ldquo;scholars have raised
+                questions,&rdquo; &ldquo;this tradition teaches.&rdquo;
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-primary-500 font-bold shrink-0">&bull;</span>
+              <span>
+                We never use loaded terms like &ldquo;cult,&rdquo;
+                &ldquo;brainwashing,&rdquo; &ldquo;debunked,&rdquo; or
+                &ldquo;proven true&rdquo; in editorial content.
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-primary-500 font-bold shrink-0">&bull;</span>
+              <span>
+                Critical and devotional resources receive equal visual
+                prominence.
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-primary-500 font-bold shrink-0">&bull;</span>
+              <span>
+                Personal stories are published with minimal editing to preserve
+                the author&rsquo;s voice.
+              </span>
+            </li>
+          </ul>
+        </section>
 
-        <h2 className="text-2xl font-heading text-slate-900 pt-4">
-          How We&#39;re Funded
-        </h2>
-        <p>
-          FaithLens is independently funded through display advertising and
-          voluntary donations. We are not sponsored by or affiliated with any
-          religious organization. Our editorial content is never influenced by
-          advertisers.
-        </p>
+        {/* Ad */}
+        <AdUnit slot="about-mid" format="horizontal" />
 
-        <h2 className="text-2xl font-heading text-slate-900 pt-4">
-          Support Us
-        </h2>
-        <p>
-          If you find FaithLens valuable, consider buying us a coffee. Every
-          small donation helps us keep the lights on and continue producing
-          quality, unbiased religious content.
-        </p>
-        <DonateButton size="md" />
+        {/* What We Are Not */}
+        <section>
+          <h2 className="font-serif text-3xl text-ink-900 mb-6">
+            What We Are Not
+          </h2>
+          <ul className="space-y-4 text-ink-700 leading-relaxed">
+            <li className="flex gap-3">
+              <span className="text-primary-500 font-bold shrink-0">&bull;</span>
+              <span>
+                We are not affiliated with any religious organization.
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-primary-500 font-bold shrink-0">&bull;</span>
+              <span>We are not an anti-religion platform.</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-primary-500 font-bold shrink-0">&bull;</span>
+              <span>We are not a religious advocacy platform.</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-primary-500 font-bold shrink-0">&bull;</span>
+              <span>
+                We are not a counseling service. If you are in crisis, please
+                contact a mental health professional.
+              </span>
+            </li>
+          </ul>
+        </section>
 
-        <h2 className="text-2xl font-heading text-slate-900 pt-4">
-          Disclaimer
-        </h2>
-        <p className="text-sm text-slate-500">
-          FaithLens is an educational resource and is not affiliated with any
-          church, denomination, or religious organization. All trademarks,
-          church names, and logos belong to their respective owners. Content on
-          this site represents various viewpoints and does not constitute
-          endorsement of any particular religious belief.
-        </p>
+        {/* Contact */}
+        <section>
+          <h2 className="font-serif text-3xl text-ink-900 mb-4">Contact</h2>
+          <p className="text-ink-700 leading-relaxed">
+            Have suggestions, corrections, or want to contribute? Reach out at{" "}
+            <a
+              href="mailto:hello@example.com"
+              className="text-primary-500 hover:text-primary-600 underline"
+            >
+              hello@example.com
+            </a>
+            .
+          </p>
+        </section>
+
+        {/* Email Capture */}
+        <EmailCapture />
       </div>
-    </div>
+    </>
   );
 }
