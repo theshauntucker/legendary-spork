@@ -169,13 +169,13 @@ export default function RootLayout({
         {children}
         <Analytics />
         <SpeedInsights />
-        {/* Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID */}
-        {/* <Script
+        {/* Google AdSense */}
+        <Script
           async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7833856993657379"
           crossOrigin="anonymous"
           strategy="afterInteractive"
-        /> */}
+        />
 
         {/* TikTok Pixel */}
         <Script id="tiktok-pixel" strategy="afterInteractive">{`
