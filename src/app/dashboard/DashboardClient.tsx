@@ -120,6 +120,89 @@ function PurchaseCard({
   );
 }
 
+// Big hero card for Season Member — shown to brand-new signups
+function SubscriptionHeroCard() {
+  const [loading, setLoading] = React.useState(false);
+
+  const handleSubscribe = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "subscription" }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else { alert("Something went wrong. Please try again."); setLoading(false); }
+    } catch {
+      alert("Something went wrong. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="relative rounded-3xl overflow-hidden border-2 border-primary-500/60 mb-4"
+      style={{ boxShadow: "0 0 40px rgba(139,92,246,0.25), 0 0 80px rgba(139,92,246,0.1)" }}>
+      {/* Background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary-900/80 via-accent-900/60 to-surface-900/90" />
+      <div className="absolute inset-0 bg-gradient-to-r from-primary-600/10 via-transparent to-gold-500/10" />
+
+      {/* Badge */}
+      <div className="absolute top-0 left-0 right-0 flex justify-center">
+        <div className="bg-gradient-to-r from-primary-500 via-accent-500 to-gold-500 text-white text-xs font-extrabold uppercase tracking-widest px-8 py-1.5 rounded-b-xl">
+          👑 Most Popular — Introductory Rate
+        </div>
+      </div>
+
+      <div className="relative px-6 pt-10 pb-6 sm:px-10 sm:pt-12 sm:pb-8">
+        <div className="flex flex-col sm:flex-row items-center gap-6">
+          {/* Left: price + details */}
+          <div className="flex-1 text-center sm:text-left">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-1">Season Member</h3>
+            <div className="flex items-baseline gap-2 justify-center sm:justify-start mb-3">
+              <span className="text-5xl sm:text-6xl font-black text-white">$12.99</span>
+              <span className="text-surface-200 text-lg">/month</span>
+            </div>
+            <p className="text-primary-300 text-sm font-semibold mb-4">
+              🔒 Rate locked in forever — price goes up soon
+            </p>
+            <ul className="space-y-2 text-sm text-surface-200 text-left inline-block">
+              {[
+                "10 AI-powered analyses every month",
+                "Full season progress tracking",
+                "All styles: dance, cheer, duo, group",
+                "Cancel anytime — no contracts",
+              ].map(f => (
+                <li key={f} className="flex items-center gap-2">
+                  <span className="text-primary-400 font-bold">✓</span> {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Right: CTA */}
+          <div className="w-full sm:w-64 flex flex-col items-center gap-3">
+            <button
+              onClick={handleSubscribe}
+              disabled={loading}
+              className="w-full py-4 rounded-2xl font-extrabold text-lg text-white bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 hover:opacity-90 transition-all shadow-lg disabled:opacity-50"
+            >
+              {loading ? "Loading..." : "Start Membership →"}
+            </button>
+            <p className="text-xs text-surface-200/60 text-center">
+              Cancel anytime. No commitment.
+            </p>
+            <p className="text-xs text-surface-200/40 text-center">
+              Or use your free credit first — upgrade anytime.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardClient({
   user,
   videos,
@@ -253,34 +336,80 @@ export default function DashboardClient({
           ))}
         </div>
 
-        {/* Welcome + Pricing — shown when user has no credits */}
-        {credits.remaining === 0 && (
+        {/* ── BIG subscription upsell — shown to new users with only their free credit ── */}
+        {credits.total <= 1 && credits.used === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.05 }}
+            className="mb-8"
+          >
+            {/* Greeting */}
+            <div className="text-center mb-6">
+              <p className="text-sm font-semibold uppercase tracking-widest text-primary-400 mb-1">
+                🎉 Welcome{user.name ? `, ${user.name.split(" ")[0]}` : ""}! Your first analysis is free.
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-extrabold font-[family-name:var(--font-display)]">
+                Unlock the Full Season
+              </h2>
+              <p className="mt-2 text-surface-200 max-w-md mx-auto text-sm">
+                Most families subscribe on day one. Lock in the intro rate before it goes up.
+              </p>
+            </div>
+
+            {/* Season Member — HERO CARD */}
+            <SubscriptionHeroCard />
+
+            {/* Divider */}
+            <div className="flex items-center gap-3 my-5">
+              <div className="flex-1 border-t border-white/10" />
+              <span className="text-xs text-surface-200/50 uppercase tracking-widest">or pay per routine</span>
+              <div className="flex-1 border-t border-white/10" />
+            </div>
+
+            {/* BOGO + Pack as secondary options */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <PurchaseCard
+                badge="⚡ Buy One Get One"
+                badgeColor="text-gold-300 bg-gold-500/20"
+                title="BOGO — 2 Analyses"
+                price="$8.99"
+                description="Buy one, get one free. Only $4.50 each."
+                features={["2 full AI analyses", "Competition-standard scoring", "Timestamped judge notes"]}
+                buttonText="Get 2 Analyses — $8.99"
+                buttonStyle="border border-gold-500/60 hover:bg-gold-500/10"
+                type="single"
+              />
+              <PurchaseCard
+                badge="🏆 Best Value"
+                badgeColor="text-gold-300 bg-gold-500/20"
+                title="Competition Pack"
+                price="$29.99"
+                description="5 analyses — only $6 each, never expire."
+                features={["5 full AI analyses", "Only $6 each — save $15", "Never expire"]}
+                buttonText="Get 5 Analyses — $29.99"
+                buttonStyle="border border-primary-500/60 hover:bg-primary-500/10"
+                type="pack"
+              />
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── Out-of-credits section (existing subscribers/purchasers who ran out) ── */}
+        {credits.remaining === 0 && credits.total > 1 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.05 }}
             className="mb-8"
           >
-            {/* Welcome banner */}
             <div className="bg-gradient-to-r from-primary-700/60 via-accent-600/40 to-primary-700/60 border border-primary-500/30 rounded-2xl p-6 mb-4 text-center">
-              <h2 className="text-2xl font-bold text-white mb-2">
-                {credits.used > 0 ? "Ready for Your Next Routine?" : `Welcome to RoutineX${user.name ? `, ${user.name.split(' ')[0]}` : ''}! 🏆`}
-              </h2>
+              <h2 className="text-2xl font-bold text-white mb-2">Ready for Your Next Routine?</h2>
               <p className="text-surface-200 text-sm max-w-lg mx-auto">
-                {credits.used > 0
-                  ? "Pick up more credits to keep improving your routines all season long."
-                  : "Get 2 analyses for $8.99 (BOGO) or a 5-pack for $29.99 to keep tracking all season."}
+                Pick up more credits to keep improving your routines all season long.
               </p>
-              {/* Privacy statement */}
-              <div className="mt-3 flex items-center justify-center gap-2 text-xs text-gray-400">
-                <span>🔒</span>
-                <span>RoutineX was built with privacy in mind. Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.</span>
-              </div>
             </div>
-
-            {/* Pricing options */}
             <div className="grid sm:grid-cols-3 gap-4">
-              {/* Season Member subscription — featured */}
               <PurchaseCard
                 badge="👑 Most Popular"
                 badgeColor="text-primary-300 bg-primary-500/20"
@@ -292,30 +421,26 @@ export default function DashboardClient({
                 buttonStyle="bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 hover:opacity-90"
                 type="subscription"
               />
-
-              {/* BOGO */}
               <PurchaseCard
                 badge="⚡ Buy One Get One"
                 badgeColor="text-gold-300 bg-gold-500/20"
                 title="BOGO — 2 Analyses"
                 price="$8.99"
-                description="Buy one analysis, get one free. Only $4.50 each."
-                features={["2 full AI analyses", "Competition-standard scoring", "Timestamped judge notes", "Re-submission tracking"]}
+                description="Buy one analysis, get one free."
+                features={["2 full AI analyses", "Competition-standard scoring", "Timestamped judge notes"]}
                 buttonText="Get 2 Analyses — $8.99"
-                buttonStyle="border-2 border-gold-500 hover:bg-gold-500/20"
+                buttonStyle="border border-gold-500/60 hover:bg-gold-500/10"
                 type="single"
               />
-
-              {/* Pack option */}
               <PurchaseCard
                 badge="🏆 Best Value"
                 badgeColor="text-gold-300 bg-gold-500/20"
                 title="Competition Pack"
                 price="$29.99"
                 description="5 analyses — only $6 each, never expire."
-                features={["5 full AI analyses", "Only $6 each — save $15", "All styles supported", "Never expire"]}
+                features={["5 full AI analyses", "Only $6 each — save $15", "Never expire"]}
                 buttonText="Get 5 Analyses — $29.99"
-                buttonStyle="border-2 border-primary-500 hover:bg-primary-500/20"
+                buttonStyle="border border-primary-500/60 hover:bg-primary-500/10"
                 type="pack"
               />
             </div>

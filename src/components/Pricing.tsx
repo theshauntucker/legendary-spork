@@ -240,6 +240,47 @@ export default function Pricing() {
           </motion.div>
         </div>
 
+        {/* Studio tier — full-width contact card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.35 }}
+          className="mt-5 relative rounded-3xl overflow-hidden border border-white/10 bg-white/3 backdrop-blur-sm"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-900/30 via-transparent to-gold-900/20" />
+          <div className="relative flex flex-col sm:flex-row items-center gap-6 px-8 py-7">
+            {/* Icon */}
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-500/30 to-primary-500/30 border border-white/10">
+              <Sparkles className="h-7 w-7 text-gold-300" />
+            </div>
+
+            {/* Copy */}
+            <div className="flex-1 text-center sm:text-left">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gold-400 mb-1">
+                <Crown className="h-3 w-3" />
+                Studio &amp; Academy Plan
+              </div>
+              <h3 className="text-xl font-extrabold text-white">
+                $99<span className="text-base font-semibold text-surface-200">/month</span>
+                <span className="ml-3 text-sm font-normal text-surface-200">· 100 analyses/month · entire studio covered</span>
+              </h3>
+              <p className="mt-1 text-sm text-surface-200 max-w-xl">
+                Built for studios, academies, and cheer programs that need to analyze multiple routines across teams. One subscription covers your whole studio — coaches, solos, groups, everything.
+              </p>
+            </div>
+
+            {/* CTA */}
+            <a
+              href="mailto:22tucker22@comcast.net?subject=Studio%20Plan%20Inquiry&body=Hi%20Shaun%2C%20I%27m%20interested%20in%20the%20RoutineX%20Studio%20Plan%20for%20my%20studio."
+              className="shrink-0 flex items-center gap-2 rounded-full border border-gold-400/60 px-6 py-3 font-bold text-gold-300 hover:bg-gold-500/10 transition-colors text-sm whitespace-nowrap"
+            >
+              Contact for Studio Access
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+        </motion.div>
+
         {/* Bottom comparison line */}
         <motion.div
           initial={{ opacity: 0 }}
