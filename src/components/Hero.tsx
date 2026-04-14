@@ -82,17 +82,22 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        {/* PRIMARY CTA — Free first analysis */}
+        {/* PRIMARY CTA */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-10 flex flex-col items-center gap-3"
         >
-              Get 2 Analyses — $8.99
+          <div className="flex flex-col items-center gap-2">
+            <a
+              href="/signup"
+              className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-8 py-4 text-lg font-extrabold text-white hover:opacity-90 transition-all shadow-xl"
+            >
+              Get Started Free
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </a>
-            <span className="text-xs text-gold-300 font-semibold">🎉 Launch offer · buy one, get one free</span>
+            <span className="text-xs text-gold-300 font-semibold">🎉 First analysis on us — no credit card required</span>
           </div>
 
           {/* Secondary options */}
