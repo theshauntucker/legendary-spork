@@ -4,11 +4,17 @@ import { getAuthToken } from './api';
 
 // Product IDs — must match App Store Connect
 export const IAP_PRODUCTS = {
-  SINGLE: 'routinex_single',   // $8.99 — 1 analysis credit
-  PACK: 'routinex_pack',       // $29.99 — 5 analysis credits
+  SINGLE: 'routinex_single',     // $8.99 — 2 analyses (BOGO launch)
+  PACK: 'routinex_pack',         // $29.99 — 5 analyses
+  MONTHLY: 'routinex_monthly',   // $12.99/mo — 10 analyses (auto-renewable subscription)
 } as const;
 
-const PRODUCT_IDS = [IAP_PRODUCTS.SINGLE, IAP_PRODUCTS.PACK];
+// One-time consumables
+const CONSUMABLE_IDS = [IAP_PRODUCTS.SINGLE, IAP_PRODUCTS.PACK];
+// Auto-renewable subscriptions
+const SUBSCRIPTION_IDS = [IAP_PRODUCTS.MONTHLY];
+// All product IDs
+const PRODUCT_IDS = [...CONSUMABLE_IDS, ...SUBSCRIPTION_IDS];
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE || 'https://routinex.org';
 
 // Detect Expo Go — NitroModules (used by react-native-iap) crash in Expo Go
@@ -101,7 +107,9 @@ export function setupPurchaseListeners(
         const data = await res.json();
 
         if (res.ok && data.verified) {
-          await iap.finishTransaction({ purchase, isConsumable: true });
+          // Subscriptions are non-consumable; one-time packs/single are consumable
+          const isSubscription = (SUBSCRIPTION_IDS as string[]).includes(purchase.productId);
+          await iap.finishTransaction({ purchase, isConsumable: !isSubscription });
           onCreditsGranted?.();
         } else {
           console.error('Receipt verification failed:', data.error);
@@ -137,22 +145,29 @@ export function setupPurchaseListeners(
 }
 
 /**
- * Load available IAP products from the App Store.
+ * Load available IAP products from the App Store (consumables + subscriptions).
  */
 export async function loadProducts() {
   const iap = getIAP();
-  if (!iap || Platform.OS !== 'ios') return [];
+  if (!iap || Platform.OS !== 'ios') return { products: [], subscriptions: [] };
 
   try {
-    return await iap.getProducts({ skus: PRODUCT_IDS });
+    const products = await iap.getProducts({ skus: CONSUMABLE_IDS });
+    let subscriptions: any[] = [];
+    try {
+      subscriptions = await iap.getSubscriptions({ skus: SUBSCRIPTION_IDS });
+    } catch (err) {
+      console.warn('Failed to load IAP subscriptions:', err);
+    }
+    return { products, subscriptions };
   } catch (err) {
     console.error('Failed to load IAP products:', err);
-    return [];
+    return { products: [], subscriptions: [] };
   }
 }
 
 /**
- * Request purchase of a single analysis ($8.99).
+ * Request purchase of the BOGO single offer ($8.99 = 2 analyses).
  */
 export async function purchaseSingle(): Promise<void> {
   const iap = getIAP();
@@ -161,12 +176,22 @@ export async function purchaseSingle(): Promise<void> {
 }
 
 /**
- * Request purchase of the competition pack ($29.99).
+ * Request purchase of the competition pack ($29.99 = 5 analyses).
  */
 export async function purchasePack(): Promise<void> {
   const iap = getIAP();
   if (!iap) throw new Error('In-App Purchases not available. Please use a native build.');
   await iap.requestPurchase({ sku: IAP_PRODUCTS.PACK });
+}
+
+/**
+ * Request subscription to Pro Monthly ($12.99/mo = 10 analyses/month).
+ * Auto-renewable subscription — Apple handles renewal and cancellation.
+ */
+export async function purchaseMonthly(): Promise<void> {
+  const iap = getIAP();
+  if (!iap) throw new Error('In-App Purchases not available. Please use a native build.');
+  await iap.requestSubscription({ sku: IAP_PRODUCTS.MONTHLY });
 }
 
 /**

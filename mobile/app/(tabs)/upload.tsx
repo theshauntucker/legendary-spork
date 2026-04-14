@@ -17,7 +17,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as VideoThumbnails from 'expo-video-thumbnails';
 import * as WebBrowser from 'expo-web-browser';
 import { uploadFrames, getAuthToken } from '../../lib/api';
-import { purchaseSingle, purchasePack } from '../../lib/iap';
+import { purchaseSingle, purchasePack, purchaseMonthly } from '../../lib/iap';
 import { colors, gradients, gradientProps, glass, glassElevated, inputStyle, labelStyle, screenGradient } from '../../lib/theme';
 
 const DANCE_STYLES = [
@@ -161,7 +161,7 @@ export default function UploadScreen() {
     setStep('frames');
   };
 
-  const [purchaseType, setPurchaseType] = useState<'single' | 'pack'>('single');
+  const [purchaseType, setPurchaseType] = useState<'single' | 'pack' | 'monthly'>('monthly');
   const [hasCredits, setHasCredits] = useState(false);
   const [creditsRemaining, setCreditsRemaining] = useState(0);
   const [checkingCredits, setCheckingCredits] = useState(true);
@@ -204,6 +204,8 @@ export default function UploadScreen() {
           try {
             if (purchaseType === 'single') {
               await purchaseSingle();
+            } else if (purchaseType === 'monthly') {
+              await purchaseMonthly();
             } else {
               await purchasePack();
             }
@@ -603,6 +605,37 @@ export default function UploadScreen() {
             Choose a plan to continue:
           </Text>
 
+          <TouchableOpacity onPress={() => setPurchaseType('monthly')}>
+            <View style={{
+              ...glass,
+              borderColor: purchaseType === 'monthly' ? colors.gold[500] : 'rgba(245,158,11,0.25)',
+              borderWidth: purchaseType === 'monthly' ? 2 : 1,
+              backgroundColor: purchaseType === 'monthly' ? 'rgba(245,158,11,0.14)' : 'rgba(255,255,255,0.06)',
+              padding: 18,
+            }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
+                  Pro Monthly — $12.99/mo
+                </Text>
+                <View style={{ borderRadius: 999, overflow: 'hidden' }}>
+                  <LinearGradient
+                    colors={[colors.gold[500], colors.accent[500], colors.primary[500]]}
+                    {...gradientProps.leftToRight}
+                    style={{ paddingVertical: 3, paddingHorizontal: 10, borderRadius: 999 }}
+                  >
+                    <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800' }}>⭐ BEST VALUE</Text>
+                  </LinearGradient>
+                </View>
+              </View>
+              <Text style={{ color: colors.gold[400], fontSize: 12, fontWeight: '600', marginTop: 4 }}>
+                10 analyses/month — only $1.30 each
+              </Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+                Unused credits roll over. Cancel anytime in Settings.
+              </Text>
+            </View>
+          </TouchableOpacity>
+
           <TouchableOpacity onPress={() => setPurchaseType('single')}>
             <View style={{
               ...glass,
@@ -706,9 +739,11 @@ export default function UploadScreen() {
               <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
                 {hasCredits
                   ? 'Analyze Now'
-                  : purchaseType === 'single'
-                    ? 'Get 2 Analyses — $8.99'
-                    : 'Get 5 Analyses — $29.99'}
+                  : purchaseType === 'monthly'
+                    ? 'Start Pro Monthly — $12.99/mo'
+                    : purchaseType === 'single'
+                      ? 'Get 2 Analyses — $8.99'
+                      : 'Get 5 Analyses — $29.99'}
               </Text>
             )}
           </LinearGradient>

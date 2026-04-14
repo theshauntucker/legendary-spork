@@ -19,8 +19,8 @@ const sections = [
     body: 'You must be at least 13 years old to create an account. If you are under 18, a parent or guardian must agree to these terms on your behalf. You are responsible for maintaining the security of your account credentials.',
   },
   {
-    title: '4. Payments & Refunds',
-    body: 'Our BOGO launch offer gives you 2 analyses for $8.99 USD, or you can purchase a Competition Pack of 5 analyses for $29.99 USD. All payments are processed securely. Refunds are handled on a case-by-case basis — contact us at the email below.',
+    title: '4. Payments & Subscriptions',
+    body: "Your first analysis is free when you sign up.\n\nPaid options:\n\n• Pro Monthly Subscription: $12.99 USD per month for 10 analyses. This is an auto-renewable subscription. Payment will be charged to your Apple ID account at confirmation of purchase. The subscription automatically renews each month unless cancelled at least 24 hours before the end of the current period. You can manage or cancel your subscription at any time in your Apple ID account settings under Subscriptions. No refund is provided for the unused portion of any subscription period.\n\n• BOGO Launch Offer: $8.99 USD for 2 one-time analyses.\n\n• Competition Pack: $29.99 USD for 5 one-time analyses.\n\nAll purchases on iOS are processed through Apple's In-App Purchase system. Refunds for one-time purchases are handled on a case-by-case basis — contact us at the email below. Subscription refunds follow Apple's refund policy and should be requested through Apple.",
   },
   {
     title: '5. User Content',

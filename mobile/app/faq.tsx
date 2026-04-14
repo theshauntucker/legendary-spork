@@ -36,7 +36,7 @@ const faqs = [
   },
   {
     q: 'What does it cost?',
-    a: 'Right now we have a BOGO launch offer: $8.99 gets you 2 full analyses (buy one, get one free). Or grab our Competition Pack — 5 analyses for $29.99 (just $6 each). Follow us on Instagram @routinex.ai for updates and special offers!',
+    a: "Your first analysis is FREE when you sign up — no credit card required.\n\nAfter that, pick the option that fits you best:\n\n• Pro Monthly ($12.99/mo): 10 analyses every month, unused credits roll over, cancel anytime. Works out to just $1.30 per analysis — our best value.\n\n• BOGO Launch ($8.99): Get 2 full analyses for the price of one. Great for occasional use.\n\n• Competition Pack ($29.99): 5 analyses in one purchase. Perfect for competition season.\n\nFollow @routinex.ai on Instagram for updates and special offers!",
   },
   {
     q: 'Can I get a refund?',

@@ -7,8 +7,9 @@ export const dynamic = "force-dynamic";
 // Product ID → credits mapping (must match App Store Connect)
 const PRODUCT_CREDITS: Record<string, { credits: number; paymentType: string }> =
   {
-    routinex_single: { credits: 2, paymentType: "iap_single" },  // BOGO: $8.99 = 2 analyses
-    routinex_pack: { credits: 5, paymentType: "iap_pack" },      // $29.99 = 5 analyses
+    routinex_single: { credits: 2, paymentType: "iap_single" },     // BOGO: $8.99 = 2 analyses
+    routinex_pack: { credits: 5, paymentType: "iap_pack" },         // $29.99 = 5 analyses
+    routinex_monthly: { credits: 10, paymentType: "iap_monthly" },  // $12.99/mo = 10 analyses (auto-renewable)
   };
 
 /**
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
         stripe_session_id: `iap_${transactionId}`,
         stripe_payment_intent: null,
         payment_type: productConfig.paymentType,
-        amount_cents: productId === "routinex_pack" ? 2999 : 899,
+        amount_cents: productId === "routinex_pack" ? 2999 : productId === "routinex_monthly" ? 1299 : 899,
         currency: "usd",
         status: "completed",
         credits_granted: productConfig.credits,

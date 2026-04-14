@@ -163,6 +163,61 @@ export default function LandingScreen() {
           A private coaching session costs $75+. RoutineX gives you detailed feedback for a fraction of the price.
         </Text>
 
+        {/* Free First Analysis */}
+        <View style={{
+          ...glass,
+          borderColor: 'rgba(16,185,129,0.30)',
+          borderWidth: 1,
+          padding: 22,
+          marginTop: 20,
+        }}>
+          <View style={{
+            position: 'absolute', top: -12, left: 20,
+            borderRadius: 999, overflow: 'hidden',
+            backgroundColor: 'rgba(16,185,129,0.20)',
+            paddingVertical: 4, paddingHorizontal: 14,
+            borderWidth: 1,
+            borderColor: 'rgba(16,185,129,0.40)',
+          }}>
+            <Text style={{ color: colors.freeGreenLight, fontSize: 10, fontWeight: '800', letterSpacing: 0.5 }}>FREE</Text>
+          </View>
+          <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700', marginTop: 4 }}>First Analysis</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4, marginTop: 8 }}>
+            <Text style={{ color: '#fff', fontSize: 40, fontWeight: '800' }}>$0</Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>1 analysis</Text>
+          </View>
+          <Text style={{ color: colors.freeGreenLight, fontSize: 13, fontWeight: '600', marginTop: 4 }}>
+            Try RoutineX risk-free
+          </Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 6 }}>
+            Sign up and get your first full AI analysis on us. No credit card required.
+          </Text>
+          {['1 full AI analysis', 'Competition-standard scoring', 'Timestamped judge notes', 'Improvement roadmap', 'Results in under 5 minutes'].map((item) => (
+            <View key={item} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
+              <Text style={{ color: colors.freeGreen, fontSize: 12 }}>✓</Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{item}</Text>
+            </View>
+          ))}
+
+          <TouchableOpacity
+            onPress={() => router.push('/(auth)/signup')}
+            activeOpacity={0.8}
+            style={{
+              borderRadius: 999,
+              marginTop: 18,
+              paddingVertical: 14,
+              alignItems: 'center',
+              borderWidth: 2,
+              borderColor: colors.freeGreen,
+              backgroundColor: 'rgba(16,185,129,0.10)',
+            }}
+          >
+            <Text style={{ color: colors.freeGreenLight, fontWeight: '700', fontSize: 15 }}>
+              Sign Up Free
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* BOGO Launch Offer */}
         <View style={{
           ...glass,
@@ -219,7 +274,7 @@ export default function LandingScreen() {
               {...gradientProps.leftToRight}
               style={{ paddingVertical: 4, paddingHorizontal: 14, borderRadius: 999 }}
             >
-              <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 }}>BEST VALUE</Text>
+              <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 }}>POPULAR</Text>
             </LinearGradient>
           </View>
 
@@ -258,13 +313,76 @@ export default function LandingScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Monthly Subscription — BEST VALUE */}
+        <View style={{
+          ...glass,
+          borderColor: 'rgba(245,158,11,0.40)',
+          borderWidth: 2,
+          padding: 22,
+          marginTop: 14,
+          shadowColor: colors.gold[500],
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.3,
+          shadowRadius: 16,
+          elevation: 8,
+        }}>
+          <View style={{
+            position: 'absolute', top: -12, left: 20,
+            borderRadius: 999, overflow: 'hidden',
+          }}>
+            <LinearGradient
+              colors={[colors.gold[500], colors.accent[500], colors.primary[500]]}
+              {...gradientProps.leftToRight}
+              style={{ paddingVertical: 4, paddingHorizontal: 14, borderRadius: 999 }}
+            >
+              <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 }}>⭐ BEST VALUE</Text>
+            </LinearGradient>
+          </View>
+          <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700', marginTop: 4 }}>Pro Monthly</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4, marginTop: 8 }}>
+            <Text style={{ color: '#fff', fontSize: 40, fontWeight: '800' }}>$12.99</Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>/month</Text>
+          </View>
+          <Text style={{ color: colors.gold[400], fontSize: 13, fontWeight: '600', marginTop: 4 }}>
+            10 analyses every month — only $1.30 each
+          </Text>
+          <Text style={{ color: colors.textSecondary, fontSize: 13, marginTop: 6 }}>
+            Best value for serious dancers. Track multiple routines all season long. Cancel anytime in Settings.
+          </Text>
+          {['10 AI analyses per month', 'Unused credits roll over', 'Competition-standard scoring', 'Full progress tracking & trophy room', 'Priority processing', 'Cancel anytime — no commitment'].map((item) => (
+            <View key={item} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
+              <Text style={{ color: colors.gold[400], fontSize: 12 }}>✓</Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{item}</Text>
+            </View>
+          ))}
+
+          <TouchableOpacity
+            onPress={() => router.push('/(auth)/signup')}
+            activeOpacity={0.8}
+            style={{ borderRadius: 999, overflow: 'hidden', marginTop: 18 }}
+          >
+            <LinearGradient
+              colors={[colors.gold[500], colors.accent[500], colors.primary[600]]}
+              {...gradientProps.diagonal}
+              style={{ borderRadius: 999, paddingVertical: 16, alignItems: 'center' }}
+            >
+              <Text style={{ color: '#fff', fontWeight: '800', fontSize: 16 }}>
+                Start Pro Monthly
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+          <Text style={{ color: colors.textTertiary, fontSize: 10, textAlign: 'center', marginTop: 8, lineHeight: 14 }}>
+            Auto-renews monthly at $12.99. Cancel anytime in your Apple ID subscription settings.
+          </Text>
+        </View>
+
         {/* Value comparison */}
         <View style={{ flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', gap: 16, marginTop: 20 }}>
           <Text style={{ color: colors.textTertiary, fontSize: 12, textDecorationLine: 'line-through' }}>Private lesson: $75-$150/hr</Text>
           <Text style={{ color: colors.textTertiary, fontSize: 12, textDecorationLine: 'line-through' }}>Competition entry: $80-$120</Text>
         </View>
         <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600', textAlign: 'center', marginTop: 8 }}>
-          RoutineX: from <Text style={{ color: colors.accent[400] }}>$4.50/analysis</Text> with BOGO
+          RoutineX: <Text style={{ color: colors.freeGreenLight }}>start FREE</Text>, then from <Text style={{ color: colors.gold[400] }}>$1.30/analysis</Text> with Pro Monthly
         </Text>
       </LinearGradient>
 
