@@ -75,6 +75,13 @@ function SignupForm() {
       }
     }
 
+    // Grant the free credit immediately after sign-in.
+    // auth/callback only runs for confirmation email links — not direct signups
+    // with auto-confirm ON — so we grant it here to ensure no one is missed.
+    fetch("/api/free-credit", { method: "POST" }).catch((err) =>
+      console.error("Free credit grant failed:", err)
+    );
+
     setSuccess(true);
     setLoading(false);
 
@@ -142,8 +149,7 @@ function SignupForm() {
             <CheckCircle className="mx-auto h-12 w-12 text-green-400 mb-4" />
             <h2 className="text-xl font-bold">Account Created!</h2>
             <p className="mt-2 text-surface-200 text-sm">
-              Redirecting to payment to activate your Founding Member
-              Pass...
+              Your first analysis is on us. Taking you to your dashboard...
             </p>
           </motion.div>
         ) : (
