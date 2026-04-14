@@ -1,157 +1,202 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Play, ArrowRight, Users, Star, Shield, Zap, Trophy, Gift } from "lucide-react";
+import { ArrowRight, Users, Star, Shield, Zap, Trophy, Check, Crown, Sparkles } from "lucide-react";
 
 export default function Hero() {
+  const [subLoading, setSubLoading] = useState(false);
+
+  const handleSubscribe = async () => {
+    setSubLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "subscription" }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Something went wrong. Please try again.");
+        setSubLoading(false);
+      }
+    } catch {
+      alert("Something went wrong. Please try again.");
+      setSubLoading(false);
+    }
+  };
+
   return (
-    <section className="relative min-h-screen overflow-hidden pt-[130px]">
-      <div className="absolute inset-0">
+    <section className="relative overflow-hidden pt-[130px] pb-20">
+      <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 right-0 w-80 h-80 bg-primary-400/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent-600/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary-500/40 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent-500/35 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gold-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0.5s' }} />
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary-500/30 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent-500/25 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 pb-20 text-center">
+      <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+
+        {/* ── Headline ── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-6"
+          className="text-center mb-3"
         >
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight font-[family-name:var(--font-display)]">
-            Routine<span className="gradient-text">X</span>
-          </h2>
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary-500/30 bg-primary-500/10 px-4 py-1.5 mb-6">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500" />
+            </span>
+            <span className="text-sm text-primary-200">For competitive dancers, dance moms &amp; studio owners</span>
+          </div>
+
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] font-[family-name:var(--font-display)]">
+            Score Every Routine.{" "}
+            <span className="gradient-text">Track the Whole Season.</span>
+          </h1>
+
+          <p className="mx-auto mt-5 max-w-2xl text-base sm:text-lg text-surface-200 leading-relaxed">
+            Upload any routine and get <span className="text-white font-semibold">competition-standard scoring, timestamped judge notes, and a Coach&apos;s Playbook</span> in under 5 minutes.
+          </p>
+
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-5 text-sm text-surface-200">
+            <div className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-primary-400" /><span>Competition-Calibrated Scoring</span></div>
+            <div className="flex items-center gap-1.5"><Zap className="h-4 w-4 text-accent-400" /><span>Results in Under 5 Minutes</span></div>
+            <div className="flex items-center gap-1.5"><Trophy className="h-4 w-4 text-gold-400" /><span>Full Season Tracking</span></div>
+          </div>
         </motion.div>
 
+        {/* ── Pricing cards — right here at the top ── */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 rounded-full border border-primary-500/30 bg-primary-500/10 px-4 py-1.5 mb-8"
-        >
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500" />
-          </span>
-          <span className="text-sm text-primary-200">
-            For competitive dancers, dance moms &amp; studio owners
-          </span>
-        </motion.div>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] font-[family-name:var(--font-display)]"
-        >
-          Score Every Routine.{" "}
-          <span className="gradient-text">Track the Whole Season.</span>
-        </motion.h1>
-
-        <motion.p
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mx-auto mt-6 max-w-2xl text-lg sm:text-xl text-surface-200 leading-relaxed"
+          className="mt-10 max-w-3xl mx-auto"
         >
-          Upload any routine and get{" "}
-          <span className="text-white font-semibold">competition-standard scoring, timestamped judge notes, and a Coach&apos;s Playbook</span>{" "}
-          in under 5 minutes — then track every re-submission all season long as your dancer improves.
-        </motion.p>
+          {/* Season Member — featured hero card */}
+          <div
+            className="relative glass rounded-3xl p-7 border-2 border-primary-500/60 flex flex-col mb-4 ring-2 ring-primary-500/20 ring-offset-2 ring-offset-transparent"
+            style={{ boxShadow: "0 0 40px rgba(139,92,246,0.2)" }}
+          >
+            <div className="absolute -top-3 left-5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-primary-500 via-accent-500 to-gold-400 px-3 py-1 text-xs font-bold text-white">
+              <Crown className="h-3 w-3" />
+              MOST POPULAR
+            </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.25 }}
-          className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-surface-200"
-        >
-          <div className="flex items-center gap-1.5">
-            <Shield className="h-4 w-4 text-primary-400" />
-            <span>Competition-Calibrated Scoring</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Zap className="h-4 w-4 text-accent-400" />
-            <span>Results in Under 5 Minutes</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Trophy className="h-4 w-4 text-gold-400" />
-            <span>Full Season Progress Tracking</span>
-          </div>
-        </motion.div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-2">
+              <div>
+                <h3 className="text-xl font-bold text-white">Season Member</h3>
+                <div className="flex items-baseline gap-1 mt-2">
+                  <span className="text-4xl font-extrabold text-white">$12.99</span>
+                  <span className="text-surface-200 text-sm">/month</span>
+                </div>
+                <p className="text-xs text-primary-300 font-semibold mt-1">Introductory rate — locked in forever 🔒</p>
+                <p className="text-xs text-surface-200/60 italic mt-1">Upload after every rehearsal. Watch your scores climb all season.</p>
+              </div>
 
-        {/* PRIMARY CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-10 flex flex-col items-center gap-3"
-        >
-          <div className="flex flex-col items-center gap-2">
-            <a
-              href="/signup"
-              className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-8 py-4 text-lg font-extrabold text-white hover:opacity-90 transition-all shadow-xl"
-            >
-              Get Started Free
-              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              <div className="sm:text-right shrink-0">
+                <ul className="space-y-1.5 text-sm text-surface-200 mb-4 sm:text-left">
+                  {[
+                    "10 analyses per month",
+                    "Full season tracking dashboard",
+                    "Timestamped judge notes",
+                    "Re-submission score tracking",
+                    "Cancel anytime",
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-2">
+                      <Check className="h-3.5 w-3.5 text-primary-400 shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={handleSubscribe}
+                  disabled={subLoading}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-7 py-3.5 font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {subLoading ? "Loading..." : "Subscribe — $12.99/mo"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* BOGO + Pack side by side */}
+          <div className="grid sm:grid-cols-2 gap-4 mb-5">
+            {/* BOGO */}
+            <div className="relative glass rounded-3xl p-6 border border-yellow-500/40 flex flex-col">
+              <div className="absolute -top-3 left-5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-yellow-500 to-amber-400 px-3 py-1 text-xs font-bold text-white">
+                <Zap className="h-3 w-3" />
+                BOGO
+              </div>
+              <div className="mt-3 mb-3">
+                <h3 className="text-base font-bold text-white">Buy One Get One</h3>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="text-3xl font-extrabold text-white">$8.99</span>
+                  <span className="text-surface-200 text-xs">2 analyses</span>
+                </div>
+                <p className="text-xs text-yellow-300 font-semibold mt-0.5">$4.50 each — BOGO deal</p>
+              </div>
+              <ul className="space-y-1.5 mb-4 flex-1">
+                {["2 full AI analyses", "Competition-standard scoring", "Timestamped judge notes", "Never expire"].map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-xs text-surface-200">
+                    <Check className="h-3 w-3 text-yellow-400 shrink-0" />{item}
+                  </li>
+                ))}
+              </ul>
+              <a href="/signup" className="w-full flex items-center justify-center gap-2 rounded-full border-2 border-yellow-500 px-5 py-3 font-bold text-white hover:bg-yellow-500/20 transition-colors text-sm">
+                Claim BOGO — $8.99 <ArrowRight className="h-4 w-4" />
+              </a>
+            </div>
+
+            {/* Competition Pack */}
+            <div className="relative glass rounded-3xl p-6 border border-primary-500/30 flex flex-col">
+              <div className="absolute -top-3 left-5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-primary-600 to-gold-500 px-3 py-1 text-xs font-bold text-white">
+                BEST VALUE
+              </div>
+              <div className="mt-3 mb-3">
+                <h3 className="text-base font-bold text-white">Competition Pack</h3>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="text-3xl font-extrabold text-white">$29.99</span>
+                  <span className="text-surface-200 text-xs">5 analyses</span>
+                </div>
+                <p className="text-xs text-primary-400 font-semibold mt-0.5">$6 each — save $15 vs single</p>
+              </div>
+              <ul className="space-y-1.5 mb-4 flex-1">
+                {["5 full AI analyses", "Only $6 each — save $15", "All styles supported", "Never expire"].map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-xs text-surface-200">
+                    <Check className="h-3 w-3 text-primary-400 shrink-0" />{item}
+                  </li>
+                ))}
+              </ul>
+              <a href="/signup" className="w-full flex items-center justify-center gap-2 rounded-full border border-primary-500/60 px-5 py-3 font-bold text-white hover:bg-primary-500/20 transition-colors text-sm">
+                Get 5 Analyses — $29.99 <ArrowRight className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+
+          {/* Free tier link */}
+          <p className="text-center text-sm text-surface-200">
+            Not sure yet?{" "}
+            <a href="/signup" className="text-primary-400 font-semibold hover:text-primary-300 transition-colors underline underline-offset-2">
+              Start free — first analysis on us, no card required →
             </a>
-            <span className="text-xs text-gold-300 font-semibold">🎉 First analysis on us — no credit card required</span>
-          </div>
-
-          {/* Secondary options */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-2">
-            <div className="flex flex-col items-center gap-0.5">
-              <a
-                href="/signup"
-                className="inline-flex items-center gap-2 rounded-full border border-gold-500/40 bg-gold-500/10 px-6 py-3 text-sm font-semibold text-white hover:bg-gold-500/20 transition-colors"
-              >
-                ⚡ BOGO — Get 2 for $8.99
-              </a>
-              <span className="text-xs text-surface-200">Buy one, get one free</span>
-            </div>
-            <div className="flex flex-col items-center gap-0.5">
-              <a
-                href="/signup"
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 px-6 py-3 text-sm font-medium text-surface-200 hover:bg-white/5 transition-colors"
-              >
-                Get 5 Analyses — $29.99
-              </a>
-              <span className="text-xs text-surface-200">Only $6 each</span>
-            </div>
-          </div>
+          </p>
+          <p className="text-center text-xs text-surface-200/50 mt-1">
+            Already have an account? <a href="/login" className="hover:text-white transition-colors underline">Log in</a>
+          </p>
         </motion.div>
 
-        <p className="mt-3 text-xs text-surface-200">
-          Already have an account?{" "}
-          <a href="/login" className="underline hover:text-white transition-colors">Log in</a>
-        </p>
-
-        <div className="mt-6 mx-auto max-w-2xl">
-          <div className="bg-white/10 border border-gold-400/50 rounded-2xl px-6 py-4 text-center">
-            <p className="text-base font-bold text-white mb-1">🔒 Your video never leaves your phone.</p>
-            <p className="text-sm text-gray-300">Only still-frame thumbnails are analyzed by AI. Nothing is uploaded, stored, or seen by any human. Ever.</p>
-          </div>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-4"
-        >
-          <a href="#sample-analysis" className="inline-flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors">
-            <Play className="h-4 w-4 text-primary-400" />
-            See a sample analysis first
-          </a>
-        </motion.div>
-
+        {/* ── Trust row ── */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-surface-200"
+          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-surface-200"
         >
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-primary-400" />
@@ -168,45 +213,6 @@ export default function Hero() {
           <div>Works with <span className="text-white font-semibold">every</span> major competition</div>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-          className="mt-8 mx-auto max-w-4xl"
-        >
-          <div className="glass rounded-2xl p-6 sm:p-8 text-left">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-xs text-primary-400 font-semibold uppercase tracking-wider">Sample Analysis Preview</p>
-                <p className="text-lg font-bold mt-1">Teen Jazz Solo — &quot;Into the Light&quot;</p>
-              </div>
-              <div className="text-right">
-                <p className="text-3xl font-bold gradient-text">274</p>
-                <p className="text-xs text-surface-200">out of 300</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { label: "Technique", score: 32.2, max: 35 },
-                { label: "Performance", score: 33.2, max: 35 },
-                { label: "Choreography", score: 18.3, max: 20 },
-                { label: "Overall", score: 9.0, max: 10 },
-              ].map((cat) => (
-                <div key={cat.label} className="rounded-xl bg-white/5 p-3 text-center">
-                  <p className="text-xs text-surface-200">{cat.label}</p>
-                  <p className="text-xl font-bold text-white mt-1">{cat.score}</p>
-                  <div className="mt-2 h-1.5 rounded-full bg-surface-800 overflow-hidden">
-                    <div className="h-full rounded-full bg-gradient-to-r from-primary-500 to-accent-400" style={{ width: `${(cat.score / cat.max) * 100}%` }} />
-                  </div>
-                  <p className="text-[10px] text-surface-200 mt-1">/ {cat.max}</p>
-                </div>
-              ))}
-            </div>
-            <p className="mt-4 text-xs text-center text-surface-200">
-              <a href="#sample-analysis" className="text-primary-400 hover:underline">See the full detailed analysis below &darr;</a>
-            </p>
-          </div>
-        </motion.div>
       </div>
     </section>
   );
