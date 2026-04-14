@@ -347,7 +347,7 @@ export default function DashboardClient({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-10"
+          className="mb-8"
         >
           <h1 className="text-3xl sm:text-4xl font-bold font-[family-name:var(--font-display)]">
             {user.name ? `Hey, ${user.name.split(" ")[0]}!` : "Your Dashboard"}
@@ -359,67 +359,13 @@ export default function DashboardClient({
           </p>
         </motion.div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-          {(() => {
-            const analyzedCount = videos.filter((v) => v.status === "analyzed").length;
-            const analyzedVideos = videos.filter((v) => v.analyses?.length > 0);
-            const avgScore = analyzedVideos.length > 0
-              ? Math.round(
-                  analyzedVideos.reduce(
-                    (sum, v) => sum + (v.analyses[0]?.total_score ?? 0),
-                    0
-                  ) / analyzedVideos.length
-                )
-              : "—";
-
-            return [
-              {
-                label: "Credits Left",
-                value: credits.remaining,
-                icon: CheckCircle,
-              },
-              {
-                label: "Videos Uploaded",
-                value: videos.length,
-                icon: Video,
-              },
-              {
-                label: "Analyses Complete",
-                value: analyzedCount,
-                icon: BarChart3,
-              },
-              {
-                label: "Avg. Score",
-                value: avgScore,
-                icon: CheckCircle,
-              },
-            ];
-          })().map((stat) => (
-            <div key={stat.label} className="glass rounded-2xl p-4 text-center">
-              <stat.icon className="mx-auto h-5 w-5 text-primary-400 mb-2" />
-              <p className="text-2xl font-bold">{stat.value}</p>
-              <p className="text-xs text-surface-200 mt-1">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Get More Credits — always visible ── */}
+        {/* ── Get More Analyses — always visible, right at the top ── */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.05 }}
-          className="mb-8"
+          className="mb-10"
         >
-          <div className="text-center mb-6">
-            <h2 className="text-2xl sm:text-3xl font-extrabold font-[family-name:var(--font-display)]">
-              Get More Analyses
-            </h2>
-            <p className="mt-2 text-surface-200 max-w-md mx-auto text-sm">
-              Pick the plan that fits your season.
-            </p>
-          </div>
-
           {/* Season Member — HERO CARD */}
           <SubscriptionHeroCard />
 
@@ -472,6 +418,35 @@ export default function DashboardClient({
             />
           </div>
         </motion.div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+          {(() => {
+            const analyzedCount = videos.filter((v) => v.status === "analyzed").length;
+            const analyzedVideos = videos.filter((v) => v.analyses?.length > 0);
+            const avgScore = analyzedVideos.length > 0
+              ? Math.round(
+                  analyzedVideos.reduce(
+                    (sum, v) => sum + (v.analyses[0]?.total_score ?? 0),
+                    0
+                  ) / analyzedVideos.length
+                )
+              : "—";
+
+            return [
+              { label: "Credits Left", value: credits.remaining, icon: CheckCircle },
+              { label: "Videos Uploaded", value: videos.length, icon: Video },
+              { label: "Analyses Complete", value: analyzedCount, icon: BarChart3 },
+              { label: "Avg. Score", value: avgScore, icon: CheckCircle },
+            ];
+          })().map((stat) => (
+            <div key={stat.label} className="glass rounded-2xl p-4 text-center">
+              <stat.icon className="mx-auto h-5 w-5 text-primary-400 mb-2" />
+              <p className="text-2xl font-bold">{stat.value}</p>
+              <p className="text-xs text-surface-200 mt-1">{stat.label}</p>
+            </div>
+          ))}
+        </div>
 
         {/* ── Out-of-credits section (existing subscribers/purchasers who ran out) ── */}
         {credits.remaining === 0 && credits.total > 1 && (
