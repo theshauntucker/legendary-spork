@@ -167,6 +167,9 @@ export default function Pricing() {
                 <span className="text-surface-200 text-sm">/month</span>
               </div>
               <p className="text-xs text-primary-300 font-semibold mt-1">Introductory rate — locked in forever</p>
+            <p className="text-xs text-surface-200/60 italic mt-2">
+              Upload after every rehearsal. Watch your scores climb all season.
+            </p>
             </div>
             <ul className="space-y-2.5 mb-7 flex-1">
               {[

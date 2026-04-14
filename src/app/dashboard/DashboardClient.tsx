@@ -179,6 +179,9 @@ function SubscriptionHeroCard() {
                 </li>
               ))}
             </ul>
+            <p className="mt-4 text-sm text-surface-200/70 italic max-w-sm">
+              "Upload after every rehearsal. Watch your scores climb. Walk into competition already knowing what the judges will say."
+            </p>
           </div>
 
           {/* Right: CTA */}
