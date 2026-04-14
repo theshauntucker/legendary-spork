@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { Zap } from "lucide-react";
 
-// BOGO Launch Offer deadline: April 20, 2026 at 11:59 PM PT
-const DEADLINE = new Date("2026-04-21T06:59:59Z"); // midnight PT = 6:59:59 AM UTC next day
+// Launch offer deadline: Sunday April 20, 2026 at 11:59:59 PM PT
+const DEADLINE = new Date("2026-04-21T07:59:59Z"); // midnight PT = 7:59:59 AM UTC next day
 
 function pad(n: number) {
   return n.toString().padStart(2, "0");
@@ -41,14 +41,12 @@ export default function CountdownBanner() {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-primary-700 via-accent-600 to-gold-600 shadow-lg shadow-primary-900/50">
-      <div className="mx-auto max-w-7xl px-4 py-2.5 flex flex-row items-center justify-center gap-2 sm:gap-4 text-white text-sm">
-        {/* Offer text */}
-        <div className="flex items-center gap-1.5 font-semibold shrink-0">
-          <Zap className="h-3.5 w-3.5 text-gold-300 shrink-0" />
-          <span className="text-xs sm:text-sm">
-            <span className="hidden sm:inline">Launch Offer: </span>
-            <span className="text-gold-200 font-bold">2 Analyses for $8.99</span>
-            <span className="hidden sm:inline"> — Buy One, Get One Free</span>
+      <div className="mx-auto max-w-7xl px-4 py-2 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-white text-sm">
+        {/* Left: offer text */}
+        <div className="flex items-center gap-2 font-semibold">
+          <Zap className="h-4 w-4 text-gold-300 shrink-0" />
+          <span>
+            Launch Offer: <span className="text-gold-200">2 Analyses for $8.99</span> — Buy One, Get One Free
           </span>
         </div>
 
@@ -77,8 +75,7 @@ export default function CountdownBanner() {
           href="/signup"
           className="shrink-0 inline-flex items-center gap-1 bg-white text-gray-900 text-xs font-bold rounded-full px-3 py-1 hover:bg-gray-100 transition-colors"
         >
-          <span className="hidden sm:inline">Claim Launch Offer</span>
-          <span className="sm:hidden">Get BOGO</span>
+          Claim Launch Offer
         </a>
       </div>
     </div>

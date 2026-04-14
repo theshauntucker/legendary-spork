@@ -409,7 +409,9 @@ export default function DashboardClient({
             <div className="bg-gradient-to-r from-primary-700/60 via-accent-600/40 to-primary-700/60 border border-primary-500/30 rounded-2xl p-6 mb-4 text-center">
               <h2 className="text-2xl font-bold text-white mb-2">Ready for Your Next Routine?</h2>
               <p className="text-surface-200 text-sm max-w-lg mx-auto">
-                Pick up more credits to keep improving your routines all season long.
+                {credits.used > 0
+                  ? "Pick up more credits to keep improving your routines all season long."
+                  : "Grab our Launch Offer below — 2 full AI-powered analyses for just $8.99. Buy one, get one free."}
               </p>
             </div>
             <div className="grid sm:grid-cols-3 gap-4">

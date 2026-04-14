@@ -141,7 +141,7 @@ export async function GET() {
           }}
         >
           <span>routinex.org</span>
-          <span>First analysis FREE — then from $6/video</span>
+          <span>Launch offer: 2 analyses for $8.99</span>
         </div>
       </div>
     ),

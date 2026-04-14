@@ -88,15 +88,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine credits to grant based on payment type
-    // subscription = $12.99/month = 10 credits (first month)
-    // single = $8.99 = 2 credits (BOGO)
+    // single = $8.99 = 2 credits (BOGO launch offer)
     // video_analysis / pack = $29.99 = 5 credits
     // beta_access (legacy) = 3 credits
     const isBeta = paymentType === "beta_access";
     const isPack = paymentType === "video_analysis";
     const isSingle = paymentType === "single";
-    const isSubscription = paymentType === "subscription";
-    const creditsToGrant = isSubscription ? 10 : isBeta ? BETA_CREDITS : isPack ? 5 : isSingle ? 2 : 1;
+    const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : isSingle ? 2 : 1;
 
     const serviceClient = await createServiceClient();
 
