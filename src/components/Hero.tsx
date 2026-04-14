@@ -77,6 +77,23 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mt-10 max-w-3xl mx-auto"
         >
+          {/* Free first analysis */}
+          <a
+            href="/signup"
+            className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-5 py-3.5 mb-4 hover:bg-emerald-500/20 transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 shrink-0">
+                <Sparkles className="h-4 w-4 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Try it free — first analysis on us</p>
+                <p className="text-xs text-emerald-300/80">No credit card required. See your score in under 5 minutes.</p>
+              </div>
+            </div>
+            <ArrowRight className="h-4 w-4 text-emerald-400 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+          </a>
+
           {/* Season Member — featured hero card */}
           <div
             className="relative glass rounded-3xl p-7 border-2 border-primary-500/60 flex flex-col mb-4 ring-2 ring-primary-500/20 ring-offset-2 ring-offset-transparent"
@@ -179,13 +196,6 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Free tier link */}
-          <p className="text-center text-sm text-surface-200">
-            Not sure yet?{" "}
-            <a href="/signup" className="text-primary-400 font-semibold hover:text-primary-300 transition-colors underline underline-offset-2">
-              Start free — first analysis on us, no card required →
-            </a>
-          </p>
           <p className="text-center text-xs text-surface-200/50 mt-1">
             Already have an account? <a href="/login" className="hover:text-white transition-colors underline">Log in</a>
           </p>
