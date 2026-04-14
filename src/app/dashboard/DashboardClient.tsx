@@ -65,14 +65,13 @@ const statusConfig: Record<
   },
 };
 
-// Big hero-style card for one-time purchases (BOGO / Pack)
+// Big hero-style card for one-time purchases — variant: "gold" | "purple"
 function HeroPurchaseCard({
-  badge, accentColor, glowColor, borderColor, title, price, subPrice,
-  tagline, features, buttonText, buttonGradient, type
+  variant, badge, title, price, subPrice, tagline, features, buttonText, type
 }: {
-  badge: string; accentColor: string; glowColor: string; borderColor: string;
-  title: string; price: string; subPrice: string; tagline: string;
-  features: string[]; buttonText: string; buttonGradient: string; type: string;
+  variant: "gold" | "purple";
+  badge: string; title: string; price: string; subPrice: string; tagline: string;
+  features: string[]; buttonText: string; type: string;
 }) {
   const [loading, setLoading] = React.useState(false);
 
@@ -93,19 +92,21 @@ function HeroPurchaseCard({
     }
   };
 
+  const isGold = variant === "gold";
+
   return (
     <div
-      className={`relative rounded-3xl overflow-hidden border-2 ${borderColor} flex flex-col`}
-      style={{ boxShadow: `0 0 30px ${glowColor}, 0 0 60px ${glowColor}40` }}
+      className={`relative rounded-3xl overflow-hidden flex flex-col ${isGold ? "border-2 border-yellow-500/50" : "border-2 border-violet-500/50"}`}
+      style={{ boxShadow: isGold ? "0 0 30px rgba(234,179,8,0.2), 0 0 60px rgba(234,179,8,0.1)" : "0 0 30px rgba(139,92,246,0.2), 0 0 60px rgba(139,92,246,0.1)" }}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-surface-900/95 via-surface-900/80 to-surface-800/90" />
-      <div className={`absolute inset-0 bg-gradient-to-br ${accentColor} opacity-10`} />
 
       {/* Badge stripe */}
       <div className="absolute top-0 left-0 right-0 flex justify-center">
-        <div className={`${buttonGradient} text-white text-xs font-extrabold uppercase tracking-widest px-6 py-1 rounded-b-xl`}>
-          {badge}
-        </div>
+        {isGold
+          ? <div className="bg-gradient-to-r from-yellow-500 to-amber-400 text-white text-xs font-extrabold uppercase tracking-widest px-6 py-1 rounded-b-xl">{badge}</div>
+          : <div className="bg-gradient-to-r from-violet-600 to-purple-500 text-white text-xs font-extrabold uppercase tracking-widest px-6 py-1 rounded-b-xl">{badge}</div>
+        }
       </div>
 
       <div className="relative px-6 pt-10 pb-6 flex flex-col flex-1">
@@ -113,22 +114,26 @@ function HeroPurchaseCard({
         <div className="flex items-baseline gap-2 mb-1">
           <span className="text-4xl sm:text-5xl font-black text-white">{price}</span>
         </div>
-        <p className={`text-sm font-semibold mb-3 ${accentColor.includes("gold") ? "text-gold-300" : "text-primary-300"}`}>{subPrice}</p>
+        {isGold
+          ? <p className="text-sm font-semibold mb-3 text-yellow-300">{subPrice}</p>
+          : <p className="text-sm font-semibold mb-3 text-violet-300">{subPrice}</p>
+        }
         <ul className="space-y-2 mb-4 flex-1">
           {features.map(f => (
             <li key={f} className="flex items-center gap-2 text-sm text-surface-200">
-              <span className={accentColor.includes("gold") ? "text-gold-400 font-bold" : "text-primary-400 font-bold"}>✓</span> {f}
+              {isGold
+                ? <span className="text-yellow-400 font-bold">✓</span>
+                : <span className="text-violet-400 font-bold">✓</span>
+              }
+              {f}
             </li>
           ))}
         </ul>
         <p className="text-xs text-surface-200/60 italic mb-4">{tagline}</p>
-        <button
-          onClick={handlePurchase}
-          disabled={loading}
-          className={`w-full py-3.5 rounded-2xl font-extrabold text-base text-white ${buttonGradient} hover:opacity-90 transition-all shadow-lg disabled:opacity-50`}
-        >
-          {loading ? "Loading..." : buttonText}
-        </button>
+        {isGold
+          ? <button onClick={handlePurchase} disabled={loading} className="w-full py-3.5 rounded-2xl font-extrabold text-base text-white bg-gradient-to-r from-yellow-500 to-amber-400 hover:opacity-90 transition-all shadow-lg disabled:opacity-50">{loading ? "Loading..." : buttonText}</button>
+          : <button onClick={handlePurchase} disabled={loading} className="w-full py-3.5 rounded-2xl font-extrabold text-base text-white bg-gradient-to-r from-violet-600 to-purple-500 hover:opacity-90 transition-all shadow-lg disabled:opacity-50">{loading ? "Loading..." : buttonText}</button>
+        }
       </div>
     </div>
   );
@@ -360,12 +365,7 @@ export default function DashboardClient({
         </motion.div>
 
         {/* ── Get More Analyses — always visible, right at the top ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.05 }}
-          className="mb-10"
-        >
+        <div className="mb-10">
           {/* Season Member — HERO CARD */}
           <SubscriptionHeroCard />
 
@@ -379,10 +379,8 @@ export default function DashboardClient({
           {/* BOGO + Pack — big hero cards */}
           <div className="grid sm:grid-cols-2 gap-4">
             <HeroPurchaseCard
+              variant="gold"
               badge="⚡ Buy One Get One Free"
-              accentColor="from-gold-500 to-amber-400"
-              glowColor="rgba(234,179,8,0.2)"
-              borderColor="border-gold-500/50"
               title="BOGO — 2 Analyses"
               price="$8.99"
               subPrice="Just $4.50 each — buy one, get one free"
@@ -394,14 +392,11 @@ export default function DashboardClient({
                 "Never expire",
               ]}
               buttonText="Get 2 Analyses — $8.99"
-              buttonGradient="bg-gradient-to-r from-gold-500 to-amber-400"
               type="single"
             />
             <HeroPurchaseCard
+              variant="purple"
               badge="🏆 Best Value — Save $15"
-              accentColor="from-primary-600 to-accent-500"
-              glowColor="rgba(139,92,246,0.2)"
-              borderColor="border-primary-500/50"
               title="Competition Pack"
               price="$29.99"
               subPrice="Only $6 per analysis — 5 total, never expire"
@@ -413,11 +408,10 @@ export default function DashboardClient({
                 "Never expire — use all season",
               ]}
               buttonText="Get 5 Analyses — $29.99"
-              buttonGradient="bg-gradient-to-r from-primary-600 to-accent-500"
               type="pack"
             />
           </div>
-        </motion.div>
+        </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
