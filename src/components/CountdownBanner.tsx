@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { Zap } from "lucide-react";
 
-// Launch offer deadline: Sunday April 20, 2026 at 11:59:59 PM PT
-const DEADLINE = new Date("2026-04-21T07:59:59Z"); // midnight PT = 7:59:59 AM UTC next day
+const DEADLINE = new Date("2026-04-21T07:59:59Z");
 
 function pad(n: number) {
   return n.toString().padStart(2, "0");
@@ -17,65 +16,46 @@ export default function CountdownBanner() {
 
   useEffect(() => {
     setMounted(true);
-
     function calc() {
-      const now = Date.now();
-      const diff = DEADLINE.getTime() - now;
-      if (diff <= 0) {
-        setExpired(true);
-        return;
-      }
-      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const m = Math.floor((diff / (1000 * 60)) % 60);
-      const s = Math.floor((diff / 1000) % 60);
-      setTimeLeft({ d, h, m, s });
+      const diff = DEADLINE.getTime() - Date.now();
+      if (diff <= 0) { setExpired(true); return; }
+      setTimeLeft({
+        d: Math.floor(diff / 86400000),
+        h: Math.floor((diff / 3600000) % 24),
+        m: Math.floor((diff / 60000) % 60),
+        s: Math.floor((diff / 1000) % 60),
+      });
     }
-
     calc();
-    const interval = setInterval(calc, 1000);
-    return () => clearInterval(interval);
+    const t = setInterval(calc, 1000);
+    return () => clearInterval(t);
   }, []);
 
   if (expired) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-primary-700 via-accent-600 to-gold-600 shadow-lg shadow-primary-900/50">
-      <div className="mx-auto max-w-7xl px-4 py-2 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-white text-sm">
-        {/* Left: offer text */}
-        <div className="flex items-center gap-2 font-semibold">
-          <Zap className="h-4 w-4 text-gold-300 shrink-0" />
-          <span>
-            Launch Offer: <span className="text-gold-200">2 Analyses for $8.99</span> — Buy One, Get One Free
-          </span>
-        </div>
+    <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-primary-700 via-accent-600 to-gold-600">
+      <div className="flex items-center justify-center gap-2 px-3 h-10 text-white text-xs font-semibold">
+        <Zap className="h-3.5 w-3.5 text-gold-300 shrink-0" />
+        {/* Short label on mobile, full on sm+ */}
+        <span className="sm:hidden">BOGO: 2 analyses for $8.99</span>
+        <span className="hidden sm:inline">Launch Offer: <span className="text-gold-200">2 Analyses for $8.99</span> — Buy One, Get One Free</span>
 
         {/* Countdown */}
         {mounted && (
-          <div className="flex items-center gap-1 font-mono font-bold text-white">
-            {timeLeft.d > 0 && (
-              <span className="bg-white/20 rounded px-1.5 py-0.5 text-xs">
-                {timeLeft.d}d
-              </span>
-            )}
-            <span className="bg-white/20 rounded px-1.5 py-0.5 text-xs">
-              {pad(timeLeft.h)}h
-            </span>
-            <span className="bg-white/20 rounded px-1.5 py-0.5 text-xs">
-              {pad(timeLeft.m)}m
-            </span>
-            <span className="bg-white/20 rounded px-1.5 py-0.5 text-xs hidden sm:inline-block">
-              {pad(timeLeft.s)}s
-            </span>
-          </div>
+          <span className="flex items-center gap-1 font-mono font-bold shrink-0">
+            {timeLeft.d > 0 && <span className="bg-white/20 rounded px-1.5 py-0.5">{timeLeft.d}d</span>}
+            <span className="bg-white/20 rounded px-1.5 py-0.5">{pad(timeLeft.h)}h</span>
+            <span className="bg-white/20 rounded px-1.5 py-0.5">{pad(timeLeft.m)}m</span>
+            <span className="hidden sm:inline bg-white/20 rounded px-1.5 py-0.5">{pad(timeLeft.s)}s</span>
+          </span>
         )}
 
-        {/* CTA */}
         <a
           href="/signup"
-          className="shrink-0 inline-flex items-center gap-1 bg-white text-gray-900 text-xs font-bold rounded-full px-3 py-1 hover:bg-gray-100 transition-colors"
+          className="shrink-0 bg-white text-gray-900 text-xs font-bold rounded-full px-3 py-1 hover:bg-gray-100 transition-colors"
         >
-          Claim Launch Offer
+          Claim
         </a>
       </div>
     </div>
