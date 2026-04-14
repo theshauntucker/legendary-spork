@@ -65,7 +65,76 @@ const statusConfig: Record<
   },
 };
 
-// Sub-component for purchase cards
+// Big hero-style card for one-time purchases (BOGO / Pack)
+function HeroPurchaseCard({
+  badge, accentColor, glowColor, borderColor, title, price, subPrice,
+  tagline, features, buttonText, buttonGradient, type
+}: {
+  badge: string; accentColor: string; glowColor: string; borderColor: string;
+  title: string; price: string; subPrice: string; tagline: string;
+  features: string[]; buttonText: string; buttonGradient: string; type: string;
+}) {
+  const [loading, setLoading] = React.useState(false);
+
+  const handlePurchase = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else { alert(data.message || "Something went wrong. Please try again."); setLoading(false); }
+    } catch {
+      alert("Something went wrong. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      className={`relative rounded-3xl overflow-hidden border-2 ${borderColor} flex flex-col`}
+      style={{ boxShadow: `0 0 30px ${glowColor}, 0 0 60px ${glowColor}40` }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-surface-900/95 via-surface-900/80 to-surface-800/90" />
+      <div className={`absolute inset-0 bg-gradient-to-br ${accentColor} opacity-10`} />
+
+      {/* Badge stripe */}
+      <div className="absolute top-0 left-0 right-0 flex justify-center">
+        <div className={`${buttonGradient} text-white text-xs font-extrabold uppercase tracking-widest px-6 py-1 rounded-b-xl`}>
+          {badge}
+        </div>
+      </div>
+
+      <div className="relative px-6 pt-10 pb-6 flex flex-col flex-1">
+        <h3 className="text-xl sm:text-2xl font-extrabold text-white mb-1">{title}</h3>
+        <div className="flex items-baseline gap-2 mb-1">
+          <span className="text-4xl sm:text-5xl font-black text-white">{price}</span>
+        </div>
+        <p className={`text-sm font-semibold mb-3 ${accentColor.includes("gold") ? "text-gold-300" : "text-primary-300"}`}>{subPrice}</p>
+        <ul className="space-y-2 mb-4 flex-1">
+          {features.map(f => (
+            <li key={f} className="flex items-center gap-2 text-sm text-surface-200">
+              <span className={accentColor.includes("gold") ? "text-gold-400 font-bold" : "text-primary-400 font-bold"}>✓</span> {f}
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-surface-200/60 italic mb-4">{tagline}</p>
+        <button
+          onClick={handlePurchase}
+          disabled={loading}
+          className={`w-full py-3.5 rounded-2xl font-extrabold text-base text-white ${buttonGradient} hover:opacity-90 transition-all shadow-lg disabled:opacity-50`}
+        >
+          {loading ? "Loading..." : buttonText}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Small card (used in out-of-credits 3-col grid only)
 function PurchaseCard({
   badge, badgeColor, title, price, description, features, buttonText, buttonStyle, type
 }: {
@@ -84,12 +153,8 @@ function PurchaseCard({
         body: JSON.stringify({ type }),
       });
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.message || "Something went wrong. Please try again.");
-        setLoading(false);
-      }
+      if (data.url) window.location.href = data.url;
+      else { alert(data.message || "Something went wrong. Please try again."); setLoading(false); }
     } catch {
       alert("Something went wrong. Please try again.");
       setLoading(false);
@@ -339,64 +404,74 @@ export default function DashboardClient({
           ))}
         </div>
 
-        {/* ── BIG subscription upsell — shown to new users with only their free credit ── */}
-        {credits.total <= 1 && credits.used === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.05 }}
-            className="mb-8"
-          >
-            {/* Greeting */}
-            <div className="text-center mb-6">
-              <p className="text-sm font-semibold uppercase tracking-widest text-primary-400 mb-1">
-                🎉 Welcome{user.name ? `, ${user.name.split(" ")[0]}` : ""}! Your first analysis is free.
-              </p>
-              <h2 className="text-3xl sm:text-4xl font-extrabold font-[family-name:var(--font-display)]">
-                Unlock the Full Season
-              </h2>
-              <p className="mt-2 text-surface-200 max-w-md mx-auto text-sm">
-                Most families subscribe on day one. Lock in the intro rate before it goes up.
-              </p>
-            </div>
+        {/* ── Get More Credits — always visible ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.05 }}
+          className="mb-8"
+        >
+          <div className="text-center mb-6">
+            <h2 className="text-2xl sm:text-3xl font-extrabold font-[family-name:var(--font-display)]">
+              Get More Analyses
+            </h2>
+            <p className="mt-2 text-surface-200 max-w-md mx-auto text-sm">
+              Pick the plan that fits your season.
+            </p>
+          </div>
 
-            {/* Season Member — HERO CARD */}
-            <SubscriptionHeroCard />
+          {/* Season Member — HERO CARD */}
+          <SubscriptionHeroCard />
 
-            {/* Divider */}
-            <div className="flex items-center gap-3 my-5">
-              <div className="flex-1 border-t border-white/10" />
-              <span className="text-xs text-surface-200/50 uppercase tracking-widest">or pay per routine</span>
-              <div className="flex-1 border-t border-white/10" />
-            </div>
+          {/* Divider */}
+          <div className="flex items-center gap-3 my-5">
+            <div className="flex-1 border-t border-white/10" />
+            <span className="text-xs text-surface-200/50 uppercase tracking-widest">or pay per routine</span>
+            <div className="flex-1 border-t border-white/10" />
+          </div>
 
-            {/* BOGO + Pack as secondary options */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              <PurchaseCard
-                badge="⚡ Buy One Get One"
-                badgeColor="text-gold-300 bg-gold-500/20"
-                title="BOGO — 2 Analyses"
-                price="$8.99"
-                description="Buy one, get one free. Only $4.50 each."
-                features={["2 full AI analyses", "Competition-standard scoring", "Timestamped judge notes"]}
-                buttonText="Get 2 Analyses — $8.99"
-                buttonStyle="border border-gold-500/60 hover:bg-gold-500/10"
-                type="single"
-              />
-              <PurchaseCard
-                badge="🏆 Best Value"
-                badgeColor="text-gold-300 bg-gold-500/20"
-                title="Competition Pack"
-                price="$29.99"
-                description="5 analyses — only $6 each, never expire."
-                features={["5 full AI analyses", "Only $6 each — save $15", "Never expire"]}
-                buttonText="Get 5 Analyses — $29.99"
-                buttonStyle="border border-primary-500/60 hover:bg-primary-500/10"
-                type="pack"
-              />
-            </div>
-          </motion.div>
-        )}
+          {/* BOGO + Pack — big hero cards */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <HeroPurchaseCard
+              badge="⚡ Buy One Get One Free"
+              accentColor="from-gold-500 to-amber-400"
+              glowColor="rgba(234,179,8,0.2)"
+              borderColor="border-gold-500/50"
+              title="BOGO — 2 Analyses"
+              price="$8.99"
+              subPrice="Just $4.50 each — buy one, get one free"
+              tagline="Perfect for a single competition day or trying us out."
+              features={[
+                "2 full AI analyses",
+                "Competition-standard scoring (out of 300)",
+                "Timestamped judge feedback",
+                "Never expire",
+              ]}
+              buttonText="Get 2 Analyses — $8.99"
+              buttonGradient="bg-gradient-to-r from-gold-500 to-amber-400"
+              type="single"
+            />
+            <HeroPurchaseCard
+              badge="🏆 Best Value — Save $15"
+              accentColor="from-primary-600 to-accent-500"
+              glowColor="rgba(139,92,246,0.2)"
+              borderColor="border-primary-500/50"
+              title="Competition Pack"
+              price="$29.99"
+              subPrice="Only $6 per analysis — 5 total, never expire"
+              tagline="Stock up for the whole season. Use them whenever you need."
+              features={[
+                "5 full AI analyses",
+                "Save $15 vs buying individually",
+                "All styles: dance, cheer, duo, group",
+                "Never expire — use all season",
+              ]}
+              buttonText="Get 5 Analyses — $29.99"
+              buttonGradient="bg-gradient-to-r from-primary-600 to-accent-500"
+              type="pack"
+            />
+          </div>
+        </motion.div>
 
         {/* ── Out-of-credits section (existing subscribers/purchasers who ran out) ── */}
         {credits.remaining === 0 && credits.total > 1 && (
