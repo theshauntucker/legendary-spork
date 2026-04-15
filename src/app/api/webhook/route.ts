@@ -71,6 +71,54 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: "Renewal credit grant failed" }, { status: 500 });
         }
       }
+
+      // ─── Studio subscription renewal branch (additive) ─────────────────
+      // Studio subscriptions set subscription_data.metadata.payment_type =
+      // "studio_subscription" and studio_id (NOT user_id), so the Season
+      // Member block above no-ops for them. This block handles:
+      //   • trial → active transition (bump total_credits from 25 to 50)
+      //   • monthly renewal (additive grant of 50, used_credits untouched)
+      if (subMetadata.payment_type === "studio_subscription" && subMetadata.studio_id) {
+        const studioId = subMetadata.studio_id;
+        const serviceClient = await createServiceClient();
+        try {
+          const { data: pool } = await serviceClient
+            .from("studio_credits")
+            .select("total_credits, subscription_status")
+            .eq("studio_id", studioId)
+            .maybeSingle();
+
+          if (!pool) {
+            console.error(`Webhook: studio_credits row missing for studio ${studioId}`);
+          } else if (pool.subscription_status === "trial") {
+            // First real payment after trial — bump pool from 25 to 50 and flip to active
+            await serviceClient
+              .from("studio_credits")
+              .update({
+                total_credits: 50,
+                subscription_status: "active",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("studio_id", studioId);
+            console.log(`Webhook: Studio ${studioId} trial → active, pool bumped to 50`);
+          } else {
+            // Already active — monthly additive grant of 50, leave used_credits alone
+            await serviceClient
+              .from("studio_credits")
+              .update({
+                total_credits: pool.total_credits + 50,
+                subscription_status: "active",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("studio_id", studioId);
+            console.log(`Webhook: Studio ${studioId} monthly renewal — pool +50`);
+          }
+        } catch (err) {
+          console.error("Webhook: Studio subscription renewal failed:", err);
+          return NextResponse.json({ error: "Studio renewal failed" }, { status: 500 });
+        }
+      }
+      // ────────────────────────────────────────────────────────────────────
     }
     return NextResponse.json({ received: true });
   }
@@ -81,6 +129,80 @@ export async function POST(request: NextRequest) {
     const userId = session.metadata?.user_id;
     const paymentType = session.metadata?.payment_type || "beta_access";
     const referralCode = session.metadata?.referral_code || null;
+
+    // ─── Studio subscription early branch (additive) ─────────────────────
+    // Studio checkouts set payment_type="studio_subscription" and studio_id
+    // on session metadata (the /studio/signup flow creates the studios row
+    // before redirecting to Stripe). This branch sets up the shared pool at
+    // 25 credits for the 30-day trial. The existing B2C branches below
+    // remain in their original order and are not executed for studio flows.
+    if (paymentType === "studio_subscription") {
+      const studioId = session.metadata?.studio_id;
+      if (!studioId) {
+        console.error("Webhook: studio_subscription session missing studio_id", session.id);
+        return NextResponse.json({ received: true });
+      }
+      const serviceClient = await createServiceClient();
+      try {
+        // Idempotency: if a payments row already exists for this session, skip.
+        const { data: existing } = await serviceClient
+          .from("payments")
+          .select("id")
+          .eq("stripe_session_id", session.id)
+          .maybeSingle();
+
+        if (!existing) {
+          await serviceClient.from("payments").insert({
+            user_id: userId,
+            stripe_session_id: session.id,
+            stripe_payment_intent:
+              typeof session.payment_intent === "string" ? session.payment_intent : null,
+            payment_type: "studio_subscription",
+            amount_cents: session.amount_total || 0,
+            currency: session.currency || "usd",
+            status: "completed",
+            credits_granted: 25,
+          }).then(({ error }) => {
+            if (error && error.code !== "23505") {
+              console.error("Studio payment insert error:", error);
+            }
+          });
+        }
+
+        // Upsert the studio_credits pool: trial starts with 25 credits, bumps
+        // to 50 on first invoice.payment_succeeded (billing_reason=cycle).
+        const trialEndsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        const subscriptionId =
+          typeof session.subscription === "string" ? session.subscription : null;
+
+        const { error: upsertError } = await serviceClient
+          .from("studio_credits")
+          .upsert(
+            {
+              studio_id: studioId,
+              total_credits: 25,
+              used_credits: 0,
+              trial_ends_at: trialEndsAt,
+              subscription_status: "trial",
+              stripe_subscription_id: subscriptionId,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "studio_id" }
+          );
+
+        if (upsertError) {
+          throw new Error(`studio_credits upsert failed: ${upsertError.message}`);
+        }
+        console.log(
+          `Webhook: Studio ${studioId} trial started (pool=25, ends ${trialEndsAt})`
+        );
+      } catch (err) {
+        console.error("Webhook: Studio checkout processing failed:", err);
+        return NextResponse.json({ error: "Studio checkout failed" }, { status: 500 });
+      }
+      return NextResponse.json({ received: true });
+    }
+    // ──────────────────────────────────────────────────────────────────────
 
     if (!userId) {
       console.error("Webhook: No user_id in session metadata", session.id);
