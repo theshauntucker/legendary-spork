@@ -236,6 +236,86 @@ export async function getTrackById(
   };
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// Recommendations ("Find me something like this")
+// ─────────────────────────────────────────────────────────────────────
+
+export interface RecommendationFilters {
+  /** Target tempo — Spotify picks candidates near this BPM. */
+  targetTempo?: number;
+  /** Hard min/max BPM. */
+  minTempo?: number;
+  maxTempo?: number;
+  /** Target energy 0..1. */
+  targetEnergy?: number;
+  /** Hard min/max duration in ms. */
+  minDurationMs?: number;
+  maxDurationMs?: number;
+  /** 1..100. Default 20. */
+  limit?: number;
+}
+
+interface SpotifyRecommendationsResponse {
+  tracks: SpotifyTrack[];
+}
+
+export async function getRecommendations(
+  seedTrackIds: string[],
+  filters: RecommendationFilters = {}
+): Promise<SpotifyTrackSummary[]> {
+  if (seedTrackIds.length === 0) return [];
+  // Spotify caps seed_tracks at 5.
+  const seeds = seedTrackIds.slice(0, 5).join(",");
+
+  const params = new URLSearchParams({
+    seed_tracks: seeds,
+    limit: String(Math.min(100, Math.max(1, filters.limit ?? 20))),
+  });
+  if (filters.targetTempo !== undefined) params.set("target_tempo", String(filters.targetTempo));
+  if (filters.minTempo !== undefined) params.set("min_tempo", String(filters.minTempo));
+  if (filters.maxTempo !== undefined) params.set("max_tempo", String(filters.maxTempo));
+  if (filters.targetEnergy !== undefined) params.set("target_energy", String(filters.targetEnergy));
+  if (filters.minDurationMs !== undefined) params.set("min_duration_ms", String(filters.minDurationMs));
+  if (filters.maxDurationMs !== undefined) params.set("max_duration_ms", String(filters.maxDurationMs));
+
+  const data = await spotifyFetch<SpotifyRecommendationsResponse>(
+    `/recommendations?${params.toString()}`
+  );
+  const items = data.tracks;
+  if (items.length === 0) return [];
+
+  // Enrich with batched audio-features for nicer chips on each suggestion.
+  const ids = items.map((t) => t.id).join(",");
+  let features: (SpotifyAudioFeatures | null)[] = [];
+  try {
+    const feat = await spotifyFetch<SpotifyAudioFeaturesBatch>(
+      `/audio-features?ids=${encodeURIComponent(ids)}`
+    );
+    features = feat.audio_features;
+  } catch {
+    features = items.map(() => null);
+  }
+  const featureMap = new Map<string, SpotifyAudioFeatures>();
+  for (const f of features) if (f) featureMap.set(f.id, f);
+
+  return items.map((t) => {
+    const f = featureMap.get(t.id);
+    return {
+      spotifyTrackId: t.id,
+      name: t.name,
+      artists: t.artists.map((a) => a.name),
+      albumName: t.album.name,
+      albumImageUrl: t.album.images[0]?.url ?? null,
+      durationMs: t.duration_ms,
+      explicit: t.explicit,
+      previewUrl: t.preview_url,
+      tempoBpm: f ? Math.round(f.tempo * 10) / 10 : null,
+      energy: f ? Math.round(f.energy * 100) / 100 : null,
+      danceability: f ? Math.round(f.danceability * 100) / 100 : null,
+    };
+  });
+}
+
 // Test-only helper (not exported from an index) — lets the regression
 // test reset cache between cases.
 export function __resetSpotifyTokenCache() {
