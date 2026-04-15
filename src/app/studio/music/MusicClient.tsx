@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -71,6 +71,38 @@ export default function MusicClient({
   const [savingId, setSavingId] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestIdRef = useRef(0);
+
+  // Lazy-loaded collision state for every library tile. One batch call.
+  type CollisionState = "green" | "yellow" | "red";
+  const [collisions, setCollisions] = useState<Record<string, CollisionState>>({});
+  const libraryIds = useMemo(() => library.map((t) => t.id), [library]);
+
+  useEffect(() => {
+    if (libraryIds.length === 0) {
+      setCollisions({});
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const res = await fetch("/api/studio/music/collisions/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trackIds: libraryIds }),
+      });
+      if (!res.ok || cancelled) return;
+      const data = (await res.json()) as {
+        results: Record<string, { state: CollisionState }>;
+      };
+      const map: Record<string, CollisionState> = {};
+      for (const [id, v] of Object.entries(data.results)) {
+        map[id] = v.state;
+      }
+      if (!cancelled) setCollisions(map);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [libraryIds]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -276,43 +308,47 @@ export default function MusicClient({
             </div>
           ) : (
             <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {library.map((t) => (
-                <li key={t.id} className="glass rounded-2xl p-4">
-                  <a href={`/studio/music/${t.id}`} className="flex items-center gap-3 group">
-                    {t.albumImageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={t.albumImageUrl}
-                        alt=""
-                        className="h-16 w-16 rounded-md object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="h-16 w-16 rounded-md bg-surface-900 flex-shrink-0 flex items-center justify-center">
-                        <Music className="h-5 w-5 text-surface-200" />
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold truncate group-hover:text-accent-300 transition-colors">
-                        {t.trackName || "Untitled"}
-                      </p>
-                      <p className="text-xs text-surface-200 truncate">
-                        {t.artistName || "—"}
-                      </p>
-                      <div className="mt-1 flex flex-wrap gap-1.5">
-                        {t.tempoBpm !== null && (
-                          <Chip icon={<Gauge className="h-3 w-3" />}>
-                            {t.tempoBpm} bpm
+              {library.map((t) => {
+                const state = collisions[t.id];
+                return (
+                  <li key={t.id} className="glass rounded-2xl p-4 relative">
+                    <CollisionDot state={state} />
+                    <a href={`/studio/music/${t.id}`} className="flex items-center gap-3 group">
+                      {t.albumImageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={t.albumImageUrl}
+                          alt=""
+                          className="h-16 w-16 rounded-md object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="h-16 w-16 rounded-md bg-surface-900 flex-shrink-0 flex items-center justify-center">
+                          <Music className="h-5 w-5 text-surface-200" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold truncate group-hover:text-accent-300 transition-colors">
+                          {t.trackName || "Untitled"}
+                        </p>
+                        <p className="text-xs text-surface-200 truncate">
+                          {t.artistName || "—"}
+                        </p>
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {t.tempoBpm !== null && (
+                            <Chip icon={<Gauge className="h-3 w-3" />}>
+                              {t.tempoBpm} bpm
+                            </Chip>
+                          )}
+                          <Chip icon={<Clock className="h-3 w-3" />}>
+                            {formatDuration(t.durationMs)}
                           </Chip>
-                        )}
-                        <Chip icon={<Clock className="h-3 w-3" />}>
-                          {formatDuration(t.durationMs)}
-                        </Chip>
+                        </div>
                       </div>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-surface-200 group-hover:text-white transition-colors flex-shrink-0" />
-                  </a>
-                </li>
-              ))}
+                      <ArrowRight className="h-4 w-4 text-surface-200 group-hover:text-white transition-colors flex-shrink-0" />
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -327,5 +363,34 @@ function Chip({ icon, children }: { icon: React.ReactNode; children: React.React
       {icon}
       {children}
     </span>
+  );
+}
+
+function CollisionDot({ state }: { state: "green" | "yellow" | "red" | undefined }) {
+  if (!state) {
+    // Still loading — render an invisible placeholder so the tile's hit
+    // area doesn't shift when the dot arrives.
+    return <span className="absolute top-3 right-3 h-2.5 w-2.5" aria-hidden />;
+  }
+  const cfg = {
+    green: {
+      bg: "bg-green-400",
+      title: "Clear to lock in — no other studio is using this song this season.",
+    },
+    yellow: {
+      bg: "bg-yellow-400",
+      title: "Being considered by another studio this season (outside your state).",
+    },
+    red: {
+      bg: "bg-red-500",
+      title: "Another studio in your state has locked this song in this season.",
+    },
+  }[state];
+  return (
+    <span
+      className={`absolute top-3 right-3 h-2.5 w-2.5 rounded-full ${cfg.bg} ring-2 ring-surface-950/40`}
+      title={cfg.title}
+      aria-label={cfg.title}
+    />
   );
 }
