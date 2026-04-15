@@ -195,12 +195,10 @@ export default function StudioDashboardClient({
             icon={<Music className="h-6 w-6" />}
             eyebrow="Music Hub"
             title="Find. Check. Lock."
-            body="Search Spotify, check lyrics, protect your song from collisions with other studios this season."
+            body="Search Spotify, add tracks to your studio library, keep shared notes on every song you're considering."
             actionLabel="Search"
             href="/studio/music"
             accent="accent"
-            disabled
-            disabledHint="Launching in the Music Hub release"
           />
           <HeroTile
             icon={<Calendar className="h-6 w-6" />}
@@ -265,8 +263,6 @@ export default function StudioDashboardClient({
                 done={checklist.searchMusic}
                 label="Search your first song in the Music Hub"
                 href="/studio/music"
-                disabled
-                disabledHint="Coming with Music Hub release"
               />
               <ChecklistRow
                 done={checklist.uploadRoutine}
