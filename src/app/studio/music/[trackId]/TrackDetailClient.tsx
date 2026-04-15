@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Music,
@@ -14,10 +14,13 @@ import {
   AlertCircle,
   CheckCircle2,
   ShieldAlert,
+  ShieldCheck,
   ExternalLink,
   Plus,
   Check,
   Wand2,
+  Link as LinkIcon,
+  X,
 } from "lucide-react";
 
 interface Track {
@@ -109,6 +112,127 @@ export default function TrackDetailClient({
   const [filterMinBpm, setFilterMinBpm] = useState<string>("");
   const [filterMaxBpm, setFilterMaxBpm] = useState<string>("");
   const [filterEnergy, setFilterEnergy] = useState<string>("");
+
+  // ─── Collision state ───────────────────────────────────────────────
+  interface CollisionCountsShape {
+    total_uses: number;
+    this_season: number;
+    locked_this_season: number;
+    this_season_in_region: number;
+    locked_this_season_in_region: number;
+  }
+  const [collisionState, setCollisionState] = useState<"green" | "yellow" | "red" | null>(null);
+  const [collisionCounts, setCollisionCounts] = useState<CollisionCountsShape | null>(null);
+  const [collisionRegion, setCollisionRegion] = useState<string | null>(null);
+  const [collisionLoading, setCollisionLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setCollisionLoading(true);
+      try {
+        const res = await fetch(
+          `/api/studio/music/collisions?trackId=${encodeURIComponent(track.id)}`
+        );
+        if (!cancelled && res.ok) {
+          const data = await res.json();
+          setCollisionState(data.state ?? null);
+          setCollisionCounts(data.counts ?? null);
+          setCollisionRegion(data.region ?? null);
+        }
+      } catch {
+        // Silent: banner falls back to the "unavailable" copy.
+      } finally {
+        if (!cancelled) setCollisionLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [track.id]);
+
+  // ─── Link-routine form state ───────────────────────────────────────
+  const [linkRoutineName, setLinkRoutineName] = useState("");
+  const [linkDancerName, setLinkDancerName] = useState("");
+  const [linkStyle, setLinkStyle] = useState("");
+  const [linkEntryType, setLinkEntryType] = useState("");
+  const [linkAgeDivision, setLinkAgeDivision] = useState("");
+  const [linkStatus, setLinkStatus] = useState<"considering" | "locked_in" | "performed">(
+    "considering"
+  );
+  const [linking, setLinking] = useState(false);
+  const [linkError, setLinkError] = useState("");
+
+  const submitLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLinking(true);
+    setLinkError("");
+    const res = await fetch("/api/studio/music/link-routine", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        music_track_id: track.id,
+        routine_name: linkRoutineName.trim() || undefined,
+        dancer_name: linkDancerName.trim() || undefined,
+        style: linkStyle.trim() || undefined,
+        entry_type: linkEntryType.trim() || undefined,
+        age_division: linkAgeDivision.trim() || undefined,
+        status: linkStatus,
+      }),
+    });
+    setLinking(false);
+    if (!res.ok) {
+      const { error: apiErr } = await res.json().catch(() => ({ error: "Link failed" }));
+      setLinkError(apiErr || "Link failed");
+      return;
+    }
+    // Refetch linked routines + collision state — any lock-in changes the banner.
+    setLinkRoutineName("");
+    setLinkDancerName("");
+    setLinkStyle("");
+    setLinkEntryType("");
+    setLinkAgeDivision("");
+    setLinkStatus("considering");
+    await refreshCollisions();
+    router.refresh();
+  };
+
+  const refreshCollisions = async () => {
+    const res = await fetch(
+      `/api/studio/music/collisions?trackId=${encodeURIComponent(track.id)}`
+    );
+    if (res.ok) {
+      const data = await res.json();
+      setCollisionState(data.state ?? null);
+      setCollisionCounts(data.counts ?? null);
+    }
+  };
+
+  const updateLinkStatus = async (
+    id: string,
+    status: "considering" | "locked_in" | "performed"
+  ) => {
+    const res = await fetch("/api/studio/music/link-routine", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    if (res.ok) {
+      await refreshCollisions();
+      router.refresh();
+    }
+  };
+
+  const removeLink = async (id: string) => {
+    if (!confirm("Remove this routine link?")) return;
+    const res = await fetch(`/api/studio/music/link-routine?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      await refreshCollisions();
+      router.refresh();
+    }
+  };
 
   const dirty = (notes.trim() || null) !== (track.notes ?? null);
   const isChecked = lyricsStatus && lyricsStatus !== "unchecked";
@@ -338,14 +462,96 @@ export default function TrackDetailClient({
           )}
         </div>
 
-        {/* Collision check — Phase F */}
+        {/* Collision detection */}
+        <CollisionCard
+          state={collisionState}
+          counts={collisionCounts}
+          region={collisionRegion}
+          loading={collisionLoading}
+        />
+
+        {/* Link to a routine */}
         <div className="glass rounded-2xl p-5 mb-6">
-          <h2 className="font-semibold mb-1">Collision detection</h2>
-          <p className="text-sm text-surface-200">
-            Cross-studio collision alerts — green/yellow/red — arrive once
-            routine linking ships. Until then, treat the library as a private
-            shortlist for your team.
+          <div className="flex items-center gap-2 mb-3">
+            <LinkIcon className="h-4 w-4 text-primary-300" />
+            <h2 className="font-semibold">Link to a routine</h2>
+          </div>
+          <p className="text-xs text-surface-200 mb-4">
+            Connect this song to a specific routine so collision detection
+            picks it up. Lock-ins turn your banner red for other studios in
+            your state.
           </p>
+          <form onSubmit={submitLink} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+              type="text"
+              value={linkRoutineName}
+              onChange={(e) => setLinkRoutineName(e.target.value)}
+              placeholder="Routine name (e.g. 'The Fire Within')"
+              className="rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors"
+            />
+            <input
+              type="text"
+              value={linkDancerName}
+              onChange={(e) => setLinkDancerName(e.target.value)}
+              placeholder="Dancer name"
+              className="rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors"
+            />
+            <input
+              type="text"
+              value={linkStyle}
+              onChange={(e) => setLinkStyle(e.target.value)}
+              placeholder="Style (jazz, lyrical, …)"
+              className="rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors"
+            />
+            <input
+              type="text"
+              value={linkEntryType}
+              onChange={(e) => setLinkEntryType(e.target.value)}
+              placeholder="Entry type (solo, small group, …)"
+              className="rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors"
+            />
+            <input
+              type="text"
+              value={linkAgeDivision}
+              onChange={(e) => setLinkAgeDivision(e.target.value)}
+              placeholder="Age division (mini / junior / teen / senior)"
+              className="rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors"
+            />
+            <select
+              value={linkStatus}
+              onChange={(e) =>
+                setLinkStatus(e.target.value as "considering" | "locked_in" | "performed")
+              }
+              className="rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors"
+            >
+              <option value="considering" className="bg-surface-900">
+                Considering
+              </option>
+              <option value="locked_in" className="bg-surface-900">
+                Locked in
+              </option>
+              <option value="performed" className="bg-surface-900">
+                Performed
+              </option>
+            </select>
+            <div className="sm:col-span-2 flex items-center justify-between gap-3 flex-wrap">
+              {linkError && <p className="text-sm text-red-400">{linkError}</p>}
+              <button
+                type="submit"
+                disabled={linking}
+                className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white px-4 py-2 text-sm font-semibold transition-colors"
+              >
+                {linking ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <LinkIcon className="h-4 w-4" />
+                    Link routine
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
 
         {/* Similar songs */}
@@ -543,26 +749,56 @@ export default function TrackDetailClient({
           </h2>
           {linkedRoutines.length === 0 ? (
             <p className="text-sm text-surface-200">
-              No routines linked yet. The link-to-routine flow arrives with
-              collision detection.
+              No routines linked yet. Use the form above to connect this song
+              to a routine — once another studio in your state locks the same
+              track, you&apos;ll see a red collision alert up top.
             </p>
           ) : (
             <ul className="divide-y divide-white/10">
               {linkedRoutines.map((r) => (
-                <li key={r.id} className="py-3">
-                  <p className="text-sm font-medium">
-                    {r.routineName || "Untitled routine"}
-                    {r.dancerName && (
-                      <span className="text-surface-200"> · {r.dancerName}</span>
-                    )}
-                  </p>
-                  <p className="text-xs text-surface-200 mt-0.5">
-                    {[r.style, r.entryType, r.ageDivision].filter(Boolean).join(" · ")}
-                    {" · "}
-                    <span className="capitalize">{r.status.replace("_", " ")}</span>
-                    {" · "}
-                    {r.season}
-                  </p>
+                <li key={r.id} className="py-3 flex items-start justify-between gap-3 flex-wrap">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">
+                      {r.routineName || "Untitled routine"}
+                      {r.dancerName && (
+                        <span className="text-surface-200"> · {r.dancerName}</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-surface-200 mt-0.5">
+                      {[r.style, r.entryType, r.ageDivision].filter(Boolean).join(" · ")}
+                      {[r.style, r.entryType, r.ageDivision].filter(Boolean).length > 0 && " · "}
+                      {r.season}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <select
+                      value={r.status}
+                      onChange={(e) =>
+                        updateLinkStatus(
+                          r.id,
+                          e.target.value as "considering" | "locked_in" | "performed"
+                        )
+                      }
+                      className="rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs text-white focus:outline-none focus:border-primary-500 transition-colors"
+                    >
+                      <option value="considering" className="bg-surface-900">
+                        Considering
+                      </option>
+                      <option value="locked_in" className="bg-surface-900">
+                        Locked in
+                      </option>
+                      <option value="performed" className="bg-surface-900">
+                        Performed
+                      </option>
+                    </select>
+                    <button
+                      onClick={() => removeLink(r.id)}
+                      className="inline-flex items-center gap-1 rounded-full bg-white/5 hover:bg-red-500/20 hover:text-red-300 text-surface-200 px-3 py-1 text-xs transition-colors"
+                      aria-label="Remove link"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -616,6 +852,109 @@ function FlagPill({ label, on }: { label: string; on: boolean }) {
       <CheckCircle2 className="h-3 w-3" />
       {label}
     </span>
+  );
+}
+
+function CollisionCard({
+  state,
+  counts,
+  region,
+  loading,
+}: {
+  state: "green" | "yellow" | "red" | null;
+  counts: {
+    total_uses: number;
+    this_season: number;
+    locked_this_season: number;
+    this_season_in_region: number;
+    locked_this_season_in_region: number;
+  } | null;
+  region: string | null;
+  loading: boolean;
+}) {
+  if (loading && !state) {
+    return (
+      <div className="glass rounded-2xl p-5 mb-6">
+        <div className="flex items-center gap-2 text-sm text-surface-200">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Checking cross-studio collisions…
+        </div>
+      </div>
+    );
+  }
+
+  if (!state || !counts) {
+    return (
+      <div className="glass rounded-2xl p-5 mb-6">
+        <h2 className="font-semibold mb-1">Collision detection</h2>
+        <p className="text-sm text-surface-200">
+          Collision lookup unavailable right now. Try again in a moment.
+        </p>
+      </div>
+    );
+  }
+
+  const regionLabel = region ? ` in ${region}` : "";
+
+  if (state === "red") {
+    return (
+      <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-5 mb-6">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-red-300 flex-shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <h2 className="font-semibold text-red-100">
+              ⚠ Another studio{regionLabel} has locked this song in this season.
+            </h2>
+            <p className="text-sm text-red-100/80 mt-1">
+              {counts.locked_this_season_in_region}{" "}
+              {counts.locked_this_season_in_region === 1 ? "lock-in" : "lock-ins"}{" "}
+              flagged in your region. Consider a different song or connect
+              with your network before you lock this in.
+            </p>
+            <p className="text-xs text-red-100/60 mt-2">
+              We never share which studios, dancers, or routines — only that
+              it&apos;s happening.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (state === "yellow") {
+    return (
+      <div className="rounded-2xl border border-yellow-500/40 bg-yellow-500/10 p-5 mb-6">
+        <div className="flex items-start gap-3">
+          <ShieldAlert className="h-5 w-5 text-yellow-200 flex-shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <h2 className="font-semibold text-yellow-50">
+              Being considered elsewhere, but not near you.
+            </h2>
+            <p className="text-sm text-yellow-100/80 mt-1">
+              {counts.this_season}{" "}
+              {counts.this_season === 1 ? "other studio has" : "other studios have"}{" "}
+              this song on their shortlist this season. None are locked in
+              within your region.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-green-500/30 bg-green-500/10 p-5 mb-6">
+      <div className="flex items-start gap-3">
+        <ShieldCheck className="h-5 w-5 text-green-300 flex-shrink-0 mt-0.5" />
+        <div className="min-w-0">
+          <h2 className="font-semibold text-green-100">Clear to lock in.</h2>
+          <p className="text-sm text-green-100/80 mt-1">
+            No other studio is using this song this season. You&apos;re good
+            to build this routine.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
 
