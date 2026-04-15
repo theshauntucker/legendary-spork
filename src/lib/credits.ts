@@ -1,4 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
+import { getStudioForUser } from "@/lib/studio/membership";
 
 const BETA_CREDITS = 3;
 
@@ -19,6 +20,12 @@ interface CreditStatus {
   isAdmin: boolean;
   totalCredits: number;
   usedCredits: number;
+  // ─── Studio-pool extensions (all optional, undefined for B2C users) ────
+  // A non-studio user's response contains none of these fields — the object
+  // returned for B2C users is byte-identical to pre-studio behavior.
+  source?: "personal" | "studio";
+  studioId?: string;
+  studioSubscriptionStatus?: string | null;
 }
 
 /**
@@ -30,7 +37,7 @@ export async function getUserCredits(
   userId: string,
   userEmail?: string
 ): Promise<CreditStatus> {
-  // Admin bypass
+  // Admin bypass — behavior preserved exactly
   if (isAdmin(userEmail)) {
     return {
       hasCredits: true,
@@ -41,6 +48,28 @@ export async function getUserCredits(
       usedCredits: 0,
     };
   }
+
+  // ─── Studio branch (additive) ─────────────────────────────────────────
+  // If the user is a member of a studio, their balance IS the shared pool.
+  // This branch only triggers for users who joined a studio; every existing
+  // B2C user has zero studio_members rows and falls through to the original
+  // code path below, byte-identical to pre-studio behavior.
+  const studio = await getStudioForUser(serviceClient, userId);
+  if (studio) {
+    const studioRemaining = Math.max(0, studio.totalCredits - studio.usedCredits);
+    return {
+      hasCredits: studioRemaining > 0,
+      remaining: studioRemaining,
+      isBetaMember: false,
+      isAdmin: false,
+      totalCredits: studio.totalCredits,
+      usedCredits: studio.usedCredits,
+      source: "studio",
+      studioId: studio.studioId,
+      studioSubscriptionStatus: studio.subscriptionStatus,
+    };
+  }
+  // ──────────────────────────────────────────────────────────────────────
 
   const { data: credits } = await serviceClient
     .from("user_credits")
@@ -80,8 +109,41 @@ export async function useCredit(
   userId: string,
   userEmail?: string
 ): Promise<void> {
-  // Don't deduct from admins
+  // Don't deduct from admins — behavior preserved exactly
   if (isAdmin(userEmail)) return;
+
+  // ─── Studio branch (additive) ─────────────────────────────────────────
+  // Studio members draw from the shared pool. B2C users have no
+  // studio_members row and fall through to the original RPC call below.
+  const studio = await getStudioForUser(serviceClient, userId);
+  if (studio) {
+    // Atomic conditional update: only succeeds if pool has credit left.
+    // Using .select() with WHERE guards prevents under-deducting into negative.
+    const { data: drained, error } = await serviceClient
+      .from("studio_credits")
+      .update({
+        used_credits: studio.usedCredits + 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("studio_id", studio.studioId)
+      .eq("used_credits", studio.usedCredits)        // optimistic lock
+      .lt("used_credits", studio.totalCredits)       // don't drain past total
+      .select("studio_id");
+
+    if (error) {
+      throw new Error(`studio_credits update failed: ${error.message}`);
+    }
+    if (!drained || drained.length === 0) {
+      // Either pool empty or lost the optimistic-lock race. Surface so the
+      // caller can refund / show an error rather than silently do nothing.
+      throw new Error("Studio credit pool exhausted or updated concurrently");
+    }
+    // NOTE: studio_analysis_links audit row is written by the caller in a
+    // subsequent phase once process/route.ts is updated to pass video context.
+    // For Phase A, the pool deduction alone is sufficient.
+    return;
+  }
+  // ──────────────────────────────────────────────────────────────────────
 
   // Use RPC for atomic increment to avoid race conditions
   await serviceClient.rpc("increment_used_credits", { p_user_id: userId });
