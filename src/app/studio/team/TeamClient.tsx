@@ -129,15 +129,23 @@ export default function TeamClient({
               <p className="mt-1 text-sm text-surface-200">Region: {studio.region}</p>
             )}
           </div>
-          {isOwner && (
+          <div className="flex items-center gap-2">
             <a
-              href="/studio/settings"
+              href="/studio/dashboard"
               className="inline-flex items-center gap-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 text-sm transition-colors"
             >
-              <Settings className="h-4 w-4" />
-              Settings
+              ← Dashboard
             </a>
-          )}
+            {isOwner && (
+              <a
+                href="/studio/settings"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 text-sm transition-colors"
+              >
+                <Settings className="h-4 w-4" />
+                Settings
+              </a>
+            )}
+          </div>
         </div>
 
         {/* Permanent studio invite code */}

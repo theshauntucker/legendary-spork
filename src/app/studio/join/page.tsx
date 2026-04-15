@@ -101,7 +101,7 @@ function JoinForm() {
 
     setSuccess(true);
     setTimeout(() => {
-      router.push("/studio/team");
+      router.push("/studio/dashboard");
       router.refresh();
     }, 1000);
   };
@@ -142,7 +142,7 @@ function JoinForm() {
           >
             <CheckCircle className="mx-auto h-12 w-12 text-green-400 mb-4" />
             <h2 className="text-xl font-bold">You&apos;re in!</h2>
-            <p className="mt-2 text-surface-200 text-sm">Heading to the team board…</p>
+            <p className="mt-2 text-surface-200 text-sm">Heading to your studio dashboard…</p>
           </motion.div>
         ) : (
           <form onSubmit={handleSubmit} className="glass rounded-3xl p-6 sm:p-8 space-y-5">

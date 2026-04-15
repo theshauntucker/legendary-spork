@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
           payment_type: "studio_subscription",
         },
       },
-      success_url: `${baseUrl}/studio/team?subscribed=1`,
+      success_url: `${baseUrl}/studio/dashboard?subscribed=1`,
       cancel_url: `${baseUrl}/studio/settings?subscribe=canceled`,
     });
 

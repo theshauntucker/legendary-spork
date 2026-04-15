@@ -223,9 +223,12 @@ export default function SettingsClient({
           </p>
         </div>
 
-        <div className="mt-6 text-center text-sm">
+        <div className="mt-6 text-center text-sm flex items-center justify-center gap-5">
+          <a href="/studio/dashboard" className="text-primary-400 hover:underline">
+            ← Back to dashboard
+          </a>
           <a href="/studio/team" className="text-primary-400 hover:underline">
-            ← Back to team
+            Team →
           </a>
         </div>
       </div>

@@ -102,11 +102,11 @@ export default function StudioSignupPage() {
     //    no charge today; webhook creates the credit pool on success.
     const subRes = await fetch("/api/studio/subscribe", { method: "POST" });
     if (!subRes.ok) {
-      // Studio was created successfully; just fall back to the team page
-      // so the owner can retry subscribe later from settings.
+      // Studio was created successfully; land on dashboard so the owner
+      // sees the subscription-setup banner and can retry from there.
       setSuccess(true);
       setTimeout(() => {
-        router.push("/studio/team?subscribe=pending");
+        router.push("/studio/dashboard?subscribe=pending");
         router.refresh();
       }, 1200);
       return;
@@ -119,7 +119,7 @@ export default function StudioSignupPage() {
 
     setSuccess(true);
     setTimeout(() => {
-      router.push("/studio/team");
+      router.push("/studio/dashboard");
       router.refresh();
     }, 1200);
   };
@@ -179,7 +179,7 @@ export default function StudioSignupPage() {
             <CheckCircle className="mx-auto h-12 w-12 text-green-400 mb-4" />
             <h2 className="text-xl font-bold">Studio Created</h2>
             <p className="mt-2 text-surface-200 text-sm">
-              Taking you to your team board...
+              Taking you to your studio dashboard...
             </p>
           </motion.div>
         ) : (
