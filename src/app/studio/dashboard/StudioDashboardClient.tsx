@@ -204,12 +204,10 @@ export default function StudioDashboardClient({
             icon={<Calendar className="h-6 w-6" />}
             eyebrow="Season"
             title="Season Schedule"
-            body="Add your competition weekends so every entry, time, and stage is in one place."
+            body="Add your competition weekends and assign the routines you're bringing. Collision detection picks it up automatically."
             actionLabel="Add Competition"
             href="/studio/schedule"
             accent="gold"
-            disabled
-            disabledHint="Launching with the schedule release"
           />
           <HeroTile
             icon={<Users className="h-6 w-6" />}
@@ -256,8 +254,6 @@ export default function StudioDashboardClient({
                 done={checklist.loadSchedule}
                 label="Load your competition schedule"
                 href="/studio/schedule"
-                disabled
-                disabledHint="Coming with schedule release"
               />
               <ChecklistRow
                 done={checklist.searchMusic}

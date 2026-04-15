@@ -40,10 +40,10 @@ export default async function StudioDashboardPage() {
     .select("id", { count: "exact", head: true })
     .eq("studio_id", membership.studioId);
 
-  // Schedule activity (Phase G will populate schedule-related rows via
-  // studio_routine_music.competition_names; fall back to counting any row)
+  // Schedule activity: Phase G added studio_competitions; checklist now
+  // auto-completes as soon as the owner adds one competition row.
   const { count: scheduleRowCount } = await service
-    .from("studio_routine_music")
+    .from("studio_competitions")
     .select("id", { count: "exact", head: true })
     .eq("studio_id", membership.studioId);
 
