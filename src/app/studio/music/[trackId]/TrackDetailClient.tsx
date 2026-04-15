@@ -12,7 +12,12 @@ import {
   Save,
   Trash2,
   AlertCircle,
+  CheckCircle2,
+  ShieldAlert,
   ExternalLink,
+  Plus,
+  Check,
+  Wand2,
 } from "lucide-react";
 
 interface Track {
@@ -50,6 +55,25 @@ function formatDuration(ms: number | null): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
+interface LyricFlags {
+  profanity?: boolean;
+  sexual_content?: boolean;
+  drug_references?: boolean;
+  violence?: boolean;
+  religious_conflict?: boolean;
+}
+
+interface SimilarTrack {
+  spotifyTrackId: string;
+  name: string;
+  artists: string[];
+  albumImageUrl: string | null;
+  durationMs: number;
+  explicit: boolean;
+  tempoBpm: number | null;
+  energy: number | null;
+}
+
 export default function TrackDetailClient({
   track,
   linkedRoutines,
@@ -64,7 +88,85 @@ export default function TrackDetailClient({
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
 
+  // ─── Lyric-check state ─────────────────────────────────────────────
+  const [lyricsStatus, setLyricsStatus] = useState<string | null>(track.lyricsStatus);
+  const [lyricsFlags, setLyricsFlags] = useState<LyricFlags | null>(
+    (track.lyricsFlags as LyricFlags | null) ?? null
+  );
+  const [ageRating, setAgeRating] = useState<string | null>(track.ageRating);
+  const [lyricsNote, setLyricsNote] = useState<string>("");
+  const [lyricsConfidence, setLyricsConfidence] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
+
+  // ─── Similar-songs state ───────────────────────────────────────────
+  const [similar, setSimilar] = useState<SimilarTrack[] | null>(null);
+  const [similarLoading, setSimilarLoading] = useState(false);
+  const [similarError, setSimilarError] = useState("");
+  const [savedSpotifyIds, setSavedSpotifyIds] = useState<Set<string>>(new Set());
+  const [savingId, setSavingId] = useState<string | null>(null);
+
+  // Filters for similar-songs query
+  const [filterMinBpm, setFilterMinBpm] = useState<string>("");
+  const [filterMaxBpm, setFilterMaxBpm] = useState<string>("");
+  const [filterEnergy, setFilterEnergy] = useState<string>("");
+
   const dirty = (notes.trim() || null) !== (track.notes ?? null);
+  const isChecked = lyricsStatus && lyricsStatus !== "unchecked";
+
+  const checkLyrics = async () => {
+    setChecking(true);
+    setError("");
+    const res = await fetch("/api/studio/music/check-lyrics", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ trackId: track.id }),
+    });
+    setChecking(false);
+    if (!res.ok) {
+      const { error: apiErr } = await res.json().catch(() => ({ error: "Check failed" }));
+      setError(apiErr || "Check failed");
+      return;
+    }
+    const data = await res.json();
+    setLyricsStatus(data.lyrics_status ?? null);
+    setLyricsFlags((data.lyrics_flags as LyricFlags | null) ?? null);
+    setAgeRating(data.age_rating ?? null);
+    setLyricsConfidence(data.confidence ?? null);
+    setLyricsNote(data.notes ?? "");
+    router.refresh();
+  };
+
+  const loadSimilar = async () => {
+    setSimilarLoading(true);
+    setSimilarError("");
+    const params = new URLSearchParams({ trackId: track.id, limit: "20" });
+    if (filterMinBpm.trim()) params.set("minBpm", filterMinBpm.trim());
+    if (filterMaxBpm.trim()) params.set("maxBpm", filterMaxBpm.trim());
+    if (filterEnergy.trim()) params.set("targetEnergy", filterEnergy.trim());
+    const res = await fetch(`/api/studio/music/similar?${params.toString()}`);
+    setSimilarLoading(false);
+    if (!res.ok) {
+      const { error: apiErr } = await res.json().catch(() => ({ error: "Similar failed" }));
+      setSimilarError(apiErr || "Similar failed");
+      setSimilar([]);
+      return;
+    }
+    const data = (await res.json()) as { results: SimilarTrack[] };
+    setSimilar(data.results);
+  };
+
+  const saveSimilar = async (spotifyTrackId: string) => {
+    setSavingId(spotifyTrackId);
+    const res = await fetch("/api/studio/music/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ spotifyTrackId }),
+    });
+    setSavingId(null);
+    if (res.ok) {
+      setSavedSpotifyIds((prev) => new Set(prev).add(spotifyTrackId));
+    }
+  };
 
   const saveNotes = async () => {
     setSaving(true);
@@ -167,25 +269,73 @@ export default function TrackDetailClient({
           </div>
         </div>
 
-        {/* Lyrics check — Phase E */}
+        {/* Lyric safety check */}
         <div className="glass rounded-2xl p-5 mb-6">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-gold-300 flex-shrink-0 mt-0.5" />
-            <div className="min-w-0">
-              <h2 className="font-semibold">Lyric safety check</h2>
-              <p className="text-sm text-surface-200 mt-1">
-                Automatic lyric screening and age-division recommendations ship
-                in the next Music Hub release. For now, verify manually for
-                profanity, sexual content, and age-appropriateness.
+          <div className="flex items-start justify-between gap-4 mb-3">
+            <h2 className="font-semibold flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4 text-gold-300" />
+              Lyric safety check
+            </h2>
+            {!isChecked ? (
+              <button
+                onClick={checkLyrics}
+                disabled={checking}
+                className="inline-flex items-center gap-1.5 rounded-full bg-gold-500 hover:bg-gold-400 text-surface-950 px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50"
+              >
+                {checking ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Check lyrics
+                  </>
+                )}
+              </button>
+            ) : (
+              <AgeRatingBadge rating={ageRating} />
+            )}
+          </div>
+
+          {!isChecked && (
+            <p className="text-sm text-surface-200">
+              We&apos;ll run this song through Claude to flag profanity, sexual
+              content, drug references, violence, and religious conflict —
+              plus suggest safe age divisions. One click.
+            </p>
+          )}
+
+          {isChecked && lyricsStatus === "unavailable" && (
+            <div className="flex items-start gap-2 text-sm text-surface-200">
+              <AlertCircle className="h-4 w-4 text-gold-300 flex-shrink-0 mt-0.5" />
+              <p>
+                Unable to verify lyrics automatically.{" "}
+                {lyricsNote || "Please review manually before competition."}
               </p>
-              {track.lyricsStatus && track.lyricsStatus !== "unchecked" && (
-                <p className="text-xs text-surface-200/80 mt-2">
-                  Current status: <strong>{track.lyricsStatus}</strong>
-                  {track.ageRating ? ` · ${track.ageRating}` : ""}
+            </div>
+          )}
+
+          {isChecked && lyricsStatus !== "unavailable" && (
+            <div className="space-y-3">
+              {lyricsFlags && (
+                <ul className="flex flex-wrap gap-1.5">
+                  <FlagPill label="Profanity" on={!!lyricsFlags.profanity} />
+                  <FlagPill label="Sexual" on={!!lyricsFlags.sexual_content} />
+                  <FlagPill label="Drugs" on={!!lyricsFlags.drug_references} />
+                  <FlagPill label="Violence" on={!!lyricsFlags.violence} />
+                  <FlagPill label="Religious" on={!!lyricsFlags.religious_conflict} />
+                </ul>
+              )}
+              {lyricsNote && (
+                <p className="text-sm text-surface-200">{lyricsNote}</p>
+              )}
+              {lyricsConfidence && lyricsConfidence !== "high" && (
+                <p className="text-xs text-surface-200 italic">
+                  Confidence: <strong>{lyricsConfidence}</strong> — double-check
+                  if the song matters.
                 </p>
               )}
             </div>
-          </div>
+          )}
         </div>
 
         {/* Collision check — Phase F */}
@@ -196,6 +346,159 @@ export default function TrackDetailClient({
             routine linking ships. Until then, treat the library as a private
             shortlist for your team.
           </p>
+        </div>
+
+        {/* Similar songs */}
+        <div className="glass rounded-2xl p-5 mb-6">
+          <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
+            <div>
+              <h2 className="font-semibold flex items-center gap-2">
+                <Wand2 className="h-4 w-4 text-accent-300" />
+                Find me something like this
+              </h2>
+              <p className="text-xs text-surface-200 mt-1">
+                Seeded from this track&apos;s audio features. Tune the filters
+                to narrow the mood.
+              </p>
+            </div>
+            <button
+              onClick={loadSimilar}
+              disabled={similarLoading}
+              className="inline-flex items-center gap-1.5 rounded-full bg-accent-500 hover:bg-accent-400 disabled:opacity-50 text-white px-4 py-2 text-sm font-semibold transition-colors"
+            >
+              {similarLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>Suggest songs</>
+              )}
+            </button>
+          </div>
+
+          {/* Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+            <div>
+              <label className="block text-xs text-surface-200 mb-1">Min BPM</label>
+              <input
+                type="number"
+                value={filterMinBpm}
+                onChange={(e) => setFilterMinBpm(e.target.value)}
+                placeholder={track.tempoBpm ? String(Math.max(60, Math.round(track.tempoBpm - 15))) : "60"}
+                min={40}
+                max={220}
+                className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:border-accent-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-surface-200 mb-1">Max BPM</label>
+              <input
+                type="number"
+                value={filterMaxBpm}
+                onChange={(e) => setFilterMaxBpm(e.target.value)}
+                placeholder={track.tempoBpm ? String(Math.round(track.tempoBpm + 15)) : "150"}
+                min={40}
+                max={220}
+                className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:border-accent-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-surface-200 mb-1">
+                Target energy (0 – 1)
+              </label>
+              <input
+                type="number"
+                value={filterEnergy}
+                onChange={(e) => setFilterEnergy(e.target.value)}
+                placeholder={track.energy !== null ? String(track.energy) : "0.65"}
+                step={0.05}
+                min={0}
+                max={1}
+                className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-white focus:outline-none focus:border-accent-500"
+              />
+            </div>
+          </div>
+
+          {similarError && <p className="text-sm text-red-400 mb-3">{similarError}</p>}
+
+          {similar && similar.length === 0 && !similarLoading && (
+            <p className="text-sm text-surface-200 text-center py-4">
+              No suggestions matched those filters.
+            </p>
+          )}
+
+          {similar && similar.length > 0 && (
+            <ul className="space-y-2">
+              {similar.map((s) => {
+                const saved = savedSpotifyIds.has(s.spotifyTrackId);
+                return (
+                  <li
+                    key={s.spotifyTrackId}
+                    className="flex items-center gap-3 rounded-xl bg-white/5 border border-white/10 p-3"
+                  >
+                    {s.albumImageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={s.albumImageUrl}
+                        alt=""
+                        className="h-12 w-12 rounded-md object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="h-12 w-12 rounded-md bg-surface-900 flex-shrink-0 flex items-center justify-center">
+                        <Music className="h-4 w-4 text-surface-200" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">
+                        {s.name}
+                        {s.explicit && (
+                          <span className="ml-2 text-[10px] font-bold bg-white/10 text-surface-200 px-1.5 py-0.5 rounded">
+                            E
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-xs text-surface-200 truncate">
+                        {s.artists.join(", ")}
+                      </p>
+                      <div className="mt-1 flex flex-wrap gap-1.5">
+                        {s.tempoBpm !== null && (
+                          <Chip icon={<Gauge className="h-3 w-3" />} label={`${s.tempoBpm} bpm`} />
+                        )}
+                        {s.energy !== null && (
+                          <Chip
+                            icon={<Activity className="h-3 w-3" />}
+                            label={`energy ${Math.round(s.energy * 100)}`}
+                          />
+                        )}
+                        <Chip icon={<Clock className="h-3 w-3" />} label={formatDuration(s.durationMs)} />
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => saveSimilar(s.spotifyTrackId)}
+                      disabled={saved || savingId === s.spotifyTrackId}
+                      className={`flex-shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        saved
+                          ? "bg-green-500/20 text-green-300 cursor-default"
+                          : savingId === s.spotifyTrackId
+                          ? "bg-white/10 text-surface-200"
+                          : "bg-accent-500 hover:bg-accent-400 text-white"
+                      }`}
+                    >
+                      {saved ? (
+                        <>
+                          <Check className="h-3.5 w-3.5" /> Saved
+                        </>
+                      ) : savingId === s.spotifyTrackId ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <>
+                          <Plus className="h-3.5 w-3.5" /> Add
+                        </>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
 
         {/* Notes */}
@@ -295,6 +598,67 @@ function Chip({ icon, label }: { icon: React.ReactNode; label: string }) {
     <span className="inline-flex items-center gap-1 rounded-full bg-white/5 text-surface-200 px-2.5 py-1 text-xs font-medium">
       {icon}
       {label}
+    </span>
+  );
+}
+
+function FlagPill({ label, on }: { label: string; on: boolean }) {
+  if (on) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 text-red-300 border border-red-500/30 px-2.5 py-0.5 text-xs font-medium">
+        <AlertCircle className="h-3 w-3" />
+        {label}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 text-green-300/80 border border-green-500/20 px-2.5 py-0.5 text-xs font-medium">
+      <CheckCircle2 className="h-3 w-3" />
+      {label}
+    </span>
+  );
+}
+
+function AgeRatingBadge({ rating }: { rating: string | null }) {
+  const map: Record<
+    string,
+    { label: string; className: string; icon: React.ReactNode }
+  > = {
+    all_ages: {
+      label: "All Ages",
+      className: "bg-green-500/15 text-green-300 border-green-500/40",
+      icon: <CheckCircle2 className="h-3.5 w-3.5" />,
+    },
+    teen_plus: {
+      label: "Teen+",
+      className: "bg-yellow-500/15 text-yellow-200 border-yellow-500/40",
+      icon: <ShieldAlert className="h-3.5 w-3.5" />,
+    },
+    senior_only: {
+      label: "Senior Only",
+      className: "bg-orange-500/15 text-orange-200 border-orange-500/40",
+      icon: <ShieldAlert className="h-3.5 w-3.5" />,
+    },
+    flagged: {
+      label: "Flagged",
+      className: "bg-red-500/15 text-red-300 border-red-500/40",
+      icon: <AlertCircle className="h-3.5 w-3.5" />,
+    },
+  };
+  if (!rating || !map[rating]) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 text-surface-200 border border-white/10 px-3 py-1 text-xs font-semibold">
+        Unrated
+      </span>
+    );
+  }
+  const cfg = map[rating];
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${cfg.className}`}
+    >
+      {cfg.icon}
+      {cfg.label}
     </span>
   );
 }
