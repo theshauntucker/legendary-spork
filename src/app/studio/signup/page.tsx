@@ -98,28 +98,12 @@ export default function StudioSignupPage() {
       return;
     }
 
-    // 3. Redirect to Stripe for the trial subscription. 30-day free trial,
-    //    no charge today; webhook creates the credit pool on success.
-    const subRes = await fetch("/api/studio/subscribe", { method: "POST" });
-    if (!subRes.ok) {
-      // Studio was created successfully; land on dashboard so the owner
-      // sees the subscription-setup banner and can retry from there.
-      setSuccess(true);
-      setTimeout(() => {
-        router.push("/studio/dashboard?subscribe=pending");
-        router.refresh();
-      }, 1200);
-      return;
-    }
-    const { url } = await subRes.json();
-    if (url) {
-      window.location.href = url;
-      return;
-    }
-
+    // 3. Land directly on the studio dashboard. No credit card required
+    //    for the 30-day trial — owner can add payment method from Settings
+    //    before the trial ends to continue past day 30.
     setSuccess(true);
     setTimeout(() => {
-      router.push("/studio/dashboard");
+      router.push("/studio/dashboard?trial=started");
       router.refresh();
     }, 1200);
   };
@@ -149,8 +133,7 @@ export default function StudioSignupPage() {
             Your Studio&apos;s Private Edge
           </h1>
           <p className="mt-3 text-surface-200 text-sm">
-            30-day free trial. Shared credit pool. Music Hub with collision
-            detection. Team board. Cancel anytime.
+            <span className="text-emerald-300 font-semibold">30-day free trial — no credit card required.</span> Shared credit pool. Music Hub. Team board. Cancel anytime.
           </p>
         </div>
 
@@ -304,7 +287,7 @@ export default function StudioSignupPage() {
             </button>
 
             <p className="text-xs text-surface-200 text-center">
-              No charge today. Card required. Cancel anytime in Settings.
+              <span className="text-emerald-300 font-semibold">No credit card required.</span> Full access for 30 days. Cancel anytime.
             </p>
           </form>
         )}

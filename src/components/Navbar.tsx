@@ -10,6 +10,7 @@ const navLinks = [
   { label: "How It Works", href: "/#how-it-works" },
   { label: "Events", href: "/events", icon: "calendar", badge: "New" },
   { label: "Pricing", href: "/#pricing" },
+  { label: "Studio", href: "/studio/signup", badge: "New" },
   { label: "FAQ", href: "/#faq" },
 ];
 

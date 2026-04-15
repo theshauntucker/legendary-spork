@@ -47,11 +47,11 @@ export default function Pricing() {
             Simple, honest pricing
           </p>
           <h2 className="mt-3 text-4xl sm:text-5xl font-bold font-[family-name:var(--font-display)]">
-            Your First Analysis Is{" "}
-            <span className="gradient-text">Always Free</span>
+            From First Analysis to{" "}
+            <span className="gradient-text">Whole-Studio Software</span>
           </h2>
           <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
-            No credit card needed to start. Upgrade whenever you&apos;re ready — or lock in our introductory subscription rate before it goes up.
+            Dancers and moms start free. Studio owners get a <span className="text-white font-semibold">30-day free trial — no credit card required.</span> Launch pricing locked in forever.
           </p>
         </motion.div>
 
@@ -243,44 +243,81 @@ export default function Pricing() {
           </motion.div>
         </div>
 
-        {/* Studio tier — full-width contact card */}
+        {/* ── STUDIO & ACADEMY TIER — flagship card ── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.35 }}
-          className="mt-5 relative rounded-3xl overflow-hidden border border-white/10 bg-white/3 backdrop-blur-sm"
+          className="mt-8 relative rounded-3xl overflow-hidden border-2 border-gold-500/50 ring-2 ring-gold-500/20 ring-offset-2 ring-offset-transparent"
+          style={{ boxShadow: "0 0 50px rgba(234,179,8,0.18)" }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-900/30 via-transparent to-gold-900/20" />
-          <div className="relative flex flex-col sm:flex-row items-center gap-6 px-8 py-7">
-            {/* Icon */}
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-500/30 to-primary-500/30 border border-white/10">
-              <Sparkles className="h-7 w-7 text-gold-300" />
-            </div>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-900/40 via-accent-900/30 to-gold-900/30" />
+          <div className="absolute -top-3 left-8 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-gold-500 via-accent-500 to-primary-500 px-3 py-1 text-xs font-bold text-white z-10">
+            <Crown className="h-3 w-3" />
+            RUNS YOUR WHOLE STUDIO
+          </div>
 
-            {/* Copy */}
-            <div className="flex-1 text-center sm:text-left">
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gold-400 mb-1">
-                <Crown className="h-3 w-3" />
-                Studio &amp; Academy Plan
+          <div className="relative px-6 sm:px-10 py-9">
+            <div className="grid md:grid-cols-5 gap-8 items-center">
+              {/* Left: headline + price */}
+              <div className="md:col-span-2">
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gold-300 mb-2">
+                  <Sparkles className="h-3 w-3" />
+                  Studio &amp; Academy Plan
+                </div>
+                <h3 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight">
+                  The whole studio on <span className="gradient-text">one board.</span>
+                </h3>
+                <div className="flex items-baseline gap-1 mt-4">
+                  <span className="text-5xl font-extrabold text-white">$99</span>
+                  <span className="text-surface-200">/month</span>
+                </div>
+                <p className="mt-1 text-sm font-bold text-emerald-300">
+                  🎁 30-day free trial · No credit card required
+                </p>
+                <p className="mt-1 text-xs text-gold-300 font-semibold">
+                  🔒 Founding-studio pricing — locked in forever
+                </p>
+
+                <a
+                  href="/studio/signup"
+                  className="mt-5 w-full inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-6 py-3.5 font-bold text-white hover:opacity-90 transition-opacity animate-pulse-glow text-sm"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Start 30-Day Free Trial
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+                <p className="mt-2 text-center text-xs text-surface-200/70">
+                  Takes 60 seconds. Cancel anytime.
+                </p>
               </div>
-              <h3 className="text-xl font-extrabold text-white">
-                $99<span className="text-base font-semibold text-surface-200">/month</span>
-                <span className="ml-3 text-sm font-normal text-surface-200">· 100 analyses/month · entire studio covered</span>
-              </h3>
-              <p className="mt-1 text-sm text-surface-200 max-w-xl">
-                Built for studios, academies, and cheer programs that need to analyze multiple routines across teams. One subscription covers your whole studio — coaches, solos, groups, everything.
-              </p>
-            </div>
 
-            {/* CTA */}
-            <a
-              href="mailto:22tucker22@comcast.net?subject=Studio%20Plan%20Inquiry&body=Hi%20Shaun%2C%20I%27m%20interested%20in%20the%20RoutineX%20Studio%20Plan%20for%20my%20studio."
-              className="shrink-0 flex items-center gap-2 rounded-full border border-gold-400/60 px-6 py-3 font-bold text-gold-300 hover:bg-gold-500/10 transition-colors text-sm whitespace-nowrap"
-            >
-              Contact for Studio Access
-              <ArrowRight className="h-4 w-4" />
-            </a>
+              {/* Right: feature grid */}
+              <div className="md:col-span-3">
+                <p className="text-sm text-surface-200 mb-4">
+                  One subscription covers your whole staff. Every choreographer gets analyses from a shared 100-analysis pool. Plus tools nobody else has built for studios:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {[
+                    { name: "Team Board", desc: "Every routine, every dancer — one pipeline" },
+                    { name: "Music Hub", desc: "In-state song collision detection" },
+                    { name: "Season Schedule", desc: "Competition calendar, built-in" },
+                    { name: "Shared Credit Pool", desc: "100 analyses/mo across your staff" },
+                    { name: "Coach's Playbook", desc: "Auto-generated notes for every routine" },
+                    { name: "Dancer Roster", desc: "Track every dancer, every event" },
+                  ].map((f) => (
+                    <div key={f.name} className="flex items-start gap-2.5 rounded-xl bg-white/5 border border-white/10 px-3.5 py-3">
+                      <Check className="h-4 w-4 text-gold-400 mt-0.5 shrink-0" />
+                      <div>
+                        <div className="text-sm font-bold text-white">{f.name}</div>
+                        <div className="text-xs text-surface-200/80">{f.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </motion.div>
 
