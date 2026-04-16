@@ -21,7 +21,11 @@ import {
   Wand2,
   Link as LinkIcon,
   X,
+  Play,
+  Pause,
+  VolumeX,
 } from "lucide-react";
+import { useRef } from "react";
 
 interface Track {
   id: string;
@@ -33,6 +37,7 @@ interface Track {
   energy: number | null;
   danceability: number | null;
   albumImageUrl: string | null;
+  previewUrl: string | null;
   lyricsStatus: string | null;
   lyricsFlags: Record<string, unknown> | null;
   ageRating: string | null;
@@ -90,6 +95,39 @@ export default function TrackDetailClient({
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
+
+  // ─── Preview playback state ─────────────────────────────────────────
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const togglePreview = () => {
+    if (!track.previewUrl) return;
+
+    if (playing && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setPlaying(false);
+      return;
+    }
+
+    const audio = new Audio(track.previewUrl);
+    audio.volume = 0.8;
+    audio.addEventListener("ended", () => setPlaying(false));
+    audio.addEventListener("error", () => setPlaying(false));
+    audio.play().catch(() => setPlaying(false));
+    audioRef.current = audio;
+    setPlaying(true);
+  };
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   // ─── Lyric-check state ─────────────────────────────────────────────
   const [lyricsStatus, setLyricsStatus] = useState<string | null>(track.lyricsStatus);
@@ -340,18 +378,57 @@ export default function TrackDetailClient({
 
         {/* Header card */}
         <div className="glass rounded-3xl p-5 sm:p-6 mb-6 flex gap-5">
-          {track.albumImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={track.albumImageUrl}
-              alt=""
-              className="h-28 w-28 sm:h-36 sm:w-36 rounded-xl object-cover flex-shrink-0"
-            />
-          ) : (
-            <div className="h-28 w-28 sm:h-36 sm:w-36 rounded-xl bg-surface-900 flex-shrink-0 flex items-center justify-center">
-              <Music className="h-8 w-8 text-surface-200" />
-            </div>
-          )}
+          {/* Album art — doubles as play/pause for 30-sec Spotify preview */}
+          <button
+            type="button"
+            onClick={togglePreview}
+            disabled={!track.previewUrl}
+            className="relative h-28 w-28 sm:h-36 sm:w-36 rounded-xl overflow-hidden flex-shrink-0 group/art focus:outline-none focus:ring-2 focus:ring-accent-400 disabled:cursor-default"
+            aria-label={
+              !track.previewUrl
+                ? "No preview available"
+                : playing
+                ? "Pause 30-second preview"
+                : "Play 30-second preview"
+            }
+          >
+            {track.albumImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={track.albumImageUrl}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="h-full w-full bg-surface-900 flex items-center justify-center">
+                <Music className="h-8 w-8 text-surface-200" />
+              </div>
+            )}
+            {/* Overlay */}
+            {track.previewUrl && (
+              <span
+                className={`absolute inset-0 flex items-center justify-center transition-opacity ${
+                  playing
+                    ? "bg-black/60 opacity-100"
+                    : "bg-black/40 opacity-0 group-hover/art:opacity-100"
+                }`}
+              >
+                {playing ? (
+                  <Pause className="h-8 w-8 text-white" fill="currentColor" />
+                ) : (
+                  <Play className="h-8 w-8 text-white" fill="currentColor" />
+                )}
+              </span>
+            )}
+            {!track.previewUrl && (
+              <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover/art:opacity-100 transition-opacity">
+                <VolumeX className="h-6 w-6 text-white/60" />
+              </span>
+            )}
+            {playing && (
+              <span className="pointer-events-none absolute bottom-0 left-0 h-1 w-full bg-accent-400/80 animate-pulse" />
+            )}
+          </button>
 
           <div className="min-w-0 flex-1">
             <p className="text-xs uppercase tracking-widest text-accent-400 mb-1 inline-flex items-center gap-1.5">
@@ -379,7 +456,24 @@ export default function TrackDetailClient({
               )}
               <Chip icon={<Clock className="h-3 w-3" />} label={formatDuration(track.durationMs)} />
             </div>
-            <div className="mt-3">
+            <div className="mt-3 flex items-center gap-4">
+              {track.previewUrl && (
+                <button
+                  type="button"
+                  onClick={togglePreview}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent-300 hover:text-white transition-colors"
+                >
+                  {playing ? (
+                    <>
+                      <Pause className="h-3.5 w-3.5" fill="currentColor" /> Pause preview
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-3.5 w-3.5" fill="currentColor" /> Play 30s preview
+                    </>
+                  )}
+                </button>
+              )}
               <a
                 href={spotifyUrl}
                 target="_blank"

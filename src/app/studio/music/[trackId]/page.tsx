@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireStudioMembership } from "@/lib/studio/auth";
 import { createServiceClient } from "@/lib/supabase/server";
+import { getTrackById } from "@/lib/studio/spotify";
 import TrackDetailClient from "./TrackDetailClient";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,16 @@ export default async function TrackDetailPage({
 
   if (!track) notFound();
 
+  // Fetch the Spotify preview URL (30-second clip) — nice-to-have, so
+  // we swallow errors silently and fall back to null.
+  let previewUrl: string | null = null;
+  try {
+    const spotifyData = await getTrackById(track.spotify_track_id);
+    previewUrl = spotifyData?.previewUrl ?? null;
+  } catch {
+    // Spotify creds may not be configured — no preview, no problem.
+  }
+
   // Routines linked to this track (Phase F will populate via the
   // link-routine endpoint; for now may be empty).
   const { data: linkedRoutines } = await service
@@ -44,6 +55,7 @@ export default async function TrackDetailPage({
         energy: track.energy,
         danceability: track.danceability,
         albumImageUrl: track.album_image_url,
+        previewUrl,
         lyricsStatus: track.lyrics_status,
         lyricsFlags: track.lyrics_flags,
         ageRating: track.age_rating,

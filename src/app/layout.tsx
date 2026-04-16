@@ -166,7 +166,7 @@ export default function RootLayout({
       <body>
         <CountdownBanner />
         <Navbar />
-        {children}
+        <main className="pt-24">{children}</main>
         <Analytics />
         <SpeedInsights />
         {/* Google AdSense */}
