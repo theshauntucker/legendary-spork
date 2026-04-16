@@ -12,6 +12,9 @@ import {
   Clock,
   Activity,
   Gauge,
+  Play,
+  Pause,
+  VolumeX,
 } from "lucide-react";
 
 interface Studio {
@@ -42,6 +45,7 @@ interface SearchResult {
   albumImageUrl: string | null;
   durationMs: number;
   explicit: boolean;
+  previewUrl: string | null;
   tempoBpm: number | null;
   energy: number | null;
   danceability: number | null;
@@ -71,6 +75,76 @@ export default function MusicClient({
   const [savingId, setSavingId] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestIdRef = useRef(0);
+
+  // ── Preview playback state ──
+  // Which track's 30-second preview is currently playing (or null).
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  // Track id whose audio we've already tried and is missing a preview_url.
+  // We use this to briefly flash a "no preview available" hint next to
+  // the track's play button.
+  const [noPreviewId, setNoPreviewId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Stop any in-flight playback on unmount or when navigating away.
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  // Also stop whatever is playing when the user starts a new search —
+  // feels weird to have a track from the previous query keep going.
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setPlayingId(null);
+  }, [query]);
+
+  const togglePreview = (trackId: string, previewUrl: string | null) => {
+    // No preview from Spotify — let the user know (e.g. some labels strip it).
+    if (!previewUrl) {
+      setNoPreviewId(trackId);
+      setTimeout(() => {
+        setNoPreviewId((cur) => (cur === trackId ? null : cur));
+      }, 1800);
+      return;
+    }
+
+    // Clicking the currently-playing track → pause.
+    if (playingId === trackId && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setPlayingId(null);
+      return;
+    }
+
+    // Switching tracks → stop the current one first.
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    const audio = new Audio(previewUrl);
+    audio.volume = 0.8;
+    audio.addEventListener("ended", () => {
+      setPlayingId((cur) => (cur === trackId ? null : cur));
+    });
+    audio.addEventListener("error", () => {
+      setPlayingId((cur) => (cur === trackId ? null : cur));
+    });
+    audio.play().catch(() => {
+      // Autoplay policies or network hiccup — reset state silently.
+      setPlayingId((cur) => (cur === trackId ? null : cur));
+    });
+    audioRef.current = audio;
+    setPlayingId(trackId);
+  };
 
   // Lazy-loaded collision state for every library tile. One batch call.
   type CollisionState = "green" | "yellow" | "red";
@@ -214,22 +288,62 @@ export default function MusicClient({
             <ul className="mt-5 space-y-2">
               {results.map((r) => {
                 const saved = savedIds.has(r.spotifyTrackId);
+                const isPlaying = playingId === r.spotifyTrackId;
+                const showNoPreview = noPreviewId === r.spotifyTrackId;
                 return (
                   <li
                     key={r.spotifyTrackId}
                     className="flex items-center gap-3 rounded-xl bg-white/5 border border-white/10 p-3 hover:bg-white/10 transition-colors"
                   >
-                    {r.albumImageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={r.albumImageUrl}
-                        alt=""
-                        className="h-12 w-12 rounded-md object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="h-12 w-12 rounded-md bg-surface-900 flex-shrink-0 flex items-center justify-center">
-                        <Music className="h-4 w-4 text-surface-200" />
-                      </div>
+                    {/* Album art doubles as a play / pause button. */}
+                    <button
+                      type="button"
+                      onClick={() => togglePreview(r.spotifyTrackId, r.previewUrl)}
+                      className="relative h-12 w-12 rounded-md overflow-hidden flex-shrink-0 group/art focus:outline-none focus:ring-2 focus:ring-accent-400"
+                      aria-label={
+                        !r.previewUrl
+                          ? "No 30-second preview available for this track"
+                          : isPlaying
+                          ? `Pause preview of ${r.name}`
+                          : `Play 30-second preview of ${r.name}`
+                      }
+                    >
+                      {r.albumImageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={r.albumImageUrl}
+                          alt=""
+                          className="h-12 w-12 object-cover"
+                        />
+                      ) : (
+                        <div className="h-12 w-12 bg-surface-900 flex items-center justify-center">
+                          <Music className="h-4 w-4 text-surface-200" />
+                        </div>
+                      )}
+                      {/* Overlay: play/pause icon (or muted icon if no preview). */}
+                      <span
+                        className={`absolute inset-0 flex items-center justify-center transition-opacity ${
+                          isPlaying
+                            ? "bg-black/60 opacity-100"
+                            : "bg-black/40 opacity-0 group-hover/art:opacity-100"
+                        }`}
+                      >
+                        {!r.previewUrl ? (
+                          <VolumeX className="h-5 w-5 text-white/70" />
+                        ) : isPlaying ? (
+                          <Pause className="h-5 w-5 text-white" fill="currentColor" />
+                        ) : (
+                          <Play className="h-5 w-5 text-white" fill="currentColor" />
+                        )}
+                      </span>
+                      {isPlaying && (
+                        <span className="pointer-events-none absolute bottom-0 left-0 h-0.5 w-full bg-accent-400/80 animate-pulse" />
+                      )}
+                    </button>
+                    {showNoPreview && (
+                      <span className="text-[10px] text-surface-200/80 -ml-1">
+                        No preview
+                      </span>
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="font-medium truncate">
