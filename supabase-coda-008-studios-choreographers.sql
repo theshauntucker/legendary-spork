@@ -1,17 +1,58 @@
 -- Coda migration 008: studios + choreographers directory + routine credits + seeds
 
+-- Studios table: may already exist with a different schema from supabase-studio.sql
+-- (id, name, owner_user_id, invite_code, region, created_at). Additively evolve it
+-- to the Coda schema so legacy rows (e.g. "RoutineX HQ") are preserved.
 create table if not exists public.studios (
   id uuid default gen_random_uuid() primary key,
-  slug text unique not null,
   name text not null,
-  city text,
-  state text,
-  website text,
-  logo_gradient jsonb,
-  claimed_by uuid references public.profiles(id),
-  verified boolean default false,
   created_at timestamptz default now()
 );
+
+alter table public.studios add column if not exists slug text;
+alter table public.studios add column if not exists city text;
+alter table public.studios add column if not exists state text;
+alter table public.studios add column if not exists website text;
+alter table public.studios add column if not exists logo_gradient jsonb;
+alter table public.studios add column if not exists claimed_by uuid references public.profiles(id);
+alter table public.studios add column if not exists verified boolean default false;
+
+-- Backfill slug for any legacy rows that don't have one.
+update public.studios
+set slug = lower(regexp_replace(coalesce(name, id::text), '[^a-zA-Z0-9]+', '-', 'g'))
+where slug is null;
+
+-- Now enforce uniqueness + not-null on slug (idempotent).
+do $$
+begin
+  if not exists (
+    select 1 from pg_indexes where schemaname='public' and indexname='studios_slug_key'
+  ) then
+    alter table public.studios add constraint studios_slug_key unique (slug);
+  end if;
+exception when duplicate_table then null;
+end $$;
+
+alter table public.studios alter column slug set not null;
+
+-- Legacy columns from supabase-studio.sql (owner_user_id, invite_code) were not-null.
+-- The Coda schema uses claimed_by instead, so relax the legacy not-null constraints
+-- to let seed rows through.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema='public' and table_name='studios' and column_name='owner_user_id'
+  ) then
+    alter table public.studios alter column owner_user_id drop not null;
+  end if;
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema='public' and table_name='studios' and column_name='invite_code'
+  ) then
+    alter table public.studios alter column invite_code drop not null;
+  end if;
+end $$;
 
 create table if not exists public.choreographers (
   id uuid default gen_random_uuid() primary key,

@@ -1,6 +1,26 @@
 -- Coda migration 004: achievements (trophy wall) + backfill from analyses >= 260
 -- Relies on profiles + visibility_settings from migrations 001-003.
 
+-- Ensure optional videos columns referenced by the backfill exist (idempotent).
+alter table public.videos add column if not exists competition_name text;
+alter table public.videos add column if not exists competition_date date;
+
+-- Drop legacy achievements table (from supabase-dancer-tracking.sql) if present.
+-- That older schema (user_id, dancer_name, achievement_type, achievement_data, earned_at)
+-- collides with the Coda trophy wall schema defined below. Legacy table is empty
+-- in production (verified) and was never referenced by shipped UI, so dropping is safe.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'achievements'
+      and column_name = 'dancer_name'
+  ) then
+    drop table public.achievements cascade;
+  end if;
+end $$;
+
 create table if not exists public.achievements (
   id uuid default gen_random_uuid() primary key,
   profile_id uuid references public.profiles(id) on delete cascade not null,

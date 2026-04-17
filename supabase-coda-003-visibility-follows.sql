@@ -113,10 +113,11 @@ create policy "video visibility" on public.videos for select
     )
   );
 
--- Data migration: mark every existing video as private by default, unless it has a public_share_token.
+-- Data migration: mark every existing video as private by default.
+-- (videos table has no public_share_token column in the current schema; owners can
+-- opt individual items into broader visibility via the UI after migration.)
 insert into public.visibility_settings (owner_profile_id, item_type, item_id, visibility)
-select p.id, 'video', v.id,
-  case when v.public_share_token is not null then 'public' else 'private' end
+select p.id, 'video', v.id, 'private'
 from public.videos v
 join public.profiles p on p.user_id = v.user_id
 where not exists (
