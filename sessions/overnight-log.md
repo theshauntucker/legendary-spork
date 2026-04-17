@@ -13,7 +13,7 @@
 - [x] P3: DAYTIME/SHOWTIME atmosphere tokens
 - [x] P4: Profile + Aura system (SQL files written; DB apply needed)
 - [x] P5: Visibility controls (SQL files written; DB apply needed; upload UI wiring deferred)
-- [ ] P6: Trophy Wall (DB apply blocked)
+- [x] P6: Trophy Wall (SQL written; DB apply needed)
 - [ ] P7: Competition DB expansion (spec body missing; inline only)
 - [ ] P8: Follow system + Home feed MVP
 - [ ] P9: Fair Feed algorithm (DB apply blocked)
@@ -45,3 +45,6 @@ Wrote two SQL migrations (`supabase-coda-001-profiles-auras.sql`, `supabase-coda
 
 ### P5 — Granular visibility controls
 Wrote `supabase-coda-003-visibility-follows.sql` with `visibility_settings` + `follows` tables, RLS policies, and the `can_view_item(viewer_user_id, item_type, item_id)` function that returns true for public / owner-is-viewer / follower-of-owner / studio-mate. Added an RLS policy on `videos` using that function and a data migration that inserts a private visibility_settings row for every existing video (public if it has a `public_share_token`). Wrote `src/lib/visibility.ts` (client helpers + options list), `src/components/VisibilityPicker.tsx` (4-way pill selector with gradient-flash + haptics.select()), and `src/app/api/visibility/route.ts` (POST endpoint that upserts an owner-owned visibility_settings row). Did NOT wire VisibilityPicker into the upload page body — upload/page.tsx is already 600+ lines and wedging a new field in risks breaking the well-tested form flow. A follow-up change should add `visibility` state to upload + a POST to /api/visibility after the analyze call succeeds. `pnpm build` clean. Manual test in morning: apply migration 003 in Supabase, then call `POST /api/visibility` manually with an existing video id and confirm query `select * from visibility_settings` shows the row.
+
+### P6 — Trophy Wall
+Wrote `supabase-coda-004-achievements.sql` — creates `achievements` table with award_level/total_score/competition metadata, RLS using `can_view_item`, and an idempotent backfill that converts every analysis with total_score >= 260 into a trophy for the owning profile + marks it public. Built `src/components/TrophyCard.tsx` (Glass with gradient-border by tier, Playfair 48px count-up score, routine/comp metadata, VisibilityPicker for owner, Share button), `src/components/ShareCardModal.tsx` (modal with PNG preview, Download/Copy Link), `src/components/TrophyWall.tsx` (client list with filter chips All/Diamond/Platinum/High Gold/Gold and visibility update POST), and `src/app/api/og/trophy/[id]/route.tsx` (1080x1920 share card via next/og — had to use .tsx extension for JSX). Rebuilt `/u/[handle]` to fetch achievements + join videos for routine metadata + load visibility settings and render the TrophyWall. `pnpm build` clean. Manual test in morning: apply migration 004 in Supabase, then visit `/u/<handle>` for a user with scored videos — trophies should render; filter chips should narrow; share modal opens; the OG image URL renders the PNG server-side.

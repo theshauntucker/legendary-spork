@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Aura } from "@/components/Aura";
-import { Glass } from "@/components/ui/Glass";
+import { TrophyWall } from "@/components/TrophyWall";
+import type { TrophyCardData } from "@/components/TrophyCard";
 
 type ProfileRow = {
   id: string;
+  user_id: string;
   handle: string;
   display_name: string | null;
   profile_type: "dancer" | "parent" | "studio" | "choreographer";
@@ -21,27 +23,66 @@ export const dynamic = "force-dynamic";
 export default async function ProfilePage({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
   const supabase = await createClient();
-  const { data } = await supabase
+
+  const { data: profileRow } = await supabase
     .from("profiles")
     .select(
-      "id,handle,display_name,profile_type,aura_stops,aura_tier,glyph,founding_member,is_diamond_club,is_verified",
+      "id,user_id,handle,display_name,profile_type,aura_stops,aura_tier,glyph,founding_member,is_diamond_club,is_verified",
     )
     .ilike("handle", handle)
     .maybeSingle();
 
-  if (!data) notFound();
-  const profile = data as ProfileRow;
+  if (!profileRow) notFound();
+  const profile = profileRow as ProfileRow;
+
+  const { data: auth } = await supabase.auth.getUser();
+  const isOwner = auth.user?.id === profile.user_id;
+
+  const { data: rawTrophies } = await supabase
+    .from("achievements")
+    .select("id, award_level, total_score, competition_name, competition_date, category, video_id")
+    .eq("profile_id", profile.id)
+    .order("earned_at", { ascending: false });
+
+  const trophyList = rawTrophies ?? [];
+  const videoIds = trophyList.map((t) => t.video_id).filter(Boolean) as string[];
+
+  const { data: videos } = videoIds.length
+    ? await supabase.from("videos").select("id, routine_name, style, entry_type").in("id", videoIds)
+    : { data: [] as Array<{ id: string; routine_name: string | null; style: string | null; entry_type: string | null }> };
+
+  const { data: visSettings } = trophyList.length
+    ? await supabase
+        .from("visibility_settings")
+        .select("item_id, visibility")
+        .eq("item_type", "achievement")
+        .in(
+          "item_id",
+          trophyList.map((t) => t.id),
+        )
+    : { data: [] as Array<{ item_id: string; visibility: string }> };
+
+  const videoMap = new Map((videos ?? []).map((v) => [v.id, v]));
+  const visMap = new Map((visSettings ?? []).map((v) => [v.item_id, v.visibility]));
+
+  const trophies: TrophyCardData[] = trophyList.map((t) => {
+    const v = t.video_id ? videoMap.get(t.video_id) : undefined;
+    return {
+      id: t.id,
+      award_level: t.award_level as TrophyCardData["award_level"],
+      total_score: Number(t.total_score),
+      routine_name: v?.routine_name ?? null,
+      style: v?.style ?? t.category ?? null,
+      entry_type: v?.entry_type ?? null,
+      competition_name: t.competition_name,
+      competition_date: t.competition_date,
+      visibility: (visMap.get(t.id) as TrophyCardData["visibility"]) ?? "private",
+    };
+  });
 
   return (
-    <main style={{ minHeight: "100vh", padding: 32, maxWidth: 760, margin: "0 auto" }}>
-      <section
-        style={{
-          display: "flex",
-          gap: 24,
-          alignItems: "center",
-          marginBottom: 24,
-        }}
-      >
+    <main style={{ minHeight: "100vh", padding: 32, maxWidth: 960, margin: "0 auto" }}>
+      <section style={{ display: "flex", gap: 24, alignItems: "center", marginBottom: 32 }}>
         <Aura
           gradient_stops={profile.aura_stops ?? undefined}
           tier={profile.aura_tier ?? "starter"}
@@ -66,12 +107,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ handle
         </div>
       </section>
 
-      <Glass style={{ padding: 24 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Trophy Wall</h2>
-        <p style={{ opacity: 0.7, fontSize: 14 }}>
-          Trophies are coming. When this user scores Gold or higher, their wins will land here.
-        </p>
-      </Glass>
+      <section>
+        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 12 }}>Trophies</h2>
+        <TrophyWall handle={profile.handle} isOwner={isOwner} trophies={trophies} />
+      </section>
     </main>
   );
 }
