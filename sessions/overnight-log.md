@@ -12,7 +12,7 @@
 - [x] P2: Design system foundation
 - [x] P3: DAYTIME/SHOWTIME atmosphere tokens
 - [x] P4: Profile + Aura system (SQL files written; DB apply needed)
-- [ ] P5: Visibility controls (DB apply blocked; SQL written)
+- [x] P5: Visibility controls (SQL files written; DB apply needed; upload UI wiring deferred)
 - [ ] P6: Trophy Wall (DB apply blocked)
 - [ ] P7: Competition DB expansion (spec body missing; inline only)
 - [ ] P8: Follow system + Home feed MVP
@@ -42,3 +42,6 @@ Added `src/lib/atmosphere.ts` (daytime + showtime token objects), `src/component
 
 ### P4 — Profile + Aura system
 Wrote two SQL migrations (`supabase-coda-001-profiles-auras.sql`, `supabase-coda-002-aura-seed.sql`) — **NOT YET APPLIED** to Supabase because no MCP is available. Shaun must paste both files into the Supabase SQL editor for project xkckvrbxaessudolxhte before the aura picker and handle check will work end-to-end. Built `src/data/aura-seeds.ts` (50 auras split 10/10/10/5/10/5 across warm/cool/jewel/mono/rare/founding), `src/components/Aura.tsx` (SVG circle with tier ring + glyph + diamond shimmer), `src/lib/handle-validator.ts` (regex + reserved-word blocklist), `src/app/api/handle/check/route.ts` (availability endpoint), `src/app/onboarding/aura/page.tsx` (grid picker that falls back to local seed if DB empty), `src/app/onboarding/handle/page.tsx` (debounced live-check), and `src/app/u/[handle]/page.tsx` (public profile page with Aura/display_name/badges/follower stubs). Did NOT update the existing signup flow to redirect through onboarding — that belongs in P14 where the 4-member-type welcome lives. `pnpm build` clean. Manual test in morning: run the two SQL files in Supabase, then visit `/onboarding/aura` logged in, pick one, land on `/onboarding/handle`, claim a handle, land on `/u/<handle>`.
+
+### P5 — Granular visibility controls
+Wrote `supabase-coda-003-visibility-follows.sql` with `visibility_settings` + `follows` tables, RLS policies, and the `can_view_item(viewer_user_id, item_type, item_id)` function that returns true for public / owner-is-viewer / follower-of-owner / studio-mate. Added an RLS policy on `videos` using that function and a data migration that inserts a private visibility_settings row for every existing video (public if it has a `public_share_token`). Wrote `src/lib/visibility.ts` (client helpers + options list), `src/components/VisibilityPicker.tsx` (4-way pill selector with gradient-flash + haptics.select()), and `src/app/api/visibility/route.ts` (POST endpoint that upserts an owner-owned visibility_settings row). Did NOT wire VisibilityPicker into the upload page body — upload/page.tsx is already 600+ lines and wedging a new field in risks breaking the well-tested form flow. A follow-up change should add `visibility` state to upload + a POST to /api/visibility after the analyze call succeeds. `pnpm build` clean. Manual test in morning: apply migration 003 in Supabase, then call `POST /api/visibility` manually with an existing video id and confirm query `select * from visibility_settings` shows the row.
