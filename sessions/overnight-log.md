@@ -11,7 +11,7 @@
 - [x] P1: VIP→Coda rename (degraded — no VIP files exist)
 - [x] P2: Design system foundation
 - [x] P3: DAYTIME/SHOWTIME atmosphere tokens
-- [ ] P4: Profile + Aura system (DB apply blocked; SQL written)
+- [x] P4: Profile + Aura system (SQL files written; DB apply needed)
 - [ ] P5: Visibility controls (DB apply blocked; SQL written)
 - [ ] P6: Trophy Wall (DB apply blocked)
 - [ ] P7: Competition DB expansion (spec body missing; inline only)
@@ -39,3 +39,6 @@ Shipped all six design primitives: `src/lib/motion.ts` (springOut, tapScale, fad
 
 ### P3 — DAYTIME/SHOWTIME atmosphere tokens
 Added `src/lib/atmosphere.ts` (daytime + showtime token objects), `src/components/AtmosphereProvider.tsx` (context, sets `data-atmosphere` attribute), and `src/hooks/useAtmosphere.ts`. Wrapped root layout in `<AtmosphereProvider atmosphere="daytime">`. Added CSS variables to globals.css for both atmospheres. Created `src/app/analysis/[id]/layout.tsx` that re-wraps the analysis routes in showtime. Updated `/design-preview` with a toggle button that flips atmosphere and reflects new tokens. `pnpm build` clean. Note: Glass/GradientText/Button were not refactored to read CSS vars — they use hardcoded values from gradients.ts intentionally so that gradient surfaces look correct on both backgrounds; the atmosphere tokens affect page bg + text colors only. Manual test in morning: `/design-preview` toggle flips background + text colors; any `/analysis/[id]` route loads dark.
+
+### P4 — Profile + Aura system
+Wrote two SQL migrations (`supabase-coda-001-profiles-auras.sql`, `supabase-coda-002-aura-seed.sql`) — **NOT YET APPLIED** to Supabase because no MCP is available. Shaun must paste both files into the Supabase SQL editor for project xkckvrbxaessudolxhte before the aura picker and handle check will work end-to-end. Built `src/data/aura-seeds.ts` (50 auras split 10/10/10/5/10/5 across warm/cool/jewel/mono/rare/founding), `src/components/Aura.tsx` (SVG circle with tier ring + glyph + diamond shimmer), `src/lib/handle-validator.ts` (regex + reserved-word blocklist), `src/app/api/handle/check/route.ts` (availability endpoint), `src/app/onboarding/aura/page.tsx` (grid picker that falls back to local seed if DB empty), `src/app/onboarding/handle/page.tsx` (debounced live-check), and `src/app/u/[handle]/page.tsx` (public profile page with Aura/display_name/badges/follower stubs). Did NOT update the existing signup flow to redirect through onboarding — that belongs in P14 where the 4-member-type welcome lives. `pnpm build` clean. Manual test in morning: run the two SQL files in Supabase, then visit `/onboarding/aura` logged in, pick one, land on `/onboarding/handle`, claim a handle, land on `/u/<handle>`.
