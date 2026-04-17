@@ -16,7 +16,7 @@
 - [x] P6: Trophy Wall (SQL written; DB apply needed)
 - [x] P7: Competition DB (38 events — spec file missing for full 95)
 - [x] P8: Follow system + Home feed MVP
-- [ ] P9: Fair Feed algorithm (DB apply blocked)
+- [x] P9: Fair Feed (v1 blend; edge function + cron deferred)
 - [ ] P10: Reactions + threaded comments (DB apply blocked)
 - [ ] P11: Dance Bonds (DB apply blocked)
 - [ ] P12: Studios + Choreographer pages (DB apply blocked)
@@ -54,3 +54,6 @@ Coda_15_Competition_Database.md does NOT exist in the workspace, so the 95-event
 
 ### P8 — Follow system + Home feed MVP
 Shipped `/api/follow` (POST follow, DELETE unfollow) backed by the follows table from migration 003. Built `src/components/FollowButton.tsx` (optimistic toggle with haptics.tap + success), `src/components/FeedCard.tsx` (aura + handle + source badge + score + routine info), `src/lib/fair-feed.ts` (buildFeed fetches follow + studio candidates, pulls recent achievements, joins videos + profiles, enforces a 3-per-owner diversity cap, returns source-tagged items with nextCursor), `/api/feed` (GET with cursor pagination), and `/home` (reach-today Glass banner linking to /principles, feed list with empty state pointing to /find). Added follower + following counts and the FollowButton to `/u/[handle]` — counts come from head-exact Supabase count queries. DID NOT implement rising-stars row, DID NOT implement `/` redirect to `/home` (the current `/` is the public landing and redirecting breaks marketing). `pnpm build` clean. Manual test in morning: sign in, visit `/home` (redirects to /login if not signed in, /welcome if no profile), visit `/u/<other-handle>` and hit Follow, refresh `/home` — their achievements should appear in the feed with source badge "Following".
+
+### P9 — Fair Feed algorithm
+Wrote `supabase-coda-005-fair-feed.sql` with `posts`, `reach_floor_queue`, `post_views`, `feed_audit` tables, a `public.reach_today` view that counts distinct post views per profile in the last 24h, and a BEFORE INSERT trigger on posts that creates a reach_floor_queue row with 50 target_views + 24h expiry. RLS policies in place. Built `/principles` public page (accessible logged-out) with weight bars, guarantee copy, and anti-pattern list. `src/lib/fair-feed.ts` already has the v1 blend (follow / studio / discovery) with a 3-per-owner diversity cap from P8 — did NOT extend to the full 5-source blend because event + fair_reach + bond sources need check-ins + dance_bonds + post_views tables all wired up (P11, P13). SKIPPED: the `enforce-reach-floor` Supabase edge function (no way to deploy from this session), and the pg_cron schedule — both require Shaun to set up in Supabase dashboard. The trigger still enqueues posts correctly; only the injection step is missing. `pnpm build` clean. Manual test in morning: apply migration 005, INSERT a row into public.posts, verify reach_floor_queue got a matching row via trigger; visit `/principles` while signed out — should render publicly.
