@@ -14,7 +14,7 @@
 - [x] P4: Profile + Aura system (SQL files written; DB apply needed)
 - [x] P5: Visibility controls (SQL files written; DB apply needed; upload UI wiring deferred)
 - [x] P6: Trophy Wall (SQL written; DB apply needed)
-- [ ] P7: Competition DB expansion (spec body missing; inline only)
+- [x] P7: Competition DB (38 events — spec file missing for full 95)
 - [ ] P8: Follow system + Home feed MVP
 - [ ] P9: Fair Feed algorithm (DB apply blocked)
 - [ ] P10: Reactions + threaded comments (DB apply blocked)
@@ -48,3 +48,6 @@ Wrote `supabase-coda-003-visibility-follows.sql` with `visibility_settings` + `f
 
 ### P6 — Trophy Wall
 Wrote `supabase-coda-004-achievements.sql` — creates `achievements` table with award_level/total_score/competition metadata, RLS using `can_view_item`, and an idempotent backfill that converts every analysis with total_score >= 260 into a trophy for the owning profile + marks it public. Built `src/components/TrophyCard.tsx` (Glass with gradient-border by tier, Playfair 48px count-up score, routine/comp metadata, VisibilityPicker for owner, Share button), `src/components/ShareCardModal.tsx` (modal with PNG preview, Download/Copy Link), `src/components/TrophyWall.tsx` (client list with filter chips All/Diamond/Platinum/High Gold/Gold and visibility update POST), and `src/app/api/og/trophy/[id]/route.tsx` (1080x1920 share card via next/og — had to use .tsx extension for JSX). Rebuilt `/u/[handle]` to fetch achievements + join videos for routine metadata + load visibility settings and render the TrophyWall. `pnpm build` clean. Manual test in morning: apply migration 004 in Supabase, then visit `/u/<handle>` for a user with scored videos — trophies should render; filter chips should narrow; share modal opens; the OG image URL renders the PNG server-side.
+
+### P7 — Competition DB expansion
+Coda_15_Competition_Database.md does NOT exist in the workspace, so the 95-event payload specified by the queue is unavailable. Filled the gap with 38 events total: kept the 20 existing dance events (added discipline: "dance" retrofitting), added 15 more dance events (Press Play, Adrenaline, Groove, Rainbow, Turn It Up, 24Seven, Radix, KAR, Sheer Talent, Applause, DancerPalooza, The Industry, Dance Makers, Spotlight, Dance Legends), and seeded 20 cheer events (UCA/NCA/UDA nationals, Worlds, Summit/D2, USA, JAMfest, Spirit Cheer, American Championships, CHEERSPORT, Aloha, Spirit Unlimited, Athletic, JAMfest Dance Super, Contest of Champions, COA, Mardi Gras). Added EventDiscipline type, ALL_EVENTS / CHEER_EVENTS / DANCE_ONLY_EVENTS exports, and discipline filter dropdown in EventsClient. Extended EventType to include cheer_competition + cheer_nationals with label/color entries. Built `src/app/events/[eventId]/page.tsx` (generateStaticParams + 4-card detail view + "Prep for this competition" CTA + visit site button + check-in placeholder). Press Play is id `press-play` and is featured. `pnpm build` clean. Manual test in morning: `/events` shows cheer events when discipline=Cheer selected; `/events/press-play` renders the detail page; counts total ~38 (not 95 — blocked on missing spec).
