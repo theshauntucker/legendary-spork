@@ -24,7 +24,7 @@
 - [x] P14: First visit + BottomNav (6-step builder deferred)
 - [x] P15: DM foundation (conversation creation UI deferred)
 - [x] P16: Launch seeds + Bayda (cron deployment deferred)
-- [ ] P17: Final audit and deployment checklist
+- [x] P17: Final audit and deployment checklist
 
 ## Notes per prompt
 
@@ -78,3 +78,6 @@ Wrote `supabase-coda-010-dm.sql` with `conversations`, `conversation_participant
 
 ### P16 — Launch seeds + Bayda daily posts
 Wrote `supabase-coda-011-seed-launch-data.sql` — idempotent Day-0 backfill that (1) creates a profiles row for every auth.users row that lacks one, generating a handle from email-local-part + user_id prefix, guessing profile_type=parent if any of their videos has a dancer_name, else dancer, defaulting age_tier to adult, marking founding_member=true for the first 1000 by order of existing count; (2) re-runs the achievements backfill from migration 004 for any late sign-ups; (3) defaults backfilled achievements public; (4) creates a "Bayda" system profile (handle "bayda", verified, no user_id) idempotently. Built `src/lib/bayda-seed-posts.ts` — pure generator returning up to 5 posts per day (score gain leader, top song placeholder, newest Diamond, weekend check-in count, rising star placeholder). Built `src/lib/launch-email.ts` with subject/html/text templates using Coda gradient + founding-member copy variant. Built `/api/admin/send-launch-email` (admin-gated by `x-admin-email` header matching OWNER_EMAIL, uses service role to list auth users, pairs emails to profiles, calls Resend per row). SKIPPED: pg_cron schedule for the Bayda generator (no deploy capability — must be added in Supabase dashboard, running daily 8 AM UTC and inserting rows into public.posts with bayda's profile_id). `pnpm build` clean. Manual test in morning: apply migration 011, run `select count(*) from public.profiles` and verify every auth user has one; hit `POST /api/admin/send-launch-email` with header `x-admin-email: 22tucker22@comcast.net` (from curl with RESEND key set) — response returns `{sent: N}`.
+
+### P17 — Final audit
+Final `pnpm build` is clean. `pnpm lint` is broken due to a pre-existing Next.js 16 incompatibility (the script still calls `next lint`, which was removed) — logged in the final report as a 1-line fix, not treated as an overnight regression. Wrote `sessions/overnight-final-report.md` (full prompt-by-prompt status, route/API/migration inventory, acceptance criteria to verify, deferred work) and `sessions/MORNING_MESSAGE.md` (5-bullet summary, top-3 test list, one open question). 17 commits on `claude/add-routinex-docs-ZtYv6`. Not pushed.
