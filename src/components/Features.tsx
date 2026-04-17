@@ -43,10 +43,10 @@ export default function Features() {
         >
           <p className="text-sm font-semibold uppercase tracking-wider text-primary-400">Everything Included</p>
           <h2 className="mt-3 text-4xl sm:text-5xl font-bold font-[family-name:var(--font-display)]">
-            Built for <span className="gradient-text">Competitive Dance Families</span>
+            Built for <span className="gradient-text">Competitive Dance &amp; Cheer Families</span>
           </h2>
           <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
-            Every analysis includes all of this — no tiers, no add-ons. This is what dance parents and coaches get every single time they upload.
+            Every analysis includes all of this — no tiers, no add-ons. This is what dance and cheer parents and coaches get every single time they upload.
           </p>
         </motion.div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">

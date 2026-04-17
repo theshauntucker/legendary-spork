@@ -427,7 +427,7 @@ export default function SampleAnalysis() {
           {/* CTA inside report */}
           <div className="bg-gradient-to-r from-primary-700/30 to-accent-600/30 p-6 sm:p-8 text-center">
             <p className="text-lg font-bold">
-              Want this for your dancer&apos;s routine?
+              Want this for your athlete&apos;s routine?
             </p>
             <p className="text-sm text-surface-200 mt-1 mb-4">
               Your first full analysis is completely free. No credit card required.

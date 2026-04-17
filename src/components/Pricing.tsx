@@ -51,7 +51,7 @@ export default function Pricing() {
             <span className="gradient-text">Whole-Studio Software</span>
           </h2>
           <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
-            Dancers and moms start free. Studio owners get a <span className="text-white font-semibold">30-day free trial — no credit card required.</span> Launch pricing locked in forever.
+            Dancers, cheer athletes, and parents start free. Studio owners get a <span className="text-white font-semibold">30-day free trial — no credit card required.</span> Launch pricing locked in forever.
           </p>
         </motion.div>
 

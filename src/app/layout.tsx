@@ -36,6 +36,9 @@ export const metadata: Metadata = {
     "dance competition prep",
     "dance technique feedback",
     "dance parent tools",
+    "cheer parent tools",
+    "cheer scoring",
+    "all-star cheer analysis",
     "dance coach tools",
     "routine improvement",
     "dance score calculator",
@@ -60,7 +63,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "RoutineX — Your Dancer's Secret Weapon",
+    title: "RoutineX — Your Athlete's Secret Weapon",
     description:
       "AI-powered video analysis for competitive dancers & cheer teams. Launch offer: 2 analyses for $8.99 — buy one, get one free.",
     images: ["/opengraph-image"],
@@ -111,14 +114,14 @@ const jsonLd = {
           name: "Single Analysis",
           price: "8.99",
           priceCurrency: "USD",
-          description: "One AI-powered competition-standard dance routine analysis",
+          description: "One AI-powered competition-standard dance or cheer routine analysis",
         },
         {
           "@type": "Offer",
           name: "Competition Pack (5 Analyses)",
           price: "29.99",
           priceCurrency: "USD",
-          description: "5 AI-powered dance routine analyses — only $6 each",
+          description: "5 AI-powered dance or cheer routine analyses — only $6 each",
         },
       ],
       aggregateRating: {

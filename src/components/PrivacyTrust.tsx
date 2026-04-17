@@ -8,7 +8,7 @@ export default function PrivacyTrust() {
           <div className="flex items-center justify-center gap-2 mb-4">
             <Shield className="w-8 h-8 text-gold-500" />
             <h2 className="text-3xl md:text-4xl font-bold text-white">
-              Your Dancer's Privacy is Sacred
+              Your Athlete's Privacy is Sacred
             </h2>
           </div>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">

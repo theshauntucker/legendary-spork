@@ -60,7 +60,7 @@ export default function Competitions() {
             Works With Every Major Competition
           </h2>
           <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
-            Our AI is trained on competition-standard scoring rubrics. No matter where your dancer competes, RoutineX speaks the same language as the judges.
+            Our AI is trained on competition-standard scoring rubrics. No matter where your dancer or cheer athlete competes, RoutineX speaks the same language as the judges.
           </p>
         </motion.div>
 

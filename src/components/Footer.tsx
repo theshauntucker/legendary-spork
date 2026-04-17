@@ -21,11 +21,11 @@ export default function Footer() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-[family-name:var(--font-display)] leading-tight">
-              Don&apos;t Let Your Dancer{" "}
+              Don&apos;t Let Your Athlete{" "}
               <span className="gradient-text">Fall Behind</span>
             </h2>
             <p className="mt-6 text-lg sm:text-xl text-surface-200 max-w-2xl mx-auto">
-              Every routine is a chance to improve. RoutineX gives your dancer the detailed, professional feedback they need to climb from Gold to Diamond.
+              Every routine is a chance to improve. RoutineX gives your athlete the detailed, professional feedback they need to climb from Gold to Diamond.
             </p>
 
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -74,7 +74,7 @@ export default function Footer() {
             </div>
 
             <p className="text-xs text-surface-200 flex items-center gap-1">
-              Made with <Heart className="h-3 w-3 text-accent-500 fill-accent-500" /> for the dance community
+              Made with <Heart className="h-3 w-3 text-accent-500 fill-accent-500" /> for the dance &amp; cheer community
             </p>
           </div>
 

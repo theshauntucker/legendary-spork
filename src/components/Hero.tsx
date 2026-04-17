@@ -51,7 +51,7 @@ export default function Hero() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500" />
             </span>
-            <span className="text-sm text-primary-200">For competitive dancers, dance moms &amp; studio owners</span>
+            <span className="text-sm text-primary-200">For competitive dancers, cheer athletes, dance moms &amp; studio owners</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] font-[family-name:var(--font-display)]">
