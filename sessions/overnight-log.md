@@ -15,7 +15,7 @@
 - [x] P5: Visibility controls (SQL files written; DB apply needed; upload UI wiring deferred)
 - [x] P6: Trophy Wall (SQL written; DB apply needed)
 - [x] P7: Competition DB (38 events — spec file missing for full 95)
-- [ ] P8: Follow system + Home feed MVP
+- [x] P8: Follow system + Home feed MVP
 - [ ] P9: Fair Feed algorithm (DB apply blocked)
 - [ ] P10: Reactions + threaded comments (DB apply blocked)
 - [ ] P11: Dance Bonds (DB apply blocked)
@@ -51,3 +51,6 @@ Wrote `supabase-coda-004-achievements.sql` — creates `achievements` table with
 
 ### P7 — Competition DB expansion
 Coda_15_Competition_Database.md does NOT exist in the workspace, so the 95-event payload specified by the queue is unavailable. Filled the gap with 38 events total: kept the 20 existing dance events (added discipline: "dance" retrofitting), added 15 more dance events (Press Play, Adrenaline, Groove, Rainbow, Turn It Up, 24Seven, Radix, KAR, Sheer Talent, Applause, DancerPalooza, The Industry, Dance Makers, Spotlight, Dance Legends), and seeded 20 cheer events (UCA/NCA/UDA nationals, Worlds, Summit/D2, USA, JAMfest, Spirit Cheer, American Championships, CHEERSPORT, Aloha, Spirit Unlimited, Athletic, JAMfest Dance Super, Contest of Champions, COA, Mardi Gras). Added EventDiscipline type, ALL_EVENTS / CHEER_EVENTS / DANCE_ONLY_EVENTS exports, and discipline filter dropdown in EventsClient. Extended EventType to include cheer_competition + cheer_nationals with label/color entries. Built `src/app/events/[eventId]/page.tsx` (generateStaticParams + 4-card detail view + "Prep for this competition" CTA + visit site button + check-in placeholder). Press Play is id `press-play` and is featured. `pnpm build` clean. Manual test in morning: `/events` shows cheer events when discipline=Cheer selected; `/events/press-play` renders the detail page; counts total ~38 (not 95 — blocked on missing spec).
+
+### P8 — Follow system + Home feed MVP
+Shipped `/api/follow` (POST follow, DELETE unfollow) backed by the follows table from migration 003. Built `src/components/FollowButton.tsx` (optimistic toggle with haptics.tap + success), `src/components/FeedCard.tsx` (aura + handle + source badge + score + routine info), `src/lib/fair-feed.ts` (buildFeed fetches follow + studio candidates, pulls recent achievements, joins videos + profiles, enforces a 3-per-owner diversity cap, returns source-tagged items with nextCursor), `/api/feed` (GET with cursor pagination), and `/home` (reach-today Glass banner linking to /principles, feed list with empty state pointing to /find). Added follower + following counts and the FollowButton to `/u/[handle]` — counts come from head-exact Supabase count queries. DID NOT implement rising-stars row, DID NOT implement `/` redirect to `/home` (the current `/` is the public landing and redirecting breaks marketing). `pnpm build` clean. Manual test in morning: sign in, visit `/home` (redirects to /login if not signed in, /welcome if no profile), visit `/u/<other-handle>` and hit Follow, refresh `/home` — their achievements should appear in the feed with source badge "Following".

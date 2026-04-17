@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Aura } from "@/components/Aura";
 import { TrophyWall } from "@/components/TrophyWall";
+import { FollowButton } from "@/components/FollowButton";
 import type { TrophyCardData } from "@/components/TrophyCard";
 
 type ProfileRow = {
@@ -37,6 +38,35 @@ export default async function ProfilePage({ params }: { params: Promise<{ handle
 
   const { data: auth } = await supabase.auth.getUser();
   const isOwner = auth.user?.id === profile.user_id;
+
+  const [{ count: followerCount }, { count: followingCount }] = await Promise.all([
+    supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("following_id", profile.id),
+    supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("follower_id", profile.id),
+  ]);
+
+  let isFollowing = false;
+  if (auth.user && !isOwner) {
+    const { data: viewerProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", auth.user.id)
+      .maybeSingle();
+    if (viewerProfile) {
+      const { data: followRow } = await supabase
+        .from("follows")
+        .select("follower_id")
+        .eq("follower_id", viewerProfile.id)
+        .eq("following_id", profile.id)
+        .maybeSingle();
+      isFollowing = !!followRow;
+    }
+  }
 
   const { data: rawTrophies } = await supabase
     .from("achievements")
@@ -101,9 +131,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ handle
             {profile.is_verified ? <Badge tone="accent">Verified</Badge> : null}
           </div>
           <div style={{ display: "flex", gap: 16, marginTop: 14, fontSize: 14, opacity: 0.7 }}>
-            <span><strong>—</strong> followers</span>
-            <span><strong>—</strong> following</span>
+            <span><strong>{followerCount ?? 0}</strong> followers</span>
+            <span><strong>{followingCount ?? 0}</strong> following</span>
           </div>
+          {!isOwner && auth.user ? (
+            <div style={{ marginTop: 16 }}>
+              <FollowButton targetProfileId={profile.id} initialFollowing={isFollowing} />
+            </div>
+          ) : null}
         </div>
       </section>
 
