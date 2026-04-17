@@ -17,7 +17,7 @@
 - [x] P7: Competition DB (38 events — spec file missing for full 95)
 - [x] P8: Follow system + Home feed MVP
 - [x] P9: Fair Feed (v1 blend; edge function + cron deferred)
-- [ ] P10: Reactions + threaded comments (DB apply blocked)
+- [x] P10: Reactions + comments (TrophyCard wiring deferred)
 - [ ] P11: Dance Bonds (DB apply blocked)
 - [ ] P12: Studios + Choreographer pages (DB apply blocked)
 - [ ] P13: Competition check-ins + weekend threads (DB apply blocked)
@@ -57,3 +57,6 @@ Shipped `/api/follow` (POST follow, DELETE unfollow) backed by the follows table
 
 ### P9 — Fair Feed algorithm
 Wrote `supabase-coda-005-fair-feed.sql` with `posts`, `reach_floor_queue`, `post_views`, `feed_audit` tables, a `public.reach_today` view that counts distinct post views per profile in the last 24h, and a BEFORE INSERT trigger on posts that creates a reach_floor_queue row with 50 target_views + 24h expiry. RLS policies in place. Built `/principles` public page (accessible logged-out) with weight bars, guarantee copy, and anti-pattern list. `src/lib/fair-feed.ts` already has the v1 blend (follow / studio / discovery) with a 3-per-owner diversity cap from P8 — did NOT extend to the full 5-source blend because event + fair_reach + bond sources need check-ins + dance_bonds + post_views tables all wired up (P11, P13). SKIPPED: the `enforce-reach-floor` Supabase edge function (no way to deploy from this session), and the pg_cron schedule — both require Shaun to set up in Supabase dashboard. The trigger still enqueues posts correctly; only the injection step is missing. `pnpm build` clean. Manual test in morning: apply migration 005, INSERT a row into public.posts, verify reach_floor_queue got a matching row via trigger; visit `/principles` while signed out — should render publicly.
+
+### P10 — Reactions + threaded comments
+Wrote `supabase-coda-006-engagement.sql` with `post_reactions` (composite PK on post_id/post_type/profile_id/emoji_code) and `comments` (with parent_comment_id for 1-level nesting and soft-delete via deleted_at) plus RLS. Built `/api/reactions` (POST upsert, DELETE with same PK) and `/api/comments` (GET by post + POST + PATCH soft-delete). `src/components/ReactionBar.tsx` ships the 4 primary reactions (💎🔥👑✨) inline with count badges and a `+` button that expands to an 18-emoji picker (heart, clap, star, trophy, microphone, fire_heart, eyes, kiss, tears, bow, mind_blown, pointing, muscle, rose). Supabase Realtime subscription on `post_reactions` filter `post_id=eq.` updates counts live. `src/components/CommentThread.tsx` fetches via REST, subscribes to INSERTs via Realtime, renders one level of nesting, posts on Enter. Wired into `FeedCard` — tap "Comments" to toggle thread. Did NOT wire into TrophyCard (hit length budget; trophy-wall cards already have Share + Visibility + count-up animation). `pnpm build` clean. Manual test in morning: apply migration 006, open `/home`, tap 💎 on a feed item, open a second browser as another user → count should tick to 2 without refresh; post a comment → other browser sees it.

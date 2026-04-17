@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Aura } from "@/components/Aura";
 import { Glass } from "@/components/ui/Glass";
+import { ReactionBar } from "@/components/ReactionBar";
+import { CommentThread } from "@/components/CommentThread";
 import { fadeLift, springOut } from "@/lib/motion";
 
 export type FeedItem = {
@@ -42,6 +45,7 @@ const sourceBadge: Record<NonNullable<FeedItem["source"]>, string> = {
 };
 
 export function FeedCard({ item }: { item: FeedItem }) {
+  const [commentsOpen, setCommentsOpen] = useState(false);
   return (
     <motion.div variants={fadeLift} initial="initial" animate="animate" transition={springOut}>
       <Glass style={{ padding: 16 }}>
@@ -74,6 +78,25 @@ export function FeedCard({ item }: { item: FeedItem }) {
         <p style={{ fontSize: 13, opacity: 0.7, marginTop: 2 }}>
           {[item.style, item.competition_name].filter(Boolean).join(" · ")}
         </p>
+        <div style={{ marginTop: 10 }}>
+          <ReactionBar postId={item.id} postType="achievement" />
+        </div>
+        <button
+          type="button"
+          onClick={() => setCommentsOpen((v) => !v)}
+          style={{
+            marginTop: 8,
+            background: "transparent",
+            border: "none",
+            color: "var(--accent)",
+            fontSize: 13,
+            cursor: "pointer",
+            padding: 0,
+          }}
+        >
+          {commentsOpen ? "Hide comments" : "Comments"}
+        </button>
+        {commentsOpen ? <CommentThread postId={item.id} postType="achievement" /> : null}
       </Glass>
     </motion.div>
   );
