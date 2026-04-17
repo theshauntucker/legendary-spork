@@ -8,7 +8,7 @@
 
 ## Prompt Progress
 - [x] P0: Audit complete
-- [ ] P1: VIP→Coda rename (degraded — no VIP files exist)
+- [x] P1: VIP→Coda rename (degraded — no VIP files exist)
 - [ ] P2: Design system foundation
 - [ ] P3: DAYTIME/SHOWTIME atmosphere tokens
 - [ ] P4: Profile + Aura system (DB apply blocked; SQL written)
@@ -30,3 +30,6 @@
 
 ### P0 — Audit complete
 Wrote `sessions/overnight-audit.md` detailing missing files, missing Supabase MCP, and confirmation that the queue's `main` branch instruction is overridden by the `claude/add-routinex-docs-ZtYv6` branch directive. 17 code files audited — all missing. Spec files VIP_XX all missing; only `Coda_14_Research_And_Best_Practices.md` exists. Manual test in morning: none for P0 (audit is read-only).
+
+### P1 — VIP→Coda rename (partial)
+No VIP_XX files existed in the workspace to rename — `git mv` skipped for all 10 of them. Updated CLAUDE.md: "VIP Social Platform" → "Coda Social Platform", 8 spec-file references swapped, build-process step + execution-order line updated, added Coda_14 to the reference list. Updated `src/app/api/bayda/route.ts` Bayda prompt: "THE VIP VIBE" section renamed to "CODA, THE SOCIAL LAYER", and the engagement tease line rewritten to reference "a whole social platform called Coda". The 9 expected new Coda_XX specs (Coda_05, 06, 07, 15, 16, 17, 18, 19, Launch_Day_Kit) are not present in the workspace — flagged as a degradation affecting future prompts that reference them. Manual test in morning: open Bayda, ask "what's coming next?" — should mention Coda (not VIP).
