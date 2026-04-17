@@ -18,6 +18,7 @@ const QUICK_PROMPTS = [
   "What's the scoring system?",
   "Is it really free to try?",
   "What competitions do you cover?",
+  "What are all the features of RoutineX?",
 ];
 
 export default function BaydaWidget() {
