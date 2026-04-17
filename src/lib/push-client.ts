@@ -52,7 +52,9 @@ export async function subscribePush(): Promise<{ success: boolean; error?: strin
 
   const sub = await reg.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(publicKey),
+    // Cast: TypeScript's latest Uint8Array<ArrayBufferLike> differs from the
+    // BufferSource the PushManager typing expects. The value is valid at runtime.
+    applicationServerKey: urlBase64ToUint8Array(publicKey) as unknown as ArrayBuffer,
   });
 
   const res = await fetch("/api/push/subscribe", {

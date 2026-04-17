@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { lookupPostOwner, lookupProfileUser } from "@/lib/post-owner";
+import { notifyUser } from "@/lib/notify-user";
+
+const EMOJI_DISPLAY: Record<string, string> = {
+  diamond: "💎", fire: "🔥", crown: "👑", sparkle: "✨", heart: "❤️",
+  clap: "👏", star: "⭐", trophy: "🏆", microphone: "🎤",
+  fire_heart: "❤️‍🔥", eyes: "👀", kiss: "😘", tears: "😭",
+  bow: "🙇", mind_blown: "🤯", pointing: "👉", muscle: "💪", rose: "🌹",
+};
 
 const ITEM_TYPES = new Set(["achievement", "post", "comment"]);
 const EMOJI_CODES = new Set([
@@ -36,6 +45,30 @@ export async function POST(req: Request) {
       emoji_code: body.emoji_code,
     });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Best-effort reaction notification to post owner (only for post/achievement, not comment)
+  const reactorProfileId = ctx.profile_id as string;
+  if (body.post_type === "achievement" || body.post_type === "post") {
+    try {
+      const owner = await lookupPostOwner(body.post_type, body.post_id);
+      const reactor = await lookupProfileUser(reactorProfileId);
+      if (owner && owner.profileId !== reactorProfileId) {
+        const emoji = EMOJI_DISPLAY[body.emoji_code] || "✨";
+        await notifyUser({
+          userId: owner.userId,
+          kind: "reaction",
+          title: `${reactor?.displayName || reactor?.handle || "Someone"} reacted ${emoji}`,
+          body: "on your post",
+          href: owner.handle ? `/u/${owner.handle}` : "/home",
+          actorId: reactor?.userId,
+          targetId: body.post_id,
+        });
+      }
+    } catch (err) {
+      console.warn("reaction notify failed:", err);
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }
 

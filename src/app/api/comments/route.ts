@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { lookupPostOwner, lookupProfileUser } from "@/lib/post-owner";
+import { notifyUser } from "@/lib/notify-user";
 
 const ITEM_TYPES = new Set(["achievement", "post"]);
 
@@ -58,6 +60,53 @@ export async function POST(req: Request) {
     .select("id, body, profile_id, parent_comment_id, created_at")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Fire notifications — best effort. A reply notifies the comment author;
+  // a top-level comment notifies the post owner.
+  const commenterProfileId = ctx.profile_id as string;
+  try {
+    const commenter = await lookupProfileUser(commenterProfileId);
+    const snippet = body.body.trim().slice(0, 80);
+    if (body.parent_comment_id) {
+      const { createServiceClient } = await import("@/lib/supabase/server");
+      const s = await createServiceClient();
+      const { data: parentRow } = await s
+        .from("comments")
+        .select("profile_id")
+        .eq("id", body.parent_comment_id)
+        .maybeSingle();
+      if (parentRow?.profile_id && parentRow.profile_id !== commenterProfileId) {
+        const parentOwner = await lookupProfileUser(parentRow.profile_id);
+        if (parentOwner) {
+          await notifyUser({
+            userId: parentOwner.userId,
+            kind: "comment",
+            title: `${commenter?.displayName || commenter?.handle || "Someone"} replied to your comment`,
+            body: snippet,
+            href: `/home`,
+            actorId: commenter?.userId,
+            targetId: body.post_id,
+          });
+        }
+      }
+    } else {
+      const owner = await lookupPostOwner(body.post_type, body.post_id);
+      if (owner && owner.profileId !== commenterProfileId) {
+        await notifyUser({
+          userId: owner.userId,
+          kind: "comment",
+          title: `${commenter?.displayName || commenter?.handle || "Someone"} commented on your post`,
+          body: snippet,
+          href: owner.handle ? `/u/${owner.handle}` : "/home",
+          actorId: commenter?.userId,
+          targetId: body.post_id,
+        });
+      }
+    }
+  } catch (err) {
+    console.warn("comment notify failed:", err);
+  }
+
   return NextResponse.json({ comment: data });
 }
 

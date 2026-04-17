@@ -58,23 +58,29 @@ export function computeDHashFromCanvas(source: HTMLCanvasElement | OffscreenCanv
   return hex;
 }
 
-/** Convert a 16-char hex dHash to a 64-bit BigInt for fast Hamming compare. */
-export function hashToBigInt(hex: string): bigint {
-  if (!/^[0-9a-f]{16}$/i.test(hex)) return 0n;
-  return BigInt("0x" + hex);
+/** Fast bit-count for a 16-bit unsigned integer (Brian Kernighan's algorithm). */
+function popcount16(n: number): number {
+  let x = n & 0xffff;
+  x = x - ((x >> 1) & 0x5555);
+  x = (x & 0x3333) + ((x >> 2) & 0x3333);
+  x = (x + (x >> 4)) & 0x0f0f;
+  return (x * 0x0101) >> 8 & 0x3f;
 }
 
-/** Hamming distance between two hex dHashes. */
+/**
+ * Hamming distance between two 16-char hex dHashes. Implemented via four
+ * 16-bit XORs + popcount so we stay under 32-bit arithmetic and don't
+ * require ES2020 BigInt support.
+ */
 export function hammingDistance(a: string, b: string): number {
-  const ai = hashToBigInt(a);
-  const bi = hashToBigInt(b);
-  let x = ai ^ bi;
-  let count = 0;
-  while (x !== 0n) {
-    count += Number(x & 1n);
-    x >>= 1n;
+  if (!/^[0-9a-f]{16}$/i.test(a) || !/^[0-9a-f]{16}$/i.test(b)) return 64;
+  let total = 0;
+  for (let i = 0; i < 4; i++) {
+    const ai = parseInt(a.slice(i * 4, i * 4 + 4), 16);
+    const bi = parseInt(b.slice(i * 4, i * 4 + 4), 16);
+    total += popcount16(ai ^ bi);
   }
-  return count;
+  return total;
 }
 
 /**
