@@ -231,63 +231,96 @@ export async function POST(request: NextRequest) {
     }
     // ─────────────────────────────────────────────────────────────────────────
 
-    // Save analysis to database
-    const { data: analysisRecord, error: analysisError } = await serviceClient
-      .from("analyses")
-      .insert({
-        video_id: videoId,
-        user_id: userId,
-        total_score: analysis.totalScore,
-        award_level: analysis.awardLevel,
-        judge_scores: analysis.judgeScores,
-        timeline_notes: analysis.timelineNotes,
-        improvement_priorities: analysis.improvementPriorities,
-        competition_comparison: analysis.competitionComparison,
-      })
-      .select("id")
-      .single();
-
-    if (analysisError || !analysisRecord) {
-      console.error("Analysis insert error:", analysisError);
+    // ── P-PRE-1: Once Claude Vision returns a valid score, flip video status
+    // to "analyzed" as the FIRST post-analysis DB write. Downstream failures
+    // (analysis insert, credit deduction, email) are each wrapped so they
+    // cannot cascade into markVideoError() and falsely mark a successfully
+    // analyzed routine as an error.
+    const hasValidScore = typeof analysis?.totalScore === "number" && analysis.totalScore > 0;
+    if (!hasValidScore) {
       await markVideoError(serviceClient, videoId);
-      return NextResponse.json({ error: "Failed to save analysis" }, { status: 500 });
+      return NextResponse.json({ error: "Analysis returned invalid score" }, { status: 500 });
     }
 
-    // Update video as analyzed
-    await serviceClient
-      .from("videos")
-      .update({
-        status: "analyzed",
-        analysis_id: analysisRecord.id,
-        preprocessing_metadata: {
-          ...meta,
-          analyzedAt: new Date().toISOString(),
-          analyzedWithAI: usedAI,
-        },
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", videoId);
+    try {
+      await serviceClient
+        .from("videos")
+        .update({
+          status: "analyzed",
+          preprocessing_metadata: {
+            ...meta,
+            analyzedAt: new Date().toISOString(),
+            analyzedWithAI: usedAI,
+          },
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", videoId);
+    } catch (statusErr) {
+      console.error("Failed to flip status to analyzed (continuing):", statusErr);
+    }
 
-    // Analysis delivered successfully — NOW deduct the credit
+    // Save analysis to database — isolated so insert failure doesn't flip status
+    let analysisId: string | null = null;
+    try {
+      const { data: analysisRecord, error: analysisError } = await serviceClient
+        .from("analyses")
+        .insert({
+          video_id: videoId,
+          user_id: userId,
+          total_score: analysis.totalScore,
+          award_level: analysis.awardLevel,
+          judge_scores: analysis.judgeScores,
+          timeline_notes: analysis.timelineNotes,
+          improvement_priorities: analysis.improvementPriorities,
+          competition_comparison: analysis.competitionComparison,
+        })
+        .select("id")
+        .single();
+
+      if (analysisError || !analysisRecord) {
+        throw analysisError || new Error("Empty analysis insert result");
+      }
+      analysisId = analysisRecord.id;
+    } catch (analysisErr) {
+      console.error("Analysis insert failed (video still marked analyzed):", analysisErr);
+    }
+
+    // Link analysis_id onto video — isolated
+    if (analysisId) {
+      try {
+        await serviceClient
+          .from("videos")
+          .update({ analysis_id: analysisId, updated_at: new Date().toISOString() })
+          .eq("id", videoId);
+      } catch (linkErr) {
+        console.error("Failed to link analysis_id on video:", linkErr);
+      }
+    }
+
+    // Deduct credit — isolated
     try {
       await useCredit(serviceClient, userId);
     } catch (creditErr) {
       console.error("Failed to deduct credit (analysis still saved):", creditErr);
     }
 
-    // Notify admin of completed analysis
-    const userEmail = video.user_id
-      ? (await serviceClient.auth.admin.getUserById(userId)).data.user?.email || "unknown"
-      : "unknown";
-    notifyAnalysisComplete(
-      userEmail,
-      video.routine_name || "Untitled",
-      video.style || "Unknown",
-      analysis.totalScore,
-      analysis.awardLevel
-    ).catch(() => {});
+    // Notify admin — isolated
+    try {
+      const userEmail = video.user_id
+        ? (await serviceClient.auth.admin.getUserById(userId)).data.user?.email || "unknown"
+        : "unknown";
+      notifyAnalysisComplete(
+        userEmail,
+        video.routine_name || "Untitled",
+        video.style || "Unknown",
+        analysis.totalScore,
+        analysis.awardLevel
+      ).catch(() => {});
+    } catch (notifyErr) {
+      console.error("Admin notify failed:", notifyErr);
+    }
 
-    return NextResponse.json({ success: true, analysisId: analysisRecord.id });
+    return NextResponse.json({ success: true, analysisId });
   } catch (err) {
     console.error("Process route error:", err);
 
@@ -297,12 +330,22 @@ export async function POST(request: NextRequest) {
       `videoId: ${videoId}`
     ).catch(() => {});
 
+    // Only mark video as error if it hasn't already been flipped to analyzed.
+    // Prevents the outer catch from clobbering a successful run when a
+    // post-analysis step (unrelated to actual analysis) throws late.
     if (videoId) {
       try {
         const serviceClient = await createServiceClient();
-        await markVideoError(serviceClient, videoId);
+        const { data: current } = await serviceClient
+          .from("videos")
+          .select("status")
+          .eq("id", videoId)
+          .maybeSingle();
+        if (current?.status !== "analyzed") {
+          await markVideoError(serviceClient, videoId);
+        }
       } catch (updateErr) {
-        console.error("Failed to mark video as error:", updateErr);
+        console.error("Failed to check/mark video as error:", updateErr);
       }
     }
 

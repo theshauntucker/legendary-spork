@@ -4,11 +4,14 @@
  * No external dependencies required.
  */
 
+import { computeDHashFromCanvas } from "@/lib/dhash";
+
 export interface ExtractedFrame {
   timestamp: number; // seconds into the video
   label: string; // e.g., "0:15"
   blob: Blob; // JPEG image blob
   dataUrl: string; // base64 data URL for preview
+  phash?: string; // 16-char hex dHash for first 3 frames (undefined after)
 }
 
 export interface VideoMetadata {
@@ -151,10 +154,21 @@ export function extractFrames(
             canvasWidth,
             canvasHeight
           );
+          // dHash the first 3 frames for near-duplicate detection.
+          // The canvas still holds the freshly-drawn frame from captureFrameAtTime.
+          let phash: string | undefined;
+          if (i < 3) {
+            try {
+              phash = computeDHashFromCanvas(canvas);
+            } catch (hashErr) {
+              console.warn("dHash failed for frame", i, hashErr);
+            }
+          }
           frames.push({
             timestamp,
             label: formatTime(timestamp),
             ...frame,
+            phash,
           });
         } catch {
           // Skip frames that fail to capture (rare, usually at very end)
