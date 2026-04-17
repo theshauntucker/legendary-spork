@@ -10,7 +10,7 @@
 - [x] P0: Audit complete
 - [x] P1: VIP→Coda rename (degraded — no VIP files exist)
 - [x] P2: Design system foundation
-- [ ] P3: DAYTIME/SHOWTIME atmosphere tokens
+- [x] P3: DAYTIME/SHOWTIME atmosphere tokens
 - [ ] P4: Profile + Aura system (DB apply blocked; SQL written)
 - [ ] P5: Visibility controls (DB apply blocked; SQL written)
 - [ ] P6: Trophy Wall (DB apply blocked)
@@ -36,3 +36,6 @@ No VIP_XX files existed in the workspace to rename — `git mv` skipped for all 
 
 ### P2 — Design system foundation
 Shipped all six design primitives: `src/lib/motion.ts` (springOut, tapScale, fadeLift, stagger), `src/lib/haptics.ts` (tap/select/success/error/milestone with navigator.vibrate guard), `src/lib/gradients.ts` (10 named gradients + shadowRim), plus `ui/Glass.tsx`, `ui/GradientText.tsx`, and `ui/Button.tsx` (primary/secondary/ghost with framer-motion tapScale + haptics.tap() + @radix-ui/react-slot for asChild). Added keyframes to globals.css (diamond-shimmer, aura-pulse, gradient-flash) and a custom gradient scrollbar. `pnpm build` is clean and `/design-preview` renders all components. Manual test in morning: visit `/design-preview` — three buttons animate on tap, Glass card looks glassy, gradients render.
+
+### P3 — DAYTIME/SHOWTIME atmosphere tokens
+Added `src/lib/atmosphere.ts` (daytime + showtime token objects), `src/components/AtmosphereProvider.tsx` (context, sets `data-atmosphere` attribute), and `src/hooks/useAtmosphere.ts`. Wrapped root layout in `<AtmosphereProvider atmosphere="daytime">`. Added CSS variables to globals.css for both atmospheres. Created `src/app/analysis/[id]/layout.tsx` that re-wraps the analysis routes in showtime. Updated `/design-preview` with a toggle button that flips atmosphere and reflects new tokens. `pnpm build` clean. Note: Glass/GradientText/Button were not refactored to read CSS vars — they use hardcoded values from gradients.ts intentionally so that gradient surfaces look correct on both backgrounds; the atmosphere tokens affect page bg + text colors only. Manual test in morning: `/design-preview` toggle flips background + text colors; any `/analysis/[id]` route loads dark.

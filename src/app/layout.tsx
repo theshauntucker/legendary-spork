@@ -8,6 +8,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
 
 import Navbar from "@/components/Navbar";
 import CountdownBanner from "@/components/CountdownBanner";
+import { AtmosphereProvider } from "@/components/AtmosphereProvider";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -167,9 +168,11 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <CountdownBanner />
-        <Navbar />
-        <main className="pt-24">{children}</main>
+        <AtmosphereProvider atmosphere="daytime">
+          <CountdownBanner />
+          <Navbar />
+          <main className="pt-24">{children}</main>
+        </AtmosphereProvider>
         <Analytics />
         <SpeedInsights />
         {/* Google AdSense */}
