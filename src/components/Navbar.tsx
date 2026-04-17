@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Sparkles, User, LogOut, Calendar, Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const navLinks = [
   { label: "How It Works", href: "/#how-it-works" },
@@ -91,6 +92,7 @@ export default function Navbar() {
                   <User className="h-4 w-4" />
                   Dashboard
                 </a>
+                <NotificationBell />
                 <button
                   onClick={handleLogout}
                   className="inline-flex items-center gap-1.5 text-sm text-surface-200 hover:text-white transition-colors"

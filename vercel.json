@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/cleanup-frames",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/bayda-daily-posts",
+      "schedule": "0 12 * * *"
     }
   ]
 }

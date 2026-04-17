@@ -4,11 +4,12 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Calendar, MapPin, ExternalLink, Search, Star, Trophy, Sparkles, Filter } from "lucide-react";
 import {
-  DANCE_EVENTS,
+  ALL_EVENTS,
   MONTH_NAMES,
   TYPE_LABELS,
   TYPE_COLORS,
   type EventType,
+  type EventDiscipline,
 } from "@/data/competitions";
 
 const CURRENT_MONTH = new Date().getMonth() + 1;
@@ -17,16 +18,17 @@ export default function EventsClient() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<EventType | "all">("all");
   const [styleFilter, setStyleFilter] = useState("all");
+  const [disciplineFilter, setDisciplineFilter] = useState<EventDiscipline | "all">("all");
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
 
   const allStyles = useMemo(() => {
     const s = new Set<string>();
-    DANCE_EVENTS.forEach((e) => e.styles.forEach((st) => s.add(st)));
+    ALL_EVENTS.forEach((e) => e.styles.forEach((st) => s.add(st)));
     return ["all", ...Array.from(s).sort()];
   }, []);
 
   const filtered = useMemo(() => {
-    return DANCE_EVENTS.filter((event) => {
+    return ALL_EVENTS.filter((event) => {
       if (search && !event.name.toLowerCase().includes(search.toLowerCase()) &&
           !event.description.toLowerCase().includes(search.toLowerCase()) &&
           !event.styles.some(s => s.toLowerCase().includes(search.toLowerCase()))) {
@@ -34,13 +36,17 @@ export default function EventsClient() {
       }
       if (typeFilter !== "all" && event.type !== typeFilter) return false;
       if (styleFilter !== "all" && !event.styles.includes(styleFilter) && !event.styles.includes("All styles")) return false;
+      if (disciplineFilter !== "all") {
+        const d = event.discipline ?? "dance";
+        if (d !== disciplineFilter && d !== "both") return false;
+      }
       if (showFeaturedOnly && !event.featured) return false;
       return true;
     });
-  }, [search, typeFilter, styleFilter, showFeaturedOnly]);
+  }, [search, typeFilter, styleFilter, disciplineFilter, showFeaturedOnly]);
 
-  const featured = DANCE_EVENTS.filter((e) => e.featured);
-  const upcoming = DANCE_EVENTS.filter((e) =>
+  const featured = ALL_EVENTS.filter((e) => e.featured);
+  const upcoming = ALL_EVENTS.filter((e) =>
     e.typicalMonths.some((m) => m >= CURRENT_MONTH)
   ).slice(0, 4);
 
@@ -186,6 +192,18 @@ export default function EventsClient() {
               />
             </div>
 
+            {/* Discipline filter (dance vs cheer) */}
+            <select
+              value={disciplineFilter}
+              onChange={(e) => setDisciplineFilter(e.target.value as EventDiscipline | "all")}
+              className="rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary-500 transition-colors"
+              aria-label="Discipline"
+            >
+              <option value="all">Dance + Cheer</option>
+              <option value="dance">Dance</option>
+              <option value="cheer">Cheer</option>
+            </select>
+
             {/* Type filter */}
             <select
               value={typeFilter}
@@ -196,6 +214,8 @@ export default function EventsClient() {
               <option value="competition">Competitions</option>
               <option value="convention">Conventions</option>
               <option value="nationals">Nationals</option>
+              <option value="cheer_competition">Cheer Competitions</option>
+              <option value="cheer_nationals">Cheer Nationals</option>
             </select>
 
             {/* Featured toggle */}

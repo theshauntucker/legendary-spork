@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+:root {
+  --bg: #FAF7F2;
+  --surface: #FFFFFF;
+  --surface-alt: #F3EFE8;
+  --text: #1A1A1F;
+  --text-muted: #52525B;
+  --text-faint: #71717A;
+  --border: rgba(0, 0, 0, 0.08);
+  --accent: #EC4899;
+}
+
+[data-atmosphere="showtime"] {
+  --bg: #09090B;
+  --surface: #18181B;
+  --surface-alt: #1F1F23;
+  --text: #FFFFFF;
+  --text-muted: #A1A1AA;
+  --text-faint: #71717A;
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: #C084FC;
+}
+
 @theme {
   --color-primary-50: #faf5ff;
   --color-primary-100: #f3e8ff;
@@ -41,8 +63,55 @@ body {
 }
 
 ::selection {
-  background-color: var(--color-primary-600);
+  background: rgba(192, 132, 252, 0.3);
   color: white;
+}
+
+/* Coda design-system keyframes */
+@keyframes diamond-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes aura-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes gradient-flash {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.4); }
+  100% { filter: brightness(1); }
+}
+
+.animate-diamond-shimmer {
+  background-size: 200% 100%;
+  animation: diamond-shimmer 6s linear infinite;
+}
+
+.animate-aura-pulse {
+  animation: aura-pulse 2s ease-in-out infinite;
+}
+
+.animate-gradient-flash {
+  animation: gradient-flash 400ms ease;
+}
+
+/* Coda custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #18181B;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #EC4899, #F97316, #FBBF24);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  filter: brightness(1.2);
 }
 
 @keyframes float {

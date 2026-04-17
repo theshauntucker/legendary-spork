@@ -159,11 +159,17 @@ function UploadPageInner() {
       // Step 2: Convert to base64
       setStage("uploading"); setProgress(35); setStatusMessage("Uploading frames for analysis...");
       const base64Frames = await framesToBase64(frames);
+      // Collect up to 3 perceptual hashes for near-duplicate detection
+      const phashes = frames
+        .slice(0, 3)
+        .map((f) => f.phash)
+        .filter((h): h is string => typeof h === "string" && h.length === 16);
 
       // Step 3: Send to API
       setProgress(45); setStatusMessage("Uploading frames — this can take a minute for longer routines...");
       const payload = JSON.stringify({
         frames: base64Frames,
+        phashes,
         // parentVideoId is passed explicitly when arriving via "Submit Improved Routine" from the tracker
         ...(parentVideoId ? { parentVideoId } : {}),
         // forceUpload bypasses the duplicate fingerprint check — used for testing / admin re-runs

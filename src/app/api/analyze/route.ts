@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getUserCredits } from "@/lib/credits";
+import { minHammingAcrossFrames, DHASH_DUPLICATE_THRESHOLD } from "@/lib/dhash";
 
 interface FrameInput {
   timestamp: number;
@@ -40,12 +41,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { frames, metadata, parentVideoId: explicitParentId, forceUpload } = body as {
+    const { frames, phashes, metadata, parentVideoId: explicitParentId, forceUpload } = body as {
       frames: FrameInput[];
+      phashes?: string[];
       metadata: RoutineMetadata;
       parentVideoId?: string;
       forceUpload?: boolean;
     };
+
+    // Normalize / validate perceptual hashes (client should send 1-3 16-char hex strings)
+    const cleanPhashes: string[] = Array.isArray(phashes)
+      ? phashes.filter((h): h is string => typeof h === "string" && /^[0-9a-f]{16}$/i.test(h))
+      : [];
 
     if (!frames || frames.length === 0) {
       return NextResponse.json({ error: "No frames provided" }, { status: 400 });
@@ -90,6 +97,50 @@ export async function POST(request: NextRequest) {
     }
     // ────────────────────────────────────────────────────────────────────────
 
+    // ── Perceptual dHash fuzzy duplicate detection (cross-user) ─────────────
+    // The md5 fingerprint above catches exact re-uploads. The dHash check
+    // catches visually identical routines that have been re-encoded, cropped,
+    // or slightly trimmed. Threshold: min Hamming distance <= 8 bits.
+    //
+    // Bounded to the most recent 2000 videos to keep the query cheap. In
+    // practice duplicates appear soon after the original upload.
+    if (cleanPhashes.length && !forceUpload) {
+      try {
+        const { data: recentPhashed } = await serviceClient
+          .from("videos")
+          .select("id, routine_name, user_id, status, created_at, frame_phash")
+          .not("frame_phash", "is", null)
+          .in("status", ["analyzed", "processing", "uploaded"])
+          .order("created_at", { ascending: false })
+          .limit(2000);
+
+        if (Array.isArray(recentPhashed)) {
+          for (const row of recentPhashed) {
+            const rowHashes = Array.isArray(row.frame_phash) ? row.frame_phash : [];
+            if (!rowHashes.length) continue;
+            const d = minHammingAcrossFrames(cleanPhashes, rowHashes);
+            if (d <= DHASH_DUPLICATE_THRESHOLD) {
+              const sameOwner = row.user_id === user.id;
+              return NextResponse.json({
+                error: "DUPLICATE_VIDEO",
+                code: "DUPLICATE_VIDEO",
+                existingVideoId: sameOwner ? row.id : undefined,
+                existingRoutineName: sameOwner ? row.routine_name : "another member's routine",
+                existingStatus: sameOwner ? row.status : "analyzed",
+                hammingDistance: d,
+                message: sameOwner
+                  ? `This looks like the same routine you already submitted as "${row.routine_name}". If you want to track a new submission, record a new version of the routine.`
+                  : `This video closely matches one already in our system. If you own the original footage, please re-record or reach out so we can help.`,
+              }, { status: 409 });
+            }
+          }
+        }
+      } catch (phashErr) {
+        console.warn("dHash duplicate check failed (non-fatal):", phashErr);
+      }
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
     // Parse competition date safely
     let parsedCompDate: string | null = null;
     if (metadata.competitionDate) {
@@ -118,6 +169,7 @@ export async function POST(request: NextRequest) {
         file_size: metadata.originalFileSize || null,
         status: "processing",
         frame_fingerprint: frameFingerprint,
+        frame_phash: cleanPhashes.length ? cleanPhashes : null,
       })
       .select("id")
       .single();

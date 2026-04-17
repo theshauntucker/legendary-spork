@@ -147,4 +147,29 @@ export async function notifyAnalysisError(
     `
   );
 }
+export async function notifyAdminReport(
+  reporterEmail: string,
+  targetKind: string,
+  targetId: string,
+  reason: string
+) {
+  const now = new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" });
+  await sendEmail(
+    `🚨 New Report: ${targetKind} — ${targetId.slice(0, 12)}`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px;">
+      <h2 style="color: #dc2626;">New Moderation Report</h2>
+      <p><strong>Reporter:</strong> ${reporterEmail}</p>
+      <p><strong>Target:</strong> ${targetKind} / ${targetId}</p>
+      <p><strong>Reason:</strong></p>
+      <blockquote style="border-left: 3px solid #dc2626; padding-left: 12px; color: #374151;">
+        ${reason.replace(/[<>]/g, "")}
+      </blockquote>
+      <p><strong>Time:</strong> ${now} PDT</p>
+      <hr style="border: none; border-top: 1px solid #e5e7eb;" />
+      <p style="color: #6b7280; font-size: 12px;">RoutineX Moderation</p>
+    </div>
+    `
+  );
+}
 // cache bust Sun Mar 22 14:29:05 PDT 2026
