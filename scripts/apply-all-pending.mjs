@@ -1,10 +1,18 @@
 #!/usr/bin/env node
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, createWriteStream } from "node:fs";
 import { resolve } from "node:path";
 import { runSql } from "./_supabase-api.mjs";
 
 const ROOT = process.cwd();
 const PATTERN = /^supabase-coda-\d{3}-.*\.sql$/;
+const LOG_PATH = resolve(ROOT, "apply-migrations.log");
+const log = createWriteStream(LOG_PATH, { flags: "w" });
+
+function emit(entry) {
+  const line = JSON.stringify({ ts: new Date().toISOString(), ...entry });
+  process.stdout.write(line + "\n");
+  log.write(line + "\n");
+}
 
 async function ensureTracker() {
   await runSql(`
@@ -27,20 +35,28 @@ async function recordApplied(filename) {
 }
 
 async function main() {
-  console.log("[tracker] ensuring public._applied_migrations");
-  await ensureTracker();
+  emit({ event: "start", pattern: PATTERN.source });
+
+  try {
+    await ensureTracker();
+    emit({ event: "tracker_ready" });
+  } catch (err) {
+    emit({ event: "tracker_error", error: err.message });
+    throw err;
+  }
 
   const applied = await listApplied();
   const all = readdirSync(ROOT)
     .filter((f) => PATTERN.test(f))
     .sort();
 
+  emit({ event: "plan", total: all.length, already_applied: applied.size });
+
   if (all.length === 0) {
-    console.log("[info] no supabase-coda-*.sql files found at repo root");
+    emit({ event: "done", applied: 0, skipped: 0, failed: 0, note: "no migrations found" });
+    log.end();
     return;
   }
-
-  console.log(`[plan] ${all.length} candidate files, ${applied.size} already applied`);
 
   let successes = 0;
   let skipped = 0;
@@ -48,36 +64,40 @@ async function main() {
 
   for (const f of all) {
     if (applied.has(f)) {
-      console.log(`[skip] ${f} (already applied)`);
+      emit({ event: "skip", file: f, reason: "already_applied" });
       skipped++;
       continue;
     }
     const sql = readFileSync(resolve(ROOT, f), "utf8");
-    console.log(`[apply] ${f} (${sql.length} bytes)`);
+    emit({ event: "apply_start", file: f, bytes: sql.length });
     try {
-      await runSql(sql);
+      const result = await runSql(sql);
+      const rowCount = Array.isArray(result) ? result.length : null;
       await recordApplied(f);
-      console.log(`[ok]    ${f}`);
+      emit({ event: "apply_ok", file: f, row_count: rowCount });
       successes++;
     } catch (err) {
-      console.error(`[fail]  ${f}`);
-      console.error(err.message);
+      emit({ event: "apply_fail", file: f, error: err.message });
       failures.push({ file: f, error: err.message });
       break;
     }
   }
 
-  console.log("\n=== summary ===");
-  console.log(`applied:  ${successes}`);
-  console.log(`skipped:  ${skipped}`);
-  console.log(`failed:   ${failures.length}`);
-  if (failures.length) {
-    for (const f of failures) console.log(`  - ${f.file}: ${f.error.slice(0, 200)}`);
-    process.exit(1);
-  }
+  emit({
+    event: "done",
+    applied: successes,
+    skipped,
+    failed: failures.length,
+    failures,
+  });
+
+  log.end();
+
+  if (failures.length) process.exit(1);
 }
 
 main().catch((err) => {
-  console.error("[fatal]", err.message);
+  emit({ event: "fatal", error: err.message });
+  log.end();
   process.exit(1);
 });
