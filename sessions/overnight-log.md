@@ -18,7 +18,7 @@
 - [x] P8: Follow system + Home feed MVP
 - [x] P9: Fair Feed (v1 blend; edge function + cron deferred)
 - [x] P10: Reactions + comments (TrophyCard wiring deferred)
-- [ ] P11: Dance Bonds (DB apply blocked)
+- [x] P11: Dance Bonds (SQL+lib shipped; compute edge function + UI wiring deferred)
 - [ ] P12: Studios + Choreographer pages (DB apply blocked)
 - [ ] P13: Competition check-ins + weekend threads (DB apply blocked)
 - [ ] P14: First visit experience (4 member types, 5-tab nav)
@@ -60,3 +60,6 @@ Wrote `supabase-coda-005-fair-feed.sql` with `posts`, `reach_floor_queue`, `post
 
 ### P10 — Reactions + threaded comments
 Wrote `supabase-coda-006-engagement.sql` with `post_reactions` (composite PK on post_id/post_type/profile_id/emoji_code) and `comments` (with parent_comment_id for 1-level nesting and soft-delete via deleted_at) plus RLS. Built `/api/reactions` (POST upsert, DELETE with same PK) and `/api/comments` (GET by post + POST + PATCH soft-delete). `src/components/ReactionBar.tsx` ships the 4 primary reactions (💎🔥👑✨) inline with count badges and a `+` button that expands to an 18-emoji picker (heart, clap, star, trophy, microphone, fire_heart, eyes, kiss, tears, bow, mind_blown, pointing, muscle, rose). Supabase Realtime subscription on `post_reactions` filter `post_id=eq.` updates counts live. `src/components/CommentThread.tsx` fetches via REST, subscribes to INSERTs via Realtime, renders one level of nesting, posts on Enter. Wired into `FeedCard` — tap "Comments" to toggle thread. Did NOT wire into TrophyCard (hit length budget; trophy-wall cards already have Share + Visibility + count-up animation). `pnpm build` clean. Manual test in morning: apply migration 006, open `/home`, tap 💎 on a feed item, open a second browser as another user → count should tick to 2 without refresh; post a comment → other browser sees it.
+
+### P11 — Dance Bonds
+Wrote `supabase-coda-007-dance-bonds.sql` with `dance_bonds` table (composite PK enforcing profile_a_id < profile_b_id) + public read RLS. Built `src/lib/dance-bonds.ts` with all 12 bond types (diamond, fire, crown, division, studio, song, weekend, second_degree, mutual_90, rising, choreo, pace), emoji map, rarity-ranked top-3 selector, and `computeBondTypes()` that takes two profile signals + context and returns bond codes. Built `src/components/BondEmojiString.tsx` that fetches from `dance_bonds` for (viewer, target), renders top-3 emojis with hover title, uses Supabase client for reads. SKIPPED: the Supabase edge function `compute-dance-bonds` (no deploy capability from this session), and did NOT wire BondEmojiString into FeedCard/TrophyCard/profile (needs viewer profile id passed through server→client — risk of extra changes breaking build). `pnpm build` clean. Manual test in morning: apply migration 007; a future session must deploy an edge function that walks profile pairs and upserts bond types. Can manually INSERT a dance_bonds row, then wire BondEmojiString into FeedCard with `<BondEmojiString viewerProfileId={...} targetProfileId={item.owner.id} />`.
