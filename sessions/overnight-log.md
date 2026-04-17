@@ -9,7 +9,7 @@
 ## Prompt Progress
 - [x] P0: Audit complete
 - [x] P1: VIP→Coda rename (degraded — no VIP files exist)
-- [ ] P2: Design system foundation
+- [x] P2: Design system foundation
 - [ ] P3: DAYTIME/SHOWTIME atmosphere tokens
 - [ ] P4: Profile + Aura system (DB apply blocked; SQL written)
 - [ ] P5: Visibility controls (DB apply blocked; SQL written)
@@ -33,3 +33,6 @@ Wrote `sessions/overnight-audit.md` detailing missing files, missing Supabase MC
 
 ### P1 — VIP→Coda rename (partial)
 No VIP_XX files existed in the workspace to rename — `git mv` skipped for all 10 of them. Updated CLAUDE.md: "VIP Social Platform" → "Coda Social Platform", 8 spec-file references swapped, build-process step + execution-order line updated, added Coda_14 to the reference list. Updated `src/app/api/bayda/route.ts` Bayda prompt: "THE VIP VIBE" section renamed to "CODA, THE SOCIAL LAYER", and the engagement tease line rewritten to reference "a whole social platform called Coda". The 9 expected new Coda_XX specs (Coda_05, 06, 07, 15, 16, 17, 18, 19, Launch_Day_Kit) are not present in the workspace — flagged as a degradation affecting future prompts that reference them. Manual test in morning: open Bayda, ask "what's coming next?" — should mention Coda (not VIP).
+
+### P2 — Design system foundation
+Shipped all six design primitives: `src/lib/motion.ts` (springOut, tapScale, fadeLift, stagger), `src/lib/haptics.ts` (tap/select/success/error/milestone with navigator.vibrate guard), `src/lib/gradients.ts` (10 named gradients + shadowRim), plus `ui/Glass.tsx`, `ui/GradientText.tsx`, and `ui/Button.tsx` (primary/secondary/ghost with framer-motion tapScale + haptics.tap() + @radix-ui/react-slot for asChild). Added keyframes to globals.css (diamond-shimmer, aura-pulse, gradient-flash) and a custom gradient scrollbar. `pnpm build` is clean and `/design-preview` renders all components. Manual test in morning: visit `/design-preview` — three buttons animate on tap, Glass card looks glassy, gradients render.
