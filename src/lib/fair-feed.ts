@@ -67,11 +67,23 @@ export async function buildFeed(args: BuildFeedArgs): Promise<BuildFeedResult> {
 
   const cursorClause = args.cursor ? { lt: args.cursor } : null;
 
+  // Ghost-mode check: admins see their own test data; everyone else doesn't.
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: ghostRow } = user
+    ? await supabase.from("admin_ghosts").select("user_id").eq("user_id", user.id).maybeSingle()
+    : { data: null as { user_id: string } | null };
+  const viewerIsGhost = !!ghostRow;
+
   let achievementsQuery = supabase
     .from("achievements")
     .select("id, award_level, total_score, competition_name, earned_at, video_id, profile_id")
     .order("earned_at", { ascending: false })
     .limit(limit * 2);
+
+  // Filter test data for non-ghost viewers.
+  if (!viewerIsGhost) {
+    achievementsQuery = achievementsQuery.eq("is_test", false);
+  }
 
   if (candidateOwnerIds.length) {
     achievementsQuery = achievementsQuery.in("profile_id", candidateOwnerIds);
@@ -91,10 +103,14 @@ export async function buildFeed(args: BuildFeedArgs): Promise<BuildFeedResult> {
   }
 
   const ownerIds = Array.from(new Set(rows.map((r) => r.profile_id)));
-  const { data: ownerProfiles } = await supabase
+  let ownerProfilesQuery = supabase
     .from("profiles")
     .select("id, handle, display_name, aura_stops, aura_tier, glyph, studio_id")
     .in("id", ownerIds);
+  if (!viewerIsGhost) {
+    ownerProfilesQuery = ownerProfilesQuery.eq("is_test", false);
+  }
+  const { data: ownerProfiles } = await ownerProfilesQuery;
   const profileById = new Map(
     ((ownerProfiles ?? []) as ProfileLite[]).map((p) => [p.id, p]),
   );

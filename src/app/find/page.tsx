@@ -34,11 +34,13 @@ export default function FindPage() {
           .from("profiles")
           .select("id, handle, display_name")
           .or(`handle.ilike.${q},display_name.ilike.${q}`)
+          .eq("is_test", false)
           .limit(15),
         supabase
           .from("studios")
           .select("id, slug, name, city, state")
           .ilike("name", q)
+          .eq("is_test", false)
           .limit(15),
         supabase.from("choreographers").select("id, slug, name").ilike("name", q).limit(15),
       ]);
