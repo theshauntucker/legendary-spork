@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Sparkles, User, LogOut, Calendar, Trophy } from "lucide-react";
+import { Menu, X, Sparkles, LogOut, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { NotificationBell } from "@/components/NotificationBell";
+import { ShellSwitcher } from "@/components/ShellSwitcher";
 
 const navLinks = [
   { label: "How It Works", href: "/#how-it-works" },
@@ -19,19 +20,31 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileType, setProfileType] = useState<
+    "dancer" | "parent" | "studio" | "choreographer" | null
+  >(null);
 
   useEffect(() => {
     const supabase = createClient();
 
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       setUser(data.user);
       setLoading(false);
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("profile_type")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+        setProfileType(profile?.profile_type ?? null);
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (!session?.user) setProfileType(null);
     });
 
     return () => subscription.unsubscribe();
@@ -78,24 +91,12 @@ export default function Navbar() {
               <div className="w-24 h-9 rounded-full bg-white/5 animate-pulse" />
             ) : user ? (
               <div className="flex items-center gap-3">
-                <a
-                  href="/dancers"
-                  className="inline-flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors"
-                >
-                  <Trophy className="h-4 w-4 text-gold-400" />
-                  Season
-                </a>
-                <a
-                  href="/dashboard"
-                  className="inline-flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors"
-                >
-                  <User className="h-4 w-4" />
-                  Dashboard
-                </a>
+                <ShellSwitcher profileType={profileType} />
                 <NotificationBell />
                 <button
                   onClick={handleLogout}
                   className="inline-flex items-center gap-1.5 text-sm text-surface-200 hover:text-white transition-colors"
+                  aria-label="Log out"
                 >
                   <LogOut className="h-4 w-4" />
                 </button>
@@ -160,13 +161,9 @@ export default function Navbar() {
 
               {user ? (
                 <>
-                  <a
-                    href="/dashboard"
-                    className="block text-sm text-surface-200 hover:text-white transition-colors"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Dashboard
-                  </a>
+                  <div className="py-2">
+                    <ShellSwitcher profileType={profileType} />
+                  </div>
                   <button
                     onClick={() => {
                       setMobileOpen(false);

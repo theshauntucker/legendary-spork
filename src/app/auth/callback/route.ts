@@ -67,6 +67,27 @@ export async function GET(request: Request) {
           }
           // Payment exists but credits not yet visible — let them through
         }
+
+        // Role-based shell routing (Meta-style): pick the default product for this user.
+        // If the caller passed ?next=, honor that. Otherwise inspect profile.
+        if (next === "/dashboard" || next === "/") {
+          const { data: profile } = await serviceClient
+            .from("profiles")
+            .select("profile_type, handle")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          if (!profile) {
+            return NextResponse.redirect(`${origin}/welcome`);
+          }
+
+          // Studio owners land on the studio dashboard.
+          if (profile.profile_type === "studio") {
+            return NextResponse.redirect(`${origin}/studio/dashboard`);
+          }
+          // Everyone else (dancer, parent, choreographer) lands on Coda feed.
+          return NextResponse.redirect(`${origin}/home`);
+        }
       }
 
       return NextResponse.redirect(`${origin}${next}`);
