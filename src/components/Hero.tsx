@@ -60,13 +60,14 @@ export default function Hero() {
           </h1>
 
           <p className="mx-auto mt-5 max-w-2xl text-base sm:text-lg text-surface-200 leading-relaxed">
-            Upload any routine and get <span className="text-white font-semibold">competition-standard scoring, timestamped judge notes, and a Coach&apos;s Playbook</span> in under 5 minutes.
+            Upload any routine and get <span className="text-white font-semibold">competition-standard scoring, timestamped judge notes, and a Coach&apos;s Playbook</span> in under 5 minutes. Then step into <span className="text-white font-semibold">Coda</span> — the private, photo-free social platform built for dancers, cheer athletes, and the studios who coach them.
           </p>
 
           <div className="mt-5 flex flex-wrap items-center justify-center gap-5 text-sm text-surface-200">
             <div className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-primary-400" /><span>Competition-Calibrated Scoring</span></div>
             <div className="flex items-center gap-1.5"><Zap className="h-4 w-4 text-accent-400" /><span>Results in Under 5 Minutes</span></div>
-            <div className="flex items-center gap-1.5"><Trophy className="h-4 w-4 text-gold-400" /><span>Full Season Tracking</span></div>
+            <div className="flex items-center gap-1.5"><Trophy className="h-4 w-4 text-gold-400" /><span>Trophies + Aura Profile</span></div>
+            <div className="flex items-center gap-1.5"><Users className="h-4 w-4 text-primary-400" /><span>Studio & Choreographer Pages</span></div>
           </div>
         </motion.div>
 

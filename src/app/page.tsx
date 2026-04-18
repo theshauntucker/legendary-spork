@@ -3,6 +3,7 @@ import Hero from "@/components/Hero";
 import VideoDemo from "@/components/VideoDemo";
 import HowItWorks from "@/components/HowItWorks";
 import Features from "@/components/Features";
+import CodaSocial from "@/components/CodaSocial";
 import SampleAnalysis from "@/components/SampleAnalysis";
 import Competitions from "@/components/Competitions";
 import Pricing from "@/components/Pricing";
@@ -26,6 +27,7 @@ export default function Home() {
       <PrivacyTrust />
       <HowItWorks />
       <Features />
+      <CodaSocial />
       <SampleAnalysis />
       <Competitions />
       <Pricing />
