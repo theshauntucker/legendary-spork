@@ -1,6 +1,12 @@
 import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { grantCredits, hasCreditsInDb, BETA_CREDITS } from "@/lib/credits";
+import {
+  grantCredits,
+  grantSubscriptionCycle,
+  hasCreditsInDb,
+  BETA_CREDITS,
+  SUBSCRIPTION_CREDITS,
+} from "@/lib/credits";
 import { getStripe } from "@/lib/stripe";
 import SuccessClient from "./SuccessClient";
 
@@ -54,17 +60,37 @@ export default async function SuccessPage({
         const stripe = getStripe();
         const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-        if (
-          session.payment_status === "paid" &&
-          session.metadata?.user_id === user.id
-        ) {
+        // Subscriptions return payment_status="no_payment_required" on the
+        // checkout session itself after the invoice is paid. Accept both.
+        const isSubMode = session.mode === "subscription";
+        const paidOk =
+          session.payment_status === "paid" ||
+          (isSubMode && session.payment_status === "no_payment_required");
+
+        if (paidOk && session.metadata?.user_id === user.id) {
           const paymentType =
             session.metadata?.payment_type || "beta_access";
           const referralCode = session.metadata?.referral_code || null;
           const isBeta = paymentType === "beta_access";
           const isPack = paymentType === "video_analysis";
-          const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : 1;
-          const amountFallback = isPack ? 2999 : isBeta ? 999 : 899;
+          const isSingle = paymentType === "single";
+          const isSubscription = paymentType === "subscription";
+          const creditsToGrant = isSubscription
+            ? SUBSCRIPTION_CREDITS
+            : isBeta
+            ? BETA_CREDITS
+            : isPack
+            ? 5
+            : isSingle
+            ? 2
+            : 1;
+          const amountFallback = isSubscription
+            ? 1299
+            : isPack
+            ? 2999
+            : isBeta
+            ? 999
+            : 899;
 
           const { error: insertError } = await serviceClient
             .from("payments")
@@ -84,18 +110,98 @@ export default async function SuccessPage({
             });
 
           if (insertError && insertError.code !== "23505") {
-            console.error("Success page: Payment insert failed:", insertError.message);
+            console.error(
+              "Success page: Payment insert failed:",
+              insertError.message,
+              { sessionId, userId: user.id, paymentType }
+            );
           }
 
-          // Always try to grant credits — even if payment insert was a duplicate.
-          await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
-          console.log(
-            `Success page: Granted ${creditsToGrant} credits to ${user.id} (${paymentType} — webhook fallback)`
-          );
+          if (isSubscription) {
+            // Mirror the webhook's subscription path: pull period window from
+            // the Stripe sub, upsert subscriptions row, then grant via the
+            // anti-arbitrage function.
+            const subscriptionId =
+              typeof session.subscription === "string"
+                ? session.subscription
+                : null;
+            const customerId =
+              typeof session.customer === "string" ? session.customer : null;
+
+            let periodStart = new Date();
+            let periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+            if (subscriptionId) {
+              try {
+                const sub = (await stripe.subscriptions.retrieve(
+                  subscriptionId
+                )) as unknown as {
+                  current_period_start?: number;
+                  current_period_end?: number;
+                  items?: {
+                    data?: Array<{
+                      current_period_start?: number;
+                      current_period_end?: number;
+                    }>;
+                  };
+                };
+                const item = sub.items?.data?.[0];
+                const pStart =
+                  sub.current_period_start ?? item?.current_period_start;
+                const pEnd =
+                  sub.current_period_end ?? item?.current_period_end;
+                if (pStart) periodStart = new Date(pStart * 1000);
+                if (pEnd) periodEnd = new Date(pEnd * 1000);
+              } catch (err) {
+                console.error(
+                  "Success page: Failed to fetch subscription:",
+                  err
+                );
+              }
+            }
+
+            await serviceClient.from("subscriptions").upsert(
+              {
+                user_id: user.id,
+                stripe_subscription_id: subscriptionId,
+                stripe_customer_id: customerId,
+                status: "active",
+                current_period_start: periodStart.toISOString(),
+                current_period_end: periodEnd.toISOString(),
+                cancel_at_period_end: false,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "user_id" }
+            );
+
+            await grantSubscriptionCycle(
+              serviceClient,
+              user.id,
+              SUBSCRIPTION_CREDITS,
+              periodStart,
+              periodEnd
+            );
+            console.log(
+              `Success page: Season Member activated for ${user.id} (+${SUBSCRIPTION_CREDITS} credits, expires ${periodEnd.toISOString()}) — webhook fallback`
+            );
+          } else {
+            // Pack / single / beta — additive grant, grantCredits is idempotent
+            await grantCredits(
+              serviceClient,
+              user.id,
+              creditsToGrant,
+              isBeta
+            );
+            console.log(
+              `Success page: Granted ${creditsToGrant} credits to ${user.id} (${paymentType} — webhook fallback)`
+            );
+          }
         }
       }
     } catch (err) {
-      console.error("Success page: Payment verification failed:", err);
+      console.error("Success page: Payment verification failed:", err, {
+        sessionId,
+        userId: user.id,
+      });
     }
   }
 

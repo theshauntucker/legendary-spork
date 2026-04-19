@@ -45,6 +45,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
+  // Entry-point breadcrumb — makes it trivial to correlate errors below with
+  // the event that triggered them in Vercel logs.
+  console.log(`Webhook: received ${event.type} (event_id=${event.id})`);
+
   // ── Subscription renewal — RESET credits to 10 each billing cycle ──────────
   // Use-it-or-lose-it semantics: monthly refresh zeros out used_credits and
   // sets total=10. Unused credits from the prior period don't roll over, so
@@ -65,7 +69,7 @@ export async function POST(request: NextRequest) {
     // Only process subscription renewals (not the first invoice — that's handled by checkout.session.completed)
     if (invoice.billing_reason === "subscription_cycle") {
       const subMetadata = invoice.subscription_details?.metadata || {};
-      const userId = subMetadata.user_id;
+      let userId = subMetadata.user_id;
 
       // Best-effort period extraction: invoice.lines[0].period is the cycle
       // the credits are for; fall back to invoice.period_* then to a 30-day
@@ -76,6 +80,39 @@ export async function POST(request: NextRequest) {
       const periodEndSec = line?.period?.end ?? invoice.period_end ?? Math.floor(Date.now() / 1000) + 30 * 86400;
       const periodStart = new Date(periodStartSec * 1000);
       const periodEnd = new Date(periodEndSec * 1000);
+
+      // Fallback 1 — lookup by stripe_customer_id if no metadata.user_id.
+      // Covers manually-reconciled subs (e.g. Jody) where Stripe never saw
+      // our metadata. Fallback 2 — lookup by stripe_subscription_id if we
+      // have that but no customer match.
+      if (!userId && invoice.customer) {
+        const serviceClient = await createServiceClient();
+        const { data: match } = await serviceClient
+          .from("subscriptions")
+          .select("user_id")
+          .eq("stripe_customer_id", invoice.customer)
+          .maybeSingle();
+        if (match?.user_id) {
+          userId = match.user_id;
+          console.log(
+            `Webhook renewal: matched user ${userId} via stripe_customer_id=${invoice.customer} (no metadata)`
+          );
+        }
+      }
+      if (!userId && invoice.subscription) {
+        const serviceClient = await createServiceClient();
+        const { data: match } = await serviceClient
+          .from("subscriptions")
+          .select("user_id")
+          .eq("stripe_subscription_id", invoice.subscription)
+          .maybeSingle();
+        if (match?.user_id) {
+          userId = match.user_id;
+          console.log(
+            `Webhook renewal: matched user ${userId} via stripe_subscription_id=${invoice.subscription}`
+          );
+        }
+      }
 
       if (userId) {
         const serviceClient = await createServiceClient();
@@ -121,9 +158,27 @@ export async function POST(request: NextRequest) {
             if (error && error.code !== "23505") console.error("Renewal payment insert error:", error);
           });
         } catch (err) {
-          console.error("Webhook: Failed to reset renewal credits:", err);
+          console.error("Webhook: Failed to reset renewal credits:", {
+            error: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined,
+            eventId: event.id,
+            userId,
+            subscriptionId: invoice.subscription,
+            customerId: invoice.customer,
+            billingReason: invoice.billing_reason,
+          });
           return NextResponse.json({ error: "Renewal credit refresh failed" }, { status: 500 });
         }
+      } else {
+        console.error(
+          "Webhook renewal: could not resolve user_id — metadata missing and no customer/subscription match in DB",
+          {
+            eventId: event.id,
+            subscriptionId: invoice.subscription,
+            customerId: invoice.customer,
+            metadataKeys: Object.keys(subMetadata),
+          }
+        );
       }
 
       // ─── Studio subscription renewal branch (additive) ─────────────────
@@ -168,7 +223,14 @@ export async function POST(request: NextRequest) {
             console.log(`Webhook: Studio ${studioId} monthly renewal — pool +50`);
           }
         } catch (err) {
-          console.error("Webhook: Studio subscription renewal failed:", err);
+          console.error("Webhook: Studio subscription renewal failed:", {
+            error: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined,
+            eventId: event.id,
+            studioId,
+            subscriptionId: invoice.subscription,
+            customerId: invoice.customer,
+          });
           return NextResponse.json({ error: "Studio renewal failed" }, { status: 500 });
         }
       }
@@ -251,7 +313,14 @@ export async function POST(request: NextRequest) {
           `Webhook: Studio ${studioId} trial started (pool=25, ends ${trialEndsAt})`
         );
       } catch (err) {
-        console.error("Webhook: Studio checkout processing failed:", err);
+        console.error("Webhook: Studio checkout processing failed:", {
+          error: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : undefined,
+          eventId: event.id,
+          sessionId: session.id,
+          studioId,
+          userId,
+        });
         return NextResponse.json({ error: "Studio checkout failed" }, { status: 500 });
       }
       return NextResponse.json({ received: true });
@@ -370,7 +439,16 @@ export async function POST(request: NextRequest) {
           session.amount_total || 1299
         ).catch((err: unknown) => console.error("Payment notification failed:", err));
       } catch (err) {
-        console.error("Webhook: Subscription checkout processing failed:", err);
+        console.error("Webhook: Subscription checkout processing failed:", {
+          error: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : undefined,
+          eventId: event.id,
+          sessionId: session.id,
+          userId,
+          subscriptionId,
+          customerId,
+          paymentType,
+        });
         return NextResponse.json({ error: "Subscription setup failed" }, { status: 500 });
       }
       return NextResponse.json({ received: true });
@@ -403,7 +481,15 @@ export async function POST(request: NextRequest) {
           await grantCredits(serviceClient, userId, creditsToGrant, isBeta);
           console.log(`Webhook: Recovered missing credits for ${userId}`);
         } catch (err) {
-          console.error("Webhook: Credit recovery failed:", err);
+          console.error("Webhook: Credit recovery failed:", {
+            error: err instanceof Error ? err.message : String(err),
+            stack: err instanceof Error ? err.stack : undefined,
+            eventId: event.id,
+            sessionId: session.id,
+            userId,
+            paymentType,
+            creditsToGrant,
+          });
           return NextResponse.json({ error: "Credit recovery failed" }, { status: 500 });
         }
       }
@@ -443,11 +529,20 @@ export async function POST(request: NextRequest) {
       // (uses insert-first with unique constraint fallback)
       await grantCredits(serviceClient, userId, creditsToGrant, isBeta);
     } catch (err) {
-      console.error("Webhook: Failed to record payment or grant credits:", err);
+      console.error("Webhook: Failed to record payment or grant credits:", {
+        error: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+        eventId: event.id,
+        sessionId: session.id,
+        userId,
+        paymentType,
+        creditsToGrant,
+        amountTotal: session.amount_total,
+      });
       notifyWebhookError(
         "checkout.session.completed",
         err instanceof Error ? err.message : String(err),
-        `user_id: ${userId}, payment_type: ${paymentType}, session: ${session.id}`
+        `user_id: ${userId}, payment_type: ${paymentType}, session: ${session.id}, credits: ${creditsToGrant}`
       ).catch(() => {});
       // Return 500 so Stripe retries the webhook
       return NextResponse.json(
@@ -553,7 +648,16 @@ export async function POST(request: NextRequest) {
         ).catch((err) => console.error("Cancel notification failed:", err));
       }
     } catch (err) {
-      console.error("Webhook: subscription lifecycle handler failed:", err);
+      console.error("Webhook: subscription lifecycle handler failed:", {
+        error: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+        eventType: event.type,
+        eventId: event.id,
+        subscriptionId: sub.id,
+        userId,
+        newStatus,
+        cancelAtPeriodEnd: sub.cancel_at_period_end,
+      });
       notifyWebhookError(
         event.type,
         err instanceof Error ? err.message : String(err),

@@ -1,6 +1,13 @@
 import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { getUserCredits, grantCredits, hasCreditsInDb, BETA_CREDITS } from "@/lib/credits";
+import {
+  getUserCredits,
+  grantCredits,
+  grantSubscriptionCycle,
+  hasCreditsInDb,
+  BETA_CREDITS,
+  SUBSCRIPTION_CREDITS,
+} from "@/lib/credits";
 import { getStripe } from "@/lib/stripe";
 import DashboardClient from "./DashboardClient";
 
@@ -39,17 +46,37 @@ export default async function DashboardPage({
         const stripe = getStripe();
         const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-        if (
-          session.payment_status === "paid" &&
-          session.metadata?.user_id === user.id
-        ) {
+        // Subscriptions: payment_status is "no_payment_required" after first
+        // invoice pays. Accept both.
+        const isSubMode = session.mode === "subscription";
+        const paidOk =
+          session.payment_status === "paid" ||
+          (isSubMode && session.payment_status === "no_payment_required");
+
+        if (paidOk && session.metadata?.user_id === user.id) {
           const paymentType =
             session.metadata?.payment_type || "beta_access";
           const referralCode = session.metadata?.referral_code || null;
           const isBeta = paymentType === "beta_access";
           const isPack = paymentType === "video_analysis";
-          const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : 1;
-          const amountFallback = isPack ? 2999 : isBeta ? 999 : 899;
+          const isSingle = paymentType === "single";
+          const isSubscription = paymentType === "subscription";
+          const creditsToGrant = isSubscription
+            ? SUBSCRIPTION_CREDITS
+            : isBeta
+            ? BETA_CREDITS
+            : isPack
+            ? 5
+            : isSingle
+            ? 2
+            : 1;
+          const amountFallback = isSubscription
+            ? 1299
+            : isPack
+            ? 2999
+            : isBeta
+            ? 999
+            : 899;
 
           const { error: insertError } = await serviceClient
             .from("payments")
@@ -69,18 +96,97 @@ export default async function DashboardPage({
             });
 
           if (insertError && insertError.code !== "23505") {
-            console.error("Dashboard: Payment insert failed:", insertError.message);
+            console.error(
+              "Dashboard: Payment insert failed:",
+              insertError.message,
+              { sessionId, userId: user.id, paymentType }
+            );
           }
 
-          // Always try to grant credits
-          await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
-          console.log(
-            `Dashboard: Granted ${creditsToGrant} credits to ${user.id} (webhook fallback)`
-          );
+          if (isSubscription) {
+            // Mirror webhook's subscription flow: upsert subscriptions row with
+            // Stripe IDs + period window, then anti-arbitrage grant.
+            const subscriptionId =
+              typeof session.subscription === "string"
+                ? session.subscription
+                : null;
+            const customerId =
+              typeof session.customer === "string" ? session.customer : null;
+
+            let periodStart = new Date();
+            let periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+            if (subscriptionId) {
+              try {
+                const sub = (await stripe.subscriptions.retrieve(
+                  subscriptionId
+                )) as unknown as {
+                  current_period_start?: number;
+                  current_period_end?: number;
+                  items?: {
+                    data?: Array<{
+                      current_period_start?: number;
+                      current_period_end?: number;
+                    }>;
+                  };
+                };
+                const item = sub.items?.data?.[0];
+                const pStart =
+                  sub.current_period_start ?? item?.current_period_start;
+                const pEnd =
+                  sub.current_period_end ?? item?.current_period_end;
+                if (pStart) periodStart = new Date(pStart * 1000);
+                if (pEnd) periodEnd = new Date(pEnd * 1000);
+              } catch (err) {
+                console.error(
+                  "Dashboard: Failed to fetch subscription:",
+                  err
+                );
+              }
+            }
+
+            await serviceClient.from("subscriptions").upsert(
+              {
+                user_id: user.id,
+                stripe_subscription_id: subscriptionId,
+                stripe_customer_id: customerId,
+                status: "active",
+                current_period_start: periodStart.toISOString(),
+                current_period_end: periodEnd.toISOString(),
+                cancel_at_period_end: false,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "user_id" }
+            );
+
+            await grantSubscriptionCycle(
+              serviceClient,
+              user.id,
+              SUBSCRIPTION_CREDITS,
+              periodStart,
+              periodEnd
+            );
+            console.log(
+              `Dashboard: Season Member activated for ${user.id} (+${SUBSCRIPTION_CREDITS} credits, expires ${periodEnd.toISOString()}) — webhook fallback`
+            );
+          } else {
+            // Pack / single / beta — additive grant
+            await grantCredits(
+              serviceClient,
+              user.id,
+              creditsToGrant,
+              isBeta
+            );
+            console.log(
+              `Dashboard: Granted ${creditsToGrant} credits to ${user.id} (${paymentType} — webhook fallback)`
+            );
+          }
         }
       }
     } catch (err) {
-      console.error("Dashboard: Payment verification failed:", err);
+      console.error("Dashboard: Payment verification failed:", err, {
+        sessionId,
+        userId: user.id,
+      });
       // Non-fatal — continue loading dashboard
     }
   }
