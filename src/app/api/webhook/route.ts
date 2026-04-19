@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
-import { grantCredits, hasCreditsInDb, BETA_CREDITS } from "@/lib/credits";
+import {
+  grantCredits,
+  hasCreditsInDb,
+  resetSubscriptionCredits,
+  grantSubscriptionCycle,
+  markSubscriptionExpires,
+  BETA_CREDITS,
+  SUBSCRIPTION_CREDITS,
+} from "@/lib/credits";
 import { createServiceClient } from "@/lib/supabase/server";
-import { notifyPayment } from "@/lib/notifications";
+import {
+  notifyPayment,
+  notifySubscriptionCanceled,
+  notifyWebhookError,
+} from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -33,13 +45,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // ── Subscription renewal — grant 10 credits each billing cycle ─────────────
+  // ── Subscription renewal — RESET credits to 10 each billing cycle ──────────
+  // Use-it-or-lose-it semantics: monthly refresh zeros out used_credits and
+  // sets total=10. Unused credits from the prior period don't roll over, so
+  // a user can never accumulate credits beyond one month's allowance.
   if (event.type === "invoice.payment_succeeded") {
     const invoice = event.data.object as {
       subscription?: string;
+      customer?: string;
       customer_email?: string;
       amount_paid?: number;
       billing_reason?: string;
+      period_start?: number; // unix seconds
+      period_end?: number;   // unix seconds
+      lines?: { data?: Array<{ period?: { start: number; end: number } }> };
       subscription_details?: { metadata?: Record<string, string> };
     };
 
@@ -48,27 +67,62 @@ export async function POST(request: NextRequest) {
       const subMetadata = invoice.subscription_details?.metadata || {};
       const userId = subMetadata.user_id;
 
+      // Best-effort period extraction: invoice.lines[0].period is the cycle
+      // the credits are for; fall back to invoice.period_* then to a 30-day
+      // window anchored on "now" if Stripe didn't send them (never happens
+      // in practice — defensive).
+      const line = invoice.lines?.data?.[0];
+      const periodStartSec = line?.period?.start ?? invoice.period_start ?? Math.floor(Date.now() / 1000);
+      const periodEndSec = line?.period?.end ?? invoice.period_end ?? Math.floor(Date.now() / 1000) + 30 * 86400;
+      const periodStart = new Date(periodStartSec * 1000);
+      const periodEnd = new Date(periodEndSec * 1000);
+
       if (userId) {
         const serviceClient = await createServiceClient();
         try {
-          await grantCredits(serviceClient, userId, 10, false);
-          console.log(`Webhook: Granted 10 renewal credits to ${userId} (subscription cycle)`);
+          await resetSubscriptionCredits(
+            serviceClient,
+            userId,
+            SUBSCRIPTION_CREDITS,
+            periodStart,
+            periodEnd
+          );
+          console.log(
+            `Webhook: Reset subscription credits for ${userId} → 10 (cycle ${periodStart.toISOString()} → ${periodEnd.toISOString()})`
+          );
 
-          // Record renewal payment
+          // Sync subscription status
+          await serviceClient.from("subscriptions").upsert(
+            {
+              user_id: userId,
+              stripe_subscription_id: invoice.subscription || null,
+              stripe_customer_id: invoice.customer || null,
+              status: "active",
+              current_period_start: periodStart.toISOString(),
+              current_period_end: periodEnd.toISOString(),
+              cancel_at_period_end: false,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id" }
+          );
+
+          // Record renewal payment (no throw — ancillary)
           await serviceClient.from("payments").insert({
             user_id: userId,
-            stripe_session_id: invoice.subscription || `renewal_${Date.now()}`,
+            stripe_session_id: invoice.subscription
+              ? `${invoice.subscription}_${periodStartSec}`
+              : `renewal_${Date.now()}`,
             payment_type: "subscription_renewal",
             amount_cents: invoice.amount_paid || 1299,
             currency: "usd",
             status: "completed",
-            credits_granted: 10,
+            credits_granted: SUBSCRIPTION_CREDITS,
           }).then(({ error }) => {
             if (error && error.code !== "23505") console.error("Renewal payment insert error:", error);
           });
         } catch (err) {
-          console.error("Webhook: Failed to grant renewal credits:", err);
-          return NextResponse.json({ error: "Renewal credit grant failed" }, { status: 500 });
+          console.error("Webhook: Failed to reset renewal credits:", err);
+          return NextResponse.json({ error: "Renewal credit refresh failed" }, { status: 500 });
         }
       }
 
@@ -209,6 +263,119 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
+    // ─── B2C subscription first-invoice branch ────────────────────────────
+    // The Season Member ($12.99/mo) flow: set up the subscriptions row and
+    // call resetSubscriptionCredits so the user starts with total=10, used=0,
+    // and a billing period end from Stripe. Subsequent monthly renewals go
+    // through invoice.payment_succeeded / subscription_cycle above.
+    const isSubscription = paymentType === "subscription";
+    if (isSubscription) {
+      const serviceClient = await createServiceClient();
+      const subscriptionId =
+        typeof session.subscription === "string" ? session.subscription : null;
+      const customerId =
+        typeof session.customer === "string" ? session.customer : null;
+
+      // Pull period_end from the Stripe subscription (not on the checkout session itself).
+      // In recent Stripe API versions these fields moved to subscription items, so
+      // check both locations to stay forward/backward compatible.
+      let periodStart = new Date();
+      let periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      if (subscriptionId) {
+        try {
+          const sub = (await stripe.subscriptions.retrieve(subscriptionId)) as unknown as {
+            current_period_start?: number;
+            current_period_end?: number;
+            items?: { data?: Array<{ current_period_start?: number; current_period_end?: number }> };
+          };
+          const item = sub.items?.data?.[0];
+          const pStart = sub.current_period_start ?? item?.current_period_start;
+          const pEnd = sub.current_period_end ?? item?.current_period_end;
+          if (pStart) periodStart = new Date(pStart * 1000);
+          if (pEnd) periodEnd = new Date(pEnd * 1000);
+        } catch (err) {
+          console.error("Webhook: Failed to fetch subscription for period window:", err);
+        }
+      }
+
+      try {
+        // Idempotency: if a payment row already exists for this session, skip the rest.
+        const { data: existing } = await serviceClient
+          .from("payments")
+          .select("id")
+          .eq("stripe_session_id", session.id)
+          .maybeSingle();
+
+        if (!existing) {
+          await serviceClient.from("payments").insert({
+            user_id: userId,
+            stripe_session_id: session.id,
+            stripe_payment_intent:
+              typeof session.payment_intent === "string" ? session.payment_intent : null,
+            payment_type: "subscription",
+            amount_cents: session.amount_total || 1299,
+            currency: session.currency || "usd",
+            status: "completed",
+            credits_granted: SUBSCRIPTION_CREDITS,
+            referral_code: referralCode,
+          }).then(({ error }) => {
+            if (error && error.code !== "23505") {
+              console.error("Subscription payment insert error:", error);
+            }
+          });
+        }
+
+        await serviceClient.from("subscriptions").upsert(
+          {
+            user_id: userId,
+            stripe_subscription_id: subscriptionId,
+            stripe_customer_id: customerId,
+            status: "active",
+            current_period_start: periodStart.toISOString(),
+            current_period_end: periodEnd.toISOString(),
+            cancel_at_period_end: false,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" }
+        );
+
+        // Use the anti-arbitrage grant: extends if already in an active period,
+        // resets otherwise. Prevents cancel→resubscribe-same-day credit washing.
+        await grantSubscriptionCycle(
+          serviceClient,
+          userId,
+          SUBSCRIPTION_CREDITS,
+          periodStart,
+          periodEnd
+        );
+
+        console.log(
+          `Webhook: Season Member activated for ${userId} (+${SUBSCRIPTION_CREDITS} credits, expires ${periodEnd.toISOString()})`
+        );
+
+        if (referralCode) {
+          serviceClient.rpc("attribute_affiliate_revenue", {
+            p_user_id: userId,
+            p_amount_cents: session.amount_total || 1299,
+          }).then(({ error: affErr }) => {
+            if (affErr) console.error("Affiliate attribution failed:", affErr);
+          });
+        }
+
+        const customerEmail = session.customer_email || session.customer_details?.email || userId;
+        notifyPayment(
+          customerEmail,
+          userId,
+          "subscription",
+          session.amount_total || 1299
+        ).catch((err: unknown) => console.error("Payment notification failed:", err));
+      } catch (err) {
+        console.error("Webhook: Subscription checkout processing failed:", err);
+        return NextResponse.json({ error: "Subscription setup failed" }, { status: 500 });
+      }
+      return NextResponse.json({ received: true });
+    }
+
     // Determine credits to grant based on payment type
     // single = $8.99 = 2 credits (BOGO launch offer)
     // video_analysis / pack = $29.99 = 5 credits
@@ -277,6 +444,11 @@ export async function POST(request: NextRequest) {
       await grantCredits(serviceClient, userId, creditsToGrant, isBeta);
     } catch (err) {
       console.error("Webhook: Failed to record payment or grant credits:", err);
+      notifyWebhookError(
+        "checkout.session.completed",
+        err instanceof Error ? err.message : String(err),
+        `user_id: ${userId}, payment_type: ${paymentType}, session: ${session.id}`
+      ).catch(() => {});
       // Return 500 so Stripe retries the webhook
       return NextResponse.json(
         { error: "Failed to process payment" },
@@ -306,6 +478,89 @@ export async function POST(request: NextRequest) {
       paymentType,
       session.amount_total || (isBeta ? 999 : 899)
     ).catch((err: unknown) => console.error("Payment notification failed:", err));
+  }
+
+  // ── Subscription lifecycle — cancellations and status updates ──────────────
+  // When a user cancels, Stripe fires customer.subscription.updated with
+  // cancel_at_period_end=true, then customer.subscription.deleted when the
+  // period actually ends. In both cases we set expires_at so unused credits
+  // disappear at period end — no arbitrage of "subscribe, collect 10, cancel,
+  // use for a year."
+  if (
+    event.type === "customer.subscription.updated" ||
+    event.type === "customer.subscription.deleted"
+  ) {
+    const sub = event.data.object as {
+      id: string;
+      customer?: string;
+      status?: string;
+      current_period_start?: number;
+      current_period_end?: number;
+      cancel_at_period_end?: boolean;
+      canceled_at?: number | null;
+      metadata?: Record<string, string>;
+    };
+
+    const userId = sub.metadata?.user_id;
+    if (!userId) {
+      // No user_id metadata → not a B2C subscription we manage. Studio subs
+      // have studio_id instead; skip silently.
+      return NextResponse.json({ received: true });
+    }
+
+    const serviceClient = await createServiceClient();
+    const periodEnd = sub.current_period_end
+      ? new Date(sub.current_period_end * 1000)
+      : new Date();
+    const canceledAt = sub.canceled_at ? new Date(sub.canceled_at * 1000) : null;
+    const newStatus = event.type === "customer.subscription.deleted" ? "canceled" : (sub.status || "active");
+
+    try {
+      await serviceClient.from("subscriptions").upsert(
+        {
+          user_id: userId,
+          stripe_subscription_id: sub.id,
+          stripe_customer_id: sub.customer || null,
+          status: newStatus,
+          current_period_end: periodEnd.toISOString(),
+          cancel_at_period_end: !!sub.cancel_at_period_end,
+          canceled_at: canceledAt ? canceledAt.toISOString() : null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      );
+
+      // If the user has canceled (either at-period-end flagged or already
+      // deleted), lock in expiry. Already-expired dates make credits
+      // immediately unusable; future dates let them run out the paid period.
+      if (sub.cancel_at_period_end || event.type === "customer.subscription.deleted") {
+        await markSubscriptionExpires(serviceClient, userId, periodEnd);
+        console.log(
+          `Webhook: Subscription ${sub.id} (${newStatus}) — credits expire ${periodEnd.toISOString()}`
+        );
+
+        // Alert founder so he can fire a win-back touch before access ends.
+        // Lookup the user's email for the notification body.
+        const { data: userRecord } = await serviceClient.auth.admin.getUserById(userId);
+        const userEmail = userRecord.user?.email || userId;
+        notifySubscriptionCanceled(
+          userEmail,
+          userId,
+          event.type === "customer.subscription.deleted"
+            ? "subscription_ended"
+            : "cancel_at_period_end",
+          periodEnd.toISOString()
+        ).catch((err) => console.error("Cancel notification failed:", err));
+      }
+    } catch (err) {
+      console.error("Webhook: subscription lifecycle handler failed:", err);
+      notifyWebhookError(
+        event.type,
+        err instanceof Error ? err.message : String(err),
+        `subscription_id: ${sub.id}, user_id: ${userId}`
+      ).catch(() => {});
+      return NextResponse.json({ error: "Subscription update failed" }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ received: true });

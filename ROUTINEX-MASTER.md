@@ -6,7 +6,7 @@
 
 ## 1. What Is RoutineX
 
-AI-powered competitive dance & cheer video analysis. Built by a dance dad (Shaun Tucker).
+AI-powered competitive dance & cheer video analysis. Built by dance parents (founder: Shaun Tucker; his wife is the public face and voice for the brand).
 - Users upload a routine video
 - AI analyzes still frames and returns competition-style scoring + feedback
 - Three simulated judges score Technique, Performance, Choreography, Overall

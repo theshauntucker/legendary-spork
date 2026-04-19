@@ -9,6 +9,7 @@ import {
   Video, Star, ExternalLink, LogOut, Gift, Link2,
   Trash2, Pause, Play, Edit3, Copy, X
 } from "lucide-react";
+import LiveOpsBar from "@/components/admin/LiveOpsBar";
 
 interface UserRecord {
   id: string;
@@ -275,6 +276,11 @@ export default function AdminClient({ users: initialUsers, affiliates: initialAf
               My Dashboard
             </a>
           </div>
+        </div>
+
+        {/* Live ops — polls every 30s */}
+        <div className="mb-6">
+          <LiveOpsBar />
         </div>
 
         {/* Tabs */}

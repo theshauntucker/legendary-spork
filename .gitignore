@@ -13,3 +13,6 @@ data/
 # MCP + local Claude Code settings (may contain secrets)
 .mcp.json
 .claude/settings.local.json
+
+# Separate nested SEO subsite — has its own .git and node_modules
+mobile/

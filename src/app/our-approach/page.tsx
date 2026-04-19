@@ -20,10 +20,10 @@ export default function OurApproachPage() {
         </a>
 
         <h1 className="text-3xl sm:text-4xl font-bold font-[family-name:var(--font-display)] mb-2">
-          A Note From a Dance Dad
+          A Note From Dance Parents
         </h1>
         <p className="text-surface-200 mb-10">
-          Why I built RoutineX, and what you should expect from it.
+          Why we built RoutineX, and what you should expect from it.
         </p>
 
         <div className="space-y-8 text-surface-200 leading-relaxed">
@@ -33,14 +33,14 @@ export default function OurApproachPage() {
               <h2 className="text-xl font-bold text-white">I Get It — This Matters to You</h2>
             </div>
             <p className="mb-4">
-              I&apos;m a dance dad. I&apos;ve sat in the audience at more competitions
-              than I can count, watched my kid pour their heart into a routine,
-              and then waited nervously for scores. I know how much this means to
+              We&apos;re dance parents. We&apos;ve sat in the audience at more competitions
+              than we can count, watched our dancer pour her heart into a routine,
+              and then waited nervously for scores. We know how much this means to
               your family.
             </p>
             <p>
-              That&apos;s exactly why I built RoutineX. Not as some tech gimmick,
-              but because I saw a real problem: <span className="text-white font-medium">detailed
+              That&apos;s exactly why we built RoutineX. Not as some tech gimmick,
+              but because we saw a real problem: <span className="text-white font-medium">detailed
               feedback is expensive, hard to get, and usually only happens on
               competition day.</span> Private coaching sessions run $75–$150 an hour.
               Competition entry fees pile up. And between events, you&apos;re often
@@ -76,7 +76,7 @@ export default function OurApproachPage() {
               <h2 className="text-xl font-bold text-white">It&apos;s Not Perfect — And That&apos;s Okay</h2>
             </div>
             <p className="mb-4">
-              I want to be straight with you: RoutineX uses AI, and AI isn&apos;t
+              We want to be straight with you: RoutineX uses AI, and AI isn&apos;t
               perfect. The scores you see are <span className="text-white font-medium">estimates
               based on competition judging rubrics</span> — not official results.
               Your dancer&apos;s actual competition scores may be higher or lower.
@@ -122,7 +122,7 @@ export default function OurApproachPage() {
               <h2 className="text-xl font-bold text-white">Your Child&apos;s Privacy Comes First</h2>
             </div>
             <p className="mb-4">
-              I know this is the #1 concern for parents — it was mine too.
+              We know this is the #1 concern for parents — it was ours too.
               So here&apos;s exactly how it works: <span className="text-white font-medium">your
               video never leaves your device.</span> RoutineX processes everything
               locally on your phone. We only send small still-frame thumbnails
@@ -143,7 +143,7 @@ export default function OurApproachPage() {
               better — one routine at a time.
             </p>
             <p className="text-sm">
-              — From a proud dance dad who built this for families like ours
+              — From proud dance parents who built this for families like ours
             </p>
           </div>
 

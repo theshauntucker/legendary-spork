@@ -56,7 +56,20 @@ export async function notifyPayment(
 ) {
   const now = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
   const amount = (amountCents / 100).toFixed(2);
-  const typeLabel = paymentType === "beta_access" ? "Legacy Beta ($9.99)" : `Video Analysis ($${amount})`;
+  const typeLabel =
+    paymentType === "subscription"
+      ? `Season Member ($${amount}/mo, 10 credits)`
+      : paymentType === "subscription_renewal"
+      ? `Season Member Renewal ($${amount}/mo, 10 credits reset)`
+      : paymentType === "studio_subscription"
+      ? `Studio Plan ($${amount}/mo, 100 pool credits)`
+      : paymentType === "video_analysis"
+      ? `Competition Pack ($${amount}, 5 credits)`
+      : paymentType === "single"
+      ? `BOGO ($${amount}, 2 credits)`
+      : paymentType === "beta_access"
+      ? `Legacy Beta ($${amount})`
+      : `Unknown type (${paymentType}) — $${amount}`;
 
   await sendEmail(
     `Payment Received: $${amount} from ${email}`,
@@ -168,6 +181,75 @@ export async function notifyAdminReport(
       <p><strong>Time:</strong> ${now} PDT</p>
       <hr style="border: none; border-top: 1px solid #e5e7eb;" />
       <p style="color: #6b7280; font-size: 12px;">RoutineX Moderation</p>
+    </div>
+    `
+  );
+}
+export async function notifySubscriptionCanceled(
+  email: string,
+  userId: string,
+  reason: string = "user_canceled",
+  periodEnd?: string
+) {
+  const now = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
+  await sendEmail(
+    `⚠️ Subscription Canceled: ${email}`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px;">
+      <h2 style="color: #f97316;">Subscription Canceled</h2>
+      <p><strong>Customer:</strong> ${email}</p>
+      <p><strong>User ID:</strong> ${userId}</p>
+      <p><strong>Reason:</strong> ${reason}</p>
+      ${periodEnd ? `<p><strong>Access ends:</strong> ${periodEnd}</p>` : ""}
+      <p><strong>Time:</strong> ${now} ET</p>
+      <hr style="border: none; border-top: 1px solid #e5e7eb;" />
+      <p style="color: #6b7280; font-size: 12px;">Consider a win-back email before access ends.</p>
+    </div>
+    `
+  );
+}
+
+export async function notifyWebhookError(
+  eventType: string,
+  error: string,
+  context?: string
+) {
+  const now = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
+  await sendEmail(
+    `🔴 Webhook Error: ${eventType}`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px;">
+      <h2 style="color: #dc2626;">Stripe Webhook Failed</h2>
+      <p><strong>Event:</strong> ${eventType}</p>
+      <p><strong>Error:</strong> ${error}</p>
+      ${context ? `<p><strong>Context:</strong> ${context}</p>` : ""}
+      <p><strong>Time:</strong> ${now} ET</p>
+      <hr style="border: none; border-top: 1px solid #e5e7eb;" />
+      <p style="color: #6b7280; font-size: 12px;">Check Stripe webhook logs and Vercel function logs.</p>
+    </div>
+    `
+  );
+}
+
+export async function notifyCritical(
+  subject: string,
+  body: string,
+  context?: Record<string, string | number | null | undefined>
+) {
+  const now = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
+  const contextHtml = context
+    ? Object.entries(context)
+        .map(([k, v]) => `<p><strong>${k}:</strong> ${String(v ?? "n/a")}</p>`)
+        .join("")
+    : "";
+  await sendEmail(
+    `🚨 ${subject}`,
+    `
+    <div style="font-family: sans-serif; max-width: 500px;">
+      <h2 style="color: #dc2626;">${subject}</h2>
+      <p>${body}</p>
+      ${contextHtml}
+      <p><strong>Time:</strong> ${now} ET</p>
     </div>
     `
   );

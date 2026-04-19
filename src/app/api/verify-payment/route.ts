@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
-import { grantCredits, BETA_CREDITS } from "@/lib/credits";
+import {
+  grantCredits,
+  grantSubscriptionCycle,
+  BETA_CREDITS,
+  SUBSCRIPTION_CREDITS,
+} from "@/lib/credits";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -34,8 +39,13 @@ export async function POST(request: NextRequest) {
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.retrieve(session_id);
 
-    // Verify payment is actually completed
-    if (session.payment_status !== "paid") {
+    // Verify payment is actually completed. For subscriptions, payment_status
+    // is often 'no_payment_required' after the first invoice is paid; accept
+    // both 'paid' and 'no_payment_required' when it's a subscription mode.
+    const isSubMode = session.mode === "subscription";
+    const paidOk = session.payment_status === "paid" ||
+      (isSubMode && session.payment_status === "no_payment_required");
+    if (!paidOk) {
       return NextResponse.json(
         { error: "Payment not completed", status: session.payment_status },
         { status: 402 }
@@ -55,9 +65,19 @@ export async function POST(request: NextRequest) {
     const isBeta = paymentType === "beta_access";
     const isPack = paymentType === "video_analysis";
     const isSingle = paymentType === "single";
-    // single = 1 credit, pack = 5 credits, beta = BETA_CREDITS
-    const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : isSingle ? 2 : 1;
-    const amountFallback = isPack ? 2999 : isBeta ? 999 : 899;
+    const isSubscription = paymentType === "subscription";
+
+    // subscription = 10/month, single = 2, pack = 5, beta = BETA_CREDITS
+    const creditsToGrant = isSubscription
+      ? SUBSCRIPTION_CREDITS
+      : isBeta
+      ? BETA_CREDITS
+      : isPack
+      ? 5
+      : isSingle
+      ? 2
+      : 1;
+    const amountFallback = isSubscription ? 1299 : isPack ? 2999 : isBeta ? 999 : 899;
 
     // Try to record payment (may already exist from webhook — that's fine)
     const { error: insertError } = await serviceClient
@@ -81,11 +101,63 @@ export async function POST(request: NextRequest) {
       console.error("Verify-payment: Payment insert failed:", insertError.message);
     }
 
-    // Always try to grant credits — grantCredits handles duplicates safely
-    await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
+    // Subscription path — reset to 10/0 with period window + mirror into
+    // subscriptions table so status tracking is correct.
+    if (isSubscription) {
+      const subscriptionId =
+        typeof session.subscription === "string" ? session.subscription : null;
+      const customerId =
+        typeof session.customer === "string" ? session.customer : null;
+
+      let periodStart = new Date();
+      let periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      if (subscriptionId) {
+        try {
+          const sub = (await stripe.subscriptions.retrieve(subscriptionId)) as unknown as {
+            current_period_start?: number;
+            current_period_end?: number;
+            items?: { data?: Array<{ current_period_start?: number; current_period_end?: number }> };
+          };
+          const item = sub.items?.data?.[0];
+          const pStart = sub.current_period_start ?? item?.current_period_start;
+          const pEnd = sub.current_period_end ?? item?.current_period_end;
+          if (pStart) periodStart = new Date(pStart * 1000);
+          if (pEnd) periodEnd = new Date(pEnd * 1000);
+        } catch (err) {
+          console.error("Verify-payment: Failed to fetch subscription:", err);
+        }
+      }
+
+      await serviceClient.from("subscriptions").upsert(
+        {
+          user_id: user.id,
+          stripe_subscription_id: subscriptionId,
+          stripe_customer_id: customerId,
+          status: "active",
+          current_period_start: periodStart.toISOString(),
+          current_period_end: periodEnd.toISOString(),
+          cancel_at_period_end: false,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      );
+
+      // Anti-arbitrage: extends if user already has active sub credits,
+      // resets otherwise. Prevents cancel→resubscribe credit washing.
+      await grantSubscriptionCycle(
+        serviceClient,
+        user.id,
+        SUBSCRIPTION_CREDITS,
+        periodStart,
+        periodEnd
+      );
+    } else {
+      // Pack / single / beta — additive grant, grantCredits is idempotent-safe
+      await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
+    }
 
     console.log(
-      `Verify-payment: Granted ${creditsToGrant} credits to ${user.id} (${paymentType}) — webhook fallback`
+      `Verify-payment: ${isSubscription ? "Reset" : "Granted"} ${creditsToGrant} credits for ${user.id} (${paymentType}) — webhook fallback`
     );
 
     return NextResponse.json({ verified: true, credits_granted: creditsToGrant });

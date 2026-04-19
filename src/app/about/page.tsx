@@ -31,7 +31,7 @@ export default function AboutPage() {
               Our Story
             </p>
             <h1 className="text-4xl sm:text-5xl font-bold font-[family-name:var(--font-display)] leading-tight">
-              Built by a Dance Dad.<br />
+              Built by Dance Parents.<br />
               <span className="gradient-text">For Every Dancer.</span>
             </h1>
           </div>
@@ -40,16 +40,16 @@ export default function AboutPage() {
           <div className="glass rounded-3xl p-8 space-y-5 text-surface-200 leading-relaxed">
             <div>
               <p className="text-white text-lg font-medium">
-                My name is Shaun Tucker. I&apos;m not a choreographer. I&apos;m not a judge. I&apos;m a dance dad — and that&apos;s exactly why I built this.
+                We&apos;re not choreographers. We&apos;re not judges. We&apos;re dance parents — and that&apos;s exactly why we built this.
               </p>
             </div>
 
             <p>
-              I&apos;ve sat in hundreds of competition bleachers watching my daughter pour everything she has into a two-minute routine. I&apos;ve seen her walk off that stage not knowing if she nailed it or missed something critical. I&apos;ve watched her wait days for scores that come back as just a number — with no explanation of what the judges actually saw.
+              We&apos;ve sat in hundreds of competition bleachers watching our dancer pour everything she has into a two-minute routine. We&apos;ve seen her walk off that stage not knowing if she nailed it or missed something critical. We&apos;ve watched her wait days for scores that come back as just a number — with no explanation of what the judges actually saw.
             </p>
 
             <p>
-              That never felt right to me. These young dancers train year-round. They sacrifice weekends, holidays, and social lives to perfect their craft. They deserve more than a ribbon and a score sheet.
+              That never felt right. These young dancers train year-round. They sacrifice weekends, holidays, and social lives to perfect their craft. They deserve more than a ribbon and a score sheet.
             </p>
 
             <p>
@@ -85,10 +85,10 @@ export default function AboutPage() {
               <h2 className="text-xl font-bold">Sometimes They Just Need to Hear It From Someone Else</h2>
             </div>
             <p className="text-surface-200 leading-relaxed mb-4">
-              My daughter has an incredible coach. She has parents who show up to every competition, every rehearsal, every late-night run-through. We tell her she&apos;s amazing. We tell her what to fix. We tell her we believe in her.
+              Our dancer has an incredible coach. She has parents who show up to every competition, every rehearsal, every late-night run-through. We tell her she&apos;s amazing. We tell her what to fix. We tell her we believe in her.
             </p>
             <p className="text-surface-200 leading-relaxed mb-4">
-              And sometimes — it doesn&apos;t land. Not because she doesn&apos;t trust us. But because we&apos;re her parents. We&apos;re her coach. We&apos;re supposed to say that.
+              And sometimes — it doesn&apos;t land. Not because she doesn&apos;t trust us. But because we&apos;re her parents. We&apos;re her at-home coaches. We&apos;re supposed to say that.
             </p>
             <p className="text-surface-200 leading-relaxed mb-4">
               But when something outside of that circle — something that watched her routine and studied every frame — tells her that her arabesque at 1:17 was <em>beautiful</em>, that her stage presence at 2:04 was <em>palpable</em>, that the story she told for two minutes and fifty-two seconds <em>moved people</em>...
@@ -100,31 +100,7 @@ export default function AboutPage() {
               RoutineX was built with heart and passion for the dancers who stress, who doubt themselves, who pour everything into their craft and wonder if it&apos;s enough. It is. And now they have something to prove it.
             </p>
 
-            <p className="text-sm text-surface-200/60 pt-2">— Shaun Tucker, Founder</p>
-
-            {/* Family photos */}
-            <div className="grid grid-cols-2 gap-4 pt-4">
-              <div className="space-y-2">
-                <div className="aspect-square overflow-hidden rounded-2xl border border-white/10">
-                  <img
-                    src="/founder-son-clean.jpg"
-                    alt="Shaun Tucker with his son"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <p className="text-xs text-center text-surface-200/50">With my son</p>
-              </div>
-              <div className="space-y-2">
-                <div className="aspect-square overflow-hidden rounded-2xl border border-white/10">
-                  <img
-                    src="/founder-daughter-clean.jpg"
-                    alt="Shaun Tucker with his daughter at Showstopper"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <p className="text-xs text-center text-surface-200/50">With my dancer at Showstopper</p>
-              </div>
-            </div>
+            <p className="text-sm text-surface-200/60 pt-2">— The RoutineX family</p>
           </div>
 
           {/* Values */}
@@ -171,7 +147,7 @@ export default function AboutPage() {
           {/* CTA */}
           <div className="text-center pt-4">
             <p className="text-surface-200 mb-5">
-              If you&apos;re a dance parent, a coach, or a dancer — I built this for you. I hope it helps your dancer find her next breakthrough.
+              If you&apos;re a dance parent, a coach, or a dancer — we built this for you. We hope it helps your dancer find her next breakthrough.
             </p>
 
             <a

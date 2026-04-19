@@ -26,6 +26,10 @@ interface CreditStatus {
   source?: "personal" | "studio";
   studioId?: string;
   studioSubscriptionStatus?: string | null;
+  // ─── Subscription-pool extensions (optional, undefined for pack users) ─
+  creditSource?: "pack" | "subscription" | "beta" | "admin" | "trial";
+  expiresAt?: string | null;
+  billingPeriodStart?: string | null;
 }
 
 /**
@@ -91,13 +95,25 @@ export async function getUserCredits(
 
   const remaining = credits.total_credits - credits.used_credits;
 
+  // Subscription credits expire at end of billing period if the user cancels.
+  // Pack credits have expires_at=NULL and never expire. If the subscription
+  // is still active, expires_at is the current period end — also fine to
+  // gate on (refresh writes new expires_at each cycle).
+  const nowMs = Date.now();
+  const expiresAt = credits.expires_at ? new Date(credits.expires_at).getTime() : null;
+  const expired =
+    credits.credit_source === "subscription" && expiresAt !== null && expiresAt < nowMs;
+
   return {
-    hasCredits: remaining > 0,
-    remaining,
+    hasCredits: !expired && remaining > 0,
+    remaining: expired ? 0 : remaining,
     isBetaMember: credits.is_beta_member,
     isAdmin: false,
     totalCredits: credits.total_credits,
     usedCredits: credits.used_credits,
+    creditSource: credits.credit_source ?? "pack",
+    expiresAt: credits.expires_at ?? null,
+    billingPeriodStart: credits.billing_period_start ?? null,
   };
 }
 
@@ -221,5 +237,136 @@ export async function refundCredit(
 
   await serviceClient.rpc("decrement_used_credits", { p_user_id: userId });
 }
+
+/**
+ * Reset a user's credits for a subscription billing cycle.
+ * Use-it-or-lose-it semantics — total is SET to p_credits (not added),
+ * used_credits is zeroed, and expires_at is the end of the billing period.
+ *
+ * This is what makes the $12.99/mo tier arbitrage-proof: you can't subscribe,
+ * collect 10, cancel, and use them for a year. When the period ends (either
+ * because we refresh it or because cancel_at_period_end fires), unused credits
+ * are gone.
+ */
+export async function resetSubscriptionCredits(
+  serviceClient: SupabaseClient,
+  userId: string,
+  credits: number,
+  periodStart: Date,
+  periodEnd: Date
+): Promise<void> {
+  const { error } = await serviceClient.rpc("reset_subscription_credits", {
+    p_user_id: userId,
+    p_credits: credits,
+    p_period_start: periodStart.toISOString(),
+    p_period_end: periodEnd.toISOString(),
+  });
+  if (error) {
+    throw new Error(`reset_subscription_credits failed: ${error.message}`);
+  }
+}
+
+/**
+ * Subscription billing cycle grant — anti-arbitrage aware.
+ *
+ * The naive flow (always call resetSubscriptionCredits) has a hole: a user
+ * can subscribe on day 1 → use 3 credits → cancel → immediately resubscribe
+ * and have their balance RESET to 10/0. That lets them buy 20 credits in one
+ * billing period for the price of one month.
+ *
+ * This function closes the hole:
+ *   - If the user already has a live subscription row (credit_source =
+ *     'subscription' and expires_at > now), we EXTEND: new total = previous
+ *     total + p_credits, used stays the same, expires_at advances to the
+ *     new period end. Effectively the resubscribe is an additive top-up.
+ *   - Otherwise (no row, expired row, or pack-sourced row), we RESET —
+ *     identical to the original behavior.
+ *
+ * This means resubscribing never wipes the used_credits counter, so a user
+ * can't wash away the 3 credits they already spent this month by recycling.
+ * Legitimate users pay nothing in penalty: if they never used any of the 10,
+ * they still end up with 10 unused after extension.
+ */
+export async function grantSubscriptionCycle(
+  serviceClient: SupabaseClient,
+  userId: string,
+  credits: number,
+  periodStart: Date,
+  periodEnd: Date
+): Promise<void> {
+  const { data: existing } = await serviceClient
+    .from("user_credits")
+    .select("total_credits, used_credits, credit_source, expires_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const now = Date.now();
+  const existingExpiresAt = existing?.expires_at
+    ? new Date(existing.expires_at).getTime()
+    : null;
+  const isLiveSubRow =
+    !!existing &&
+    existing.credit_source === "subscription" &&
+    existingExpiresAt !== null &&
+    existingExpiresAt > now;
+
+  if (!isLiveSubRow) {
+    // First-ever sub, expired sub, or pack-sourced row: reset.
+    await resetSubscriptionCredits(
+      serviceClient,
+      userId,
+      credits,
+      periodStart,
+      periodEnd
+    );
+    return;
+  }
+
+  // Resubscribe inside an active period — ADD, don't reset.
+  // We use the add_credits RPC to atomically increment total, then fix the
+  // period window via a direct update (safe — single row, single user).
+  const { error: addErr } = await serviceClient.rpc("add_credits", {
+    p_user_id: userId,
+    p_credits: credits,
+    p_is_beta: false,
+  });
+  if (addErr) {
+    throw new Error(`add_credits (subscription extend) failed: ${addErr.message}`);
+  }
+
+  const { error: updErr } = await serviceClient
+    .from("user_credits")
+    .update({
+      credit_source: "subscription",
+      billing_period_start: periodStart.toISOString(),
+      expires_at: periodEnd.toISOString(),
+    })
+    .eq("user_id", userId);
+  if (updErr) {
+    throw new Error(`user_credits period update failed: ${updErr.message}`);
+  }
+}
+
+/**
+ * Mark subscription credits as expiring at a specific time (used when a
+ * subscription is canceled — expires_at = current_period_end, so the user
+ * keeps what they have for the rest of the paid period, then it's gone).
+ */
+export async function markSubscriptionExpires(
+  serviceClient: SupabaseClient,
+  userId: string,
+  expiresAt: Date
+): Promise<void> {
+  const { error } = await serviceClient.rpc("mark_subscription_expires", {
+    p_user_id: userId,
+    p_expires_at: expiresAt.toISOString(),
+  });
+  if (error) {
+    throw new Error(`mark_subscription_expires failed: ${error.message}`);
+  }
+}
+
+/** Monthly subscription grant — the $12.99/mo "Season Member" tier. */
+export const SUBSCRIPTION_CREDITS = 10;
 
 export { BETA_CREDITS };
