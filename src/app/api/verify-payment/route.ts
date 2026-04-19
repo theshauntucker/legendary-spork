@@ -7,6 +7,7 @@ import {
   SUBSCRIPTION_CREDITS,
 } from "@/lib/credits";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { sendWelcomeEmail, notifyWelcomeSent } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -159,6 +160,24 @@ export async function POST(request: NextRequest) {
     console.log(
       `Verify-payment: ${isSubscription ? "Reset" : "Granted"} ${creditsToGrant} credits for ${user.id} (${paymentType}) — webhook fallback`
     );
+
+    // VIP welcome email — only fires on the user's first completed payment.
+    // Fire-and-forget so email failures never block the API response.
+    (async () => {
+      try {
+        const { count } = await serviceClient
+          .from("payments")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("status", "completed");
+        if (count === 1 && user.email) {
+          await sendWelcomeEmail(user.email, null, paymentType);
+          notifyWelcomeSent(user.email, paymentType).catch(() => {});
+        }
+      } catch (err) {
+        console.error("Verify-payment: welcome email failed:", err);
+      }
+    })().catch(() => {});
 
     return NextResponse.json({ verified: true, credits_granted: creditsToGrant });
   } catch (err) {

@@ -14,7 +14,57 @@ import {
   notifyPayment,
   notifySubscriptionCanceled,
   notifyWebhookError,
+  sendWelcomeEmail,
+  notifyWelcomeSent,
 } from "@/lib/notifications";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+/**
+ * Fire the VIP welcome email if this is the customer's FIRST completed
+ * payment. Counts rows in the payments table — relies on the calling path
+ * having already inserted its payments row before invoking this helper.
+ * Fire-and-forget: email failure never rolls back credits.
+ */
+async function maybeSendWelcomeEmail(
+  serviceClient: SupabaseClient,
+  userId: string,
+  customerEmail: string,
+  paymentType: string
+) {
+  try {
+    const { count, error } = await serviceClient
+      .from("payments")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("status", "completed");
+
+    if (error) {
+      console.error("Welcome email: payment count query failed:", error);
+      return;
+    }
+
+    // Only fire on the very first completed payment. Later purchases shouldn't
+    // re-trigger the welcome (they'll get upgrade/thank-you flows instead).
+    if (count === 1) {
+      if (!customerEmail || customerEmail === userId || !customerEmail.includes("@")) {
+        // Fallback: look up the user's email via auth admin
+        const { data: userRecord } = await serviceClient.auth.admin.getUserById(userId);
+        customerEmail = userRecord.user?.email || "";
+      }
+
+      if (!customerEmail || !customerEmail.includes("@")) {
+        console.error("Welcome email: could not resolve customer email for user", userId);
+        return;
+      }
+
+      await sendWelcomeEmail(customerEmail, null, paymentType);
+      notifyWelcomeSent(customerEmail, paymentType).catch(() => {});
+      console.log(`Welcome email sent to ${customerEmail} (first payment: ${paymentType})`);
+    }
+  } catch (err) {
+    console.error("Welcome email: maybeSendWelcomeEmail failed:", err);
+  }
+}
 
 export const dynamic = "force-dynamic";
 
@@ -438,6 +488,11 @@ export async function POST(request: NextRequest) {
           "subscription",
           session.amount_total || 1299
         ).catch((err: unknown) => console.error("Payment notification failed:", err));
+
+        // VIP onboarding: welcome email on first purchase only. Fire-and-forget.
+        maybeSendWelcomeEmail(serviceClient, userId, customerEmail, "subscription").catch(
+          (err) => console.error("Welcome email dispatch failed:", err)
+        );
       } catch (err) {
         console.error("Webhook: Subscription checkout processing failed:", {
           error: err instanceof Error ? err.message : String(err),
@@ -573,6 +628,11 @@ export async function POST(request: NextRequest) {
       paymentType,
       session.amount_total || (isBeta ? 999 : 899)
     ).catch((err: unknown) => console.error("Payment notification failed:", err));
+
+    // VIP onboarding: welcome email on first purchase only. Fire-and-forget.
+    maybeSendWelcomeEmail(serviceClient, userId, customerEmail, paymentType).catch(
+      (err) => console.error("Welcome email dispatch failed:", err)
+    );
   }
 
   // ── Subscription lifecycle — cancellations and status updates ──────────────

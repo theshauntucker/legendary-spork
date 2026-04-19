@@ -9,7 +9,31 @@ import {
   SUBSCRIPTION_CREDITS,
 } from "@/lib/credits";
 import { getStripe } from "@/lib/stripe";
+import { sendWelcomeEmail, notifyWelcomeSent } from "@/lib/notifications";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import DashboardClient from "./DashboardClient";
+
+// VIP welcome email — only fires on the user's first completed payment.
+async function maybeWelcome(
+  serviceClient: SupabaseClient,
+  userId: string,
+  email: string,
+  paymentType: string
+) {
+  try {
+    const { count } = await serviceClient
+      .from("payments")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("status", "completed");
+    if (count === 1 && email && email.includes("@")) {
+      await sendWelcomeEmail(email, null, paymentType);
+      notifyWelcomeSent(email, paymentType).catch(() => {});
+    }
+  } catch (err) {
+    console.error("Dashboard: welcome email failed:", err);
+  }
+}
 
 export default async function DashboardPage({
   searchParams,
@@ -168,6 +192,7 @@ export default async function DashboardPage({
             console.log(
               `Dashboard: Season Member activated for ${user.id} (+${SUBSCRIPTION_CREDITS} credits, expires ${periodEnd.toISOString()}) — webhook fallback`
             );
+            await maybeWelcome(serviceClient, user.id, user.email || "", "subscription");
           } else {
             // Pack / single / beta — additive grant
             await grantCredits(
@@ -179,6 +204,7 @@ export default async function DashboardPage({
             console.log(
               `Dashboard: Granted ${creditsToGrant} credits to ${user.id} (${paymentType} — webhook fallback)`
             );
+            await maybeWelcome(serviceClient, user.id, user.email || "", paymentType);
           }
         }
       }
