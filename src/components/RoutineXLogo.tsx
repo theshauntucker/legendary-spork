@@ -28,14 +28,17 @@ const TILE_SIZES: Record<Size, { box: number }> = {
   sm: { box: 28 },
   md: { box: 36 },
   lg: { box: 56 },
-  xl: { box: 84 },
+  // xl is the hero lockup — doubled from 84 per Shaun's call.
+  // Nav/pages stay on md so they're unaffected.
+  xl: { box: 168 },
 };
 
 const WORDMARK_SIZE: Record<Size, string> = {
   sm: "text-base",
   md: "text-xl",
   lg: "text-3xl",
-  xl: "text-5xl sm:text-6xl",
+  // Hero wordmark bumped up a notch to balance the 2× X above it.
+  xl: "text-6xl sm:text-7xl",
 };
 
 export default function RoutineXLogo({

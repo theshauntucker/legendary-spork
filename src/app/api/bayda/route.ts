@@ -217,18 +217,24 @@ export async function POST(request: NextRequest) {
     // parents who aren't tech-savvy. Anthropic's web_search is a server-side
     // tool — we declare it, the API runs it internally, and returns the
     // integrated answer. No manual loop required.
+    //
+    // Model: Sonnet 4.5, NOT Haiku. Haiku was refusing/hedging instead of
+    // firing the tool. Sonnet is eager, smarter, and actually follows
+    // "USE YOUR TOOLS" instructions. Cost hit is worth it — a refusing chatbot
+    // converts nobody.
     const response = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1200,
+      model: "claude-sonnet-4-5-20250929",
+      max_tokens: 1600,
       system: BAYDA_SYSTEM_PROMPT,
       tools: [
         {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           type: "web_search_20250305" as any,
           name: "web_search",
-          // Cap searches so she's fast and doesn't rack up cost on a single chat
+          // Room to chain searches for multi-part questions ("find the comp
+          // AND check the schedule")
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          max_uses: 3,
+          max_uses: 5,
         } as any,
       ],
       messages: messages.map((m) => ({
@@ -236,6 +242,23 @@ export async function POST(request: NextRequest) {
         content: m.content,
       })),
     });
+
+    // Log tool usage so we can see in Vercel logs whether Bayda actually
+    // searched or just answered from the prompt. If we see zero tool_use
+    // blocks on search-y questions, that's the bug.
+    const toolUses = response.content.filter((b) => b.type === "tool_use");
+    if (toolUses.length > 0) {
+      console.log(
+        `[bayda] used ${toolUses.length} tool call(s):`,
+        toolUses.map((t) => (t.type === "tool_use" ? t.name : "")).join(", ")
+      );
+    } else {
+      // Just a marker so we can spot "refused to search" in logs
+      const lastUser = messages[messages.length - 1]?.content || "";
+      console.log(
+        `[bayda] answered without tool use. Last user msg: "${lastUser.slice(0, 140)}"`
+      );
+    }
 
     // Concatenate all text blocks (the API may interleave tool_use / tool_result
     // internally with the final text answer — we only forward the text).
