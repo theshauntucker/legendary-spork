@@ -167,16 +167,41 @@ export async function POST(request: NextRequest) {
       if (userId) {
         const serviceClient = await createServiceClient();
         try {
-          await resetSubscriptionCredits(
-            serviceClient,
-            userId,
-            SUBSCRIPTION_CREDITS,
-            periodStart,
-            periodEnd
-          );
-          console.log(
-            `Webhook: Reset subscription credits for ${userId} → 10 (cycle ${periodStart.toISOString()} → ${periodEnd.toISOString()})`
-          );
+          // Idempotency guard — if user_credits.billing_period_start already
+          // matches this invoice's period_start, the cycle was already
+          // credited (Stripe retried the event, or a manual reconciliation
+          // ran first). Skip the reset to avoid wiping credits the user
+          // already used this period.
+          const { data: existingCredits } = await serviceClient
+            .from("user_credits")
+            .select("billing_period_start, credit_source")
+            .eq("user_id", userId)
+            .maybeSingle();
+
+          const periodAlreadyCredited =
+            existingCredits?.credit_source === "subscription" &&
+            existingCredits?.billing_period_start &&
+            Math.abs(
+              new Date(existingCredits.billing_period_start).getTime() -
+                periodStart.getTime()
+            ) < 60_000;
+
+          if (periodAlreadyCredited) {
+            console.log(
+              `Webhook: renewal cycle ${periodStart.toISOString()} already credited for ${userId} — skipping reset (idempotent re-fire)`
+            );
+          } else {
+            await resetSubscriptionCredits(
+              serviceClient,
+              userId,
+              SUBSCRIPTION_CREDITS,
+              periodStart,
+              periodEnd
+            );
+            console.log(
+              `Webhook: Reset subscription credits for ${userId} → 10 (cycle ${periodStart.toISOString()} → ${periodEnd.toISOString()})`
+            );
+          }
 
           // Sync subscription status
           await serviceClient.from("subscriptions").upsert(
@@ -418,12 +443,16 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        // Idempotency: if a payment row already exists for this session, skip the rest.
+        // ── Idempotency layer 1: stripe_session_id ────────────────────────
+        // If we've already processed this exact checkout session, Stripe is
+        // re-firing the event and we must NOT grant credits again.
         const { data: existing } = await serviceClient
           .from("payments")
           .select("id")
           .eq("stripe_session_id", session.id)
           .maybeSingle();
+
+        const alreadyProcessedSession = !!existing;
 
         if (!existing) {
           await serviceClient.from("payments").insert({
@@ -458,19 +487,52 @@ export async function POST(request: NextRequest) {
           { onConflict: "user_id" }
         );
 
-        // Use the anti-arbitrage grant: extends if already in an active period,
-        // resets otherwise. Prevents cancel→resubscribe-same-day credit washing.
-        await grantSubscriptionCycle(
-          serviceClient,
-          userId,
-          SUBSCRIPTION_CREDITS,
-          periodStart,
-          periodEnd
-        );
+        // ── Idempotency layer 2: billing_period_start ─────────────────────
+        // Even if the session is new, the billing period might already have
+        // been credited via a manual reconciliation row (different session
+        // id, same period). This is the bug that double-credited Jody on
+        // 2026-04-19: manual sub row inserted at 23:48, real Stripe webhook
+        // fired at 03:14 the next morning, both granted +10 credits.
+        // Now: if the billing period already has subscription credits
+        // attached, skip the grant — but keep the payment + subscription
+        // sync above so Stripe ↔ DB stay in alignment.
+        const { data: existingCredits } = await serviceClient
+          .from("user_credits")
+          .select("billing_period_start, credit_source")
+          .eq("user_id", userId)
+          .maybeSingle();
 
-        console.log(
-          `Webhook: Season Member activated for ${userId} (+${SUBSCRIPTION_CREDITS} credits, expires ${periodEnd.toISOString()})`
-        );
+        const periodAlreadyCredited =
+          existingCredits?.credit_source === "subscription" &&
+          existingCredits?.billing_period_start &&
+          Math.abs(
+            new Date(existingCredits.billing_period_start).getTime() -
+              periodStart.getTime()
+          ) < 60_000;
+
+        if (alreadyProcessedSession) {
+          console.log(
+            `Webhook: subscription session ${session.id} already processed — skipping credit grant (idempotent re-fire)`
+          );
+        } else if (periodAlreadyCredited) {
+          console.log(
+            `Webhook: billing period ${periodStart.toISOString()} already credited for ${userId} via prior reconciliation — skipping grant`
+          );
+        } else {
+          // Use the anti-arbitrage grant: extends if already in an active period,
+          // resets otherwise. Prevents cancel→resubscribe-same-day credit washing.
+          await grantSubscriptionCycle(
+            serviceClient,
+            userId,
+            SUBSCRIPTION_CREDITS,
+            periodStart,
+            periodEnd
+          );
+
+          console.log(
+            `Webhook: Season Member activated for ${userId} (+${SUBSCRIPTION_CREDITS} credits, expires ${periodEnd.toISOString()})`
+          );
+        }
 
         if (referralCode) {
           serviceClient.rpc("attribute_affiliate_revenue", {

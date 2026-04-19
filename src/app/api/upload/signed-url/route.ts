@@ -44,6 +44,44 @@ export async function POST(request: NextRequest) {
     // Use service client for storage operations
     const serviceClient = await createServiceClient();
 
+    // ─── Re-submission auto-link ──────────────────────────────────────────
+    // If this user has a prior video with the same routine + dancer name
+    // (case-insensitive, trimmed), mark the new upload as a child of the
+    // original via parent_video_id. This powers the "score progression"
+    // experience on the results page: first upload = baseline, subsequent
+    // uploads of the same routine show the delta from the original.
+    //
+    // We walk at most one hop: if the matched prior video itself has a
+    // parent, we point at THAT root so the chain stays flat (root → child,
+    // root → child, ...) rather than a linked list. This keeps queries
+    // cheap and matches what the score-progression UI already expects.
+    let parentVideoId: string | null = null;
+    const normalizedRoutine = (routineName ?? "").trim().toLowerCase();
+    const normalizedDancer = (dancerName ?? "").trim().toLowerCase();
+    if (normalizedRoutine) {
+      const { data: priorVideos } = await serviceClient
+        .from("videos")
+        .select("id, parent_video_id, routine_name, dancer_name")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      const match = (priorVideos ?? []).find((v) => {
+        const vr = (v.routine_name ?? "").trim().toLowerCase();
+        const vd = (v.dancer_name ?? "").trim().toLowerCase();
+        if (vr !== normalizedRoutine) return false;
+        // If either side has a dancer name, both must match (case-insensitive).
+        // If neither side does, a routine-name match is enough.
+        if (normalizedDancer || vd) return vd === normalizedDancer;
+        return true;
+      });
+
+      if (match) {
+        parentVideoId = match.parent_video_id ?? match.id;
+      }
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
     // Create the video record first to get the ID
     const { data: video, error: dbError } = await serviceClient
       .from("videos")
@@ -59,6 +97,7 @@ export async function POST(request: NextRequest) {
         entry_type: entryType,
         file_size: fileSize || null,
         status: "uploaded",
+        parent_video_id: parentVideoId,
       })
       .select("id")
       .single();

@@ -150,6 +150,51 @@ export async function POST(request: NextRequest) {
       } catch { /* ignore invalid dates */ }
     }
 
+    // ─── Re-submission auto-link (server-side safety net) ────────────────
+    // The client may pass parentVideoId explicitly when the user opts to
+    // "track a new submission" after a duplicate warning. If it didn't,
+    // fall back to the same name-match heuristic used in /upload/signed-url
+    // so every re-entry of a routine gets chained to its original.
+    //
+    // Walk at most one hop: if the match itself has a parent, point at THAT
+    // root so the chain stays flat.
+    let resolvedParentId: string | null = explicitParentId ?? null;
+    if (!resolvedParentId) {
+      const normalizedRoutine = (metadata.routineName ?? "").trim().toLowerCase();
+      const normalizedDancer = (metadata.dancerName ?? "").trim().toLowerCase();
+      if (normalizedRoutine) {
+        const { data: priorVideos } = await serviceClient
+          .from("videos")
+          .select("id, parent_video_id, routine_name, dancer_name")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(50);
+        const match = (priorVideos ?? []).find((v) => {
+          const vr = (v.routine_name ?? "").trim().toLowerCase();
+          const vd = (v.dancer_name ?? "").trim().toLowerCase();
+          if (vr !== normalizedRoutine) return false;
+          if (normalizedDancer || vd) return vd === normalizedDancer;
+          return true;
+        });
+        if (match) {
+          resolvedParentId = match.parent_video_id ?? match.id;
+        }
+      }
+    } else {
+      // Client passed an explicit parent — still walk one hop to root so
+      // grand-children don't accidentally chain.
+      const { data: parentRow } = await serviceClient
+        .from("videos")
+        .select("id, parent_video_id")
+        .eq("id", resolvedParentId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (parentRow?.parent_video_id) {
+        resolvedParentId = parentRow.parent_video_id;
+      }
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
     // Create video record — including new competition fields
     const { data: video, error: videoError } = await serviceClient
       .from("videos")
@@ -170,6 +215,7 @@ export async function POST(request: NextRequest) {
         status: "processing",
         frame_fingerprint: frameFingerprint,
         frame_phash: cleanPhashes.length ? cleanPhashes : null,
+        parent_video_id: resolvedParentId,
       })
       .select("id")
       .single();
