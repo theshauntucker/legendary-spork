@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Send, CheckCircle } from "lucide-react";
+import { Send, CheckCircle } from "lucide-react";
+import RoutineXLogo from "@/components/RoutineXLogo";
 
 export default function ContactPage() {
   const [name, setName] = useState("");
@@ -43,11 +44,8 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-20">
       <div className="w-full max-w-lg">
-        <a href="/" className="inline-flex items-center gap-2 mb-10">
-          <Sparkles className="h-6 w-6 text-primary-400" />
-          <span className="text-lg font-bold">
-            Routine<span className="gradient-text">X</span>
-          </span>
+        <a href="/" className="inline-flex mb-10">
+          <RoutineXLogo size="md" />
         </a>
 
         <div className="glass rounded-2xl p-8">

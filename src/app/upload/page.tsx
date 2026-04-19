@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import UploadTrustBadge from "@/components/UploadTrustBadge";
+import RoutineXLogo from "@/components/RoutineXLogo";
 import {
   extractFrames, framesToBase64, loadVideoMetadata,
   type ExtractedFrame, type ExtractionProgress,
@@ -271,9 +272,8 @@ function UploadPageInner() {
       <div className="mx-auto max-w-2xl">
         {/* Header */}
         <div className="text-center mb-10">
-          <a href="/" className="inline-flex items-center gap-2 mb-6">
-            <Sparkles className="h-6 w-6 text-primary-400" />
-            <span className="text-lg font-bold">Routine<span className="gradient-text">X</span></span>
+          <a href="/" className="inline-flex mb-6">
+            <RoutineXLogo size="md" />
           </a>
           <h1 className="text-3xl sm:text-4xl font-bold font-[family-name:var(--font-display)]">
             Upload Your Routine

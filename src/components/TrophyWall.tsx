@@ -143,12 +143,27 @@ export function TrophyWall({ handle, isOwner, trophies }: Props) {
       </div>
 
       <div
+        className="trophy-grid"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-          gap: 18,
+          gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+          gap: 14,
         }}
       >
+        <style>{`
+          @media (min-width: 640px) {
+            .trophy-grid {
+              grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+              gap: 16px !important;
+            }
+          }
+          @media (min-width: 900px) {
+            .trophy-grid {
+              grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+              gap: 18px !important;
+            }
+          }
+        `}</style>
         {filtered.map((trophy) => (
           <TrophyCard
             key={trophy.id}

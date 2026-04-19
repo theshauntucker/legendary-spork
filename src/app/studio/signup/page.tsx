@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
-  Sparkles,
   ArrowRight,
   Loader2,
   Eye,
@@ -16,6 +15,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { US_STATES } from "@/lib/studio/us-states";
+import RoutineXLogo from "@/components/RoutineXLogo";
 
 export default function StudioSignupPage() {
   const router = useRouter();
@@ -123,10 +123,10 @@ export default function StudioSignupPage() {
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <a href="/" className="inline-flex items-center gap-2 mb-4">
-            <Sparkles className="h-6 w-6 text-primary-400" />
-            <span className="text-lg font-bold">
-              Routine<span className="gradient-text">X</span> for Studios
+          <a href="/" className="inline-flex flex-col items-center gap-2 mb-4">
+            <RoutineXLogo size="md" />
+            <span className="text-xs uppercase tracking-[0.25em] text-surface-200">
+              for Studios
             </span>
           </a>
           <h1 className="text-3xl sm:text-4xl font-bold font-[family-name:var(--font-display)]">

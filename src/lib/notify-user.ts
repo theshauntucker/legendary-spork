@@ -17,6 +17,7 @@ export type NotificationKind =
   | "bond"
   | "checkin"
   | "thread"
+  | "message"
   | "system";
 
 export interface NotifyOptions {

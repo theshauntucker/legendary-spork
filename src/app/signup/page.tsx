@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import UploadTrustBadge from "@/components/UploadTrustBadge";
+import RoutineXLogo from "@/components/RoutineXLogo";
 
 function SignupForm() {
   const router = useRouter();
@@ -123,11 +124,8 @@ function SignupForm() {
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <a href="/" className="inline-flex items-center gap-2 mb-4">
-            <Sparkles className="h-6 w-6 text-primary-400" />
-            <span className="text-lg font-bold">
-              Routine<span className="gradient-text">X</span>
-            </span>
+          <a href="/" className="inline-flex mb-4">
+            <RoutineXLogo size="md" />
           </a>
           <h1 className="text-3xl font-bold font-[family-name:var(--font-display)]">
             Create Your Account

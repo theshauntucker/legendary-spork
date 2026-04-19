@@ -4,6 +4,8 @@ import { Aura } from "@/components/Aura";
 import { TrophyWall } from "@/components/TrophyWall";
 import { FollowButton } from "@/components/FollowButton";
 import { MessageButton } from "@/components/MessageButton";
+import { AddTrophyButton } from "@/components/AddTrophyButton";
+import { EditProfileButton } from "@/components/EditProfileButton";
 import type { TrophyCardData } from "@/components/TrophyCard";
 
 type ProfileRow = {
@@ -19,6 +21,7 @@ type ProfileRow = {
   founding_member: boolean;
   is_diamond_club: boolean;
   is_verified: boolean;
+  bio: string | null;
 };
 
 export const dynamic = "force-dynamic";
@@ -34,7 +37,7 @@ export default async function ProfilePage({
   const { data: profileRow } = await supabase
     .from("profiles")
     .select(
-      "id,user_id,handle,display_name,profile_type,age_tier,aura_stops,aura_tier,glyph,founding_member,is_diamond_club,is_verified",
+      "id,user_id,handle,display_name,profile_type,age_tier,aura_stops,aura_tier,glyph,founding_member,is_diamond_club,is_verified,bio",
     )
     .ilike("handle", handle)
     .maybeSingle();
@@ -169,10 +172,30 @@ export default async function ProfilePage({
       }}
     >
       {/* Hero banner — aura-tinted atmospheric gradient */}
+      <style>{`
+        .rx-hero { height: 140px; }
+        .rx-profile-card { margin-top: -56px !important; padding: 18px !important; }
+        .rx-profile-row { gap: 16px !important; }
+        .rx-profile-aura { margin-top: -64px !important; padding: 3px !important; }
+        .rx-profile-aura > div { width: 112px !important; height: 112px !important; }
+        .rx-profile-name { font-size: 24px !important; }
+        .rx-stats-row { grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)) !important; gap: 10px !important; margin-top: 18px !important; padding-top: 16px !important; }
+        .rx-stat-value { font-size: 20px !important; }
+        @media (min-width: 640px) {
+          .rx-hero { height: 200px; }
+          .rx-profile-card { margin-top: -72px !important; padding: 24px !important; }
+          .rx-profile-row { gap: 24px !important; }
+          .rx-profile-aura { margin-top: -80px !important; padding: 4px !important; }
+          .rx-profile-aura > div { width: 144px !important; height: 144px !important; }
+          .rx-profile-name { font-size: 32px !important; }
+          .rx-stats-row { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important; gap: 12px !important; margin-top: 24px !important; padding-top: 20px !important; }
+          .rx-stat-value { font-size: 24px !important; }
+        }
+      `}</style>
       <section
+        className="rx-hero"
         style={{
           position: "relative",
-          height: 200,
           background: heroGradient,
           opacity: 0.95,
         }}
@@ -209,9 +232,8 @@ export default async function ProfilePage({
       >
         {/* Profile card — pulled up over hero */}
         <section
+          className="rx-profile-card"
           style={{
-            marginTop: -72,
-            padding: 24,
             borderRadius: 20,
             background: "var(--surface, rgba(255,255,255,0.04))",
             backdropFilter: "blur(20px)",
@@ -222,17 +244,16 @@ export default async function ProfilePage({
           }}
         >
           <div
+            className="rx-profile-row"
             style={{
               display: "flex",
-              gap: 24,
               alignItems: "flex-end",
               flexWrap: "wrap",
             }}
           >
             <div
+              className="rx-profile-aura"
               style={{
-                marginTop: -80,
-                padding: 4,
                 borderRadius: "50%",
                 background: "var(--surface, #fff)",
                 boxShadow: "0 16px 36px rgba(0,0,0,0.25)",
@@ -245,10 +266,10 @@ export default async function ProfilePage({
                 size={144}
               />
             </div>
-            <div style={{ flex: 1, minWidth: 240 }}>
+            <div style={{ flex: 1, minWidth: 200 }}>
               <h1
+                className="rx-profile-name"
                 style={{
-                  fontSize: 32,
                   fontWeight: 800,
                   letterSpacing: "-0.02em",
                   lineHeight: 1.1,
@@ -308,14 +329,27 @@ export default async function ProfilePage({
             ) : null}
           </div>
 
+          {/* Bio */}
+          {profile.bio ? (
+            <p
+              style={{
+                marginTop: 16,
+                fontSize: 14,
+                lineHeight: 1.5,
+                opacity: 0.8,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+              }}
+            >
+              {profile.bio}
+            </p>
+          ) : null}
+
           {/* Stats row */}
           <div
+            className="rx-stats-row"
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-              gap: 12,
-              marginTop: 24,
-              paddingTop: 20,
               borderTop: "1px solid rgba(255,255,255,0.08)",
             }}
           >
@@ -343,6 +377,8 @@ export default async function ProfilePage({
               alignItems: "baseline",
               justifyContent: "space-between",
               marginBottom: 16,
+              flexWrap: "wrap",
+              gap: 12,
             }}
           >
             <h2
@@ -354,15 +390,26 @@ export default async function ProfilePage({
             >
               Trophy Wall
             </h2>
-            <span style={{ fontSize: 13, opacity: 0.55 }}>
-              {trophies.length} {trophies.length === 1 ? "trophy" : "trophies"}
-            </span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <span style={{ fontSize: 13, opacity: 0.55 }}>
+                {trophies.length}{" "}
+                {trophies.length === 1 ? "trophy" : "trophies"}
+              </span>
+              {isOwner ? <AddTrophyButton /> : null}
+            </div>
           </header>
           <TrophyWall
             handle={profile.handle}
             isOwner={isOwner}
             trophies={trophies}
           />
+          {isOwner ? <EditProfileButton bio={profile.bio ?? ""} /> : null}
         </section>
       </div>
     </main>
@@ -382,7 +429,6 @@ function Stat({
 }) {
   const valueStyle: React.CSSProperties = accent
     ? {
-        fontSize: 24,
         fontWeight: 800,
         letterSpacing: "-0.02em",
         backgroundImage:
@@ -393,7 +439,6 @@ function Stat({
       }
     : tone === "diamond"
       ? {
-          fontSize: 24,
           fontWeight: 800,
           letterSpacing: "-0.02em",
           backgroundImage:
@@ -404,7 +449,6 @@ function Stat({
         }
       : tone === "platinum"
         ? {
-            fontSize: 24,
             fontWeight: 800,
             letterSpacing: "-0.02em",
             backgroundImage:
@@ -414,13 +458,12 @@ function Stat({
             color: "transparent",
           }
         : {
-            fontSize: 24,
             fontWeight: 700,
             letterSpacing: "-0.02em",
           };
   return (
     <div>
-      <div style={valueStyle}>{value}</div>
+      <div className="rx-stat-value" style={valueStyle}>{value}</div>
       <div
         style={{
           fontSize: 11,

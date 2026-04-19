@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles, Heart, Star, ArrowRight } from "lucide-react";
+import { Heart, Star, Sparkles, ArrowRight } from "lucide-react";
+import RoutineXLogo from "@/components/RoutineXLogo";
 
 export default function AboutPage() {
   return (
@@ -12,11 +13,8 @@ export default function AboutPage() {
       </div>
 
       <div className="mx-auto max-w-2xl">
-        <a href="/" className="inline-flex items-center gap-2 mb-10">
-          <Sparkles className="h-6 w-6 text-primary-400" />
-          <span className="text-lg font-bold">
-            Routine<span className="gradient-text">X</span>
-          </span>
+        <a href="/" className="inline-flex mb-10">
+          <RoutineXLogo size="md" />
         </a>
 
         <motion.div

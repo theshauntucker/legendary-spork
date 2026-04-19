@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles, ArrowRight, Heart } from "lucide-react";
+import { ArrowRight, Heart } from "lucide-react";
+import RoutineXLogo from "@/components/RoutineXLogo";
 
 export default function Footer() {
   return (
@@ -51,12 +52,7 @@ export default function Footer() {
       <div className="border-t border-white/10 py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary-400" />
-              <span className="font-bold">
-                Routine<span className="gradient-text">X</span>
-              </span>
-            </div>
+            <RoutineXLogo size="sm" />
 
             <div className="flex items-center gap-6 text-xs text-surface-200">
               <a href="/privacy" className="hover:text-white transition-colors">

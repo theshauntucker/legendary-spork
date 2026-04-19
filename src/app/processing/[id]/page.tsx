@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Sparkles, Loader2, CheckCircle, Video, BarChart3, Cpu, RotateCcw } from "lucide-react";
+import { Loader2, CheckCircle, Video, BarChart3, Cpu, RotateCcw } from "lucide-react";
+import RoutineXLogo from "@/components/RoutineXLogo";
 
 const stages = [
   { key: "uploaded", label: "Video uploaded", icon: Video },
@@ -98,11 +99,8 @@ export default function ProcessingPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md text-center"
       >
-        <a href="/" className="inline-flex items-center gap-2 mb-8">
-          <Sparkles className="h-6 w-6 text-primary-400" />
-          <span className="text-lg font-bold">
-            Routine<span className="gradient-text">X</span>
-          </span>
+        <a href="/" className="inline-flex justify-center mb-8">
+          <RoutineXLogo size="md" />
         </a>
 
         {/* Main spinner / check */}

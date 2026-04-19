@@ -23,6 +23,7 @@ import {
   Loader2,
   RefreshCw,
 } from "lucide-react";
+import RoutineXLogo from "@/components/RoutineXLogo";
 
 interface JudgeScore {
   category: string;
@@ -256,11 +257,8 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
             <ArrowLeft className="h-4 w-4" />
             Dashboard
           </a>
-          <a href="/" className="inline-flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary-400" />
-            <span className="font-bold">
-              Routine<span className="gradient-text">X</span>
-            </span>
+          <a href="/" className="inline-flex items-center">
+            <RoutineXLogo size="sm" />
           </a>
           <div className="flex items-center gap-2">
             <button

@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import RoutineXLogo from "@/components/RoutineXLogo";
 import {
   Sparkles,
   Upload,
@@ -326,11 +327,8 @@ export default function DashboardClient({
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
-            <a href="/" className="inline-flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-primary-400" />
-              <span className="text-lg font-bold">
-                Routine<span className="gradient-text">X</span>
-              </span>
+            <a href="/" className="inline-flex">
+              <RoutineXLogo size="md" />
             </a>
           </div>
           <div className="flex items-center gap-4">

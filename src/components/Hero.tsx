@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Users, Star, Shield, Zap, Trophy, Check, Crown, Sparkles } from "lucide-react";
+import RoutineXLogo from "@/components/RoutineXLogo";
 
 export default function Hero() {
   const [subLoading, setSubLoading] = useState(false);
@@ -38,6 +39,16 @@ export default function Hero() {
       </div>
 
       <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+
+        {/* ── Brand lockup ── */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex justify-center mb-6"
+        >
+          <RoutineXLogo size="xl" stacked />
+        </motion.div>
 
         {/* ── Headline ── */}
         <motion.div

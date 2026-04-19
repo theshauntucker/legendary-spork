@@ -3,8 +3,9 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Sparkles, ArrowRight, Loader2, CheckCircle, Users } from "lucide-react";
+import { ArrowRight, Loader2, CheckCircle, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import RoutineXLogo from "@/components/RoutineXLogo";
 
 /**
  * Join flow:
@@ -119,11 +120,8 @@ function JoinForm() {
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <a href="/" className="inline-flex items-center gap-2 mb-4">
-            <Sparkles className="h-6 w-6 text-primary-400" />
-            <span className="text-lg font-bold">
-              Routine<span className="gradient-text">X</span>
-            </span>
+          <a href="/" className="inline-flex justify-center mb-4">
+            <RoutineXLogo size="md" />
           </a>
           <Users className="mx-auto h-8 w-8 text-primary-400 mb-3" />
           <h1 className="text-3xl font-bold font-[family-name:var(--font-display)]">

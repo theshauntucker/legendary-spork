@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import RoutineXLogo from "@/components/RoutineXLogo";
 
 export const metadata = {
   title: "Privacy Policy",
@@ -11,11 +11,8 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen py-20 px-4">
       <div className="mx-auto max-w-3xl">
-        <a href="/" className="inline-flex items-center gap-2 mb-10">
-          <Sparkles className="h-6 w-6 text-primary-400" />
-          <span className="text-lg font-bold">
-            Routine<span className="gradient-text">X</span>
-          </span>
+        <a href="/" className="inline-flex mb-10">
+          <RoutineXLogo size="md" />
         </a>
 
         <h1 className="text-3xl sm:text-4xl font-bold font-[family-name:var(--font-display)] mb-8">

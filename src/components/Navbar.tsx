@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Sparkles, LogOut, Calendar } from "lucide-react";
+import { Menu, X, LogOut, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ShellSwitcher } from "@/components/ShellSwitcher";
+import RoutineXLogo from "@/components/RoutineXLogo";
 
 const navLinks = [
   { label: "How It Works", href: "/#how-it-works" },
@@ -61,12 +62,9 @@ export default function Navbar() {
     <nav className="fixed top-8 left-0 right-0 z-50 glass">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <a href="/" className="flex items-center gap-2">
-            <Sparkles className="h-7 w-7 text-primary-400" />
-            <span className="text-xl font-bold tracking-tight">
-              Routine<span className="gradient-text">X</span>
-            </span>
+          {/* Logo — official sunset X + wordmark */}
+          <a href="/" className="flex items-center">
+            <RoutineXLogo size="md" />
           </a>
 
           {/* Desktop links */}
