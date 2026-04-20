@@ -74,8 +74,17 @@ interface Stats {
   totalRevenue: number;
   singleRevenue: number;
   packRevenue: number;
+  subscriptionRevenue: number;
+  studioRevenue: number;
   singleCount: number;
   packCount: number;
+  subscriptionCount: number;
+  studioCount: number;
+  activeSeasonMembers: number;
+  activeStudios: number;
+  seasonMemberMrrCents: number;
+  studioMrrCents: number;
+  totalMrrCents: number;
   totalMembers: number;
   convertedMembers: number;
   conversionRate: number;
@@ -307,7 +316,8 @@ export default function AdminClient({ users: initialUsers, affiliates: initialAf
             {/* Key stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { label: "Total Revenue", value: `$${(stats.totalRevenue / 100).toFixed(2)}`, icon: DollarSign, color: "text-green-400", sub: `$${(stats.singleRevenue/100).toFixed(2)} singles + $${(stats.packRevenue/100).toFixed(2)} packs` },
+                { label: "Total Revenue", value: `$${(stats.totalRevenue / 100).toFixed(2)}`, icon: DollarSign, color: "text-green-400", sub: `One-time + subs combined` },
+                { label: "Locked-in MRR", value: `$${(stats.totalMrrCents / 100).toFixed(2)}`, icon: TrendingUp, color: "text-accent-400", sub: `${stats.activeSeasonMembers} Season Member${stats.activeSeasonMembers === 1 ? "" : "s"} + ${stats.activeStudios} studio${stats.activeStudios === 1 ? "" : "s"}` },
                 { label: "Total Members", value: stats.totalMembers, icon: Users, color: "text-primary-400", sub: `${stats.convertedMembers} paid` },
                 { label: "Conversion Rate", value: `${stats.conversionRate}%`, icon: TrendingUp, color: "text-gold-400", sub: `${stats.convertedMembers} of ${stats.totalMembers}` },
               ].map((s) => (
@@ -339,9 +349,27 @@ export default function AdminClient({ users: initialUsers, affiliates: initialAf
                       <span className="text-xs text-surface-200 ml-2">({stats.packCount} sales)</span>
                     </div>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-surface-200">$12.99 Season Member</span>
+                    <div className="text-right">
+                      <span className="font-bold text-green-400">${(stats.subscriptionRevenue/100).toFixed(2)}</span>
+                      <span className="text-xs text-surface-200 ml-2">({stats.subscriptionCount} payment{stats.subscriptionCount === 1 ? "" : "s"})</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-surface-200">$99 Studio Plan</span>
+                    <div className="text-right">
+                      <span className="font-bold text-green-400">${(stats.studioRevenue/100).toFixed(2)}</span>
+                      <span className="text-xs text-surface-200 ml-2">({stats.studioCount} payment{stats.studioCount === 1 ? "" : "s"})</span>
+                    </div>
+                  </div>
                   <div className="border-t border-white/10 pt-3 flex justify-between items-center">
                     <span className="font-semibold">Total</span>
                     <span className="font-bold text-xl text-green-400">${(stats.totalRevenue/100).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs text-surface-200">
+                    <span>MRR locked in</span>
+                    <span className="text-accent-300 font-semibold">${(stats.totalMrrCents/100).toFixed(2)}/mo</span>
                   </div>
                 </div>
               </div>
@@ -528,8 +556,11 @@ export default function AdminClient({ users: initialUsers, affiliates: initialAf
             <div className="grid sm:grid-cols-3 gap-4">
               {[
                 { label: "Total Revenue", value: `$${(stats.totalRevenue/100).toFixed(2)}`, color: "text-green-400" },
+                { label: "MRR locked in", value: `$${(stats.totalMrrCents/100).toFixed(2)}/mo (${stats.activeSeasonMembers} + ${stats.activeStudios} studios)`, color: "text-accent-300" },
                 { label: "Single Sales ($8.99)", value: `${stats.singleCount} sale${stats.singleCount !== 1 ? 's' : ''} — $${(stats.singleRevenue/100).toFixed(2)}`, color: "text-accent-400" },
                 { label: "Pack Sales ($29.99)", value: `${stats.packCount} sale${stats.packCount !== 1 ? 's' : ''} — $${(stats.packRevenue/100).toFixed(2)}`, color: "text-gold-400" },
+                { label: "Season Member ($12.99)", value: `${stats.subscriptionCount} payment${stats.subscriptionCount !== 1 ? 's' : ''} — $${(stats.subscriptionRevenue/100).toFixed(2)}`, color: "text-primary-400" },
+                { label: "Studio Plan ($99)", value: `${stats.studioCount} payment${stats.studioCount !== 1 ? 's' : ''} — $${(stats.studioRevenue/100).toFixed(2)}`, color: "text-gold-400" },
               ].map(s => (
                 <div key={s.label} className="glass rounded-2xl p-5">
                   <div className={`text-xl font-bold ${s.color}`}>{s.value}</div>

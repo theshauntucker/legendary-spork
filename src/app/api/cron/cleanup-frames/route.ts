@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -7,8 +7,18 @@ export const dynamic = "force-dynamic";
  * GET /api/cron/cleanup-frames
  * Hourly cron job that auto-deletes video frames older than 24 hours.
  * COPPA compliance: ensures no frames persist beyond the retention window.
+ *
+ * Auth: Bearer CRON_SECRET, matching the pattern used by the other three
+ * crons. Without this, anyone can hit the endpoint and force a sweep — not
+ * catastrophic (only removes frames of already-analyzed videos that were due
+ * for deletion anyway) but there's no reason to leave it open.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const serviceClient = await createServiceClient();
 

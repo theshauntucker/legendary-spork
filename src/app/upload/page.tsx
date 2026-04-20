@@ -10,6 +10,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import UploadTrustBadge from "@/components/UploadTrustBadge";
 import RoutineXLogo from "@/components/RoutineXLogo";
+import DancerAutocomplete from "@/components/DancerAutocomplete";
 import {
   extractFrames, framesToBase64, loadVideoMetadata,
   type ExtractedFrame, type ExtractionProgress,
@@ -45,6 +46,11 @@ function UploadPageInner() {
   const [style, setStyle] = useState("");
   const [entryType, setEntryType] = useState("");
   const [dancerName, setDancerName] = useState("");
+  // When the uploader is a studio member and picks a dancer from their
+  // roster, we stamp the studio_dancer_id here so /api/analyze can link the
+  // video. Free-text entries (non-studio users, one-off guests) leave this
+  // null and fall through to the legacy dancer_name path.
+  const [studioDancerId, setStudioDancerId] = useState<string | null>(null);
   const [studioName, setStudioName] = useState("");
   const [choreographer, setChoreographer] = useState("");
   const [competitionName, setCompetitionName] = useState("");
@@ -63,6 +69,7 @@ function UploadPageInner() {
     const et = searchParams.get("entryType");
     const ag = searchParams.get("ageGroup");
     const dn = searchParams.get("dancerName");
+    const sdid = searchParams.get("studioDancerId");
     const sn = searchParams.get("studioName");
     const ch = searchParams.get("choreographer");
     if (pid) {
@@ -74,6 +81,7 @@ function UploadPageInner() {
     if (et) setEntryType(et);
     if (ag) setAgeGroup(ag);
     if (dn) setDancerName(dn);
+    if (sdid) setStudioDancerId(sdid);
     if (sn) setStudioName(sn);
     if (ch) setChoreographer(ch);
   }, [searchParams]);
@@ -178,6 +186,7 @@ function UploadPageInner() {
         metadata: {
           routineName,
           dancerName: dancerName || undefined,
+          studioDancerId: studioDancerId || undefined,
           studioName: studioName || undefined,
           choreographer: choreographer || undefined,
           competitionName: competitionName || undefined,
@@ -376,9 +385,14 @@ function UploadPageInner() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Dancer / Team Name</label>
-                <input type="text" value={dancerName} onChange={(e) => setDancerName(e.target.value)}
-                  placeholder="e.g., Emma R." disabled={isProcessing}
-                  className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-surface-200/50 focus:outline-none focus:border-primary-500 transition-colors disabled:opacity-50" />
+                <DancerAutocomplete
+                  value={{ displayName: dancerName, studioDancerId }}
+                  onChange={(v) => {
+                    setDancerName(v.displayName);
+                    setStudioDancerId(v.studioDancerId);
+                  }}
+                  disabled={isProcessing}
+                />
               </div>
             </div>
           </div>

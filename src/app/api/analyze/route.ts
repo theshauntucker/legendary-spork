@@ -24,6 +24,10 @@ interface RoutineMetadata {
   resolution: string;
   originalFilename: string;
   originalFileSize: number;
+  // Studio linkage — populated when the uploader picked a dancer from their
+  // studio's roster. Both values are verified server-side against
+  // studio_members + studio_dancers before being stored on the video.
+  studioDancerId?: string;
 }
 
 export const maxDuration = 60;
@@ -195,6 +199,44 @@ export async function POST(request: NextRequest) {
     }
     // ──────────────────────────────────────────────────────────────────────
 
+    // ── Studio roster linkage ────────────────────────────────────────────
+    // If the client sent a studioDancerId, verify the user is a member of
+    // the studio that owns the dancer AND the dancer is active. This
+    // prevents cross-studio tagging or stale-autocomplete from dropping an
+    // archived dancer onto a new routine.
+    let resolvedStudioDancerId: string | null = null;
+    let resolvedStudioId: string | null = null;
+    let resolvedDancerName: string | null = metadata.dancerName || null;
+
+    if (metadata.studioDancerId && typeof metadata.studioDancerId === "string") {
+      const { data: dancerRow } = await serviceClient
+        .from("studio_dancers")
+        .select("id, studio_id, name, is_active")
+        .eq("id", metadata.studioDancerId)
+        .maybeSingle();
+
+      if (dancerRow && dancerRow.is_active !== false) {
+        // Confirm user is a member of that studio
+        const { data: memberRow } = await serviceClient
+          .from("studio_members")
+          .select("user_id")
+          .eq("user_id", user.id)
+          .eq("studio_id", dancerRow.studio_id)
+          .maybeSingle();
+
+        if (memberRow) {
+          resolvedStudioDancerId = dancerRow.id;
+          resolvedStudioId = dancerRow.studio_id;
+          // Canonicalize dancer_name from the roster so upstream code that
+          // groups by name (/dancers Season Tracker) stays consistent.
+          if (!resolvedDancerName || resolvedDancerName.trim() === "") {
+            resolvedDancerName = dancerRow.name;
+          }
+        }
+      }
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
     // Create video record — including new competition fields
     const { data: video, error: videoError } = await serviceClient
       .from("videos")
@@ -203,7 +245,7 @@ export async function POST(request: NextRequest) {
         filename: metadata.originalFilename,
         storage_path: `frames/${user.id}/${Date.now()}`,
         routine_name: metadata.routineName,
-        dancer_name: metadata.dancerName || null,
+        dancer_name: resolvedDancerName,
         studio_name: metadata.studioName || null,
         choreographer: metadata.choreographer || null,
         competition_name: metadata.competitionName || null,
@@ -216,6 +258,8 @@ export async function POST(request: NextRequest) {
         frame_fingerprint: frameFingerprint,
         frame_phash: cleanPhashes.length ? cleanPhashes : null,
         parent_video_id: resolvedParentId,
+        studio_id: resolvedStudioId,
+        studio_dancer_id: resolvedStudioDancerId,
       })
       .select("id")
       .single();

@@ -47,6 +47,68 @@ export default async function StudioDashboardPage() {
     .select("id", { count: "exact", head: true })
     .eq("studio_id", membership.studioId);
 
+  // Roster snapshot — count + top-performing preview for the My Roster strip
+  const { count: rosterCount } = await service
+    .from("studio_dancers")
+    .select("id", { count: "exact", head: true })
+    .eq("studio_id", membership.studioId)
+    .eq("is_active", true);
+
+  let rosterPreview: Array<{
+    id: string;
+    name: string;
+    nickname: string | null;
+    routineCount: number;
+    bestScore: number | null;
+  }> = [];
+  if ((rosterCount ?? 0) > 0) {
+    const { data: rosterRows } = await service
+      .from("studio_dancers")
+      .select("id, name, nickname")
+      .eq("studio_id", membership.studioId)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(24);
+
+    const ids = (rosterRows ?? []).map((r) => r.id);
+    const statsByDancer: Record<string, { routineCount: number; bestScore: number | null }> = {};
+    if (ids.length > 0) {
+      const { data: vids } = await service
+        .from("videos")
+        .select("studio_dancer_id, analyses(total_score)")
+        .in("studio_dancer_id", ids)
+        .eq("status", "analyzed");
+      for (const v of vids ?? []) {
+        if (!v.studio_dancer_id) continue;
+        const aArr = Array.isArray(v.analyses) ? v.analyses : v.analyses ? [v.analyses] : [];
+        const score: number | null = aArr[0]?.total_score ?? null;
+        const bucket = statsByDancer[v.studio_dancer_id] ?? { routineCount: 0, bestScore: null };
+        bucket.routineCount += 1;
+        if (score != null && (bucket.bestScore == null || score > bucket.bestScore)) {
+          bucket.bestScore = score;
+        }
+        statsByDancer[v.studio_dancer_id] = bucket;
+      }
+    }
+
+    rosterPreview = (rosterRows ?? [])
+      .map((r) => ({
+        id: r.id,
+        name: r.name,
+        nickname: r.nickname,
+        routineCount: statsByDancer[r.id]?.routineCount ?? 0,
+        bestScore: statsByDancer[r.id]?.bestScore ?? null,
+      }))
+      // Surface dancers who've actually been analyzed first, then by best score
+      .sort((a, b) => {
+        if ((b.routineCount > 0 ? 1 : 0) !== (a.routineCount > 0 ? 1 : 0)) {
+          return (b.routineCount > 0 ? 1 : 0) - (a.routineCount > 0 ? 1 : 0);
+        }
+        return (b.bestScore ?? -1) - (a.bestScore ?? -1);
+      })
+      .slice(0, 8);
+  }
+
   const remaining = pool ? Math.max(0, pool.total_credits - pool.used_credits) : 0;
   const subscriptionStatus = pool?.subscription_status ?? null;
 
@@ -76,6 +138,11 @@ export default async function StudioDashboardPage() {
         loadSchedule: (scheduleRowCount ?? 0) > 0,
         searchMusic: (musicTrackCount ?? 0) > 0,
         uploadRoutine: (analysisCount ?? 0) > 0,
+        buildRoster: (rosterCount ?? 0) > 0,
+      }}
+      roster={{
+        count: rosterCount ?? 0,
+        preview: rosterPreview,
       }}
     />
   );

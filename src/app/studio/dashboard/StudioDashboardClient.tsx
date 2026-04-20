@@ -12,6 +12,7 @@ import {
   Circle,
   ArrowRight,
   Gauge,
+  Trophy,
   X,
 } from "lucide-react";
 
@@ -35,6 +36,20 @@ interface ChecklistFlags {
   loadSchedule: boolean;
   searchMusic: boolean;
   uploadRoutine: boolean;
+  buildRoster: boolean;
+}
+
+interface RosterPreviewEntry {
+  id: string;
+  name: string;
+  nickname: string | null;
+  routineCount: number;
+  bestScore: number | null;
+}
+
+interface RosterPayload {
+  count: number;
+  preview: RosterPreviewEntry[];
 }
 
 const DISMISS_KEY = "routinex-studio-checklist-dismissed";
@@ -45,12 +60,14 @@ export default function StudioDashboardClient({
   pool,
   needsSubscriptionSetup,
   checklist,
+  roster,
 }: {
   studio: Studio;
   role: "owner" | "choreographer" | "viewer";
   pool: PoolSnapshot | null;
   needsSubscriptionSetup: boolean;
   checklist: ChecklistFlags;
+  roster: RosterPayload;
 }) {
   // Hide the checklist once every item is done OR the user dismissed it.
   // The spec calls it "sticky-until-done" so dismissal only matters after
@@ -61,7 +78,8 @@ export default function StudioDashboardClient({
       checklist.inviteTeam &&
       checklist.loadSchedule &&
       checklist.searchMusic &&
-      checklist.uploadRoutine,
+      checklist.uploadRoutine &&
+      checklist.buildRoster,
     [checklist]
   );
   const [dismissed, setDismissed] = useState<boolean>(() => {
@@ -224,6 +242,78 @@ export default function StudioDashboardClient({
           />
         </div>
 
+        {/* My Roster strip */}
+        <div className="glass rounded-2xl p-5 sm:p-6 mb-10">
+          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-primary-600/20">
+                <Users className="h-4 w-4 text-primary-300" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">My Roster</h2>
+                <p className="text-xs text-surface-200 mt-0.5">
+                  {roster.count === 0
+                    ? "Enter each dancer once — they auto-fill on every future routine."
+                    : `${roster.count} active dancer${roster.count === 1 ? "" : "s"} · tagged automatically on upload`}
+                </p>
+              </div>
+            </div>
+            <a
+              href="/studio/roster"
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 text-sm font-semibold transition-colors"
+            >
+              {roster.count === 0 ? "Build your roster" : "Manage roster"}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </a>
+          </div>
+
+          {roster.count === 0 ? (
+            <div className="rounded-xl border border-dashed border-white/10 bg-white/3 p-5 text-center">
+              <p className="text-sm text-surface-100 font-medium">
+                Your roster is empty.
+              </p>
+              <p className="text-xs text-surface-200 mt-1">
+                Drop in your dancers once and they'll autofill on every routine upload — name, age division, level, style. No more retyping.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {roster.preview.map((d) => (
+                <a
+                  key={d.id}
+                  href={`/studio/dancer/${d.id}`}
+                  className="group rounded-xl border border-white/10 bg-white/3 hover:bg-white/6 hover:border-white/20 p-3 flex items-center gap-3 transition-colors min-w-0"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500/40 via-accent-500/30 to-gold-500/20 text-xs font-bold text-white border border-white/10">
+                    {d.name
+                      .trim()
+                      .split(/\s+/)
+                      .slice(0, 2)
+                      .map((p) => p[0]?.toUpperCase() ?? "")
+                      .join("")}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{d.name}</p>
+                    <div className="flex items-center gap-2 text-[10px] text-surface-200 mt-0.5">
+                      <span>
+                        {d.routineCount === 0
+                          ? "No routines yet"
+                          : `${d.routineCount} routine${d.routineCount === 1 ? "" : "s"}`}
+                      </span>
+                      {typeof d.bestScore === "number" && (
+                        <span className="inline-flex items-center gap-0.5 text-gold-300">
+                          <Trophy className="h-2.5 w-2.5" />
+                          {d.bestScore.toFixed(1)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* First-run checklist */}
         {showChecklist && (
           <div className="glass rounded-2xl p-5 sm:p-6 mb-10">
@@ -231,7 +321,7 @@ export default function StudioDashboardClient({
               <div>
                 <h2 className="text-lg font-semibold">First-Run Checklist</h2>
                 <p className="text-xs text-surface-200 mt-0.5">
-                  Four steps to have your studio firing on all cylinders.
+                  Five steps to have your studio firing on all cylinders.
                 </p>
               </div>
               {allDone && (
@@ -245,6 +335,11 @@ export default function StudioDashboardClient({
               )}
             </div>
             <ul className="space-y-2.5">
+              <ChecklistRow
+                done={checklist.buildRoster}
+                label="Build your roster (enter dancers once)"
+                href="/studio/roster"
+              />
               <ChecklistRow
                 done={checklist.inviteTeam}
                 label="Invite your choreographers"

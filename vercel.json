@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/bayda-daily-posts",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/coda-onboarding-emails",
+      "schedule": "0 * * * *"
     }
   ]
 }

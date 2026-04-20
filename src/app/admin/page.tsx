@@ -28,6 +28,8 @@ export default async function AdminPage() {
     { data: analyses },
     { data: authUsers },
     { data: affiliates },
+    { data: activeSubsRows },
+    { data: studioCreditsRows },
   ] = await Promise.all([
     serviceClient.from("user_credits").select("*").order("created_at", { ascending: false }),
     serviceClient.from("payments").select("*").order("created_at", { ascending: false }),
@@ -35,6 +37,10 @@ export default async function AdminPage() {
     serviceClient.from("analyses").select("id, video_id, user_id, total_score, award_level, created_at").order("created_at", { ascending: false }),
     adminClient.auth.admin.listUsers(),
     serviceClient.from("affiliates").select("*").order("created_at", { ascending: false }),
+    // Active subscriptions snapshot for MRR — status=active AND not canceled-at-period-end
+    serviceClient.from("subscriptions").select("user_id, status, cancel_at_period_end").eq("status", "active"),
+    // Studio credit pools for studio MRR
+    serviceClient.from("studio_credits").select("studio_id, subscription_status, stripe_subscription_id"),
   ]);
 
   const allUsers = authUsers?.users ?? [];
@@ -70,8 +76,25 @@ export default async function AdminPage() {
   const totalRevenue = allPayments.reduce((s, p) => s + p.amount_cents, 0);
   const singleRevenue = allPayments.filter(p => p.payment_type === "single" || p.payment_type === "trial").reduce((s, p) => s + p.amount_cents, 0);
   const packRevenue = allPayments.filter(p => p.payment_type === "video_analysis" || p.payment_type === "beta_access").reduce((s, p) => s + p.amount_cents, 0);
+  // Subscription revenue — initial + renewal rows. Keep them combined: Shaun
+  // cares about "how much did Season Member bring in", not which row was first.
+  const subscriptionRevenue = allPayments.filter(p => p.payment_type === "subscription" || p.payment_type === "subscription_renewal").reduce((s, p) => s + p.amount_cents, 0);
+  // Studio subscription revenue — separate so studio growth doesn't hide inside B2C.
+  const studioRevenue = allPayments.filter(p => p.payment_type === "studio_subscription").reduce((s, p) => s + p.amount_cents, 0);
   const singleCount = allPayments.filter(p => p.payment_type === "single" || p.payment_type === "trial").length;
   const packCount = allPayments.filter(p => p.payment_type === "video_analysis" || p.payment_type === "beta_access").length;
+  const subscriptionCount = allPayments.filter(p => p.payment_type === "subscription" || p.payment_type === "subscription_renewal").length;
+  const studioCount = allPayments.filter(p => p.payment_type === "studio_subscription").length;
+  // Forward-looking MRR — what's locked in right now, assuming nobody cancels.
+  // $12.99/mo × active Season Members + $99/mo × active studios (active OR trial,
+  // since trials convert without a second checkout).
+  const activeSeasonMembers = (activeSubsRows ?? []).filter((s) => !s.cancel_at_period_end).length;
+  const activeStudios = (studioCreditsRows ?? []).filter((s) =>
+    s.subscription_status === "active" || s.subscription_status === "trial"
+  ).length;
+  const seasonMemberMrrCents = activeSeasonMembers * 1299;
+  const studioMrrCents = activeStudios * 9900;
+  const totalMrrCents = seasonMemberMrrCents + studioMrrCents;
   const convertedUsers = userRecords.filter(u => u.hasConverted).length;
   const conversionRate = allUsers.length > 0 ? Math.round((convertedUsers / allUsers.length) * 100) : 0;
 
@@ -130,8 +153,17 @@ export default async function AdminPage() {
         totalRevenue,
         singleRevenue,
         packRevenue,
+        subscriptionRevenue,
+        studioRevenue,
         singleCount,
         packCount,
+        subscriptionCount,
+        studioCount,
+        activeSeasonMembers,
+        activeStudios,
+        seasonMemberMrrCents,
+        studioMrrCents,
+        totalMrrCents,
         totalMembers: allUsers.length,
         convertedMembers: convertedUsers,
         conversionRate,
