@@ -179,7 +179,10 @@ export default function UploadScreen() {
           setHasCredits(data.remaining > 0);
           setCreditsRemaining(data.remaining);
         }
-      } catch {}
+      } catch (err) {
+        console.warn('Credits check failed:', err);
+        setHasCredits(false);
+      }
       setCheckingCredits(false);
     };
     checkCredits();

@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../lib/auth';
 import { colors, gradients, gradientProps, headerGradient } from '../../lib/theme';
 
-const ADMIN_EMAIL = '22tucker22@comcast.net';
+const ADMIN_EMAIL = (process.env.EXPO_PUBLIC_ADMIN_EMAIL || '22tucker22@comcast.net').toLowerCase();
 
 function TabIcon({ label, focused }: { label: string; focused: boolean }) {
   return (
