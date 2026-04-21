@@ -220,6 +220,18 @@ export async function createCheckoutSession(
   return res.json();
 }
 
+export async function deleteAccount(): Promise<void> {
+  const token = await getAuthToken();
+  const res = await fetch(`${API_BASE}/api/account`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error || 'Failed to delete account');
+  }
+}
+
 export async function storeConsentRecord(
   consentType: string,
   userAgent: string,

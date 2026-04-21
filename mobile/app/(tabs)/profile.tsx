@@ -11,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../lib/auth';
 import { colors, gradients, gradientProps, glass, sectionHeader, screenGradient, CARD_ACCENT_HEIGHT } from '../../lib/theme';
+import { deleteAccount } from '../../lib/api';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
@@ -32,14 +33,34 @@ export default function ProfileScreen() {
   const handleDeleteAccount = () => {
     Alert.alert(
       'Delete Account',
-      'To delete your account and all associated data, please contact us at danceroutinex@gmail.com. We will process your request within 48 hours.',
+      'This will permanently delete your account and all data — videos, analyses, credits, and payment history. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Send Email',
+          text: 'Delete Everything',
+          style: 'destructive',
           onPress: () => {
-            Linking.openURL(
-              `mailto:danceroutinex@gmail.com?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20RoutineX%20account.%0A%0AEmail:%20${user?.email}`
+            Alert.alert(
+              'Are you absolutely sure?',
+              'Type your email to confirm: ' + (user?.email || ''),
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Yes, Delete My Account',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      await deleteAccount();
+                      await signOut();
+                    } catch (err) {
+                      Alert.alert(
+                        'Error',
+                        'Failed to delete account. Please try again or email support@routinex.org for help.'
+                      );
+                    }
+                  },
+                },
+              ]
             );
           },
         },
