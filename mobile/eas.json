@@ -7,27 +7,18 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "",
-        "EXPO_PUBLIC_API_BASE": "https://routinex.org",
-        "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": ""
+        "EXPO_PUBLIC_API_BASE": "https://routinex.org"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "",
-        "EXPO_PUBLIC_API_BASE": "https://routinex.org",
-        "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": ""
+        "EXPO_PUBLIC_API_BASE": "https://routinex.org"
       }
     },
     "production": {
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "",
-        "EXPO_PUBLIC_API_BASE": "https://routinex.org",
-        "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": ""
+        "EXPO_PUBLIC_API_BASE": "https://routinex.org"
       }
     }
   },
@@ -35,12 +26,8 @@
     "production": {
       "ios": {
         "appleId": "22tucker22@comcast.net",
-        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
-        "appleTeamId": "YOUR_APPLE_TEAM_ID"
-      },
-      "android": {
-        "serviceAccountKeyPath": "./google-service-account.json",
-        "track": "internal"
+        "ascAppId": "PASTE_YOUR_APP_STORE_CONNECT_APP_ID_HERE",
+        "appleTeamId": "PASTE_YOUR_APPLE_TEAM_ID_HERE"
       }
     }
   }
