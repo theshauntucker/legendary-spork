@@ -3,6 +3,7 @@ ios/
 android/
 dist/
 .DS_Store
+.expo/
 *.jks
 *.p8
 *.p12
