@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import {
+  BookOpen,
+  Lightbulb,
   Sparkles,
   Camera,
   Music,
@@ -191,7 +193,7 @@ export default function StudioDashboardClient({
         </div>
 
         {/* 4 hero tiles — equal visual weight per spec */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
           <HeroTile
             icon={<Camera className="h-6 w-6" />}
             eyebrow="Analyze"
@@ -237,8 +239,26 @@ export default function StudioDashboardClient({
                 : "See everyone on the team and what they&apos;re working on."
             }
             actionLabel={role === "owner" ? "Invite" : "View team"}
-            href="/studio/team"
+            href="/studio/team-board"
             accent="primary"
+          />
+          <HeroTile
+            icon={<BookOpen className="h-6 w-6" />}
+            eyebrow="Coaching"
+            title="Coach's Playbook"
+            body="Weekly coaching notes auto-generated from routine analyses. See top focus areas and per-routine feedback at a glance."
+            actionLabel="View Playbook"
+            href="/studio/playbook"
+            accent="accent"
+          />
+          <HeroTile
+            icon={<Lightbulb className="h-6 w-6" />}
+            eyebrow="Pool"
+            title="Shared Credit Pool"
+            body={`${pool?.used ?? 0}/${pool?.total ?? 100} analyses used this cycle. Team members draw from the same pool automatically.`}
+            actionLabel="Manage Pool"
+            href="/studio/settings"
+            accent="gold"
           />
         </div>
 
@@ -343,7 +363,7 @@ export default function StudioDashboardClient({
               <ChecklistRow
                 done={checklist.inviteTeam}
                 label="Invite your choreographers"
-                href="/studio/team"
+                href="/studio/team-board"
               />
               <ChecklistRow
                 done={checklist.loadSchedule}
