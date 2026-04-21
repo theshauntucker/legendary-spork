@@ -76,6 +76,17 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Capacitor native shell — hide web navigation when native tab bar is present */
+html.capacitor-native nav[data-navbar],
+html.capacitor-native footer[data-footer],
+html.capacitor-native [data-web-only] {
+  display: none !important;
+}
+
+html.capacitor-native body {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 /* Print styles for PDF download */
 @media print {
   body {

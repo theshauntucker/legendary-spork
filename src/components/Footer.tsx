@@ -5,7 +5,7 @@ import { Sparkles, ArrowRight, Heart } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="relative">
+    <footer data-footer className="relative">
       {/* Final CTA */}
       <section className="relative py-24 sm:py-32 overflow-hidden">
         <div className="absolute inset-0">
