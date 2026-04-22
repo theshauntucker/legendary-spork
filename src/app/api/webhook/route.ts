@@ -16,6 +16,7 @@ import {
   notifyWebhookError,
   sendWelcomeEmail,
   notifyWelcomeSent,
+  notifyReferralSuccess,
 } from "@/lib/notifications";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -680,6 +681,39 @@ export async function POST(request: NextRequest) {
       }).then(({ error: affErr }) => {
         if (affErr) console.error("Affiliate attribution failed:", affErr);
       });
+    }
+
+    // User-to-user referral fulfillment.
+    // Grants +1 credit to BOTH referrer and referred user on first paid
+    // routine. Caps referrer at 10 credits/month. RPC is idempotent via
+    // credit_granted_* flags on the referrals row — safe to call every time.
+    try {
+      const { data: fulfillResult, error: fulfillErr } = await serviceClient.rpc(
+        "fulfill_referral_on_payment",
+        {
+          p_referred_user_id: userId,
+          p_payment_id: session.id,
+          p_amount_cents: session.amount_total || 0,
+        }
+      );
+
+      if (fulfillErr) {
+        console.error("Referral fulfillment failed:", fulfillErr);
+      } else if (
+        fulfillResult &&
+        typeof fulfillResult === "object" &&
+        (fulfillResult as { status?: string }).status === "credited"
+      ) {
+        const referrerId = (fulfillResult as { referrer_user_id?: string })
+          .referrer_user_id;
+        if (referrerId) {
+          notifyReferralSuccess(serviceClient, referrerId).catch((err) =>
+            console.error("Referral notify failed:", err)
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Referral fulfillment exception:", err);
     }
 
     // Send payment notification email (non-blocking, ok to fail)

@@ -30,11 +30,19 @@ function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Capture ?ref= from URL on mount
+  // Capture ?ref= from URL on mount; fall back to rx_ref cookie set by
+  // middleware when the user landed on another page first (e.g. /coda).
   useEffect(() => {
     const ref = searchParams.get("ref");
     if (ref) {
       setReferralCode(ref.toUpperCase());
+      return;
+    }
+    if (typeof document !== "undefined") {
+      const match = document.cookie.match(/(?:^|; )rx_ref=([^;]+)/);
+      if (match && match[1]) {
+        setReferralCode(decodeURIComponent(match[1]).toUpperCase());
+      }
     }
   }, [searchParams]);
 

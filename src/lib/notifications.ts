@@ -1011,3 +1011,80 @@ export async function sendProfileCompletionNudge(
 }
 
 // cache bust Sun Mar 22 14:29:05 PDT 2026
+
+// ─────────────────────────────────────────────────────────────────────────
+// Referral program — user-to-user
+// ─────────────────────────────────────────────────────────────────────────
+import type { SupabaseClient as _SB } from "@supabase/supabase-js";
+
+/**
+ * Send "Your friend joined RoutineX!" email to the referrer when a referred
+ * user makes their first paid routine. Fire-and-forget — we never block the
+ * webhook on email delivery.
+ *
+ * Looks up the referrer's email via auth.admin. Silently no-ops if email
+ * cannot be resolved.
+ */
+export async function notifyReferralSuccess(
+  service: _SB,
+  referrerUserId: string
+) {
+  try {
+    const { data, error } = await service.auth.admin.getUserById(referrerUserId);
+    if (error || !data?.user?.email) {
+      console.warn(
+        "notifyReferralSuccess: could not resolve referrer email",
+        referrerUserId,
+        error?.message
+      );
+      return;
+    }
+    const email = data.user.email;
+
+    const subject = "A friend joined RoutineX — you both earned a credit";
+    const html = `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#0a0118;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#f3f4f6;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0a0118;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:18px;overflow:hidden;">
+          <tr>
+            <td style="padding:32px 28px 8px 28px;">
+              <div style="font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#9ca3af;">Referral credited</div>
+              <h1 style="margin:10px 0 0 0;font-size:28px;line-height:1.15;font-weight:900;letter-spacing:-0.01em;background:linear-gradient(135deg,#EC4899,#F97316,#FBBF24);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">
+                A friend just joined RoutineX.
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 28px 0 28px;color:#d1d5db;font-size:15px;line-height:1.6;">
+              Someone signed up with your link and grabbed their first routine.
+              We dropped a <strong style="color:#fff;">free credit</strong> into both of your accounts — theirs to get started, yours as a thank-you for bringing them in.
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 28px;">
+              <a href="https://routinex.org/referrals" style="display:inline-block;padding:14px 22px;border-radius:12px;background:linear-gradient(135deg,#EC4899,#F97316,#FBBF24);color:#0a0118;font-weight:800;text-decoration:none;font-size:15px;">
+                See my invites
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 28px 28px 28px;color:#9ca3af;font-size:13px;line-height:1.55;">
+              Share your link with more dance or cheer friends — up to 10 free credits a month. No photos of dancers, ever.
+            </td>
+          </tr>
+        </table>
+        <div style="margin-top:18px;color:#6b7280;font-size:12px;">RoutineX · routinex.org</div>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    await sendCustomerEmail(email, subject, html, { useFounderFrom: true });
+  } catch (err) {
+    console.error("notifyReferralSuccess failed:", err);
+  }
+}
