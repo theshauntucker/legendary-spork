@@ -1,0 +1,15 @@
+node_modules/
+ios/
+android/
+dist/
+.DS_Store
+.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+.env
+google-service-account.json
+Pods/

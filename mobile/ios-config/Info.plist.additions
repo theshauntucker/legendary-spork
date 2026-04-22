@@ -1,0 +1,22 @@
+<!--
+  Add these entries to the Xcode-generated Info.plist after running `npx cap add ios`.
+  Path: ios/App/App/Info.plist
+-->
+
+<!-- Camera & Photo Library -->
+<key>NSCameraUsageDescription</key>
+<string>RoutineX needs camera access to record dance routines for analysis.</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>RoutineX needs photo library access to select routine videos for analysis.</string>
+<key>NSMicrophoneUsageDescription</key>
+<string>RoutineX needs microphone access when recording routines.</string>
+
+<!-- Export Compliance -->
+<key>ITSAppUsesNonExemptEncryption</key>
+<false/>
+
+<!-- Allow media playback -->
+<key>UIBackgroundModes</key>
+<array>
+  <string>remote-notification</string>
+</array>
