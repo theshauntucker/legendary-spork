@@ -72,7 +72,7 @@ export default function ReferralsClient() {
             "I use RoutineX to get judge-style feedback on my routines. You get a free credit when you sign up with my link.",
           url: data.shareUrl,
         });
-        haptics.light();
+        haptics.tap();
         return;
       } catch {
         // user canceled — fall through to copy
@@ -123,7 +123,7 @@ export default function ReferralsClient() {
             }}
           >
             Bring a <GradientText gradient="sunsetText">dance</GradientText> or{" "}
-            <GradientText gradient="magentaRushText">cheer</GradientText> friend
+            <GradientText gradient="magentaRush">cheer</GradientText> friend
           </motion.h1>
 
           <motion.p
