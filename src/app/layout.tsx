@@ -10,6 +10,7 @@ import Navbar from "@/components/Navbar";
 import CountdownBanner from "@/components/CountdownBanner";
 import { AtmosphereProvider } from "@/components/AtmosphereProvider";
 import { BottomNav } from "@/components/BottomNav";
+import { isNativeIosShell } from "@/lib/native-shell";
 
 // iPhone / mobile rendering tuned to match modern app sites:
 // - viewportFit: "cover" lets the page render under the notch / home
@@ -162,13 +163,24 @@ const jsonLd = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // When the page is served inside the native iOS Capacitor shell, strip
+  // all the marketing chrome (CountdownBanner, top Navbar, "coming soon"
+  // cues) so the WebView feels like a real app, not a website preview.
+  // Detection is via a User-Agent suffix appended by Capacitor —
+  // see mobile/capacitor.config.ts and src/lib/native-shell.ts.
+  const inIosApp = await isNativeIosShell();
+
   return (
-    <html lang="en" className="antialiased">
+    <html
+      lang="en"
+      className="antialiased"
+      data-native-shell={inIosApp ? "ios" : undefined}
+    >
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -188,9 +200,17 @@ export default function RootLayout({
       </head>
       <body>
         <AtmosphereProvider atmosphere="daytime">
-          <CountdownBanner />
-          <Navbar />
-          <main className="pt-24 pb-24 md:pb-0">{children}</main>
+          {!inIosApp && <CountdownBanner />}
+          {!inIosApp && <Navbar />}
+          <main
+            className={
+              inIosApp
+                ? "pt-0 pb-24 md:pb-0"
+                : "pt-24 pb-24 md:pb-0"
+            }
+          >
+            {children}
+          </main>
           <BottomNav />
         </AtmosphereProvider>
         <Analytics />

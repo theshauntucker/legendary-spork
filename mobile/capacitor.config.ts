@@ -16,6 +16,10 @@ const config: CapacitorConfig = {
     contentInset: 'always',
     preferredContentMode: 'mobile',
     allowsLinkPreview: false,
+    // Identifies this WebView as the native iOS shell so the web layer
+    // can suppress marketing chrome (CountdownBanner, marketing nav,
+    // "coming soon" cues) and render an app-only experience.
+    appendUserAgent: 'RoutineXiOS/1.0',
   },
 
   plugins: {
