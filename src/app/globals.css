@@ -55,11 +55,26 @@
 
 html {
   scroll-behavior: smooth;
+  /* Prevent iOS Safari from auto-scaling text on landscape rotation
+     and on zoom — keeps the layout visually consistent with desktop. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
   background-color: var(--color-surface-950);
   color: white;
+  /* Dynamic viewport units fill the screen correctly on iPhone Safari
+     where the toolbar is dynamic. svh keeps min-height stable; the vh
+     fallback ensures older browsers still render full-height. */
+  min-height: 100vh;
+  min-height: 100svh;
+  /* Disable the default iOS tap highlight so taps look modern, not
+     ghosted by a translucent grey overlay. */
+  -webkit-tap-highlight-color: transparent;
+  /* Prevent rubber-band overscroll past the page boundary on iOS,
+     which makes pinch-zoom feel uneven. */
+  overscroll-behavior-y: none;
 }
 
 ::selection {

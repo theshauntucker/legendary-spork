@@ -30,7 +30,7 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative overflow-hidden pt-[80px] pb-20">
+    <section className="relative overflow-hidden pt-4 sm:pt-8 pb-20">
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 right-0 w-80 h-80 bg-primary-400/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent-600/20 rounded-full blur-3xl" />

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import Script from "next/script";
@@ -10,6 +10,24 @@ import Navbar from "@/components/Navbar";
 import CountdownBanner from "@/components/CountdownBanner";
 import { AtmosphereProvider } from "@/components/AtmosphereProvider";
 import { BottomNav } from "@/components/BottomNav";
+
+// iPhone / mobile rendering tuned to match modern app sites:
+// - viewportFit: "cover" lets the page render under the notch / home
+//   indicator and exposes env(safe-area-inset-*) so fixed nav bars sit
+//   correctly on iPhone X+
+// - maximumScale 5 keeps accessibility pinch-to-zoom intact
+// - themeColor sets the iOS Safari URL bar / Android status bar
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  minimumScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAF7F2" },
+    { media: "(prefers-color-scheme: dark)", color: "#09090B" },
+  ],
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),

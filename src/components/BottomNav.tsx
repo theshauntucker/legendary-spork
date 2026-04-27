@@ -13,8 +13,42 @@ const TABS = [
   { href: "/dashboard", label: "Me", icon: User },
 ];
 
+// Only show the bottom tab bar on signed-in app surfaces (the Coda
+// product) — never on marketing/landing pages like /, /pricing, /login,
+// /coda, /faq, /about, /contact, /privacy, /terms, etc.
+const APP_PATH_PREFIXES = [
+  "/home",
+  "/feed",
+  "/find",
+  "/explore",
+  "/upload",
+  "/inbox",
+  "/dashboard",
+  "/settings",
+  "/u/",
+  "/studio",
+  "/onboarding",
+  "/aura",
+  "/analysis",
+  "/processing",
+  "/routines",
+  "/threads",
+  "/referrals",
+  "/admin",
+];
+
 export function BottomNav() {
   const pathname = usePathname();
+  const isAppSurface =
+    !!pathname &&
+    APP_PATH_PREFIXES.some(
+      (prefix) =>
+        pathname === prefix ||
+        pathname === prefix.replace(/\/$/, "") ||
+        pathname.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`),
+    );
+  if (!isAppSurface) return null;
+
   return (
     <nav
       aria-label="Primary"
