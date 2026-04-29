@@ -33,6 +33,19 @@ const config: CapacitorConfig = {
       style: 'LIGHT',
       backgroundColor: '#0a0a0a',
     },
+    // Sunset-X splash on pure black. Holds ~1.4s while the WebView
+    // boots, then fades 350ms straight into the app — no white flash,
+    // no Capacitor-default blue-X intermediate frame.
+    SplashScreen: {
+      launchShowDuration: 1400,
+      launchAutoHide: true,
+      launchFadeOutDuration: 350,
+      backgroundColor: '#000000',
+      androidScaleType: 'CENTER_CROP',
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
   },
 };
 

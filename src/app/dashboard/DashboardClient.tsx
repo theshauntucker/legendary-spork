@@ -21,6 +21,7 @@ import {
   Star,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { startCheckout, type CheckoutType } from "@/lib/checkout";
 
 interface VideoRecord {
   id: string;
@@ -78,19 +79,13 @@ function HeroPurchaseCard({
 
   const handlePurchase = async () => {
     setLoading(true);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else { alert(data.message || "Something went wrong. Please try again."); setLoading(false); }
-    } catch {
-      alert("Something went wrong. Please try again.");
+    const result = await startCheckout(type as CheckoutType);
+    if (!result.ok) {
+      if (!result.cancelled) alert(result.error || "Something went wrong. Please try again.");
       setLoading(false);
+      return;
     }
+    if (!result.redirected) window.location.href = "/dashboard?from=iap";
   };
 
   const isGold = variant === "gold";
@@ -152,19 +147,13 @@ function PurchaseCard({
 
   const handlePurchase = async () => {
     setLoading(true);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else { alert(data.message || "Something went wrong. Please try again."); setLoading(false); }
-    } catch {
-      alert("Something went wrong. Please try again.");
+    const result = await startCheckout(type as CheckoutType);
+    if (!result.ok) {
+      if (!result.cancelled) alert(result.error || "Something went wrong. Please try again.");
       setLoading(false);
+      return;
     }
+    if (!result.redirected) window.location.href = "/dashboard?from=iap";
   };
 
   return (
@@ -197,19 +186,13 @@ function SubscriptionHeroCard() {
 
   const handleSubscribe = async () => {
     setLoading(true);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "subscription" }),
-      });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else { alert("Something went wrong. Please try again."); setLoading(false); }
-    } catch {
-      alert("Something went wrong. Please try again.");
+    const result = await startCheckout("subscription");
+    if (!result.ok) {
+      if (!result.cancelled) alert(result.error || "Something went wrong. Please try again.");
       setLoading(false);
+      return;
     }
+    if (!result.redirected) window.location.href = "/dashboard?from=iap";
   };
 
   return (

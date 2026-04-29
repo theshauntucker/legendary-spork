@@ -15,6 +15,7 @@ import {
   extractFrames, framesToBase64, loadVideoMetadata,
   type ExtractedFrame, type ExtractionProgress,
 } from "@/lib/video-processor";
+import { startCheckout } from "@/lib/checkout";
 
 const ageGroups = [
   "Mini (5-6)", "Petite (6-9)", "Junior (9-12)", "Teen (12-15)", "Senior (15-19)", "Adult (20+)",
@@ -234,13 +235,20 @@ function UploadPageInner() {
         }
         if (response.status === 402 && data.code === "NO_CREDITS") {
           setStage("idle"); setProgress(0);
-          const checkoutRes = await fetch("/api/checkout", {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ type: "single" }),
-          });
-          const checkoutData = await checkoutRes.json();
-          if (checkoutData.url) { window.location.href = checkoutData.url; return; }
-          throw new Error("Unable to start checkout. Please try again.");
+          // Web → Stripe redirect; iOS → native StoreKit IAP. Branches in lib/checkout.
+          const result = await startCheckout("single");
+          if (!result.ok) {
+            if (result.cancelled) return; // user cancelled IAP, leave them on /upload
+            throw new Error(result.error || "Unable to start checkout. Please try again.");
+          }
+          if (!result.redirected) {
+            // iOS path — credits granted in-place. Reload upload screen so the
+            // user can retry the upload now that they have credits.
+            window.location.reload();
+            return;
+          }
+          // Web path: redirected to Stripe — the page is unmounting, just bail.
+          return;
         }
         throw new Error(data.error || `Upload failed (${response.status})`);
       }

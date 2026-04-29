@@ -4,28 +4,26 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Users, Star, Shield, Zap, Trophy, Check, Crown, Sparkles } from "lucide-react";
 import RoutineXLogo from "@/components/RoutineXLogo";
+import { startCheckout } from "@/lib/checkout";
 
 export default function Hero() {
   const [subLoading, setSubLoading] = useState(false);
 
+  // Web → Stripe Checkout redirect; iOS → native StoreKit IAP.
+  // Branch logic lives in src/lib/checkout.ts — DO NOT call /api/checkout
+  // directly from any component, that path bypasses Apple's IAP requirement.
   const handleSubscribe = async () => {
     setSubLoading(true);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "subscription" }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Something went wrong. Please try again.");
-        setSubLoading(false);
+    const result = await startCheckout("subscription");
+    if (!result.ok) {
+      if (!result.cancelled) {
+        alert(result.error || "Something went wrong. Please try again.");
       }
-    } catch {
-      alert("Something went wrong. Please try again.");
       setSubLoading(false);
+      return;
+    }
+    if (!result.redirected) {
+      window.location.href = "/dashboard?from=iap";
     }
   };
 

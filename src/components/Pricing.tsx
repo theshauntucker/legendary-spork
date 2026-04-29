@@ -3,29 +3,32 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, ArrowRight, Gift, Zap, Star, Crown, Sparkles } from "lucide-react";
+import { startCheckout } from "@/lib/checkout";
 
 export default function Pricing() {
   const [subLoading, setSubLoading] = useState(false);
 
+  // Routes through Stripe Checkout on web, native StoreKit IAP inside the
+  // iOS Capacitor shell. See src/lib/checkout.ts for the branch logic.
   const handleSubscribe = async () => {
     setSubLoading(true);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "subscription" }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Something went wrong. Please try again.");
-        setSubLoading(false);
+    const result = await startCheckout("subscription");
+    if (!result.ok) {
+      // Silently swallow user-cancelled IAPs; surface real errors.
+      if (!result.cancelled) {
+        alert(result.error || "Something went wrong. Please try again.");
       }
-    } catch {
-      alert("Something went wrong. Please try again.");
       setSubLoading(false);
+      return;
     }
+    // iOS path: receipt validated, credits granted in-place. Show a
+    // success state by routing to the dashboard so the user sees the
+    // updated balance without a full page refresh.
+    if (!result.redirected) {
+      window.location.href = "/dashboard?from=iap";
+    }
+    // Web path: result.redirected === true, browser is already navigating
+    // to Stripe — leaving subLoading=true is fine, page is unmounting.
   };
 
   return (
