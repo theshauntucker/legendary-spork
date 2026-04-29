@@ -66,7 +66,16 @@ async function ensureStoreInitialized(): Promise<void> {
   if (storeInitialized) return storeInitialized;
 
   storeInitialized = (async () => {
-    const mod: any = await import("capacitor-plugin-cdv-purchase");
+    // Defeat Next.js static module analysis — the package is iOS-only
+    // (lives in mobile/package.json), and this code path only runs when
+    // isIosShell() is true. Wrapping the import in `new Function` makes
+    // the bundler treat it as opaque so the web build doesn't try to
+    // resolve `capacitor-plugin-cdv-purchase`.
+    const dynamicImport = new Function(
+      "name",
+      "return import(/* webpackIgnore: true */ name)"
+    );
+    const mod: any = await dynamicImport("capacitor-plugin-cdv-purchase");
     const CdvPurchase = mod.CdvPurchase ?? mod.default?.CdvPurchase ?? mod;
     const { store, ProductType, Platform } = CdvPurchase;
 
@@ -121,7 +130,12 @@ export async function purchaseNative(
 
   let CdvPurchase: any;
   try {
-    const mod: any = await import("capacitor-plugin-cdv-purchase");
+    // Same opaque-import trick as ensureStoreInitialized.
+    const dynamicImport = new Function(
+      "name",
+      "return import(/* webpackIgnore: true */ name)"
+    );
+    const mod: any = await dynamicImport("capacitor-plugin-cdv-purchase");
     CdvPurchase = mod.CdvPurchase ?? mod.default?.CdvPurchase ?? mod;
     await ensureStoreInitialized();
   } catch (err) {
@@ -258,7 +272,11 @@ export async function purchaseNative(
 export async function finishTransaction(transactionId: string): Promise<void> {
   if (!isIosShell()) return;
   try {
-    const mod: any = await import("capacitor-plugin-cdv-purchase");
+    const dynamicImport = new Function(
+      "name",
+      "return import(/* webpackIgnore: true */ name)"
+    );
+    const mod: any = await dynamicImport("capacitor-plugin-cdv-purchase");
     const CdvPurchase = mod.CdvPurchase ?? mod.default?.CdvPurchase ?? mod;
     const { store } = CdvPurchase;
     // cdv-purchase exposes finish() on the transaction object found via
