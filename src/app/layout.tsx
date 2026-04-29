@@ -201,14 +201,11 @@ export default async function RootLayout({
       <body>
         <AtmosphereProvider atmosphere="daytime">
           {!inIosApp && <CountdownBanner />}
-          {!inIosApp && <Navbar />}
-          <main
-            className={
-              inIosApp
-                ? "pt-0 pb-24 md:pb-0"
-                : "pt-24 pb-24 md:pb-0"
-            }
-          >
+          {/* Top Navbar always renders (web + iOS shell). Apple's reviewer
+              must be able to reach Settings -> Delete Account, and the
+              Navbar is the only durable cross-surface nav. */}
+          <Navbar />
+          <main className="pt-24 pb-24 md:pb-0">
             {children}
           </main>
           <BottomNav />

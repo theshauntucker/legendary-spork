@@ -59,6 +59,13 @@ html {
      and on zoom — keeps the layout visually consistent with desktop. */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Hard cap on horizontal width so a rogue wide element (hero grid,
+     marketing carousel, etc.) cannot push the page past the iPhone
+     viewport and create that "blank space on the right" look in the
+     Capacitor WebView. */
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 body {
@@ -75,6 +82,12 @@ body {
   /* Prevent rubber-band overscroll past the page boundary on iOS,
      which makes pinch-zoom feel uneven. */
   overscroll-behavior-y: none;
+  /* Same horizontal cap on body — defends against any element with
+     position:absolute that uses width:100vw and would otherwise leak
+     past the viewport. */
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 ::selection {

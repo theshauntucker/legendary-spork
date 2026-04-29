@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, LogOut, Calendar } from "lucide-react";
+import { Menu, X, LogOut, Calendar, Settings } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -91,6 +91,13 @@ export default function Navbar() {
               <div className="flex items-center gap-3">
                 <ShellSwitcher profileType={profileType} />
                 <NotificationBell />
+                <a
+                  href="/settings"
+                  className="inline-flex items-center gap-1.5 text-sm text-surface-200 hover:text-white transition-colors"
+                  aria-label="Settings"
+                >
+                  <Settings className="h-4 w-4" />
+                </a>
                 <button
                   onClick={handleLogout}
                   className="inline-flex items-center gap-1.5 text-sm text-surface-200 hover:text-white transition-colors"
@@ -162,6 +169,14 @@ export default function Navbar() {
                   <div className="py-2">
                     <ShellSwitcher profileType={profileType} />
                   </div>
+                  <a
+                    href="/settings"
+                    className="flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <Settings className="h-4 w-4" />
+                    Settings
+                  </a>
                   <button
                     onClick={() => {
                       setMobileOpen(false);

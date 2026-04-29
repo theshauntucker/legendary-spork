@@ -13,28 +13,18 @@ const TABS = [
   { href: "/dashboard", label: "Me", icon: User },
 ];
 
-// Only show the bottom tab bar on signed-in app surfaces (the Coda
-// product) — never on marketing/landing pages like /, /pricing, /login,
-// /coda, /faq, /about, /contact, /privacy, /terms, etc.
+// Only show the bottom tab bar on Coda surfaces (the social side of
+// the app — feed, find, inbox, profiles, threads). On RoutineX surfaces
+// (/dashboard, /upload, /analysis, /settings, /studio, /admin, etc.) the
+// top Navbar is the only nav — no bottom bar — per product direction.
 const APP_PATH_PREFIXES = [
   "/home",
   "/feed",
   "/find",
   "/explore",
-  "/upload",
   "/inbox",
-  "/dashboard",
-  "/settings",
   "/u/",
-  "/studio",
-  "/onboarding",
-  "/aura",
-  "/analysis",
-  "/processing",
-  "/routines",
   "/threads",
-  "/referrals",
-  "/admin",
 ];
 
 export function BottomNav() {
