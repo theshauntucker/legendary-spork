@@ -246,22 +246,32 @@ export default function Pricing() {
           </motion.div>
         </div>
 
-        {/* ── STUDIO & ACADEMY TIER — flagship card ── */}
+        {/* ── STUDIO & ACADEMY TIER — flagship card ──
+            Outer wrapper has NO overflow-hidden so the floating "RUNS YOUR
+            WHOLE STUDIO" badge (positioned -top-3 above the card) isn't
+            clipped. The inner card div is what carries the rounded corners
+            and overflow-hidden — that's where the gradient backdrop needs
+            clipping. */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.35 }}
-          className="mt-8 relative rounded-3xl overflow-hidden border-2 border-gold-500/50 ring-2 ring-gold-500/20 ring-offset-2 ring-offset-transparent"
-          style={{ boxShadow: "0 0 50px rgba(234,179,8,0.18)" }}
+          className="mt-12 relative"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-900/40 via-accent-900/30 to-gold-900/30" />
-          <div className="absolute -top-3 left-8 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-gold-500 via-accent-500 to-primary-500 px-3 py-1 text-xs font-bold text-white z-10">
+          {/* Floating badge — lives outside the clipped card so it can sit above */}
+          <div className="absolute -top-3 left-8 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-gold-500 via-accent-500 to-primary-500 px-3 py-1 text-xs font-bold text-white z-20 shadow-lg shadow-gold-500/30">
             <Crown className="h-3 w-3" />
             RUNS YOUR WHOLE STUDIO
           </div>
 
-          <div className="relative px-6 sm:px-10 py-9">
+          <div
+            className="relative rounded-3xl overflow-hidden border-2 border-gold-500/50 ring-2 ring-gold-500/20 ring-offset-2 ring-offset-transparent"
+            style={{ boxShadow: "0 0 50px rgba(234,179,8,0.18)" }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-900/40 via-accent-900/30 to-gold-900/30" />
+
+            <div className="relative px-6 sm:px-10 py-9">
             <div className="grid md:grid-cols-5 gap-8 items-center">
               {/* Left: headline + price */}
               <div className="md:col-span-2">
