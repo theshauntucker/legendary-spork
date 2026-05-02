@@ -43,6 +43,25 @@ function getCapacitor(): { isNativePlatform: () => boolean } | null {
   return window.Capacitor ?? null;
 }
 
+/**
+ * Hide `capacitor-plugin-cdv-purchase` from Next.js / Turbopack's static
+ * bundler analysis. The package only exists inside the iOS Capacitor
+ * shell (declared in mobile/package.json, NOT in the web package.json),
+ * so a literal `import("capacitor-plugin-cdv-purchase")` makes the
+ * Vercel build fail with "Module not found" even though the runtime
+ * guard via isIosShell() ensures this never executes in the browser.
+ *
+ * Wrapping the dynamic import in `new Function(...)` defeats static
+ * analysis — the bundler can't see what's being imported, so it skips
+ * resolution. At runtime the real ESM `import()` still runs as normal
+ * (and only ever fires inside the iOS WebView).
+ *
+ * Same trick used by commit 5062968 — restored here after a regression.
+ */
+const importCdvPurchase: () => Promise<any> = new Function(
+  "return import('capacitor-plugin-cdv-purchase')"
+) as () => Promise<any>;
+
 /** True when this code is running inside the RoutineX iOS Capacitor shell. */
 export function isIosShell(): boolean {
   const cap = getCapacitor();
@@ -112,10 +131,9 @@ async function ensureStoreInitialized(): Promise<void> {
   if (storeInitialized) return storeInitialized;
 
   storeInitialized = (async () => {
-    // Lazy import — webpack bundles cdv-purchase into a separate chunk
-    // that only loads when isIosShell() is true. The package is in the
-    // main package.json so the deployed Vercel build includes it.
-    const mod: any = await import("capacitor-plugin-cdv-purchase");
+    // Use the bundler-hidden importer (see importCdvPurchase above).
+    // The package only ships inside the iOS Capacitor shell.
+    const mod: any = await importCdvPurchase();
     const CdvPurchase = mod.CdvPurchase ?? mod.default?.CdvPurchase ?? mod;
     const { store, ProductType, Platform } = CdvPurchase;
 
@@ -181,7 +199,7 @@ export async function purchaseNative(
 
   let CdvPurchase: any;
   try {
-    const mod: any = await import("capacitor-plugin-cdv-purchase");
+    const mod: any = await importCdvPurchase();
     CdvPurchase = mod.CdvPurchase ?? mod.default?.CdvPurchase ?? mod;
     await ensureStoreInitialized();
   } catch (err) {
@@ -312,7 +330,7 @@ export async function purchaseNative(
 export async function finishTransaction(transactionId: string): Promise<void> {
   if (!isIosShell()) return;
   try {
-    const mod: any = await import("capacitor-plugin-cdv-purchase");
+    const mod: any = await importCdvPurchase();
     const CdvPurchase = mod.CdvPurchase ?? mod.default?.CdvPurchase ?? mod;
     const { store } = CdvPurchase;
     // cdv-purchase exposes finish() on the transaction object found via
@@ -386,7 +404,7 @@ export async function restoreNativePurchases(): Promise<IapRestoreResult> {
 
   let CdvPurchase: any;
   try {
-    const mod: any = await import("capacitor-plugin-cdv-purchase");
+    const mod: any = await importCdvPurchase();
     CdvPurchase = mod.CdvPurchase ?? mod.default?.CdvPurchase ?? mod;
     await ensureStoreInitialized();
   } catch (err) {
