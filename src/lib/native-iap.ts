@@ -22,6 +22,16 @@
  * single purchase attempt in a Promise that resolves on the first
  * `approved` event for that product. This matches the rest of the
  * codebase, which expects a promise-shaped checkout call.
+ *
+ * Apple-rejection hardening (2026-05-02 — submission 9cc8cfd3 second pass):
+ *   - Every error path returns a SPECIFIC, user-readable message. Apple's
+ *     reviewer reported "unknown message" — that's their term for "the
+ *     alert popped but the text was unhelpful." Now every catch carries
+ *     a concrete description of what failed and what the user can try.
+ *   - Console-error logging on every failure path so logs from the
+ *     reviewer's device tell us exactly what blew up.
+ *   - New `restoreNativePurchases()` for guideline 3.1.1 compliance —
+ *     surfaced via the "Restore Purchases" button in Settings.
  */
 
 import { getIapProduct, IAP_PRODUCTS } from "./iap-products";
@@ -52,10 +62,46 @@ export type IapPurchaseResult =
   | { ok: true; receipt: string; transactionId: string; productId: string }
   | { ok: false; error: string; cancelled: boolean };
 
+/** Outcome of a native IAP restore attempt. */
+export type IapRestoreResult =
+  | { ok: true; restored: number; message: string }
+  | { ok: false; error: string };
+
 // Module-level state — the store can only be initialized once per
 // app session. We track init status so subsequent purchases reuse the
 // same store instance.
 let storeInitialized: Promise<void> | null = null;
+
+/**
+ * Pull a useful error message out of an arbitrary thrown value. cdv-purchase
+ * sometimes hands us a string, sometimes an Error, sometimes a plain object
+ * with `code` + `message`. Apple treats any blank/missing message as an
+ * "unknown message" reject, so we fall back to a description of the code.
+ */
+function extractErrorMessage(err: unknown, fallback: string): string {
+  if (!err) return fallback;
+  if (typeof err === "string" && err.trim()) return err.trim();
+  if (err instanceof Error && err.message) return err.message;
+  if (typeof err === "object" && err !== null) {
+    const e = err as { message?: unknown; code?: unknown };
+    if (typeof e.message === "string" && e.message.trim()) return e.message.trim();
+    if (typeof e.code === "string" || typeof e.code === "number") {
+      return `${fallback} (code: ${e.code})`;
+    }
+  }
+  return fallback;
+}
+
+/** True when the error/code looks like a user cancellation. */
+function isCancelError(err: any): boolean {
+  if (!err) return false;
+  const message = typeof err === "string" ? err : err?.message;
+  return (
+    err?.code === "SKErrorPaymentCancelled" ||
+    err?.code === 2 ||
+    (typeof message === "string" && /cancel/i.test(message))
+  );
+}
 
 /**
  * Initialize cdv-purchase's store, register the 5 RoutineX products,
@@ -66,16 +112,10 @@ async function ensureStoreInitialized(): Promise<void> {
   if (storeInitialized) return storeInitialized;
 
   storeInitialized = (async () => {
-    // Defeat Next.js static module analysis — the package is iOS-only
-    // (lives in mobile/package.json), and this code path only runs when
-    // isIosShell() is true. Wrapping the import in `new Function` makes
-    // the bundler treat it as opaque so the web build doesn't try to
-    // resolve `capacitor-plugin-cdv-purchase`.
-    const dynamicImport = new Function(
-      "name",
-      "return import(/* webpackIgnore: true */ name)"
-    );
-    const mod: any = await dynamicImport("capacitor-plugin-cdv-purchase");
+    // Lazy import — webpack bundles cdv-purchase into a separate chunk
+    // that only loads when isIosShell() is true. The package is in the
+    // main package.json so the deployed Vercel build includes it.
+    const mod: any = await import("capacitor-plugin-cdv-purchase");
     const CdvPurchase = mod.CdvPurchase ?? mod.default?.CdvPurchase ?? mod;
     const { store, ProductType, Platform } = CdvPurchase;
 
@@ -95,7 +135,16 @@ async function ensureStoreInitialized(): Promise<void> {
     await store.initialize([Platform.APPLE_APPSTORE]);
   })();
 
-  return storeInitialized;
+  // If the init promise rejects we MUST clear the cache so the next
+  // attempt can retry — otherwise a single network blip on app launch
+  // permanently bricks IAP for that session.
+  try {
+    await storeInitialized;
+  } catch (err) {
+    storeInitialized = null;
+    console.error("[native-iap] store.initialize() failed:", err);
+    throw err;
+  }
 }
 
 /**
@@ -113,7 +162,11 @@ export async function purchaseNative(
   productId: string
 ): Promise<IapPurchaseResult> {
   if (!isIosShell()) {
-    return { ok: false, error: "Native IAP only available in iOS app", cancelled: false };
+    return {
+      ok: false,
+      error: "In-app purchases are only available inside the RoutineX iOS app.",
+      cancelled: false,
+    };
   }
 
   // Validate the productId against our known catalog before invoking
@@ -121,28 +174,22 @@ export async function purchaseNative(
   try {
     getIapProduct(productId);
   } catch (err) {
-    return {
-      ok: false,
-      error: err instanceof Error ? err.message : "Invalid productId",
-      cancelled: false,
-    };
+    const error = extractErrorMessage(err, `Unknown product "${productId}"`);
+    console.error("[native-iap] productId validation failed:", error);
+    return { ok: false, error, cancelled: false };
   }
 
   let CdvPurchase: any;
   try {
-    // Same opaque-import trick as ensureStoreInitialized.
-    const dynamicImport = new Function(
-      "name",
-      "return import(/* webpackIgnore: true */ name)"
-    );
-    const mod: any = await dynamicImport("capacitor-plugin-cdv-purchase");
+    const mod: any = await import("capacitor-plugin-cdv-purchase");
     CdvPurchase = mod.CdvPurchase ?? mod.default?.CdvPurchase ?? mod;
     await ensureStoreInitialized();
   } catch (err) {
+    const detail = extractErrorMessage(err, "StoreKit could not start.");
+    console.error("[native-iap] init failed:", err);
     return {
       ok: false,
-      error:
-        "capacitor-plugin-cdv-purchase failed to load — run `cd mobile && npm install && npx cap sync ios`",
+      error: `Couldn't connect to the App Store: ${detail}. Please check your connection, sign into the App Store, and try again.`,
       cancelled: false,
     };
   }
@@ -167,20 +214,16 @@ export async function purchaseNative(
     try {
       const product = store.get(productId);
       if (!product) {
-        safeResolve({
-          ok: false,
-          error: `StoreKit didn't return product ${productId} — verify it's approved in App Store Connect`,
-          cancelled: false,
-        });
+        const error = `This in-app purchase isn't available right now. Apple hasn't returned product "${productId}" — make sure you're signed into the App Store and try again.`;
+        console.error("[native-iap] store.get returned null for", productId);
+        safeResolve({ ok: false, error, cancelled: false });
         return;
       }
       const offer = product.getOffer();
       if (!offer) {
-        safeResolve({
-          ok: false,
-          error: `No offer available for ${productId}`,
-          cancelled: false,
-        });
+        const error = `No offer is available for "${productId}". Please try again in a moment.`;
+        console.error("[native-iap] no offer for", productId);
+        safeResolve({ ok: false, error, cancelled: false });
         return;
       }
 
@@ -203,9 +246,10 @@ export async function purchaseNative(
               transaction.id ??
               "";
             if (!receipt || !txnId) {
+              console.error("[native-iap] approved but missing receipt/txnId:", transaction);
               safeResolve({
                 ok: false,
-                error: "Transaction approved but receipt is missing — try again",
+                error: "Purchase was approved but we couldn't read the receipt. Please try Restore Purchases from Settings.",
                 cancelled: false,
               });
               cleanup();
@@ -223,24 +267,20 @@ export async function purchaseNative(
             cleanup();
           }
         } catch (err) {
-          safeResolve({
-            ok: false,
-            error: err instanceof Error ? err.message : "Approved handler failed",
-            cancelled: false,
-          });
+          const error = extractErrorMessage(err, "Couldn't finish processing your purchase.");
+          console.error("[native-iap] approved handler threw:", err);
+          safeResolve({ ok: false, error, cancelled: false });
           cleanup();
         }
       };
 
       const errorHandler = (err: any) => {
-        // cdv-purchase emits errors with code + message. SKErrorPaymentCancelled
-        // is what we get when the user dismisses the StoreKit dialog.
-        const message = err?.message ?? "Purchase failed";
-        const cancelled =
-          err?.code === "SKErrorPaymentCancelled" ||
-          err?.code === 2 ||
-          /cancel/i.test(message);
-        safeResolve({ ok: false, error: message, cancelled });
+        const cancelled = isCancelError(err);
+        const error = cancelled
+          ? "Purchase cancelled."
+          : extractErrorMessage(err, "Apple couldn't complete the purchase. Please try again.");
+        if (!cancelled) console.error("[native-iap] purchase error:", err);
+        safeResolve({ ok: false, error, cancelled });
         cleanup();
       };
 
@@ -252,12 +292,12 @@ export async function purchaseNative(
 
       await offer.order();
     } catch (err: any) {
-      const message = err?.message ?? "Purchase failed";
-      const cancelled =
-        err?.code === "SKErrorPaymentCancelled" ||
-        err?.code === 2 ||
-        /cancel/i.test(message);
-      safeResolve({ ok: false, error: message, cancelled });
+      const cancelled = isCancelError(err);
+      const error = cancelled
+        ? "Purchase cancelled."
+        : extractErrorMessage(err, "Couldn't start the purchase. Please try again.");
+      if (!cancelled) console.error("[native-iap] order() threw:", err);
+      safeResolve({ ok: false, error, cancelled });
       cleanup();
     }
   });
@@ -272,11 +312,7 @@ export async function purchaseNative(
 export async function finishTransaction(transactionId: string): Promise<void> {
   if (!isIosShell()) return;
   try {
-    const dynamicImport = new Function(
-      "name",
-      "return import(/* webpackIgnore: true */ name)"
-    );
-    const mod: any = await dynamicImport("capacitor-plugin-cdv-purchase");
+    const mod: any = await import("capacitor-plugin-cdv-purchase");
     const CdvPurchase = mod.CdvPurchase ?? mod.default?.CdvPurchase ?? mod;
     const { store } = CdvPurchase;
     // cdv-purchase exposes finish() on the transaction object found via
@@ -286,9 +322,10 @@ export async function finishTransaction(transactionId: string): Promise<void> {
     if (txn?.finish) {
       await txn.finish();
     }
-  } catch {
+  } catch (err) {
     // Non-fatal — the transaction will get redelivered on next launch
     // and the idempotency check on apple_transaction_id will short-circuit.
+    console.warn("[native-iap] finishTransaction soft-failed:", err);
   }
 }
 
@@ -312,7 +349,135 @@ export async function submitReceiptToServer(args: {
   } catch (err) {
     return {
       ok: false,
-      error: err instanceof Error ? err.message : "Network error during receipt validation",
+      error: extractErrorMessage(err, "Network error during receipt validation"),
     };
   }
+}
+
+/**
+ * Restore previously purchased In-App Purchases.
+ *
+ * Required by Apple App Store Review Guideline 3.1.1: any app that sells
+ * IAPs that can be restored MUST expose a distinct user-initiated
+ * "Restore Purchases" action. Auto-restoring on launch does NOT satisfy
+ * this — the user has to be able to tap a button.
+ *
+ * Flow:
+ *   1. Initialize the store (same path as a fresh purchase).
+ *   2. Call store.restorePurchases() — Apple returns every prior
+ *      transaction tied to the signed-in Apple ID.
+ *   3. cdv-purchase fires `approved` for each restored transaction; we
+ *      collect them, POST each receipt to /api/iap/validate-receipt for
+ *      idempotent server-side fulfillment (the apple_transaction_id
+ *      uniqueness constraint short-circuits duplicates), and report a
+ *      summary back to the UI.
+ *
+ * The user sees a single message: "Restored N purchases" or
+ * "Nothing to restore." If anything fails partway, we still report
+ * what we restored.
+ */
+export async function restoreNativePurchases(): Promise<IapRestoreResult> {
+  if (!isIosShell()) {
+    return {
+      ok: false,
+      error: "Restore Purchases is only available inside the RoutineX iOS app.",
+    };
+  }
+
+  let CdvPurchase: any;
+  try {
+    const mod: any = await import("capacitor-plugin-cdv-purchase");
+    CdvPurchase = mod.CdvPurchase ?? mod.default?.CdvPurchase ?? mod;
+    await ensureStoreInitialized();
+  } catch (err) {
+    const detail = extractErrorMessage(err, "StoreKit could not start.");
+    console.error("[native-iap] restore init failed:", err);
+    return {
+      ok: false,
+      error: `Couldn't connect to the App Store: ${detail}. Please check your connection and try again.`,
+    };
+  }
+
+  const { store } = CdvPurchase;
+
+  return new Promise<IapRestoreResult>(async (resolve) => {
+    let resolved = false;
+    const safeResolve = (r: IapRestoreResult) => {
+      if (resolved) return;
+      resolved = true;
+      resolve(r);
+    };
+
+    const restored: string[] = [];
+    const offHandlers: Array<() => void> = [];
+    const cleanup = () => offHandlers.forEach((fn) => fn());
+
+    // While restoring, every approved event represents a previously-owned
+    // entitlement. POST each receipt for idempotent server-side fulfillment.
+    const approvedHandler = async (transaction: any) => {
+      try {
+        const productId =
+          transaction.products?.[0]?.id ??
+          transaction.productId ??
+          "";
+        const receipt =
+          transaction.transactionReceipt ??
+          transaction.appStoreReceipt ??
+          "";
+        const txnId =
+          transaction.transactionId ??
+          transaction.id ??
+          "";
+        if (!productId || !receipt || !txnId) return;
+        // Server-side validate-receipt is idempotent — duplicates short
+        // out via the apple_transaction_id unique constraint.
+        await submitReceiptToServer({ receipt, transactionId: String(txnId), productId });
+        restored.push(productId);
+      } catch (err) {
+        console.warn("[native-iap] restore: per-txn fulfillment failed:", err);
+      }
+    };
+
+    const errorHandler = (err: any) => {
+      const message = extractErrorMessage(err, "Restore failed.");
+      // Don't blow up the whole restore on a single error — still resolve
+      // with what we got, but flag the failure if NOTHING was restored.
+      if (restored.length === 0) {
+        console.error("[native-iap] restore error:", err);
+        safeResolve({ ok: false, error: message });
+        cleanup();
+      }
+    };
+
+    try {
+      const subscription = store.when().approved(approvedHandler);
+      const errorSub = store.error(errorHandler);
+      offHandlers.push(() => subscription?.unregister?.());
+      offHandlers.push(() => errorSub?.unregister?.());
+
+      // Kick off the restore. cdv-purchase awaits Apple's response and
+      // fires `approved` for each prior transaction.
+      await store.restorePurchases();
+
+      // Apple's restorePurchases() resolves once all transactions have
+      // been delivered. Give a tick for the approved handlers to flush
+      // the server fulfillment calls before reporting back to the UI.
+      setTimeout(() => {
+        const count = new Set(restored).size;
+        const message =
+          count === 0
+            ? "No previous purchases were found to restore."
+            : count === 1
+              ? "Restored 1 purchase."
+              : `Restored ${count} purchases.`;
+        safeResolve({ ok: true, restored: count, message });
+        cleanup();
+      }, 1500);
+    } catch (err) {
+      const error = extractErrorMessage(err, "Restore failed. Please try again.");
+      console.error("[native-iap] restorePurchases() threw:", err);
+      safeResolve({ ok: false, error });
+      cleanup();
+    }
+  });
 }

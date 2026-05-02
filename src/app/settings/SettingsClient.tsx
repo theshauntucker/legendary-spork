@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Trash2, LogOut, Shield, ChevronRight } from "lucide-react";
+import { Sparkles, Trash2, LogOut, Shield, ChevronRight, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import { isIosShell, restoreNativePurchases } from "@/lib/native-iap";
 
 interface SettingsClientProps {
   email: string;
@@ -15,9 +16,36 @@ export default function SettingsClient({ email, createdAt }: SettingsClientProps
   const [deleteStep, setDeleteStep] = useState<"idle" | "confirm" | "deleting" | "done">("idle");
   const [error, setError] = useState("");
 
+  // Restore Purchases — Apple App Store Review Guideline 3.1.1 requires
+  // a user-initiated restore button anywhere we sell restorable IAPs.
+  // We surface it inside the iOS shell only; on the web Stripe handles
+  // entitlements server-side, so a "restore" button has nothing to do.
+  const [showRestore, setShowRestore] = useState(false);
+  const [restoreState, setRestoreState] = useState<"idle" | "restoring">("idle");
+  const [restoreMessage, setRestoreMessage] = useState("");
+
+  useEffect(() => {
+    // isIosShell() reads window.Capacitor — only safe in useEffect.
+    setShowRestore(isIosShell());
+  }, []);
+
   const handleSignOut = async () => {
-    const response = await fetch("/auth/callback?logout=true", { method: "POST" });
+    await fetch("/auth/callback?logout=true", { method: "POST" });
     router.push("/login");
+  };
+
+  const handleRestore = async () => {
+    setRestoreState("restoring");
+    setRestoreMessage("");
+    const result = await restoreNativePurchases();
+    setRestoreState("idle");
+    if (result.ok) {
+      setRestoreMessage(result.message);
+    } else {
+      setRestoreMessage(result.error);
+    }
+    // Auto-clear the message after a few seconds so the row resets.
+    setTimeout(() => setRestoreMessage(""), 6000);
   };
 
   const handleDeleteAccount = async () => {
@@ -69,6 +97,34 @@ export default function SettingsClient({ email, createdAt }: SettingsClientProps
             </div>
           </div>
         </div>
+
+        {/* Restore Purchases — iOS only.
+            Required by App Store Review Guideline 3.1.1 (Business — Payments — IAP). */}
+        {showRestore && (
+          <div className="glass rounded-2xl overflow-hidden mb-6">
+            <button
+              onClick={handleRestore}
+              disabled={restoreState === "restoring"}
+              aria-label="Restore Purchases"
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors disabled:opacity-60"
+            >
+              <div className="flex items-center gap-3">
+                <RefreshCw
+                  className={`h-4 w-4 text-primary-400 ${restoreState === "restoring" ? "animate-spin" : ""}`}
+                />
+                <span className="text-[15px] text-white">
+                  {restoreState === "restoring" ? "Restoring..." : "Restore Purchases"}
+                </span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-surface-200/50" />
+            </button>
+            {restoreMessage && (
+              <div className="px-4 pb-3 -mt-1">
+                <p className="text-xs text-surface-200">{restoreMessage}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Links */}
         <div className="glass rounded-2xl overflow-hidden mb-6">
