@@ -44,23 +44,27 @@ function getCapacitor(): { isNativePlatform: () => boolean } | null {
 }
 
 /**
- * Hide `capacitor-plugin-cdv-purchase` from Next.js / Turbopack's static
- * bundler analysis. The package only exists inside the iOS Capacitor
- * shell (declared in mobile/package.json, NOT in the web package.json),
- * so a literal `import("capacitor-plugin-cdv-purchase")` makes the
- * Vercel build fail with "Module not found" even though the runtime
- * guard via isIosShell() ensures this never executes in the browser.
+ * Load `capacitor-plugin-cdv-purchase` at runtime.
  *
- * Wrapping the dynamic import in `new Function(...)` defeats static
- * analysis — the bundler can't see what's being imported, so it skips
- * resolution. At runtime the real ESM `import()` still runs as normal
- * (and only ever fires inside the iOS WebView).
+ * The package is now declared in the root web package.json (line 24) so
+ * Turbopack DOES bundle it into a web chunk. A plain dynamic `import()`
+ * works in two ways at the same time:
+ *   1. Build time — Turbopack resolves the specifier against node_modules,
+ *      bundles the plugin into a separate chunk, and emits a chunk URL.
+ *   2. Run time — the browser/WebView fetches that chunk URL, NOT the
+ *      bare specifier (which browsers can't resolve).
  *
- * Same trick used by commit 5062968 — restored here after a regression.
+ * Earlier we wrapped this in `new Function("return import(...)")` to
+ * defeat static analysis when the package was iOS-only. That backfired:
+ * the bundler skipped the package entirely, so at runtime the WebView
+ * tried to resolve a bare module specifier and threw — which is exactly
+ * what Apple's reviewer saw as "capacitor-plugin-cdv-purchase failed to
+ * load". Now that the package is in root deps, the static-analysable
+ * import is correct.
  */
-const importCdvPurchase: () => Promise<any> = new Function(
-  "return import('capacitor-plugin-cdv-purchase')"
-) as () => Promise<any>;
+async function importCdvPurchase(): Promise<any> {
+  return import("capacitor-plugin-cdv-purchase");
+}
 
 /** True when this code is running inside the RoutineX iOS Capacitor shell. */
 export function isIosShell(): boolean {
