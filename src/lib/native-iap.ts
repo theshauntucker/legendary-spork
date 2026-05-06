@@ -127,23 +127,154 @@ function isCancelError(err: any): boolean {
 }
 
 /**
+ * Track which product IDs have actually been loaded (StoreKit returned
+ * them as valid). store.get() can return null for two distinct reasons:
+ *   (1) the iOS adapter was skipped because window.Capacitor wasn't
+ *       ready when initialize() ran, OR
+ *   (2) Apple returned the product as INVALID (not approved, missing
+ *       metadata, agreement issue, sandbox account region, etc.).
+ * We need to distinguish these so the user gets a useful message.
+ */
+const loadedProductIds = new Set<string>();
+let lastInitializeErrors: any[] = [];
+let iosAdapterRanAtInit = false;
+
+/**
+ * Wait up to `timeoutMs` for window.Capacitor to be present and report
+ * iOS as the platform. Capacitor injects the bridge synchronously when
+ * the WebView boots, but on cold-start there's a brief window where
+ * the JS bundle has loaded but Capacitor.getPlatform() isn't yet
+ * available. If we call store.initialize() during that window, the
+ * Apple adapter's `isSupported` getter returns false (because it
+ * checks `window.Capacitor.getPlatform() === 'ios'`), so the adapter
+ * is silently skipped and no products ever load — leaving every
+ * subsequent purchase to fail with the misleading "product not
+ * returned" error. Block until Capacitor is actually ready.
+ */
+async function waitForCapacitorReady(timeoutMs = 4000): Promise<boolean> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const cap = getCapacitor() as any;
+    if (cap?.getPlatform?.() === "ios" || cap?.isNativePlatform?.()) {
+      return true;
+    }
+    await new Promise((r) => setTimeout(r, 75));
+  }
+  return false;
+}
+
+/**
+ * Wait for the native PurchasePlugin bridge to be registered on
+ * window.Capacitor.Plugins. The plugin's JS registers itself via
+ * `registerPlugin('PurchasePlugin')` at import-time, but that only
+ * succeeds if Capacitor's runtime has finished injecting plugin
+ * proxies. If we proceed before this, store.initialize() returns
+ * `{code: SETUP, message: 'Capacitor PurchasePlugin not available'}`
+ * — which is exactly the failure mode that produces the misleading
+ * "Apple hasn't returned product" message we showed Apple's reviewer.
+ *
+ * Returning false here means the native pod isn't installed (build
+ * was sync'd without `npx cap sync ios`) or Capacitor's runtime
+ * hasn't finished loading. Either case, we surface a specific message.
+ */
+async function waitForPurchasePluginBridge(timeoutMs = 4000): Promise<boolean> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const cap: any = (typeof window !== "undefined" && (window as any).Capacitor) || null;
+    if (cap?.Plugins?.PurchasePlugin) return true;
+    await new Promise((r) => setTimeout(r, 75));
+  }
+  return false;
+}
+
+/**
  * Initialize cdv-purchase's store, register the 5 RoutineX products,
  * and wait for them to load from Apple. Idempotent — safe to call
- * multiple times.
+ * multiple times. Should be invoked at app boot (see useNativeIapBoot
+ * hook) so by the time a user taps Buy, every product is already
+ * loaded and no race exists.
  */
 async function ensureStoreInitialized(): Promise<void> {
   if (storeInitialized) return storeInitialized;
 
   storeInitialized = (async () => {
-    // Use the bundler-hidden importer (see importCdvPurchase above).
-    // The package only ships inside the iOS Capacitor shell.
+    // CRITICAL: Capacitor's bridge must be present before we initialize
+    // the StoreKit adapter, otherwise the adapter's isSupported check
+    // returns false and the whole platform is skipped. See note above.
+    const capacitorReady = await waitForCapacitorReady();
+    if (!capacitorReady) {
+      console.error(
+        "[native-iap] Capacitor.getPlatform() never reported 'ios'. Either we're not in the iOS shell or the bridge failed to inject."
+      );
+      throw new Error(
+        "The native bridge isn't ready yet. Close the app fully and re-open it, then try again."
+      );
+    }
+
+    // Importing the package executes its top-level
+    // `registerPlugin('PurchasePlugin')` side-effect which registers
+    // the JS proxy that bridges to the native pod. Must happen AFTER
+    // window.Capacitor is ready (above) so the registration takes.
     const mod: any = await importCdvPurchase();
     const CdvPurchase = mod.CdvPurchase ?? mod.default?.CdvPurchase ?? mod;
     const { store, ProductType, Platform } = CdvPurchase;
 
-    // Register every product we know about. Even if a Buy button only
-    // ever invokes one, the plugin needs all of them registered before
-    // Apple can return their pricing/state.
+    // Now confirm the native bridge is actually present. If the pod
+    // wasn't installed (`npx cap sync ios` wasn't run for this build)
+    // OR Capacitor's plugin registry hasn't finished setup, the
+    // PurchasePlugin proxy will be missing and store.initialize() will
+    // fail with a SETUP error that's invisible to users.
+    const pluginBridgeReady = await waitForPurchasePluginBridge();
+    if (!pluginBridgeReady) {
+      console.error(
+        "[native-iap] window.Capacitor.Plugins.PurchasePlugin missing — pod likely not installed. Run `cd mobile && npm install && npx cap sync ios` and rebuild."
+      );
+      throw new Error(
+        "The In-App Purchase plugin isn't registered with the native bridge. Please update the app from the App Store and try again."
+      );
+    }
+
+    if (!store || !Platform?.APPLE_APPSTORE) {
+      console.error("[native-iap] cdv-purchase loaded but store/Platform missing:", {
+        hasStore: !!store,
+        hasPlatform: !!Platform,
+        keys: Object.keys(mod || {}),
+      });
+      throw new Error(
+        "In-app purchase plugin loaded incorrectly. Please update the app and try again."
+      );
+    }
+
+    // Surface every plugin event to the device console so reviewer logs
+    // give us a complete trail if anything still goes wrong.
+    if (typeof store.verbosity !== "undefined") {
+      try {
+        store.verbosity = CdvPurchase.LogLevel?.DEBUG ?? 4;
+      } catch {
+        /* older versions don't expose verbosity setter */
+      }
+    }
+
+    // Wire up listeners BEFORE register/initialize so we don't miss
+    // the productUpdated events that fire during the load.
+    store
+      .when()
+      .productUpdated((product: any) => {
+        if (product?.id) {
+          loadedProductIds.add(product.id);
+          console.info("[native-iap] productUpdated:", product.id, {
+            valid: product.valid,
+            canPurchase: product.canPurchase,
+          });
+        }
+      });
+
+    store.error((err: any) => {
+      console.error("[native-iap] store error:", err);
+    });
+
+    // Register every product we know about. The plugin needs all of
+    // them registered up-front so Apple returns their pricing/state.
     const products = Object.values(IAP_PRODUCTS).map((p) => ({
       id: p.productId,
       type:
@@ -153,20 +284,86 @@ async function ensureStoreInitialized(): Promise<void> {
       platform: Platform.APPLE_APPSTORE,
     }));
     store.register(products);
+    console.info("[native-iap] registered products:", products.map((p) => p.id));
 
-    await store.initialize([Platform.APPLE_APPSTORE]);
+    // initialize() returns an IError[] — collect and inspect it. An
+    // empty array means everything loaded; a non-empty array means at
+    // least one product was rejected (most commonly INVALID_PRODUCT_ID
+    // when Apple doesn't recognize the ID, which happens if the
+    // product isn't yet "Waiting for Review" or the Paid Apps
+    // Agreement isn't active).
+    const initResult = await store.initialize([Platform.APPLE_APPSTORE]);
+    iosAdapterRanAtInit = true;
+    lastInitializeErrors = Array.isArray(initResult) ? initResult : initResult ? [initResult] : [];
+    if (lastInitializeErrors.length > 0) {
+      console.error(
+        "[native-iap] store.initialize() returned errors:",
+        lastInitializeErrors
+      );
+    }
+    console.info(
+      "[native-iap] initialize complete. loaded:",
+      Array.from(loadedProductIds),
+      "errors:",
+      lastInitializeErrors.length
+    );
   })();
 
-  // If the init promise rejects we MUST clear the cache so the next
-  // attempt can retry — otherwise a single network blip on app launch
-  // permanently bricks IAP for that session.
   try {
     await storeInitialized;
   } catch (err) {
+    // Clear cache so next attempt can retry — a single transient
+    // failure shouldn't permanently brick IAP for the session.
     storeInitialized = null;
     console.error("[native-iap] store.initialize() failed:", err);
     throw err;
   }
+}
+
+/**
+ * Eagerly boot the StoreKit store on app load so by the time a user
+ * taps Buy, everything is already loaded. Called from a client-side
+ * mount effect in src/components/NativeIapBoot.tsx.
+ *
+ * Returns true if initialization completed without errors, false if
+ * Apple rejected any product or if Capacitor wasn't ready in time.
+ * Either outcome is logged but never thrown — boot must not crash
+ * the app.
+ */
+export async function bootNativeIap(): Promise<boolean> {
+  if (!isIosShell()) return false;
+  try {
+    await ensureStoreInitialized();
+    return lastInitializeErrors.length === 0;
+  } catch (err) {
+    console.error("[native-iap] bootNativeIap failed:", err);
+    return false;
+  }
+}
+
+/** Diagnostic snapshot — used by the purchase flow to build a
+ *  user-readable error when store.get() returns null. */
+function describeStoreState(productId: string): string {
+  if (!iosAdapterRanAtInit) {
+    return "the App Store connection didn't initialize on this device";
+  }
+  if (loadedProductIds.size === 0) {
+    return "Apple didn't return any products — confirm you're signed into the App Store with the country set to United States, then re-open the app";
+  }
+  // Filter init errors to ones tied to THIS productId. An IError can
+  // carry a productId (when Apple rejected a specific SKU as
+  // INVALID_PRODUCT_ID); errors without one are global setup failures.
+  const productErrors = lastInitializeErrors.filter(
+    (e: any) => e?.productId === productId || !e?.productId
+  );
+  if (productErrors.length > 0) {
+    const codes = productErrors
+      .map((e: any) => e?.code ?? e?.message ?? String(e))
+      .filter(Boolean)
+      .join(", ");
+    return `Apple rejected this product (${codes}). The product may still be propagating after our latest update — please try again in a few minutes`;
+  }
+  return `Apple returned ${loadedProductIds.size} other products but not "${productId}". Confirm "${productId}" is approved in App Store Connect and try again`;
 }
 
 /**
@@ -209,9 +406,18 @@ export async function purchaseNative(
   } catch (err) {
     const detail = extractErrorMessage(err, "StoreKit could not start.");
     console.error("[native-iap] init failed:", err);
+    // ensureStoreInitialized() throws Error instances with already
+    // user-friendly messages (e.g. "The native bridge isn't ready
+    // yet..."). Pass those through as-is rather than double-wrapping.
+    // For unrecognised failures, prefix with the connect-to-App-Store
+    // framing so users know it's a network/StoreKit problem.
+    const isFriendly =
+      err instanceof Error && /try again|App Store|update the app/i.test(err.message);
     return {
       ok: false,
-      error: `Couldn't connect to the App Store: ${detail}. Please check your connection, sign into the App Store, and try again.`,
+      error: isFriendly
+        ? detail
+        : `Couldn't connect to the App Store: ${detail}. Please check your connection, sign into the App Store, and try again.`,
       cancelled: false,
     };
   }
@@ -234,10 +440,27 @@ export async function purchaseNative(
     const cleanup = () => offHandlers.forEach((fn) => fn());
 
     try {
-      const product = store.get(productId);
+      // If the product hasn't loaded yet (e.g. user clicked Buy before
+      // initialize completed), give it a short window to show up via
+      // the productUpdated event we've been listening for.
+      let product = store.get(productId);
       if (!product) {
-        const error = `This in-app purchase isn't available right now. Apple hasn't returned product "${productId}" — make sure you're signed into the App Store and try again.`;
-        console.error("[native-iap] store.get returned null for", productId);
+        const waitStart = Date.now();
+        while (!product && Date.now() - waitStart < 3000) {
+          await new Promise((r) => setTimeout(r, 100));
+          if (loadedProductIds.has(productId)) {
+            product = store.get(productId);
+          }
+        }
+      }
+      if (!product) {
+        const reason = describeStoreState(productId);
+        const error = `This in-app purchase isn't available right now: ${reason}.`;
+        console.error("[native-iap] store.get returned null for", productId, {
+          loaded: Array.from(loadedProductIds),
+          initErrors: lastInitializeErrors,
+          iosAdapterRanAtInit,
+        });
         safeResolve({ ok: false, error, cancelled: false });
         return;
       }
@@ -414,9 +637,13 @@ export async function restoreNativePurchases(): Promise<IapRestoreResult> {
   } catch (err) {
     const detail = extractErrorMessage(err, "StoreKit could not start.");
     console.error("[native-iap] restore init failed:", err);
+    const isFriendly =
+      err instanceof Error && /try again|App Store|update the app/i.test(err.message);
     return {
       ok: false,
-      error: `Couldn't connect to the App Store: ${detail}. Please check your connection and try again.`,
+      error: isFriendly
+        ? detail
+        : `Couldn't connect to the App Store: ${detail}. Please check your connection and try again.`,
     };
   }
 

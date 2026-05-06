@@ -10,6 +10,7 @@ import Navbar from "@/components/Navbar";
 import CountdownBanner from "@/components/CountdownBanner";
 import { AtmosphereProvider } from "@/components/AtmosphereProvider";
 import { BottomNav } from "@/components/BottomNav";
+import NativeIapBoot from "@/components/NativeIapBoot";
 import { isNativeIosShell } from "@/lib/native-shell";
 
 // iPhone / mobile rendering tuned to match modern app sites:
@@ -200,6 +201,10 @@ export default async function RootLayout({
       </head>
       <body>
         <AtmosphereProvider atmosphere="daytime">
+          {/* Pre-warms StoreKit inside the iOS Capacitor shell so the
+              first Buy click doesn't race the Capacitor bridge. No-op
+              everywhere else. */}
+          <NativeIapBoot />
           {!inIosApp && <CountdownBanner />}
           {/* Top Navbar always renders (web + iOS shell). Apple's reviewer
               must be able to reach Settings -> Delete Account, and the
