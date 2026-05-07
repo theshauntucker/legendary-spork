@@ -12,6 +12,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import { US_STATES } from "@/lib/studio/us-states";
+import {
+  isIosShell,
+  purchaseNative,
+  submitReceiptToServer,
+} from "@/lib/native-iap";
 
 interface Studio {
   id: string;
@@ -72,6 +77,53 @@ export default function SettingsClient({
 
   const subscribe = async () => {
     setSubscribing(true);
+    setError("");
+
+    // ── iOS Capacitor shell: route through StoreKit, not Stripe ──
+    // Apple guideline 3.1.1 requires digital-goods purchases inside
+    // the iOS app to use IAP. Stripe Checkout would also fail here
+    // because the WebView blocks the redirect to checkout.stripe.com.
+    // Server-side fulfillment for routinex_studio is already wired
+    // in /api/iap/validate-receipt.
+    if (isIosShell()) {
+      try {
+        const purchase = await purchaseNative("routinex_studio");
+        if (!purchase.ok) {
+          setSubscribing(false);
+          if (!purchase.cancelled) {
+            setError(purchase.error || "Could not start subscription. Try again.");
+          }
+          return;
+        }
+        const fulfilled = await submitReceiptToServer({
+          receipt: purchase.receipt,
+          transactionId: purchase.transactionId,
+          productId: purchase.productId,
+        });
+        if (!fulfilled.ok) {
+          setSubscribing(false);
+          setError(
+            fulfilled.error ||
+              "Purchase succeeded but couldn't be confirmed on the server. Try Restore Purchases from Settings."
+          );
+          return;
+        }
+        // Refresh so the Studio Plan badge / pool numbers reflect the
+        // new active subscription state immediately.
+        router.refresh();
+        setSubscribing(false);
+        return;
+      } catch (err) {
+        console.error("[studio/subscribe] iOS IAP failed:", err);
+        setSubscribing(false);
+        setError(
+          err instanceof Error ? err.message : "Could not start subscription. Try again."
+        );
+        return;
+      }
+    }
+
+    // ── Web Stripe flow (unchanged) ───────────────────────────────
     const res = await fetch("/api/studio/subscribe", { method: "POST" });
     if (!res.ok) {
       setSubscribing(false);
