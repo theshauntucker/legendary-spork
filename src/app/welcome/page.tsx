@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Sparkles, Heart, Building2, Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Glass } from "@/components/ui/Glass";
 import { Button } from "@/components/ui/Button";
@@ -11,30 +12,40 @@ import { haptics } from "@/lib/haptics";
 
 type MemberType = "dancer" | "parent" | "studio" | "choreographer";
 
-const MEMBER_TYPES: { id: MemberType; title: string; tagline: string; gradient: keyof typeof gradients }[] = [
+const MEMBER_TYPES: {
+  id: MemberType;
+  title: string;
+  tagline: string;
+  gradient: keyof typeof gradients;
+  Icon: React.ComponentType<{ className?: string; size?: number }>;
+}[] = [
   {
     id: "dancer",
     title: "Dancer",
     tagline: "Post wins, earn trophies, build your year.",
     gradient: "sunset",
+    Icon: Trophy,
   },
   {
     id: "parent",
     title: "Parent",
     tagline: "Follow your kid, manage consent, one-tap pause.",
     gradient: "magentaRush",
+    Icon: Heart,
   },
   {
     id: "studio",
     title: "Studio",
     tagline: "Claim your page, recruit, prove ROI.",
     gradient: "auraGold",
+    Icon: Building2,
   },
   {
     id: "choreographer",
     title: "Choreographer",
     tagline: "Credited routines become your portfolio.",
     gradient: "berryGlow",
+    Icon: Sparkles,
   },
 ];
 
@@ -88,14 +99,26 @@ export default function WelcomePage() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
         {MEMBER_TYPES.map((m) => (
-          <Glass key={m.id} style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+          <Glass key={m.id} style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+            {/* Role glyph — replaces the previous 80px empty gradient
+                block that read like a broken text input on mobile.
+                Now a 56px gradient circle with the role's icon
+                centered, so the card has a clear visual identity. */}
             <div
               style={{
-                height: 80,
-                borderRadius: 14,
+                width: 56,
+                height: 56,
+                borderRadius: 999,
                 backgroundImage: gradients[m.gradient],
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 6px 20px -8px rgba(0,0,0,0.5)",
               }}
-            />
+              aria-hidden
+            >
+              <m.Icon className="text-white" size={26} />
+            </div>
             <h2 style={{ fontSize: 22, fontWeight: 700 }}>{m.title}</h2>
             <p style={{ fontSize: 14, opacity: 0.75, flex: 1 }}>{m.tagline}</p>
             <Button
