@@ -23,7 +23,11 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  minimumScale: 1,
+  // 0.5 minimum (was 1) so users can pinch out to see overflowing
+  // content. Apple App Review 2026-05-07: Shaun reported the iOS
+  // WebView felt locked — couldn't zoom to read clipped right-edge
+  // text. Allowing 0.5x–5x is the WCAG-friendly range.
+  minimumScale: 0.5,
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#FAF7F2" },
@@ -210,6 +214,10 @@ export default async function RootLayout({
               must be able to reach Settings -> Delete Account, and the
               Navbar is the only durable cross-surface nav. */}
           <Navbar />
+          {/* Top padding is tightened inside the iOS shell via the
+              `[data-native-shell="ios"] main` rule in globals.css so
+              the hero isn't pushed ~250px down by stacked safe-area
+              + navbar + main padding. Web keeps the pt-24 spacing. */}
           <main className="pt-24 pb-24 md:pb-0">
             {children}
           </main>

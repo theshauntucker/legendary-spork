@@ -95,6 +95,83 @@ body {
   color: white;
 }
 
+/* ── iOS Capacitor shell overrides ───────────────────────────────────
+ * The native iOS WebView sits inside a Capacitor shell that loads
+ * routinex.org live (server.url). Inside the shell we want a tighter,
+ * app-native feel — no marketing chrome around the edges, no oversized
+ * hero spacing, the navbar flush against the dynamic island, and pinch
+ * zoom allowed everywhere.
+ *
+ * Scope: every rule below is gated on `[data-native-shell="ios"]`,
+ * which is set on <html> by src/app/layout.tsx based on the
+ * RoutineXiOS/1.0 user-agent token from mobile/capacitor.config.ts.
+ * Web visitors to routinex.org never see any of these.
+ *
+ * Apple App Review 2026-05-07: Shaun reported (1) ~250px wasted at
+ * the top, (2) right-edge horizontal clipping, (3) no pinch zoom.
+ * These rules fix all three without touching the web layout.
+ */
+
+/* 1. Navbar flush against the safe area + tighter main padding so the
+ *    hero doesn't get pushed off-screen by stacked spacing. */
+[data-native-shell="ios"] nav.fixed {
+  top: 0 !important;
+  padding-top: env(safe-area-inset-top);
+}
+
+[data-native-shell="ios"] main {
+  padding-top: calc(env(safe-area-inset-top) + 4rem) !important;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 5rem) !important;
+}
+
+/* 2. Allow pinch-zoom in/out. Some libraries set touch-action: none
+ *    on global containers and that silently kills the pinch gesture
+ *    in WKWebView. Force the safe values for the body so zoom always
+ *    works. */
+[data-native-shell="ios"] body {
+  touch-action: pan-x pan-y pinch-zoom;
+}
+
+/* 3. Defensive horizontal containment — any element that escapes
+ *    100vw inside the shell gets pulled back. Solves the right-edge
+ *    clip on hero pill, h1, and dense paragraph text. */
+[data-native-shell="ios"] {
+  max-width: 100vw;
+  overflow-x: clip;
+}
+[data-native-shell="ios"] body {
+  max-width: 100vw;
+  overflow-x: clip;
+}
+[data-native-shell="ios"] body * {
+  max-width: 100%;
+}
+
+/* 4. The hero "For competitive dancers..." pill is `inline-flex` and
+ *    its inner span won't wrap, so the whole pill overflows when the
+ *    label runs longer than the screen. Force wrap inside the shell
+ *    so the pill sits within the viewport. */
+[data-native-shell="ios"] nav.fixed + main .inline-flex,
+[data-native-shell="ios"] main .inline-flex {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+[data-native-shell="ios"] main .inline-flex > span {
+  white-space: normal;
+  text-align: left;
+}
+
+/* 5. Cap hero headline width so it never escapes — and slightly
+ *    reduce font-size on very narrow phones so a long word like
+ *    "RoutineX" doesn't push the line off-screen. */
+@media (max-width: 420px) {
+  [data-native-shell="ios"] h1 {
+    font-size: clamp(2rem, 9vw, 2.5rem) !important;
+    line-height: 1.1;
+    word-break: break-word;
+  }
+}
+
 /* Coda design-system keyframes */
 @keyframes diamond-shimmer {
   0% { background-position: -200% 0; }
