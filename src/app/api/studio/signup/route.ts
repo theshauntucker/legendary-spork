@@ -77,13 +77,28 @@ export async function POST(request: NextRequest) {
       studioId = data.id;
       break;
     }
-    if (error?.code === "23505") {
+    if (error?.code === "23505" && /invite_code/i.test(error?.message ?? "")) {
       // invite_code collision — regenerate + retry
       inviteCode = generateInviteCode(studioName);
       continue;
     }
+    // Surface the actual Postgres error code + message to the client.
+    // This used to swallow everything as "Could not create studio" and
+    // Shaun spent test time staring at a useless message. The detail
+    // here is safe to expose — it's the Postgres error description, not
+    // PII. Common cases: 23502 NOT NULL violation (missing column),
+    // 23503 FK violation (owner_user_id references a non-existent
+    // profile), 42P01 table missing, 42703 column missing.
     console.error("studios insert failed:", error);
-    return NextResponse.json({ error: "Could not create studio" }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: `Could not create studio: ${error?.message ?? "unknown DB error"}`,
+        code: error?.code,
+        hint: error?.hint,
+        details: error?.details,
+      },
+      { status: 500 }
+    );
   }
 
   if (!studioId) {
@@ -100,7 +115,15 @@ export async function POST(request: NextRequest) {
     console.error("studio_members insert failed:", memberErr);
     // Best-effort cleanup so we don't leave orphan studios rows
     await service.from("studios").delete().eq("id", studioId);
-    return NextResponse.json({ error: "Could not attach owner" }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: `Could not attach owner: ${memberErr.message}`,
+        code: memberErr.code,
+        hint: memberErr.hint,
+        details: memberErr.details,
+      },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({
