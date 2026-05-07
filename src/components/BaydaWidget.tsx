@@ -32,15 +32,14 @@ export default function BaydaWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (hasAutoOpened) return;
-    const timer = setTimeout(() => {
-      setIsOpen(true);
-      setHasAutoOpened(true);
-      setShowPulse(false);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [hasAutoOpened]);
+  // Auto-open removed (2026-05-07). The widget popped open 2 seconds
+  // into every page load and auto-focused its input — which triggered
+  // an iOS WKWebView zoom shift (input < 16px font-size) and made the
+  // app feel "noisy" on first impression. Now Bayda waits for a tap on
+  // the small bottom-right bubble before opening. setHasAutoOpened
+  // stays referenced so future changes can still consult it.
+  void hasAutoOpened;
+  void setHasAutoOpened;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -111,29 +110,38 @@ export default function BaydaWidget() {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Bubble — small, clean, bottom-right.
+          Was a long pill with "Ask Bayda" text that visually crowded
+          the corner on mobile. Now a 52px gradient circle with just
+          the chat glyph + a tiny pulse. Tap to expand into the full
+          chat panel. Sits inside the iOS safe area on iPhone via the
+          env(safe-area-inset-bottom) bottom offset. */}
       {!isOpen && (
         <button
           onClick={() => {
             setIsOpen(true);
             setShowPulse(false);
           }}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full px-5 py-3 text-white font-semibold shadow-2xl hover:scale-105 transition-transform"
+          aria-label="Ask Bayda"
+          className="fixed z-50 flex items-center justify-center rounded-full text-white shadow-2xl active:scale-95 hover:scale-105 transition-transform"
           style={{
+            right: "16px",
+            bottom: "calc(env(safe-area-inset-bottom) + 16px)",
+            width: "52px",
+            height: "52px",
             background: "linear-gradient(135deg, #9333EA, #EC4899, #F59E0B)",
             animation: "fadeInUp 0.4s ease-out",
           }}
         >
           {showPulse && (
-            <span className="absolute -top-1 -right-1 flex h-4 w-4">
+            <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-4 w-4 bg-pink-500"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-pink-500"></span>
             </span>
           )}
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
-          Ask Bayda
         </button>
       )}
 
@@ -250,8 +258,18 @@ export default function BaydaWidget() {
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask me anything about dance..."
               disabled={isLoading}
-              className="flex-1 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-500 outline-none disabled:opacity-50"
-              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)" }}
+              className="flex-1 rounded-xl px-4 py-2.5 text-white placeholder-zinc-500 outline-none disabled:opacity-50"
+              // iOS WKWebView auto-zooms the entire page whenever a
+              // focused input has font-size < 16px. Bayda auto-focuses
+              // this input on open, so the page would visibly "jump
+              // larger" the moment the widget appeared. 16px exactly
+              // disables the zoom; we keep the visual size with a
+              // matching 1rem so it still reads small relative to body.
+              style={{
+                background: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                fontSize: "16px",
+              }}
             />
             <button
               type="submit"

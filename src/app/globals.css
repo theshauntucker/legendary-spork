@@ -172,6 +172,22 @@ body {
   }
 }
 
+/* 6. Disable iOS WKWebView's auto-zoom-on-focus behavior. When any
+ *    input/select/textarea has a computed font-size < 16px, focusing
+ *    it triggers a viewport zoom to make it "readable" — which
+ *    visibly enlarges the entire page. Shaun spotted this when
+ *    Bayda's auto-focus widget made the layout grow a tad after
+ *    open. Forcing 16px on every form control disables the zoom.
+ *    Visual size stays controlled per-component because the only
+ *    elements affected are inputs (we don't bump label or body
+ *    text). 16px is the documented Apple threshold — matching it
+ *    exactly is enough; we don't have to go higher. */
+[data-native-shell="ios"] input,
+[data-native-shell="ios"] select,
+[data-native-shell="ios"] textarea {
+  font-size: max(16px, 1rem);
+}
+
 /* Coda design-system keyframes */
 @keyframes diamond-shimmer {
   0% { background-position: -200% 0; }
