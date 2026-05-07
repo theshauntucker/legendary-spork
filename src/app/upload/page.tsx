@@ -287,10 +287,13 @@ function UploadPageInner() {
       </div>
 
       <div className="mx-auto max-w-2xl">
-        {/* Header */}
+        {/* Header — bumped from size="md" to size="lg" so the
+            sunset-X mark + RoutineX wordmark above the page title
+            actually carries some weight on mobile. md was 36px box
+            and read as "small and blah" inside the iOS WebView. */}
         <div className="text-center mb-10">
-          <a href="/" className="inline-flex mb-6">
-            <RoutineXLogo size="md" />
+          <a href="/" className="inline-flex mb-6 items-center">
+            <RoutineXLogo size="lg" />
           </a>
           <h1 className="text-3xl sm:text-4xl font-bold font-[family-name:var(--font-display)]">
             Upload Your Routine
