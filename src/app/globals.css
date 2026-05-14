@@ -161,14 +161,52 @@ body {
   text-align: left;
 }
 
-/* 5. Cap hero headline width so it never escapes — and slightly
- *    reduce font-size on very narrow phones so a long word like
- *    "RoutineX" doesn't push the line off-screen. */
-@media (max-width: 420px) {
-  [data-native-shell="ios"] h1 {
-    font-size: clamp(2rem, 9vw, 2.5rem) !important;
-    line-height: 1.1;
-    word-break: break-word;
+/* 5. Cap hero headline + brand lockup so the iOS shell renders at
+ *    true mobile size — Shaun's screenshot showed the hero lockup
+ *    (XL RoutineX logo + h1) overflowing the right edge of an
+ *    iPhone 17 Pro because the design targets a 5xl container
+ *    (~1024px) and on a 393px viewport the lockup is too big.
+ *    Inside the iOS shell we want everything to fit natively with
+ *    no zoom-out needed. These caps trigger on ANY iPhone-width
+ *    viewport (≤ 480px) regardless of media-query breakpoints. */
+[data-native-shell="ios"] {
+  /* Belt + suspenders: html and body never wider than viewport. */
+  overflow-x: hidden;
+}
+[data-native-shell="ios"] h1,
+[data-native-shell="ios"] h2,
+[data-native-shell="ios"] h3 {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+@media (max-width: 480px) {
+  /* Hero h1 — cap at ~28-32px so 'Score Every Routine.' fits one
+     line on iPhone 17 Pro (393pt logical width). */
+  [data-native-shell="ios"] main h1 {
+    font-size: clamp(1.75rem, 7.5vw, 2rem) !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.01em;
+  }
+  /* Hero brand lockup — the 168px X mark + text-6xl (60px) wordmark
+     is sized for a 5xl container, not a phone. Shrink to fit. */
+  [data-native-shell="ios"] main img[alt*="RoutineX"],
+  [data-native-shell="ios"] main img[src*="sunset-x"] {
+    max-width: 88px !important;
+    max-height: 88px !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  /* The wordmark next to the X is sized text-6xl sm:text-7xl in
+     hero — bring it down to fit. */
+  [data-native-shell="ios"] main .text-6xl,
+  [data-native-shell="ios"] main .sm\:text-7xl {
+    font-size: 2.5rem !important;
+    line-height: 1.05 !important;
+  }
+  /* Hero pill "For competitive dancers..." — keep it inside the
+     viewport and let the text wrap onto multiple lines naturally. */
+  [data-native-shell="ios"] main .inline-flex {
+    max-width: calc(100vw - 2rem) !important;
   }
 }
 

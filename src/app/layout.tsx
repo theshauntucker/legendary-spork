@@ -23,11 +23,11 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  // 0.5 minimum (was 1) so users can pinch out to see overflowing
-  // content. Apple App Review 2026-05-07: Shaun reported the iOS
-  // WebView felt locked — couldn't zoom to read clipped right-edge
-  // text. Allowing 0.5x–5x is the WCAG-friendly range.
-  minimumScale: 0.5,
+  // 1.0 minimum — the app should fit the viewport perfectly with no
+  // need to zoom out. Pinch-in for accessibility is still allowed
+  // up to 5x. (Earlier we briefly allowed 0.5 to work around an
+  // overflow; the right fix is to make the layout actually fit.)
+  minimumScale: 1,
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#FAF7F2" },
