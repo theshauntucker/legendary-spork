@@ -113,15 +113,35 @@ body {
  */
 
 /* 1. Navbar flush against the safe area + tighter main padding so the
- *    hero doesn't get pushed off-screen by stacked spacing. */
+ *    hero doesn't get pushed off-screen by stacked spacing.
+ *    Shaun (2026-05-13): "fix the empty space at the top where there
+ *    is a ton of black negative space" — shrink navbar content from
+ *    h-16 (64px) to ~48px and zero out the gap below it so the hero
+ *    sits right under the navbar with no dead space. */
 [data-native-shell="ios"] nav.fixed {
   top: 0 !important;
   padding-top: env(safe-area-inset-top);
 }
+/* Shrink the navbar's INNER flex container from h-16 to ~h-12 on iOS. */
+[data-native-shell="ios"] nav.fixed > div > div.flex.h-16 {
+  height: 3rem !important;
+}
 
 [data-native-shell="ios"] main {
-  padding-top: calc(env(safe-area-inset-top) + 4rem) !important;
+  /* Navbar = safe-area-inset-top + 3rem (h-12) = exactly matched so
+     hero content starts immediately below the navbar with zero gap. */
+  padding-top: calc(env(safe-area-inset-top) + 3rem) !important;
   padding-bottom: calc(env(safe-area-inset-bottom) + 5rem) !important;
+}
+
+/* Kill any pt-4 / pt-8 / pt-16 / pt-24 on the Hero <section> AND the
+   mb-6 below the brand lockup, so the X mark sits right under the
+   navbar without stacking another 80-100px of dead space. */
+[data-native-shell="ios"] main section.relative.overflow-hidden {
+  padding-top: 0.25rem !important;
+}
+[data-native-shell="ios"] main section.relative.overflow-hidden .mb-6 {
+  margin-bottom: 0.75rem !important;
 }
 
 /* 2. Allow pinch-zoom in/out. Some libraries set touch-action: none
