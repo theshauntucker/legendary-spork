@@ -134,14 +134,24 @@ body {
   padding-bottom: calc(env(safe-area-inset-bottom) + 5rem) !important;
 }
 
-/* Kill any pt-4 / pt-8 / pt-16 / pt-24 on the Hero <section> AND the
-   mb-6 below the brand lockup, so the X mark sits right under the
-   navbar without stacking another 80-100px of dead space. */
+/* Zero out the gap between navbar and hero. Shaun wants the X mark
+   to sit IMMEDIATELY under the navbar — no breathing room, no
+   safari-style "top buffer." Three rules:
+     - section <Hero> gets padding-top: 0
+     - brand lockup mb-6 → mb-2 (just enough breath between X and
+       wordmark below it, not between sections)
+     - first child of main (the section) gets margin-top: 0 in case
+       any nested container adds one. */
 [data-native-shell="ios"] main section.relative.overflow-hidden {
-  padding-top: 0.25rem !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
 }
 [data-native-shell="ios"] main section.relative.overflow-hidden .mb-6 {
-  margin-bottom: 0.75rem !important;
+  margin-bottom: 0.5rem !important;
+}
+[data-native-shell="ios"] main > section:first-child,
+[data-native-shell="ios"] main > div:first-child {
+  margin-top: 0 !important;
 }
 
 /* 2. Allow pinch-zoom in/out. Some libraries set touch-action: none
