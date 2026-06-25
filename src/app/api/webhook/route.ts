@@ -226,7 +226,7 @@ export async function POST(request: NextRequest) {
               ? `${invoice.subscription}_${periodStartSec}`
               : `renewal_${Date.now()}`,
             payment_type: "subscription_renewal",
-            amount_cents: invoice.amount_paid || 1299,
+            amount_cents: invoice.amount_paid || 499,
             currency: "usd",
             status: "completed",
             credits_granted: SUBSCRIPTION_CREDITS,
@@ -409,8 +409,8 @@ export async function POST(request: NextRequest) {
     }
 
     // ─── B2C subscription first-invoice branch ────────────────────────────
-    // The Season Member ($12.99/mo) flow: set up the subscriptions row and
-    // call resetSubscriptionCredits so the user starts with total=10, used=0,
+    // The Season Member ($4.99/mo) flow: set up the subscriptions row and
+    // call resetSubscriptionCredits so the user starts with total=4, used=0,
     // and a billing period end from Stripe. Subsequent monthly renewals go
     // through invoice.payment_succeeded / subscription_cycle above.
     const isSubscription = paymentType === "subscription";
@@ -462,7 +462,7 @@ export async function POST(request: NextRequest) {
             stripe_payment_intent:
               typeof session.payment_intent === "string" ? session.payment_intent : null,
             payment_type: "subscription",
-            amount_cents: session.amount_total || 1299,
+            amount_cents: session.amount_total || 499,
             currency: session.currency || "usd",
             status: "completed",
             credits_granted: SUBSCRIPTION_CREDITS,
@@ -538,7 +538,7 @@ export async function POST(request: NextRequest) {
         if (referralCode) {
           serviceClient.rpc("attribute_affiliate_revenue", {
             p_user_id: userId,
-            p_amount_cents: session.amount_total || 1299,
+            p_amount_cents: session.amount_total || 499,
           }).then(({ error: affErr }) => {
             if (affErr) console.error("Affiliate attribution failed:", affErr);
           });
@@ -549,7 +549,7 @@ export async function POST(request: NextRequest) {
           customerEmail,
           userId,
           "subscription",
-          session.amount_total || 1299
+          session.amount_total || 499
         ).catch((err: unknown) => console.error("Payment notification failed:", err));
 
         // VIP onboarding: welcome email on first purchase only. Fire-and-forget.
@@ -573,13 +573,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine credits to grant based on payment type
-    // single = $8.99 = 2 credits (BOGO launch offer)
-    // video_analysis / pack = $29.99 = 5 credits
+    // single = $1.99 = 1 credit
+    // bogo   = $2.99 = 2 credits (buy one get one)
+    // video_analysis / pack = $9.99 = 5 credits
     // beta_access (legacy) = 3 credits
     const isBeta = paymentType === "beta_access";
     const isPack = paymentType === "video_analysis";
+    const isBogo = paymentType === "bogo";
     const isSingle = paymentType === "single";
-    const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : isSingle ? 2 : 1;
+    const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : isBogo ? 2 : isSingle ? 1 : 1;
 
     const serviceClient = await createServiceClient();
 
@@ -616,7 +618,7 @@ export async function POST(request: NextRequest) {
 
     // Record payment and grant credits
     try {
-      const amountFallback = isPack ? 2999 : isBeta ? 999 : 899;
+      const amountFallback = isPack ? 999 : isBeta ? 999 : isBogo ? 299 : 199;
       const { error: insertError } = await serviceClient
         .from("payments")
         .insert({
@@ -722,7 +724,7 @@ export async function POST(request: NextRequest) {
       customerEmail,
       userId,
       paymentType,
-      session.amount_total || (isBeta ? 999 : 899)
+      session.amount_total || (isBeta ? 999 : isBogo ? 299 : 199)
     ).catch((err: unknown) => console.error("Payment notification failed:", err));
 
     // VIP onboarding: welcome email on first purchase only. Fire-and-forget.

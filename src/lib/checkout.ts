@@ -25,6 +25,7 @@ import { webTypeToIapProductId } from "./iap-products";
 
 export type CheckoutType =
   | "single"
+  | "bogo"
   | "pack"
   | "subscription"
   | "studio_subscription";

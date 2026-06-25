@@ -309,13 +309,13 @@ export async function POST(request: NextRequest) {
       const userEmail = video.user_id
         ? (await serviceClient.auth.admin.getUserById(userId)).data.user?.email || "unknown"
         : "unknown";
-      notifyAnalysisComplete(
+      await notifyAnalysisComplete(
         userEmail,
         video.routine_name || "Untitled",
         video.style || "Unknown",
         analysis.totalScore,
         analysis.awardLevel
-      ).catch(() => {});
+      );
     } catch (notifyErr) {
       console.error("Admin notify failed:", notifyErr);
     }
@@ -637,7 +637,7 @@ Return ONLY the JSON object, no other text.`,
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-opus-4-8",
         max_tokens: 8192,
         messages: [{ role: "user", content }],
       }),

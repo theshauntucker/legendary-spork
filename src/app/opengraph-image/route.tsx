@@ -122,7 +122,7 @@ export async function GET() {
               fontFamily: "Arial, sans-serif",
             }}
           >
-            Get 2 Analyses — $8.99
+            Get 2 Analyses — $2.99
           </div>
         </div>
 
@@ -141,7 +141,7 @@ export async function GET() {
           }}
         >
           <span>routinex.org</span>
-          <span>Launch offer: 2 analyses for $8.99</span>
+          <span>First analysis free — then $1.99 each</span>
         </div>
       </div>
     ),

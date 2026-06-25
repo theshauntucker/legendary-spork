@@ -121,10 +121,10 @@ export default function Pricing() {
             <div className="mt-3 mb-4">
               <h3 className="text-lg font-bold">Buy One Get One</h3>
               <div className="flex items-baseline gap-1 mt-3 mb-1">
-                <span className="text-4xl font-extrabold">$8.99</span>
+                <span className="text-4xl font-extrabold">$2.99</span>
                 <span className="text-surface-200 text-sm">2 analyses</span>
               </div>
-              <p className="text-xs text-gold-400 font-semibold">$4.50 each — BOGO deal</p>
+              <p className="text-xs text-gold-400 font-semibold">$1.50 each — BOGO deal</p>
             </div>
             <ul className="space-y-2.5 mb-7 flex-1">
               {[
@@ -145,7 +145,7 @@ export default function Pricing() {
               href="/signup"
               className="w-full flex items-center justify-center gap-2 rounded-full border-2 border-gold-500 px-5 py-3.5 font-bold text-white hover:bg-gold-500/20 transition-colors text-sm"
             >
-              Claim BOGO — $8.99
+              Claim BOGO — $2.99
               <ArrowRight className="h-4 w-4" />
             </a>
           </motion.div>
@@ -166,7 +166,7 @@ export default function Pricing() {
             <div className="mt-3 mb-4">
               <h3 className="text-lg font-bold">Season Member</h3>
               <div className="flex items-baseline gap-1 mt-3">
-                <span className="text-4xl font-extrabold">$12.99</span>
+                <span className="text-4xl font-extrabold">$4.99</span>
                 <span className="text-surface-200 text-sm">/month</span>
               </div>
               <p className="text-xs text-primary-300 font-semibold mt-1">Introductory rate — locked in forever</p>
@@ -176,7 +176,7 @@ export default function Pricing() {
             </div>
             <ul className="space-y-2.5 mb-7 flex-1">
               {[
-                "10 analyses per month",
+                "4 analyses per month",
                 "Competition-standard scoring",
                 "Timestamped judge notes",
                 "Full season tracking dashboard",
@@ -195,7 +195,7 @@ export default function Pricing() {
               className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-3.5 font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
             >
               <Sparkles className="h-4 w-4" />
-              {subLoading ? "Loading..." : "Subscribe — $12.99/mo"}
+              {subLoading ? "Loading..." : "Subscribe — $4.99/mo"}
             </button>
             <p className="mt-2.5 text-center text-xs text-primary-300">🔒 Rate locked in at intro price</p>
           </motion.div>
@@ -215,10 +215,10 @@ export default function Pricing() {
             <div className="mt-3 mb-4">
               <h3 className="text-lg font-bold">Competition Pack</h3>
               <div className="flex items-baseline gap-1 mt-3 mb-1">
-                <span className="text-4xl font-extrabold">$29.99</span>
+                <span className="text-4xl font-extrabold">$9.99</span>
                 <span className="text-surface-200 text-sm">5 analyses</span>
               </div>
-              <p className="text-xs text-primary-400 font-semibold">$6 each — save $15 vs single</p>
+              <p className="text-xs text-primary-400 font-semibold">$1.99 each — 5 analyses</p>
             </div>
             <ul className="space-y-2.5 mb-7 flex-1">
               {[
@@ -239,7 +239,7 @@ export default function Pricing() {
               href="/signup"
               className="w-full flex items-center justify-center gap-2 rounded-full border-2 border-primary-500 px-5 py-3.5 font-bold text-white hover:bg-primary-500/20 transition-colors text-sm"
             >
-              Get 5 Analyses — $29.99
+              Get 5 Analyses — $9.99
               <ArrowRight className="h-4 w-4" />
             </a>
             <p className="mt-2.5 text-center text-xs text-surface-200">Not satisfied? We&apos;ll make it right.</p>

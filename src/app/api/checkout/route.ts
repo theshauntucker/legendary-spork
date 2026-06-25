@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
 
     const body = await request.json().catch(() => ({}));
-    const type = body.type || "single"; // "single" = $8.99, "pack" = $29.99
+    const type = body.type || "single"; // "single"=$1.99 (1), "bogo"=$2.99 (2), "pack"=$9.99 (5)
     const referralCode = body.referralCode || null;
 
     // Get the authenticated user — required for payment tracking
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const isPack = type === "pack";
     const isSubscription = type === "subscription";
 
-    // ── Season Member subscription — $12.99/month, 10 analyses ───────────────
+    // ── Season Member subscription — $4.99/month, 4 analyses ───────────────
     if (isSubscription) {
       const subSession = await stripe.checkout.sessions.create({
         mode: "subscription",
@@ -58,9 +58,9 @@ export async function POST(request: NextRequest) {
               currency: "usd",
               product_data: {
                 name: "RoutineX — Season Member",
-                description: "10 AI-powered dance analyses per month. Introductory rate — locked in for as long as you stay subscribed.",
+                description: "4 AI-powered dance analyses per month. Introductory rate — locked in for as long as you stay subscribed.",
               },
-              unit_amount: 1299, // $12.99/month
+              unit_amount: 499, // $4.99/month
               recurring: { interval: "month" },
             },
             quantity: 1,
@@ -79,17 +79,25 @@ export async function POST(request: NextRequest) {
     }
 
     // ── One-time purchases ────────────────────────────────────────────────────
+    const isBogo = type === "bogo";
     const productConfig = isPack
       ? {
           name: "RoutineX — Competition Pack (5 Analyses)",
-          description: "5 AI-powered dance routine analyses. Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.",
-          unit_amount: 2999, // $29.99
+          description: "5 AI-powered dance routine analyses for $9.99 ($1.99 each). Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.",
+          unit_amount: 999, // $9.99
           payment_type: "video_analysis",
         }
+      : isBogo
+      ? {
+          name: "RoutineX — Buy One Get One (2 Analyses)",
+          description: "Buy one analysis, get one free — 2 full AI-powered dance routine analyses for $2.99 ($1.50 each). Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.",
+          unit_amount: 299, // $2.99
+          payment_type: "bogo",
+        }
       : {
-          name: "RoutineX — Launch Offer: 2 Analyses for $8.99",
-          description: "BOGO launch offer — get 2 full AI-powered dance routine analyses for $8.99. Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.",
-          unit_amount: 899, // $8.99
+          name: "RoutineX — Single Analysis",
+          description: "1 full AI-powered dance routine analysis for $1.99. Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.",
+          unit_amount: 199, // $1.99
           payment_type: "single",
         };
 

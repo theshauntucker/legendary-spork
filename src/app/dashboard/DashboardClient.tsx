@@ -215,7 +215,7 @@ function SubscriptionHeroCard() {
           <div className="flex-1 text-center sm:text-left">
             <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-1">Season Member</h3>
             <div className="flex items-baseline gap-2 justify-center sm:justify-start mb-3">
-              <span className="text-5xl sm:text-6xl font-black text-white">$12.99</span>
+              <span className="text-5xl sm:text-6xl font-black text-white">$4.99</span>
               <span className="text-surface-200 text-lg">/month</span>
             </div>
             <p className="text-primary-300 text-sm font-semibold mb-4">
@@ -223,7 +223,7 @@ function SubscriptionHeroCard() {
             </p>
             <ul className="space-y-2 text-sm text-surface-200 text-left inline-block">
               {[
-                "10 AI-powered analyses every month",
+                "4 AI-powered analyses every month",
                 "Full season progress tracking",
                 "All styles: dance, cheer, duo, group",
                 "Cancel anytime — no contracts",
@@ -357,14 +357,30 @@ export default function DashboardClient({
             <div className="flex-1 border-t border-white/10" />
           </div>
 
-          {/* BOGO + Pack — big hero cards */}
-          <div className="grid sm:grid-cols-2 gap-4">
+          {/* Single + BOGO + Pack — big hero cards */}
+          <div className="grid sm:grid-cols-3 gap-4">
+            <HeroPurchaseCard
+              variant="purple"
+              badge="✨ Pay Per Routine"
+              title="Single Analysis"
+              price="$1.99"
+              subPrice="One full analysis — no commitment"
+              tagline="Just need one score before the next comp? This is it."
+              features={[
+                "1 full AI analysis",
+                "Competition-standard scoring (out of 300)",
+                "Timestamped judge feedback",
+                "Never expires",
+              ]}
+              buttonText="Get 1 Analysis — $1.99"
+              type="single"
+            />
             <HeroPurchaseCard
               variant="gold"
               badge="⚡ Buy One Get One Free"
               title="BOGO — 2 Analyses"
-              price="$8.99"
-              subPrice="Just $4.50 each — buy one, get one free"
+              price="$2.99"
+              subPrice="Just $1.50 each — buy one, get one free"
               tagline="Perfect for a single competition day or trying us out."
               features={[
                 "2 full AI analyses",
@@ -372,23 +388,23 @@ export default function DashboardClient({
                 "Timestamped judge feedback",
                 "Never expire",
               ]}
-              buttonText="Get 2 Analyses — $8.99"
-              type="single"
+              buttonText="Get 2 Analyses — $2.99"
+              type="bogo"
             />
             <HeroPurchaseCard
               variant="purple"
               badge="🏆 Best Value — Save $15"
               title="Competition Pack"
-              price="$29.99"
-              subPrice="Only $6 per analysis — 5 total, never expire"
+              price="$9.99"
+              subPrice="Only $1.99 per analysis — 5 total, never expire"
               tagline="Stock up for the whole season. Use them whenever you need."
               features={[
                 "5 full AI analyses",
-                "Save $15 vs buying individually",
+                "$1.99 each — buy 5 at once",
                 "All styles: dance, cheer, duo, group",
                 "Never expire — use all season",
               ]}
-              buttonText="Get 5 Analyses — $29.99"
+              buttonText="Get 5 Analyses — $9.99"
               type="pack"
             />
           </div>
@@ -436,7 +452,7 @@ export default function DashboardClient({
               <p className="text-surface-200 text-sm max-w-lg mx-auto">
                 {credits.used > 0
                   ? "Pick up more credits to keep improving your routines all season long."
-                  : "Grab our Launch Offer below — 2 full AI-powered analyses for just $8.99. Buy one, get one free."}
+                  : "Grab more credits below — a single analysis is just $1.99, or get 2 for $2.99 (buy one, get one)."}
               </p>
             </div>
             <div className="grid sm:grid-cols-3 gap-4">
@@ -444,10 +460,10 @@ export default function DashboardClient({
                 badge="👑 Most Popular"
                 badgeColor="text-primary-300 bg-primary-500/20"
                 title="Season Member"
-                price="$12.99/mo"
-                description="10 analyses/month. Intro rate — locked in forever."
-                features={["10 analyses per month", "Full season tracking", "Cancel anytime", "🔒 Rate locked at intro price"]}
-                buttonText="Subscribe — $12.99/mo"
+                price="$4.99/mo"
+                description="4 analyses/month. Intro rate — locked in forever."
+                features={["4 analyses per month", "Full season tracking", "Cancel anytime", "🔒 Rate locked at intro price"]}
+                buttonText="Subscribe — $4.99/mo"
                 buttonStyle="bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 hover:opacity-90"
                 type="subscription"
               />
@@ -455,21 +471,21 @@ export default function DashboardClient({
                 badge="⚡ Buy One Get One"
                 badgeColor="text-gold-300 bg-gold-500/20"
                 title="BOGO — 2 Analyses"
-                price="$8.99"
+                price="$2.99"
                 description="Buy one analysis, get one free."
                 features={["2 full AI analyses", "Competition-standard scoring", "Timestamped judge notes"]}
-                buttonText="Get 2 Analyses — $8.99"
+                buttonText="Get 2 Analyses — $2.99"
                 buttonStyle="border border-gold-500/60 hover:bg-gold-500/10"
-                type="single"
+                type="bogo"
               />
               <PurchaseCard
                 badge="🏆 Best Value"
                 badgeColor="text-gold-300 bg-gold-500/20"
                 title="Competition Pack"
-                price="$29.99"
-                description="5 analyses — only $6 each, never expire."
-                features={["5 full AI analyses", "Only $6 each — save $15", "Never expire"]}
-                buttonText="Get 5 Analyses — $29.99"
+                price="$9.99"
+                description="5 analyses — only $1.99 each, never expire."
+                features={["5 full AI analyses", "$1.99 each — 5 analyses", "Never expire"]}
+                buttonText="Get 5 Analyses — $9.99"
                 buttonStyle="border border-primary-500/60 hover:bg-primary-500/10"
                 type="pack"
               />

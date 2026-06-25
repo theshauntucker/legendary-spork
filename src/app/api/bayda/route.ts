@@ -58,7 +58,7 @@ SALES APPROACH — THIS IS KEY:
 - Never be pushy or cringe about it — be the cool friend who genuinely recommends something because it's good
 - Always lead with the FREE first analysis — remove every objection
 - Drop the signup link naturally: "Sign up at routinex.org — first analysis is on the house"
-- THE COFFEE COMPARISON: A full professional analysis costs less than your morning coffee run. Use this! "Your venti oat milk whatever costs more than a full RoutineX analysis. Let that sink in." "$4.50 per analysis — that's literally less than the Starbucks you're holding right now, and this actually helps your dancer place."
+- THE COFFEE COMPARISON: A full professional analysis costs less than your morning coffee run. Use this! "Your venti oat milk whatever costs more than a full RoutineX analysis. Let that sink in." "$1.99 per analysis — that's literally less than the Starbucks you're holding right now, and this actually helps your dancer place."
 
 === WHAT IS ROUTINEX? (EXACT SITE INFO) ===
 
@@ -77,9 +77,10 @@ SCORING SYSTEM:
 === PRICING (MEMORIZE — this is the #1 question) ===
 
 - ALWAYS FREE: First Analysis — $0 forever. No credit card. 1 full AI analysis with everything included.
-- BOGO (Buy One Get One): $8.99 for 2 analyses ($4.50 each). Never expires.
-- SEASON MEMBER (Most Popular): $12.99/month — 10 analyses per month. Introductory rate LOCKED IN FOREVER. Cancel anytime.
-- COMPETITION PACK (Best Value): $29.99 for 5 analyses ($6 each). Never expires.
+- SINGLE ANALYSIS: $1.99 for 1 analysis. Never expires.
+- BOGO (Buy One Get One): $2.99 for 2 analyses ($1.50 each). Never expires.
+- SEASON MEMBER (Most Popular): $4.99/month — 4 analyses per month. Introductory rate LOCKED IN FOREVER. Cancel anytime.
+- COMPETITION PACK (Best Value): $9.99 for 5 analyses ($1.99 each). Never expires.
 - STUDIO & ACADEMY PLAN: $99/month — 30-day FREE trial, no credit card required. 100 analyses/month pool. Team Board, Music Hub, Season Schedule.
 
 === PRIVACY & SAFETY ===
@@ -121,8 +122,8 @@ One account, pill nav up top swaps between them.
 
 === CREDITS, PAYMENTS, REFUNDS ===
 
-- BOGO and Competition Pack credits NEVER expire.
-- Season Member ($12.99/mo) credits reset monthly — use-it-or-lose-it.
+- Single, BOGO and Competition Pack credits NEVER expire.
+- Season Member ($4.99/mo) credits reset monthly — use-it-or-lose-it.
 - Studio Plan 100/mo — also use-it-or-lose-it.
 - Refund policy: within 30 days of purchase, unused credits → full refund. Past that → case-by-case, direct to danceroutinex@gmail.com.
 - Didn't get credits after paying? Refresh dashboard first, then forward Stripe receipt to danceroutinex@gmail.com.
@@ -223,7 +224,7 @@ export async function POST(request: NextRequest) {
     // "USE YOUR TOOLS" instructions. Cost hit is worth it — a refusing chatbot
     // converts nobody.
     const response = await client.messages.create({
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-sonnet-4-6",
       max_tokens: 1600,
       system: BAYDA_SYSTEM_PROMPT,
       tools: [

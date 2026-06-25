@@ -236,7 +236,7 @@ export async function POST(request: NextRequest) {
       // One-time purchase. Grant credits, write payment row.
       await grantCredits(serviceClient, user.id, product.creditsGranted, false);
     } else if (product.paymentType === "subscription") {
-      // Season Member ($12.99/mo). Use grantSubscriptionCycle which handles
+      // Season Member ($4.99/mo). Use grantSubscriptionCycle which handles
       // first-purchase, renewal, and resubscribe-without-arbitrage cases.
       const startMs = parseInt(matchingPurchase.purchase_date_ms, 10);
       const expiresMs = matchingPurchase.expires_date_ms
@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
       await grantSubscriptionCycle(
         serviceClient,
         user.id,
-        SUBSCRIPTION_CREDITS, // 10
+        SUBSCRIPTION_CREDITS, // 4
         new Date(startMs),
         new Date(expiresMs)
       );

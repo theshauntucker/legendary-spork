@@ -35,7 +35,7 @@ const faqs = [
   },
   {
     q: "What do I get when I sign up?",
-    a: "Sign up and grab our Launch Offer: 2 full AI-powered analyses for just $8.99 — that's buy one, get one free. Or go big with the Competition Pack — 5 analyses for $29.99 (just $6 each).",
+    a: "Your first analysis is always free — no credit card. After that, a single analysis is $1.99, BOGO is 2 for $2.99, the Competition Pack is 5 for $9.99 ($1.99 each), or go monthly with Season Member at $4.99/mo for 4 analyses.",
   },
   {
     q: "Can I get a refund?",

@@ -65,20 +65,23 @@ export async function POST(request: NextRequest) {
     const referralCode = session.metadata?.referral_code || null;
     const isBeta = paymentType === "beta_access";
     const isPack = paymentType === "video_analysis";
+    const isBogo = paymentType === "bogo";
     const isSingle = paymentType === "single";
     const isSubscription = paymentType === "subscription";
 
-    // subscription = 10/month, single = 2, pack = 5, beta = BETA_CREDITS
+    // subscription = 4/month, single = 1, bogo = 2, pack = 5, beta = BETA_CREDITS
     const creditsToGrant = isSubscription
       ? SUBSCRIPTION_CREDITS
       : isBeta
       ? BETA_CREDITS
       : isPack
       ? 5
-      : isSingle
+      : isBogo
       ? 2
+      : isSingle
+      ? 1
       : 1;
-    const amountFallback = isSubscription ? 1299 : isPack ? 2999 : isBeta ? 999 : 899;
+    const amountFallback = isSubscription ? 499 : isPack ? 999 : isBeta ? 999 : isBogo ? 299 : 199;
 
     // Try to record payment (may already exist from webhook — that's fine)
     const { error: insertError } = await serviceClient

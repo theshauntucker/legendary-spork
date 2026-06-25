@@ -46,7 +46,7 @@ const DEMO_PLAYBOOK = [
 const DEMO_MRR = {
   activeMembers: 34,
   trialMembers: 7,
-  mrrCents: 34 * 1299,
+  mrrCents: 34 * 499,
   poolUsed: 58,
   poolCap: 120,
   lastWeekJudged: 41,

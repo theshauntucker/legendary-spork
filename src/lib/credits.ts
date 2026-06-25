@@ -243,7 +243,7 @@ export async function refundCredit(
  * Use-it-or-lose-it semantics — total is SET to p_credits (not added),
  * used_credits is zeroed, and expires_at is the end of the billing period.
  *
- * This is what makes the $12.99/mo tier arbitrage-proof: you can't subscribe,
+ * This is what makes the $4.99/mo tier arbitrage-proof: you can't subscribe,
  * collect 10, cancel, and use them for a year. When the period ends (either
  * because we refresh it or because cancel_at_period_end fires), unused credits
  * are gone.
@@ -366,7 +366,7 @@ export async function markSubscriptionExpires(
   }
 }
 
-/** Monthly subscription grant — the $12.99/mo "Season Member" tier. */
-export const SUBSCRIPTION_CREDITS = 10;
+/** Monthly subscription grant — the $4.99/mo "Season Member" tier. */
+export const SUBSCRIPTION_CREDITS = 4;
 
 export { BETA_CREDITS };

@@ -91,7 +91,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "RoutineX — Your Athlete's Secret Weapon",
     description:
-      "AI-powered video analysis for competitive dancers & cheer teams. Launch offer: 2 analyses for $8.99 — buy one, get one free.",
+      "AI-powered video analysis for competitive dancers & cheer teams. First analysis free, then just $1.99 each or $4.99/mo for Season Member.",
     images: ["/opengraph-image"],
   },
   robots: {
@@ -138,16 +138,16 @@ const jsonLd = {
         {
           "@type": "Offer",
           name: "Single Analysis",
-          price: "8.99",
+          price: "1.99",
           priceCurrency: "USD",
           description: "One AI-powered competition-standard dance or cheer routine analysis",
         },
         {
           "@type": "Offer",
           name: "Competition Pack (5 Analyses)",
-          price: "29.99",
+          price: "9.99",
           priceCurrency: "USD",
-          description: "5 AI-powered dance or cheer routine analyses — only $6 each",
+          description: "5 AI-powered dance or cheer routine analyses — only $1.99 each",
         },
       ],
       aggregateRating: {

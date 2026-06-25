@@ -336,21 +336,21 @@ export default function AdminClient({ users: initialUsers, affiliates: initialAf
                 <h3 className="font-semibold mb-4 flex items-center gap-2"><DollarSign className="h-4 w-4 text-green-400" /> Revenue Breakdown</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-surface-200">$8.99 Single purchases</span>
+                    <span className="text-sm text-surface-200">$1.99 Single purchases</span>
                     <div className="text-right">
                       <span className="font-bold text-green-400">${(stats.singleRevenue/100).toFixed(2)}</span>
                       <span className="text-xs text-surface-200 ml-2">({stats.singleCount} sales)</span>
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-surface-200">$29.99 Pack purchases</span>
+                    <span className="text-sm text-surface-200">$9.99 Pack purchases</span>
                     <div className="text-right">
                       <span className="font-bold text-green-400">${(stats.packRevenue/100).toFixed(2)}</span>
                       <span className="text-xs text-surface-200 ml-2">({stats.packCount} sales)</span>
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-surface-200">$12.99 Season Member</span>
+                    <span className="text-sm text-surface-200">$4.99 Season Member</span>
                     <div className="text-right">
                       <span className="font-bold text-green-400">${(stats.subscriptionRevenue/100).toFixed(2)}</span>
                       <span className="text-xs text-surface-200 ml-2">({stats.subscriptionCount} payment{stats.subscriptionCount === 1 ? "" : "s"})</span>
@@ -557,9 +557,9 @@ export default function AdminClient({ users: initialUsers, affiliates: initialAf
               {[
                 { label: "Total Revenue", value: `$${(stats.totalRevenue/100).toFixed(2)}`, color: "text-green-400" },
                 { label: "MRR locked in", value: `$${(stats.totalMrrCents/100).toFixed(2)}/mo (${stats.activeSeasonMembers} + ${stats.activeStudios} studios)`, color: "text-accent-300" },
-                { label: "Single Sales ($8.99)", value: `${stats.singleCount} sale${stats.singleCount !== 1 ? 's' : ''} — $${(stats.singleRevenue/100).toFixed(2)}`, color: "text-accent-400" },
-                { label: "Pack Sales ($29.99)", value: `${stats.packCount} sale${stats.packCount !== 1 ? 's' : ''} — $${(stats.packRevenue/100).toFixed(2)}`, color: "text-gold-400" },
-                { label: "Season Member ($12.99)", value: `${stats.subscriptionCount} payment${stats.subscriptionCount !== 1 ? 's' : ''} — $${(stats.subscriptionRevenue/100).toFixed(2)}`, color: "text-primary-400" },
+                { label: "Single Sales ($1.99)", value: `${stats.singleCount} sale${stats.singleCount !== 1 ? 's' : ''} — $${(stats.singleRevenue/100).toFixed(2)}`, color: "text-accent-400" },
+                { label: "Pack Sales ($9.99)", value: `${stats.packCount} sale${stats.packCount !== 1 ? 's' : ''} — $${(stats.packRevenue/100).toFixed(2)}`, color: "text-gold-400" },
+                { label: "Season Member ($4.99)", value: `${stats.subscriptionCount} payment${stats.subscriptionCount !== 1 ? 's' : ''} — $${(stats.subscriptionRevenue/100).toFixed(2)}`, color: "text-primary-400" },
                 { label: "Studio Plan ($99)", value: `${stats.studioCount} payment${stats.studioCount !== 1 ? 's' : ''} — $${(stats.studioRevenue/100).toFixed(2)}`, color: "text-gold-400" },
               ].map(s => (
                 <div key={s.label} className="glass rounded-2xl p-5">

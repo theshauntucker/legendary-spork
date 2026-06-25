@@ -118,7 +118,7 @@ export default function Hero() {
               <div>
                 <h3 className="text-xl font-bold text-white">Season Member</h3>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-4xl font-extrabold text-white">$12.99</span>
+                  <span className="text-4xl font-extrabold text-white">$4.99</span>
                   <span className="text-surface-200 text-sm">/month</span>
                 </div>
                 <p className="text-xs text-primary-300 font-semibold mt-1">Introductory rate — locked in forever 🔒</p>
@@ -128,7 +128,7 @@ export default function Hero() {
               <div className="sm:text-right shrink-0">
                 <ul className="space-y-1.5 text-sm text-surface-200 mb-4 sm:text-left">
                   {[
-                    "10 analyses per month",
+                    "4 analyses per month",
                     "Full season tracking dashboard",
                     "Timestamped judge notes",
                     "Re-submission score tracking",
@@ -146,7 +146,7 @@ export default function Hero() {
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-7 py-3.5 font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
                 >
                   <Sparkles className="h-4 w-4" />
-                  {subLoading ? "Loading..." : "Subscribe — $12.99/mo"}
+                  {subLoading ? "Loading..." : "Subscribe — $4.99/mo"}
                 </button>
               </div>
             </div>
@@ -163,10 +163,10 @@ export default function Hero() {
               <div className="mt-3 mb-3">
                 <h3 className="text-base font-bold text-white">Buy One Get One</h3>
                 <div className="flex items-baseline gap-1 mt-1">
-                  <span className="text-3xl font-extrabold text-white">$8.99</span>
+                  <span className="text-3xl font-extrabold text-white">$2.99</span>
                   <span className="text-surface-200 text-xs">2 analyses</span>
                 </div>
-                <p className="text-xs text-yellow-300 font-semibold mt-0.5">$4.50 each — BOGO deal</p>
+                <p className="text-xs text-yellow-300 font-semibold mt-0.5">$1.50 each — BOGO deal</p>
               </div>
               <ul className="space-y-1.5 mb-4 flex-1">
                 {["2 full AI analyses", "Competition-standard scoring", "Timestamped judge notes", "Never expire"].map((item) => (
@@ -176,7 +176,7 @@ export default function Hero() {
                 ))}
               </ul>
               <a href="/signup" className="w-full flex items-center justify-center gap-2 rounded-full border-2 border-yellow-500 px-5 py-3 font-bold text-white hover:bg-yellow-500/20 transition-colors text-sm">
-                Claim BOGO — $8.99 <ArrowRight className="h-4 w-4" />
+                Claim BOGO — $2.99 <ArrowRight className="h-4 w-4" />
               </a>
             </div>
 
@@ -188,24 +188,27 @@ export default function Hero() {
               <div className="mt-3 mb-3">
                 <h3 className="text-base font-bold text-white">Competition Pack</h3>
                 <div className="flex items-baseline gap-1 mt-1">
-                  <span className="text-3xl font-extrabold text-white">$29.99</span>
+                  <span className="text-3xl font-extrabold text-white">$9.99</span>
                   <span className="text-surface-200 text-xs">5 analyses</span>
                 </div>
-                <p className="text-xs text-primary-400 font-semibold mt-0.5">$6 each — save $15 vs single</p>
+                <p className="text-xs text-primary-400 font-semibold mt-0.5">$1.99 each — 5 analyses</p>
               </div>
               <ul className="space-y-1.5 mb-4 flex-1">
-                {["5 full AI analyses", "Only $6 each — save $15", "All styles supported", "Never expire"].map((item) => (
+                {["5 full AI analyses", "$1.99 each — 5 analyses", "All styles supported", "Never expire"].map((item) => (
                   <li key={item} className="flex items-center gap-2 text-xs text-surface-200">
                     <Check className="h-3 w-3 text-primary-400 shrink-0" />{item}
                   </li>
                 ))}
               </ul>
               <a href="/signup" className="w-full flex items-center justify-center gap-2 rounded-full border border-primary-500/60 px-5 py-3 font-bold text-white hover:bg-primary-500/20 transition-colors text-sm">
-                Get 5 Analyses — $29.99 <ArrowRight className="h-4 w-4" />
+                Get 5 Analyses — $9.99 <ArrowRight className="h-4 w-4" />
               </a>
             </div>
           </div>
 
+          <p className="text-center text-xs text-surface-200/60 mb-1">
+            Just need one? <a href="/signup" className="underline hover:text-white transition-colors">Single analysis — $1.99</a>
+          </p>
           <p className="text-center text-xs text-surface-200/50 mt-1">
             Already have an account? <a href="/login" className="hover:text-white transition-colors underline">Log in</a>
           </p>

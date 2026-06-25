@@ -86,13 +86,13 @@ export default async function AdminPage() {
   const subscriptionCount = allPayments.filter(p => p.payment_type === "subscription" || p.payment_type === "subscription_renewal").length;
   const studioCount = allPayments.filter(p => p.payment_type === "studio_subscription").length;
   // Forward-looking MRR — what's locked in right now, assuming nobody cancels.
-  // $12.99/mo × active Season Members + $99/mo × active studios (active OR trial,
+  // $4.99/mo × active Season Members + $99/mo × active studios (active OR trial,
   // since trials convert without a second checkout).
   const activeSeasonMembers = (activeSubsRows ?? []).filter((s) => !s.cancel_at_period_end).length;
   const activeStudios = (studioCreditsRows ?? []).filter((s) =>
     s.subscription_status === "active" || s.subscription_status === "trial"
   ).length;
-  const seasonMemberMrrCents = activeSeasonMembers * 1299;
+  const seasonMemberMrrCents = activeSeasonMembers * 499;
   const studioMrrCents = activeStudios * 9900;
   const totalMrrCents = seasonMemberMrrCents + studioMrrCents;
   const convertedUsers = userRecords.filter(u => u.hasConverted).length;

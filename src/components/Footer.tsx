@@ -34,7 +34,7 @@ export default function Footer() {
                 href="#pricing"
                 className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary-600/25 hover:shadow-primary-600/40 transition-all animate-pulse-glow"
               >
-                Get 2 Analyses — $8.99
+                Get 2 Analyses — $2.99
                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </a>
             </div>
@@ -42,7 +42,7 @@ export default function Footer() {
             <p className="mt-6 text-sm text-surface-200">
               
               <br />
-              🎉 Launch offer: 2 full analyses for $8.99 — buy one, get one free.
+              🎉 First analysis on us. Then just $1.99 each, or $4.99/mo for Season Member.
             </p>
           </motion.div>
         </div>

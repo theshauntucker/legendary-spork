@@ -39,7 +39,7 @@ export default function TermsPage() {
 
           <h2 className="text-lg font-semibold text-white">4. Payments & Refunds</h2>
           <p>
-            We currently offer a Launch Offer: 2 full analyses for $8.99 USD (buy one, get one free). Single analyses are $8.99 USD each, and the Competition Pack offers 5 analyses for $29.99 USD. All payments are processed through Stripe. Refunds are handled on a case-by-case basis — contact us at the email below.
+            We currently offer: a single analysis for $1.99 USD, a Buy-One-Get-One (2 analyses) for $2.99 USD, and a Competition Pack (5 analyses) for $9.99 USD. A Season Member subscription is $4.99/month for 4 analyses. All payments are processed through Stripe. Refunds are handled on a case-by-case basis — contact us at the email below.
           </p>
 
           <h2 className="text-lg font-semibold text-white">5. User Content</h2>

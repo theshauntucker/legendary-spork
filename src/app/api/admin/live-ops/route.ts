@@ -87,12 +87,12 @@ export async function GET() {
       .eq("status", "active"),
   ]);
 
-  // MRR — $12.99 per active Season Member + $99 per active Studio sub.
+  // MRR — $4.99 per active Season Member + $99 per active Studio sub.
   // We don't always have a reliable 'tier' column on subscriptions, so we
-  // fall back to flat-rate-per-active: everyone gets $12.99 by default.
+  // fall back to flat-rate-per-active: everyone gets $4.99 by default.
   // If you add a tier column later, branch here.
   const activeSubCount = (activeSubsAll ?? []).length;
-  const mrrCents = activeSubCount * 1299; // TODO split Studio vs Season once tier is recorded
+  const mrrCents = activeSubCount * 499; // TODO split Studio vs Season once tier is recorded
 
   const todayRevenueCents = (paymentsToday ?? []).reduce(
     (s, p) => s + (p.amount_cents || 0),

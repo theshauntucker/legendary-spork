@@ -82,10 +82,10 @@ export default function Features() {
           className="mt-12 text-center"
         >
           <p className="text-surface-200 text-sm mb-4">
-            All of this — for the price of a single coffee run. <span className="text-white font-semibold">BOGO: 2 analyses for $8.99.</span>
+            All of this — for the price of a single coffee run. <span className="text-white font-semibold">BOGO: 2 analyses for $2.99.</span>
           </p>
           <a href="/signup" className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-7 py-3.5 font-bold text-white hover:opacity-90 transition-opacity shadow-lg shadow-primary-600/20">
-            Get 2 Analyses — $8.99
+            Get 2 Analyses — $2.99
             <Zap className="h-4 w-4" />
           </a>
         </motion.div>
