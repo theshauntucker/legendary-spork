@@ -29,8 +29,8 @@ export default function StickyBottomCTA() {
         >
           <div className="mx-auto max-w-lg glass border border-white/10 rounded-2xl px-4 py-3 flex items-center justify-between gap-3 shadow-2xl">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate">✨ First analysis is always free</p>
-              <p className="text-xs text-surface-200 truncate">No card required — see real judge feedback instantly</p>
+              <p className="text-sm font-bold text-white truncate">✨ First analysis just $1.99</p>
+              <p className="text-xs text-surface-200 truncate">Less than your morning coffee — see real judge feedback instantly</p>
             </div>
             <a
               href="/signup"

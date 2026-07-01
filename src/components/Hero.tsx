@@ -87,7 +87,7 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mt-10 max-w-3xl mx-auto"
         >
-          {/* Free first analysis */}
+          {/* First analysis $1.99 */}
           <a
             href="/signup"
             className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-5 py-3.5 mb-4 hover:bg-emerald-500/20 transition-colors group"
@@ -97,8 +97,8 @@ export default function Hero() {
                 <Sparkles className="h-4 w-4 text-emerald-400" />
               </div>
               <div>
-                <p className="text-sm font-bold text-white">Try it free — first analysis on us</p>
-                <p className="text-xs text-emerald-300/80">No credit card required. See your score in under 5 minutes.</p>
+                <p className="text-sm font-bold text-white">Your first analysis is $1.99</p>
+                <p className="text-xs text-emerald-300/80">Less than your morning coffee. See your score in under 5 minutes.</p>
               </div>
             </div>
             <ArrowRight className="h-4 w-4 text-emerald-400 shrink-0 group-hover:translate-x-0.5 transition-transform" />

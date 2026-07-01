@@ -54,7 +54,7 @@ export default function Pricing() {
             <span className="gradient-text">Whole-Studio Software</span>
           </h2>
           <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
-            Dancers, cheer athletes, and parents start free. Studio owners get a <span className="text-white font-semibold">30-day free trial — no credit card required.</span> Launch pricing locked in forever.
+            Dancers, cheer athletes, and parents start with a $1.99 first analysis — less than your morning coffee. Studio owners get a <span className="text-white font-semibold">30-day free trial — no credit card required.</span> Launch pricing locked in forever.
           </p>
         </motion.div>
 
@@ -71,15 +71,15 @@ export default function Pricing() {
           >
             <div className="absolute -top-3 left-5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-primary-500 to-accent-500 px-3 py-1 text-xs font-bold text-white">
               <Star className="h-3 w-3" />
-              ALWAYS FREE
+              FIRST ANALYSIS
             </div>
             <div className="mt-3 mb-4">
               <h3 className="text-lg font-bold">First Analysis</h3>
               <div className="flex items-baseline gap-1 mt-3 mb-1">
-                <span className="text-4xl font-extrabold">$0</span>
-                <span className="text-surface-200 text-sm">forever</span>
+                <span className="text-4xl font-extrabold">$1.99</span>
+                <span className="text-surface-200 text-sm">once</span>
               </div>
-              <p className="text-xs text-primary-300 font-semibold">No card — no strings</p>
+              <p className="text-xs text-primary-300 font-semibold">Less than your morning coffee</p>
             </div>
             <ul className="space-y-2.5 mb-7 flex-1">
               {[
@@ -100,10 +100,10 @@ export default function Pricing() {
               className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-5 py-3.5 font-bold text-white hover:opacity-90 transition-opacity animate-pulse-glow text-sm"
             >
               <Gift className="h-4 w-4" />
-              Start Free
+              Get My Analysis
               <ArrowRight className="h-4 w-4" />
             </a>
-            <p className="mt-2.5 text-center text-xs text-primary-300">✨ Always on us</p>
+            <p className="mt-2.5 text-center text-xs text-primary-300">✨ One analysis, $1.99</p>
           </motion.div>
 
           {/* BOGO */}
@@ -346,7 +346,7 @@ export default function Pricing() {
           <div className="inline-flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-sm text-surface-200">
             <div><span className="line-through">Private lesson: $75–$150/hr</span></div>
             <div><span className="line-through">Competition entry: $80–$120</span></div>
-            <div className="text-white font-semibold">RoutineX: <span className="text-gold-400">first analysis always free</span></div>
+            <div className="text-white font-semibold">RoutineX: <span className="text-gold-400">first analysis just $1.99</span></div>
           </div>
         </motion.div>
       </div>

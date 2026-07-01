@@ -251,7 +251,7 @@ function SubscriptionHeroCard() {
               Cancel anytime. No commitment.
             </p>
             <p className="text-xs text-surface-200/40 text-center">
-              Or use your free credit first — upgrade anytime.
+              Your first analysis is just $1.99 — upgrade anytime.
             </p>
           </div>
         </div>

@@ -141,7 +141,7 @@ export async function GET() {
           }}
         >
           <span>routinex.org</span>
-          <span>First analysis free — then $1.99 each</span>
+          <span>First analysis $1.99 — less than your morning coffee</span>
         </div>
       </div>
     ),

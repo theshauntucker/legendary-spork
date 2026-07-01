@@ -91,7 +91,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "RoutineX — Your Athlete's Secret Weapon",
     description:
-      "AI-powered video analysis for competitive dancers & cheer teams. First analysis free, then just $1.99 each or $4.99/mo for Season Member.",
+      "AI-powered video analysis for competitive dancers & cheer teams. First analysis just $1.99 — less than your morning coffee — or $4.99/mo for Season Member.",
     images: ["/opengraph-image"],
   },
   robots: {

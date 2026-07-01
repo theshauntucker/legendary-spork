@@ -430,7 +430,7 @@ export default function SampleAnalysis() {
               Want this for your athlete&apos;s routine?
             </p>
             <p className="text-sm text-surface-200 mt-1 mb-4">
-              Your first full analysis is completely free. No credit card required.
+              Your first full analysis is just $1.99 — less than your morning coffee.
             </p>
             <a
               href="/signup"

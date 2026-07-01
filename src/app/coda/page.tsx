@@ -126,12 +126,12 @@ export default function CodaLanding() {
             <Pill>No dancer photos, ever</Pill>
             <Pill>Safe DMs built in</Pill>
             <Pill>Fair-feed distribution</Pill>
-            <Pill>Free credit when you join</Pill>
+            <Pill>First analysis just $1.99</Pill>
           </div>
 
           <div className="cx-cta-row">
             <Link href="/signup" className="cx-cta-primary">
-              Join Coda — free credit inside →
+              Join Coda →
             </Link>
             <Link href="/sample-analysis" className="cx-cta-ghost">
               See a sample analysis
@@ -335,7 +335,7 @@ export default function CodaLanding() {
               marginRight: "auto",
             }}
           >
-            New members get a free credit, a starter aura, and room on the
+            New members get a $1.99 first analysis, a starter aura, and room on the
             Trophy Wall for every Gold, Platinum, or Diamond coming their way.
           </p>
           <div className="cx-cta-row" style={{ justifyContent: "center", marginTop: 18 }}>

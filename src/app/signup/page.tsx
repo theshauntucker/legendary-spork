@@ -84,24 +84,9 @@ function SignupForm() {
       }
     }
 
-    // Grant the free credit immediately after sign-in.
-    // auth/callback only runs for confirmation email links — not direct signups
-    // with auto-confirm ON — so we grant it here to ensure no one is missed.
-    fetch("/api/free-credit", { method: "POST" }).catch((err) =>
-      console.error("Free credit grant failed:", err)
-    );
+    // Free first analysis removed 2026-06-30 — new users purchase before analyzing.
 
     setSuccess(true);
-    setLoading(false);
-
-    // Record referral code if present (fire and forget)
-    if (referralCode.trim()) {
-      fetch("/api/referral", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: referralCode.trim() }),
-      }).catch(() => {});
-    }
 
     // Notify admin of new signup immediately (fire and forget)
     fetch("/api/notify-admin", {
@@ -110,7 +95,28 @@ function SignupForm() {
       body: JSON.stringify({ type: "signup", email, name, referralCode: referralCode.trim() || undefined }),
     }).catch(() => {});
 
-    // Send to dashboard — they'll see the welcome banner + pricing options there
+    // $1.99 up front — send new users straight to Stripe checkout for their
+    // first analysis (referral code, if any, is attributed at checkout).
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "single",
+          referralCode: referralCode.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+    } catch (err) {
+      console.error("Checkout redirect failed:", err);
+    }
+
+    // Fallback if checkout could not start — send to dashboard to purchase there.
+    setLoading(false);
     setTimeout(() => {
       router.push("/dashboard");
       router.refresh();
@@ -155,7 +161,7 @@ function SignupForm() {
             <CheckCircle className="mx-auto h-12 w-12 text-green-400 mb-4" />
             <h2 className="text-xl font-bold">Account Created!</h2>
             <p className="mt-2 text-surface-200 text-sm">
-              Your first analysis is on us. Taking you to your dashboard...
+              Your first analysis is just $1.99. Taking you to your dashboard...
             </p>
           </motion.div>
         ) : (
