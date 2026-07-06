@@ -14,6 +14,7 @@ import {
   Gift,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { startCheckout } from "@/lib/checkout";
 import UploadTrustBadge from "@/components/UploadTrustBadge";
 import RoutineXLogo from "@/components/RoutineXLogo";
 
@@ -95,21 +96,21 @@ function SignupForm() {
       body: JSON.stringify({ type: "signup", email, name, referralCode: referralCode.trim() || undefined }),
     }).catch(() => {});
 
-    // $1.99 up front — send new users straight to Stripe checkout for their
-    // first analysis (referral code, if any, is attributed at checkout).
+    // $1.99 up front — send new users to checkout for their first analysis.
+    // startCheckout() forks: web -> Stripe redirect, iOS shell -> native
+    // StoreKit IAP (Apple 3.1.1 — never open Stripe inside the app WebView).
     try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "single",
-          referralCode: referralCode.trim() || undefined,
-        }),
+      const result = await startCheckout("single", {
+        referralCode: referralCode.trim() || undefined,
       });
-      const data = await res.json();
-      if (data?.url) {
-        window.location.href = data.url;
+      if (result.ok) {
+        if (result.redirected) return; // web — Stripe Checkout is navigating
+        // iOS IAP complete — credits already granted server-side
+        window.location.href = "/dashboard?from=iap";
         return;
+      }
+      if (!result.cancelled) {
+        console.error("Checkout failed:", result.error);
       }
     } catch (err) {
       console.error("Checkout redirect failed:", err);

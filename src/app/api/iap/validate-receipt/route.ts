@@ -6,6 +6,7 @@ import {
   grantSubscriptionCycle,
   SUBSCRIPTION_CREDITS,
 } from "@/lib/credits";
+import { notifyPayment } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -326,6 +327,20 @@ export async function POST(request: NextRequest) {
       // Non-uniqueness errors are real failures. Uniqueness means another
       // request already inserted this row (race/idempotency) — safe to ignore.
       console.error("validate-receipt: payment insert failed", paymentErr);
+    }
+
+    // Notify the owner — mirrors the Stripe webhook so Apple IAP purchases
+    // show up in the same inbox as web purchases. Await so the serverless
+    // function doesn't return (and get frozen) before the email sends.
+    try {
+      await notifyPayment(
+        user.email || user.id,
+        user.id,
+        product.paymentType,
+        product.amountCents
+      );
+    } catch (err) {
+      console.error("validate-receipt: owner payment notification failed", err);
     }
 
     return NextResponse.json(
