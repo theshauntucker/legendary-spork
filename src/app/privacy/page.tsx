@@ -20,7 +20,7 @@ export default function PrivacyPage() {
         </h1>
 
         <div className="prose prose-invert prose-sm max-w-none space-y-6 text-surface-200">
-          <p><strong>Effective Date:</strong> March 17, 2026</p>
+          <p><strong>Effective Date:</strong> July 7, 2026</p>
 
           <h2 className="text-lg font-semibold text-white">1. Information We Collect</h2>
           <p>
@@ -44,6 +44,9 @@ export default function PrivacyPage() {
             <li><strong>Stripe</strong> — payment processing</li>
             <li><strong>Anthropic (Claude)</strong> — AI video analysis</li>
             <li><strong>Vercel</strong> — hosting and infrastructure</li>
+            <li><strong>Vercel Analytics</strong> — anonymous, cookie-free site analytics</li>
+            <li><strong>Meta Pixel &amp; TikTok Pixel</strong> — advertising measurement on our public marketing pages only (never on logged-in pages, uploads, or analysis results)</li>
+            <li><strong>Google AdSense</strong> — advertising on public marketing pages only</li>
           </ul>
           <p>
             Each service has its own privacy policy. We only share the minimum data necessary for each service to function.
@@ -51,7 +54,7 @@ export default function PrivacyPage() {
 
           <h2 className="text-lg font-semibold text-white">5. Data Retention</h2>
           <p>
-            We retain your account data and analysis results for as long as your account is active. You may request deletion of your account and all associated data at any time by contacting us.
+            We retain your account data and analysis results for as long as your account is active. You may request deletion of your account and all associated data at any time by contacting us. Extracted video frames are retained for a maximum of 24 hours after analysis, then permanently deleted; all other account data is deleted upon account deletion or request.
           </p>
 
           <h2 className="text-lg font-semibold text-white">6. Children&apos;s Privacy &amp; COPPA Compliance</h2>
@@ -62,7 +65,7 @@ export default function PrivacyPage() {
             <strong>How we protect minors:</strong>
           </p>
           <ul className="list-disc list-inside space-y-1">
-            <li>We require verifiable parental/guardian consent before any video of a minor is submitted for analysis.</li>
+            <li>We require a parent or guardian to affirm consent before any video of a minor is submitted for analysis, and paid accounts are additionally verified through the payment transaction.</li>
             <li>Video frames sent to our AI provider are used solely for dance analysis and are not used for training AI models.</li>
             <li>Extracted frames are automatically deleted within 24 hours of analysis completion.</li>
             <li>Users can request immediate deletion of frames at any time from their analysis results page.</li>
@@ -74,7 +77,7 @@ export default function PrivacyPage() {
             <a href="mailto:danceroutinex@gmail.com" className="text-primary-400 hover:text-primary-300">danceroutinex@gmail.com</a>.
           </p>
           <p>
-            If we learn we have collected personal information from a child under 13 without verifiable parental consent, we will delete that information promptly.
+            If we learn we have collected personal information from a child under 13 without parental consent, we will delete that information promptly.
           </p>
 
           <h2 className="text-lg font-semibold text-white">7. Security</h2>

@@ -262,7 +262,10 @@ function SignupForm() {
             </button>
 
             <p className="text-xs text-surface-200 text-center">
-              By signing up, you agree to our Terms of Service. Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or shared. Built by dance parents.
+              By signing up, you agree to our{" "}
+              <a href="/terms" className="text-primary-400 hover:underline">Terms of Service</a>{" "}
+              and{" "}
+              <a href="/privacy" className="text-primary-400 hover:underline">Privacy Policy</a>. Your full video stays on your device — analysis data is automatically deleted within 24 hours and is never sold, shared publicly, or used to train AI. Built by dance parents.
             </p>
           </form>
         )}

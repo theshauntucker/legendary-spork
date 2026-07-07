@@ -20,7 +20,7 @@ export default function TermsPage() {
         </h1>
 
         <div className="prose prose-invert prose-sm max-w-none space-y-6 text-surface-200">
-          <p><strong>Effective Date:</strong> March 17, 2026</p>
+          <p><strong>Effective Date:</strong> July 7, 2026</p>
 
           <h2 className="text-lg font-semibold text-white">1. Acceptance of Terms</h2>
           <p>
@@ -39,7 +39,7 @@ export default function TermsPage() {
 
           <h2 className="text-lg font-semibold text-white">4. Payments & Refunds</h2>
           <p>
-            We currently offer: a single analysis for $1.99 USD, a Buy-One-Get-One (2 analyses) for $2.99 USD, and a Competition Pack (5 analyses) for $9.99 USD. A Season Member subscription is $4.99/month for 4 analyses. All payments are processed through Stripe. Refunds are handled on a case-by-case basis — contact us at the email below.
+            We currently offer: a single analysis for $1.99 USD, a Buy-One-Get-One (2 analyses) for $2.99 USD, and a Competition Pack (5 analyses) for $9.99 USD. A Season Member subscription is $4.99/month for 4 analyses. All payments are processed through Stripe. Season Member subscriptions renew monthly and can be canceled at any time online from your dashboard (or through your Apple ID subscription settings for purchases made in the iOS app); cancellation takes effect at the end of the current billing period. Refunds are handled on a case-by-case basis — contact us at the email below.
           </p>
 
           <h2 className="text-lg font-semibold text-white">5. User Content</h2>

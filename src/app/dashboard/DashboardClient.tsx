@@ -292,6 +292,35 @@ export default function DashboardClient({
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [billingMsg, setBillingMsg] = React.useState<string | null>(null);
+  const [billingLoading, setBillingLoading] = React.useState(false);
+
+  const handleManageSubscription = async () => {
+    setBillingLoading(true);
+    setBillingMsg(null);
+    try {
+      const res = await fetch("/api/billing-portal", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
+      }
+      if (res.status === 404) {
+        setBillingMsg(
+          "No active web subscription — iOS subscriptions are managed in your Apple ID settings."
+        );
+      } else {
+        setBillingMsg("Something went wrong. Please try again.");
+      }
+    } catch {
+      setBillingMsg("Something went wrong. Please try again.");
+    } finally {
+      setBillingLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -779,6 +808,23 @@ export default function DashboardClient({
             </a>
           </div>
         )}
+
+        {/* Manage subscription — unobtrusive web billing entry point. Season
+            Members can open the Stripe billing portal to cancel; iOS-only
+            subscribers are told to manage via Apple ID. */}
+        <div className="mt-12 text-center">
+          <button
+            type="button"
+            onClick={handleManageSubscription}
+            disabled={billingLoading}
+            className="text-sm text-surface-200 hover:text-white hover:underline transition-colors disabled:opacity-50"
+          >
+            {billingLoading ? "Opening…" : "Manage subscription"}
+          </button>
+          {billingMsg && (
+            <p className="mt-2 text-xs text-surface-200">{billingMsg}</p>
+          )}
+        </div>
       </div>
     </div>
   );

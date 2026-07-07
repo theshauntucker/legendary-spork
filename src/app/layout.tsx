@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import Script from "next/script";
 import "./globals.css";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
@@ -12,6 +11,7 @@ import { AtmosphereProvider } from "@/components/AtmosphereProvider";
 import { BottomNav } from "@/components/BottomNav";
 import NativeIapBoot from "@/components/NativeIapBoot";
 import { isNativeIosShell } from "@/lib/native-shell";
+import MarketingPixels from "@/components/MarketingPixels";
 
 // iPhone / mobile rendering tuned to match modern app sites:
 // - viewportFit: "cover" lets the page render under the notch / home
@@ -225,38 +225,10 @@ export default async function RootLayout({
         </AtmosphereProvider>
         <Analytics />
         <SpeedInsights />
-        {/* Google AdSense */}
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7833856993657379"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
-
-        {/* TikTok Pixel */}
-        <Script id="tiktok-pixel" strategy="afterInteractive">{`
-          !function (w, d, t) {
-            w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script");n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
-            ttq.load('D7BUDSRC77UDSGCDVMLG');
-            ttq.page();
-          }(window, document, 'ttq');
-        `}</Script>
-
-        {/* Meta (Facebook) Pixel — id 255034242069090 */}
-        <Script id="meta-pixel" strategy="afterInteractive">{`
-          !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-          fbq('init', '255034242069090');
-          fbq('track', 'PageView');
-        `}</Script>
-        <noscript>
-          <img
-            height="1"
-            width="1"
-            style={{ display: "none" }}
-            src="https://www.facebook.com/tr?id=255034242069090&ev=PageView&noscript=1"
-            alt=""
-          />
-        </noscript>
+        {/* Marketing / advertising pixels — public marketing pages only.
+            Gated by pathname inside the component so they never load on
+            logged-in surfaces (dashboard, upload, analysis, settings). */}
+        <MarketingPixels />
       </body>
     </html>
   );
