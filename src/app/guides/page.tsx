@@ -53,6 +53,30 @@ export default function GuidesHubPage() {
             </p>
           </div>
 
+          {/* Featured: start here */}
+          <Link
+            href="/guides/scoring-by-company"
+            className="group mt-12 block rounded-2xl bg-gradient-to-r from-primary-700/25 to-accent-600/25 border border-white/10 p-6 sm:p-8 transition-transform hover:-translate-y-0.5"
+          >
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary-300">
+              Start here — most useful
+            </p>
+            <h2 className="mt-2 text-2xl sm:text-3xl font-bold text-white leading-snug group-hover:text-primary-200 transition-colors">
+              The Cross-Competition Award Chart: What Platinum Actually Means at
+              Every Dance Competition
+            </h2>
+            <p className="mt-3 text-surface-200 leading-relaxed max-w-3xl">
+              There is no governing body — every company invented its own award
+              ladder, so the same routine earns different award names at
+              different comps. See every ladder side by side, plus a score
+              lookup tool.
+            </p>
+            <span className="mt-4 inline-flex items-center gap-1 text-primary-400 font-semibold group-hover:gap-2 transition-all">
+              Open the award chart
+              <ArrowRight className="h-4 w-4" />
+            </span>
+          </Link>
+
           {/* Category-grouped grid */}
           <div className="mt-14 space-y-14">
             {CATEGORY_ORDER.map((category) => {
