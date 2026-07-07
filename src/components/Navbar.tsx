@@ -12,6 +12,7 @@ import RoutineXLogo from "@/components/RoutineXLogo";
 const navLinks = [
   { label: "How It Works", href: "/#how-it-works" },
   { label: "Events", href: "/events", icon: "calendar", badge: "New" },
+  { label: "Guides", href: "/guides" },
   { label: "Pricing", href: "/#pricing" },
   { label: "Studio", href: "/studio/signup", badge: "New" },
   { label: "FAQ", href: "/#faq" },

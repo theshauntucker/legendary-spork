@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 // tracked. Gate strictly by pathname prefix.
 const PUBLIC_PREFIXES = [
   "/events",
+  "/guides",
   "/studio",
   "/signup",
   "/login",
