@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NU Score — Official Digital Judge Report | Powered by RoutineX</title>
+<style>
+  :root{
+    --pink:#DD21EE; --pink2:#EE6BFA; --pinkdeep:#9410A6; --purple:#285CEE; --amber:#59C3FA;
+    --navy:#070014; --navy2:#150A3D; --nborder:#35287A; --gold:#59C3FA; --violet:#361388;
+    --text:#FFFFFF; --muted:#C7C5E8; --fine:#8D8ABF;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--navy);color:var(--text);font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 20px;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:none;}}
+  @keyframes gradShift{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(221,33,238,.5);}50%{box-shadow:0 0 0 14px rgba(221,33,238,0);}}
+  .fade{animation:fadeUp .8s ease both;}
+  .announce{background:linear-gradient(90deg,var(--pinkdeep),var(--pink),var(--pink2),var(--pink),var(--pinkdeep));background-size:300% 100%;animation:gradShift 8s ease infinite;text-align:center;padding:10px 14px;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+  header{background:#000;padding:14px 0;position:sticky;top:0;z-index:50;box-shadow:0 6px 24px rgba(0,0,0,.5);}
+  header .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+  /* NUVO logo treatment — white lowercase geometric wordmark w/ tilted-counter "o" */
+  .logo{font-family:'Arial Black',sans-serif;font-weight:900;font-size:34px;letter-spacing:-1px;color:#fff;line-height:1;text-transform:lowercase;display:flex;align-items:center;}
+  .logo .o{display:inline-block;width:.92em;height:.92em;border-radius:50%;background:#fff;position:relative;margin-left:2px;top:.06em;}
+  .logo .o::after{content:"";position:absolute;left:26%;top:20%;width:48%;height:60%;border-radius:50%;background:#000;transform:rotate(-38deg);}
+  .tagright{text-align:right;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700;color:var(--pink);line-height:1.6;}
+  .tagright span{color:var(--fine);}
+  /* hero */
+  .hero{background:linear-gradient(160deg,#070014 30%,#1B0D56 75%,#361388 100%);padding:40px 0 36px;position:relative;overflow:hidden;}
+  .hero::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 85% 15%,rgba(221,33,238,.30),transparent 45%),radial-gradient(circle at 10% 90%,rgba(40,92,238,.30),transparent 40%);}
+  .hero::after{content:"n";position:absolute;right:-60px;top:-140px;font-family:'Arial Black',sans-serif;font-weight:900;font-size:420px;color:rgba(221,33,238,.10);transform:rotate(12deg);line-height:1;pointer-events:none;text-transform:lowercase;}
+  .hero .wrap{position:relative;z-index:1;display:grid;grid-template-columns:1.3fr .7fr;gap:26px;align-items:center;}
+  @media(max-width:860px){.hero .wrap{grid-template-columns:1fr;}}
+  .hero h1{font-family:'Arial Black',sans-serif;font-weight:900;font-style:italic;text-transform:uppercase;font-size:clamp(26px,3.9vw,44px);line-height:1.08;}
+  .hero h1 em{font-style:italic;background:linear-gradient(90deg,var(--pink2),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .hero p{color:var(--muted);font-size:15px;line-height:1.65;margin-top:14px;max-width:620px;}
+  .hero p strong{color:#fff;}
+  .hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .hstat{background:rgba(255,255,255,.06);backdrop-filter:blur(6px);border:1px solid rgba(221,33,238,.55);border-radius:12px;padding:14px;text-align:center;}
+  .hstat .n{font-family:'Arial Black',sans-serif;font-style:italic;font-weight:900;font-size:24px;background:linear-gradient(90deg,var(--pink2),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .hstat .l{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;color:var(--muted);margin-top:4px;}
+  h2{font-family:'Arial Black',sans-serif;font-weight:900;font-style:italic;text-transform:uppercase;font-size:clamp(22px,3vw,32px);line-height:1.15;}
+  h2 em{font-style:italic;background:linear-gradient(90deg,var(--pink2),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .sub{color:var(--muted);max-width:680px;margin:10px 0 22px;font-size:14.5px;line-height:1.6;}
+  /* ============ VIDEO SECTION ============ */
+  .vids{padding:40px 0 8px;}
+  .vgrid{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;align-items:stretch;}
+  @media(max-width:860px){.vgrid{grid-template-columns:1fr;}}
+  .vcard{background:var(--navy2);border:1px solid var(--nborder);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,.4);}
+  .vcard video{width:100%;display:block;background:#000;aspect-ratio:16/10;object-fit:contain;}
+  .vcard.tall video{aspect-ratio:9/13;}
+  .vmeta{padding:14px 18px;}
+  .vmeta b{font-size:14px;font-style:italic;text-transform:uppercase;}
+  .vmeta p{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:4px;}
+  .vmeta .live{display:inline-block;background:rgba(47,209,128,.15);border:1px solid #2FD180;color:#2FD180;font-size:9px;font-weight:800;letter-spacing:1.5px;border-radius:999px;padding:3px 10px;text-transform:uppercase;margin-bottom:6px;}
+  /* ============ THE REPORT ============ */
+  .report{max-width:880px;margin:38px auto 0;border-radius:20px;overflow:hidden;border:1px solid rgba(221,33,238,.35);box-shadow:0 40px 100px rgba(0,0,0,.55),0 0 60px rgba(221,33,238,.15);}
+  .r-head{background:linear-gradient(120deg,var(--purple),var(--pink) 45%,var(--pink2) 75%,var(--amber));background-size:200% 200%;animation:gradShift 10s ease infinite;padding:30px 34px 26px;position:relative;overflow:hidden;}
+  .r-head::after{content:"o";position:absolute;right:-40px;bottom:-120px;font-family:'Arial Black',sans-serif;font-weight:900;font-size:280px;color:rgba(255,255,255,.10);transform:rotate(15deg);line-height:1;text-transform:lowercase;}
+  .r-head .kicker{font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:800;color:#0B1B4D;}
+  .r-head h3{font-family:'Arial Black',sans-serif;font-style:italic;font-weight:900;font-size:34px;text-transform:uppercase;margin-top:6px;}
+  .r-head .meta{font-size:13px;color:#FBE3FE;margin-top:6px;font-weight:600;}
+  .r-head .ai{display:inline-block;margin-top:10px;font-size:10px;letter-spacing:2px;font-weight:800;text-transform:uppercase;color:#070014;background:var(--amber);border-radius:999px;padding:5px 12px;}
+  .r-score{display:flex;align-items:flex-end;gap:18px;margin-top:16px;flex-wrap:wrap;position:relative;z-index:1;}
+  .r-score .big{font-family:'Arial Black',sans-serif;font-style:italic;font-weight:900;font-size:82px;line-height:.9;color:#fff;text-shadow:0 6px 30px rgba(0,0,0,.3);}
+  .r-score .of{font-size:14px;color:#FBE3FE;font-weight:700;padding-bottom:9px;}
+  .chip{background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.55);border-radius:999px;padding:8px 18px;font-weight:800;font-size:13px;letter-spacing:1px;text-transform:uppercase;margin-bottom:9px;animation:pulse 3s ease infinite;}
+  .scale{margin-top:18px;position:relative;z-index:1;}
+  .scale .bars{display:flex;gap:5px;}
+  .scale .seg{flex:1;height:10px;border-radius:5px;background:rgba(255,255,255,.28);position:relative;}
+  .scale .seg.f{background:#fff;}
+  .scale .seg .marker{position:absolute;top:-5px;width:4px;height:20px;background:var(--amber);border-radius:2px;box-shadow:0 0 12px rgba(89,195,250,.9);}
+  .scale .labels{display:flex;gap:5px;margin-top:7px;}
+  .scale .labels div{flex:1;font-size:9.5px;letter-spacing:1px;text-transform:uppercase;font-weight:800;color:#FBE3FE;text-align:center;}
+  .scale .labels div.on{color:var(--amber);}
+  .r-body{background:#F6F7FC;color:#171B2E;padding:30px 34px 36px;}
+  .r-body h4{font-family:'Arial Black',sans-serif;font-style:italic;font-weight:900;text-transform:uppercase;font-size:16px;color:#0E0433;display:flex;align-items:center;gap:9px;margin:28px 0 14px;}
+  .r-body h4:first-child{margin-top:0;}
+  .r-body h4 .ic{width:10px;height:22px;border-radius:3px;background:linear-gradient(180deg,var(--purple),var(--pink));display:inline-block;}
+  table.jt{width:100%;border-collapse:collapse;font-size:13.5px;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 26px rgba(14,4,51,.10);}
+  .jt th{background:linear-gradient(90deg,#0E0433,#361388);color:#fff;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:12px;text-align:center;font-weight:800;}
+  .jt th:first-child{text-align:left;}
+  .jt td{padding:12px;border-top:1px solid #E7E9F4;text-align:center;color:#3A415E;font-weight:600;}
+  .jt td:first-child{text-align:left;color:#0E0433;font-weight:700;}
+  .jt td:first-child small{color:#8D8ABF;font-weight:600;}
+  .jt td.avg{font-weight:800;color:#0E0433;}
+  .jt .mini{height:6px;border-radius:3px;background:#EDEEF7;margin-top:5px;overflow:hidden;}
+  .jt .mini i{display:block;height:6px;background:linear-gradient(90deg,var(--purple),var(--pink),var(--amber));border-radius:3px;width:0;transition:width 1.4s ease;}
+  .jt tr.tot td{background:linear-gradient(90deg,#0E0433,#361388);color:#fff;font-weight:800;border-top:none;}
+  .jt tr.tot td:first-child{color:#fff;}
+  .jt tr.tot td.avg{color:var(--amber);font-family:'Arial Black',sans-serif;font-style:italic;font-size:17px;}
+  .compare{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  @media(max-width:700px){.compare{grid-template-columns:repeat(2,1fr);}}
+  .cmp{background:#fff;border-radius:14px;padding:16px 14px;text-align:center;box-shadow:0 8px 26px rgba(14,4,51,.09);}
+  .cmp .l{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:800;color:#8D8ABF;}
+  .cmp .n{font-family:'Arial Black',sans-serif;font-style:italic;font-weight:900;font-size:30px;margin-top:4px;color:#0E0433;}
+  .cmp.you{background:linear-gradient(135deg,var(--purple),var(--pink));}
+  .cmp.you .l,.cmp.you .n{color:#fff;}
+  .cmp .n.gold{color:#0E7BC4;}
+  .cmp .n.purp{color:#B316C7;}
+  .ctx{background:#fff;border-left:5px solid;border-image:linear-gradient(180deg,var(--purple),var(--pink)) 1;border-radius:0 12px 12px 0;padding:13px 17px;font-size:13px;line-height:1.6;color:#3A415E;margin-top:12px;box-shadow:0 8px 26px rgba(14,4,51,.07);}
+  .cat{background:#fff;border-radius:14px;padding:19px 22px;margin-bottom:12px;box-shadow:0 8px 26px rgba(14,4,51,.09);}
+  .cat .t{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+  .cat .t b{font-size:15px;color:#0E0433;text-transform:uppercase;font-style:italic;}
+  .cat .t .sc{font-family:'Arial Black',sans-serif;font-style:italic;font-weight:900;background:linear-gradient(90deg,var(--purple),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent;font-size:17px;white-space:nowrap;}
+  .cat p{font-size:13.5px;line-height:1.66;color:#3A415E;margin-top:8px;}
+  .cat .style{margin-top:10px;background:linear-gradient(90deg,#EAEFFD,#FBEAFE);border-radius:9px;padding:11px 15px;font-size:12.5px;line-height:1.6;color:#7A1B8A;font-style:italic;}
+  .tl{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:700px){.tl{grid-template-columns:1fr;}}
+  .tn{background:#fff;border-radius:14px;padding:13px 15px;display:flex;gap:12px;align-items:flex-start;box-shadow:0 8px 26px rgba(14,4,51,.09);}
+  .thumb{width:52px;height:74px;border-radius:9px;flex-shrink:0;background:linear-gradient(160deg,#361388,#070014);display:flex;align-items:center;justify-content:center;color:var(--pink2);font-size:18px;position:relative;overflow:hidden;}
+  .thumb::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 20%,rgba(221,33,238,.4),transparent 60%);}
+  .tn .ts{font-family:'Arial Black',sans-serif;font-style:italic;font-weight:900;font-size:13px;color:var(--pink);}
+  .tn .tag{display:inline-block;font-size:9px;font-weight:800;letter-spacing:1px;border-radius:999px;padding:2px 9px;margin-left:6px;text-transform:uppercase;vertical-align:middle;}
+  .tag.pos{background:#E2F8ED;color:#0E9F5D;}
+  .tag.imp{background:#FFF3DC;color:#B97A00;}
+  .tn p{font-size:12.5px;line-height:1.55;color:#3A415E;margin-top:4px;}
+  .tl-note{font-size:11.5px;color:#8D8ABF;margin-top:10px;font-style:italic;}
+  .pri{background:#fff;border-radius:14px;padding:17px 19px;margin-bottom:10px;box-shadow:0 8px 26px rgba(14,4,51,.09);display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:flex-start;}
+  .pri .num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Arial Black',sans-serif;font-style:italic;font-weight:900;font-size:16px;box-shadow:0 6px 16px rgba(221,33,238,.35);}
+  .pri b{font-size:14px;color:#0E0433;}
+  .pri .chips{margin:6px 0 8px;}
+  .pri .pc{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;border-radius:999px;padding:3px 10px;margin-right:6px;}
+  .pc.high{background:#FAE0FD;color:var(--pinkdeep);}
+  .pc.med{background:#FFF3DC;color:#B97A00;}
+  .pc.time{background:#EDEEF7;color:#3A415E;}
+  .pri p{font-size:12.5px;line-height:1.6;color:#3A415E;}
+  .pri p b{color:var(--pinkdeep);font-size:12.5px;}
+  /* business */
+  .duo{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:36px 0 6px;}
+  @media(max-width:860px){.duo{grid-template-columns:1fr;}}
+  .tile{background:var(--navy2);border:1px solid var(--nborder);border-top:4px solid var(--pink);border-radius:14px;padding:20px;transition:transform .25s ease,box-shadow .25s ease;}
+  .tile:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(221,33,238,.18);}
+  .tile h4{font-size:13.5px;font-style:italic;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+  .tile h4 .star{color:var(--amber);}
+  .tile p{color:var(--muted);font-size:13px;line-height:1.62;}
+  .tile p strong{color:#fff;}
+  .band{background:linear-gradient(90deg,var(--purple),var(--pink) 50%,var(--amber));background-size:200% 100%;animation:gradShift 12s ease infinite;padding:24px 0;margin-top:36px;}
+  .band .wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;text-align:center;}
+  .band .stat .n{font-family:'Arial Black',sans-serif;font-style:italic;font-weight:900;font-size:32px;line-height:1;text-shadow:0 3px 14px rgba(0,0,0,.25);}
+  .band .stat .l{font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-top:5px;color:rgba(255,255,255,.85);}
+  .revsec{padding:38px 0 6px;}
+  .card{background:var(--navy2);border:1px solid var(--nborder);border-radius:16px;}
+  .rev{padding:8px 26px 20px;}
+  .rev table{width:100%;border-collapse:collapse;font-size:14px;}
+  .rev td{padding:12px 4px;border-bottom:1px solid var(--nborder);color:var(--muted);}
+  .rev td:last-child{text-align:right;color:#fff;font-weight:700;white-space:nowrap;}
+  .rev tr.total td{font-family:'Arial Black',sans-serif;font-style:italic;font-weight:900;font-size:18px;border-bottom:none;padding-top:16px;text-transform:uppercase;background:linear-gradient(90deg,var(--pink2),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .footnote{color:var(--fine);font-size:11px;line-height:1.6;margin-top:8px;}
+  .cta{text-align:center;padding:46px 0 54px;}
+  .btn{display:inline-block;background:linear-gradient(90deg,var(--purple),var(--pink));color:#fff;font-family:'Arial Black',sans-serif;font-style:italic;font-weight:900;font-size:16px;padding:16px 46px;border-radius:10px;text-decoration:none;text-transform:uppercase;letter-spacing:1px;box-shadow:0 14px 36px rgba(221,33,238,.4);transition:transform .2s ease;}
+  .btn:hover{transform:scale(1.04);}
+  .cta .alt{color:var(--fine);font-size:12.5px;margin-top:14px;}
+  footer{background:#000;padding:20px 0 28px;color:#5E5A8F;font-size:10px;line-height:1.7;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="announce">&#10022; NU Score&trade; &mdash; Official Digital Judge Reports &bull; Built for Nuvo &bull; Powered by RoutineX &#10022;</div>
+
+<header>
+  <div class="wrap">
+    <div class="logo">nuv<span class="o"></span></div>
+    <div class="tagright">NU Score&trade;<br><span>Powered by RoutineX</span></div>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="fade">
+      <h1>More revenue. Zero build. <em>Your win.</em></h1>
+      <p>A $231K first-year line for Nuvo, <strong>live before the 2026&ndash;27 tour opens in Anchorage</strong> &mdash; built on footage only you own. Below: the complete NU Score report and the live product on video. Today your artists&rsquo; video critiques and score sheets post to the studio&rsquo;s Dance360 account <strong>up to 24 hours after the event ends</strong> &mdash; and the family who paid for the weekend may never see them at all. Every routine scored, every family holding your brand <strong>ten minutes after the music stops.</strong></p>
+    </div>
+    <div class="hero-stats fade" style="animation-delay:.15s;">
+      <div class="hstat"><div class="n">26</div><div class="l">2026&ndash;27 Tour Cities</div></div>
+      <div class="hstat"><div class="n">~13K</div><div class="l">Routines / Season*</div></div>
+      <div class="hstat"><div class="n">10 MIN</div><div class="l">Stage to Report</div></div>
+      <div class="hstat"><div class="n">$231K</div><div class="l">Yr-1 Potential</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= VIDEO PROOF ================= -->
+<div class="wrap vids">
+  <h2>Watch it <em>work</em></h2>
+  <p class="sub">Real footage of the live engine &mdash; upload to full judge report. This is the exact experience your families would get, reskinned in Nuvo purple.</p>
+  <div class="vgrid">
+    <div class="vcard">
+      <video controls preload="metadata" src="/demo/RoutineX-Process-60s.mp4"></video>
+      <div class="vmeta">
+        <span class="live">&#9679; Live Product</span><br>
+        <b>The Upload Experience &mdash; Fast by Design</b>
+        <p>A routine goes in, a complete three-judge scored report comes out: category scores, adjudication benchmarks, timestamped notes, and a training plan. Every screen shown is <strong style="color:#fff;">fully customizable to the exclusive partner</strong> &mdash; your flow, your fields, your brand.</p>
+      </div>
+    </div>
+    <div class="vcard tall">
+      <video controls preload="metadata" src="/demo/TikTok-DEMO-Full-Product-Updated.mp4"></video>
+      <div class="vmeta">
+        <span class="live">&#9679; Live Product</span><br>
+        <b>The Parent Experience</b>
+        <p>What a dance mom sees on her phone &mdash; the screenshot that gets shared to the whole studio group chat.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= FULL REPORT ================= -->
+<div class="wrap">
+  <div class="report">
+
+    <div class="r-head">
+      <div class="kicker">&#127942; NUVO OFFICIAL DIGITAL JUDGE REPORT</div>
+      <h3>&ldquo;Gravity&rdquo;</h3>
+      <div class="meta">Meadowlands, NJ &bull; Entry #214 &bull; Teen (13&ndash;15) &bull; Lyrical Solo &bull; 2:44</div>
+      <div class="ai">&#10022; AI Vision Analysis &mdash; Calibrated to Nuvo Judging &amp; C.O.D.A. Score Sheets</div>
+      <div class="r-score">
+        <div class="big" id="bigScore">293</div>
+        <div class="of">out of 300</div>
+        <div class="chip">&#10022; DJ&rsquo;S PICK!! Adjudication</div>
+      </div>
+      <div class="scale">
+        <div class="bars">
+          <div class="seg f"></div><div class="seg f"></div><div class="seg f"></div>
+          <div class="seg f"><div class="marker" style="right:72%;"></div></div>
+        </div>
+        <div class="labels">
+          <div>Gold</div><div>High Gold</div><div>Palladium</div><div class="on">DJ&rsquo;s PICK!! &#10022; Top Tier</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="r-body">
+
+      <h4><span class="ic"></span> Score Breakdown by Judge</h4>
+      <table class="jt">
+        <tr><th>Category</th><th>Judge 1</th><th>Judge 2</th><th>Judge 3</th><th>Average</th></tr>
+        <tr><td>Technique <small>(/50)</small></td><td>49.0</td><td>49.0</td><td>48.5</td><td class="avg">48.8<div class="mini"><i data-w="98%"></i></div></td></tr>
+        <tr><td>Performance <small>(/20)</small></td><td>19.5</td><td>19.5</td><td>19.5</td><td class="avg">19.5<div class="mini"><i data-w="97%"></i></div></td></tr>
+        <tr><td>Choreography &amp; Musicality <small>(/20)</small></td><td>19.5</td><td>19.0</td><td>19.5</td><td class="avg">19.3<div class="mini"><i data-w="96%"></i></div></td></tr>
+        <tr><td>Overall Appearance <small>(/10)</small></td><td>10.0</td><td>10.0</td><td>10.0</td><td class="avg">10.0<div class="mini"><i data-w="100%"></i></div></td></tr>
+        <tr class="tot"><td>Total</td><td>98.0</td><td>97.5</td><td>97.5</td><td class="avg">293/300</td></tr>
+      </table>
+
+      <h4><span class="ic"></span> How You Compare</h4>
+      <div class="compare">
+        <div class="cmp you"><div class="l">Your Score</div><div class="n">293</div></div>
+        <div class="cmp"><div class="l">Tour Average</div><div class="n">271</div></div>
+        <div class="cmp"><div class="l">Palladium From</div><div class="n gold">282</div></div>
+        <div class="cmp"><div class="l">DJ&rsquo;s PICK!! From</div><div class="n purp">291</div></div>
+      </div>
+      <div class="ctx">Teen Lyrical is one of the deepest divisions on the Nuvo tour. This score lands inside the <b>DJ&rsquo;s PICK!! range (291&ndash;300)</b> &mdash; Nuvo&rsquo;s highest adjudication, where judges score in half-point increments to separate the very top of the field &mdash; and makes the routine <b>eligible for The 2027 Dance Awards</b>. Judges at this level look for seamless technique-to-emotion connection, sustained control through transitions, and musicality that reads from the back of the house.</div>
+
+      <h4><span class="ic"></span> Detailed Feedback by Category</h4>
+      <div class="cat">
+        <div class="t"><b>Technique</b><span class="sc">48.8/50</span></div>
+        <p>Half the score at Nuvo lives in this category, and this dancer earns it. At 0:42, the d&eacute;velopp&eacute; shows exceptional extension with a fully supported standing leg, and the floor work sequence at 0:47 transitions with control that never breaks the line. The turn sequence at 1:18 is cleanly landed; a faster spot on the final rotation would lock the finish at full height. Feet remain pointed and articulate through every leap and transition, and placement holds under fatigue in the final third of the routine.</p>
+        <div class="style">&#10022; The technique consistently serves the lyrical vocabulary &mdash; breath-led movement initiation, suspended balances, and controlled descents that make difficult skills read as effortless. This is the technical maturity that wins the Teen division at The Dance Awards.</div>
+      </div>
+      <div class="cat">
+        <div class="t"><b>Performance</b><span class="sc">19.5/20</span></div>
+        <p>Emotional commitment is present from the opening breath and builds in a deliberate arc. The moment at 2:03 is the emotional peak of the piece and it reads to the back row &mdash; face, breath and body all telling the same story. Projection never drops during transitions, and the connection between musical phrasing and emotional phrasing shows a dancer performing the piece rather than executing it. Eye focus is intentional throughout, drawing the audience through the narrative.</p>
+        <div class="style">&#10022; True lyrical storytelling: the dancer sustains vulnerability without sacrificing strength. Protect the 2:03 moment in every run &mdash; it is the routine&rsquo;s signature and a genuine Best NU Group-caliber moment in solo form.</div>
+      </div>
+      <div class="cat">
+        <div class="t"><b>Choreography &amp; Musicality</b><span class="sc">19.3/20</span></div>
+        <p>The choreography builds a clear emotional architecture with intelligent use of levels &mdash; the descent into floor work at 0:47 and the recovery at 1:43 create the breathing structure lyrical judges look for. Traveling phrases from 1:19 to 1:35 open the stage and vary the visual field, and the musical accents are choreographed with restraint rather than decoration. Transitions are seamless and the ending at 2:28 lands with intention rather than display.</p>
+        <div class="style">&#10022; Musicality-first construction with dynamic contrast between suspension and release. The piece is built to score: every eight-count either develops technique or develops story.</div>
+      </div>
+      <div class="cat">
+        <div class="t"><b>Overall Appearance</b><span class="sc">10.0/10</span></div>
+        <p>A complete, polished, stage-ready presentation. Costuming supports the concept without restricting the movement, grooming and lines are immaculate from entrance to blackout, and the total picture reads as intentional at every moment. There is clear evidence of elite coaching and deliberate preparation &mdash; this is what a routine looks like when a studio prepares against the judging standard instead of guessing at it.</p>
+        <div class="style">&#10022; This is the calibration story: dancers who train with the scoring system in front of them walk on stage with nothing left to guess.</div>
+      </div>
+
+      <h4><span class="ic"></span> Timestamped Performance Notes <span style="font-size:10px;color:#8D8ABF;font-style:normal;font-weight:600;">&nbsp;&mdash; each paired with the exact video frame</span></h4>
+      <div class="tl">
+        <div class="tn"><div class="thumb">&#10022;</div><div><span class="ts">0:15</span><span class="tag pos">Strength</span><p>Opening establishes confident presence &mdash; breath initiation and focus are immediate.</p></div></div>
+        <div class="tn"><div class="thumb">&#10022;</div><div><span class="ts">0:42</span><span class="tag pos">Strength</span><p>Exceptional d&eacute;velopp&eacute; extension; standing leg fully supported through the balance.</p></div></div>
+        <div class="tn"><div class="thumb">&#10022;</div><div><span class="ts">0:47</span><span class="tag pos">Strength</span><p>Controlled descent into floor work &mdash; the line never breaks through the level change.</p></div></div>
+        <div class="tn"><div class="thumb">&#10022;</div><div><span class="ts">1:18</span><span class="tag imp">Improve</span><p>Turn sequence lands clean &mdash; spot faster on the final rotation to finish at full height.</p></div></div>
+        <div class="tn"><div class="thumb">&#10022;</div><div><span class="ts">1:35</span><span class="tag imp">Improve</span><p>Traveling phrase could use sharper attack on the accent to maximize the musical hit.</p></div></div>
+        <div class="tn"><div class="thumb">&#10022;</div><div><span class="ts">2:03</span><span class="tag pos">Strength</span><p>Emotional peak reads to the back row &mdash; the money moment of the routine.</p></div></div>
+        <div class="tn"><div class="thumb">&#10022;</div><div><span class="ts">2:28</span><span class="tag pos">Strength</span><p>Ending held with control and intention &mdash; a true DJ&rsquo;s PICK!!-level finish.</p></div></div>
+        <div class="tn"><div class="thumb">&#10022;</div><div><span class="ts">2:44</span><span class="tag pos">Strength</span><p>Final breath sustains character through the blackout. Judges notice.</p></div></div>
+      </div>
+      <div class="tl-note">In production, each note displays the actual captured video frame from the performance &mdash; shot on your stage, under your lights, from your official footage.</div>
+
+      <h4><span class="ic"></span> Improvement Priorities &mdash; Personalized Training Plan</h4>
+      <div class="pri">
+        <div class="num">1</div>
+        <div>
+          <b>Faster spot on final rotation of the turn sequence</b>
+          <div class="chips"><span class="pc high">High Impact</span><span class="pc time">2&ndash;3 Weeks</span></div>
+          <p><b>Training tip:</b> Practice single turns facing a fixed point, holding the spot as long as possible before whipping the head. Layer the full sequence back in only after the single is automatic &mdash; the finish should land at full height with zero drift.</p>
+        </div>
+      </div>
+      <div class="pri">
+        <div class="num">2</div>
+        <div>
+          <b>Sharper attack on musical accents in traveling phrases</b>
+          <div class="chips"><span class="pc high">High Impact</span><span class="pc time">1&ndash;2 Months</span></div>
+          <p><b>Training tip:</b> Run the 1:19&ndash;1:35 phrase on counts with a hard stop on every accent &mdash; &ldquo;1-2-3-STOP.&rdquo; Once the stops are clean, restore the flow and keep only the attack. The contrast is what makes lyrical accents land.</p>
+        </div>
+      </div>
+      <div class="pri">
+        <div class="num">3</div>
+        <div>
+          <b>Sustain shoulder placement out of floor work under fatigue</b>
+          <div class="chips"><span class="pc med">Medium Impact</span><span class="pc time">2&ndash;3 Months</span></div>
+          <p><b>Training tip:</b> Add 30-second plank-to-press sequences at the end of rehearsal when tired &mdash; placement habits built under fatigue are the ones that hold in the final third of the routine on stage.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div style="text-align:center;color:var(--fine);font-size:12px;padding:14px 0 0;">&#9650; This entire report generates in minutes from your official event footage &mdash; branded Nuvo, delivered to the parent&rsquo;s phone.</div>
+</div>
+
+<!-- ================= YOUR VISION / CUSTOMIZATION ================= -->
+<div class="wrap" style="padding-top:44px;">
+  <h2>Your vision. Your rules. <em>We shape to it.</em></h2>
+  <p class="sub">Nothing above is fixed. Every layer of the platform reconfigures to how Nuvo wants to run it &mdash; and because the engine already exists, standing it up costs you <strong style="color:#fff;">next to nothing.</strong></p>
+  <div class="duo" style="padding:8px 0 0;grid-template-columns:repeat(3,1fr);">
+    <div class="tile">
+      <h4><span class="star">&#10022;</span> Your scoring, exactly</h4>
+      <p>Your 50/20/20/10 criteria, half-point increments, award ranges from High Silver to DJ&rsquo;s PICK!!, C.O.D.A. style-specific score sheets &mdash; the rubric is <strong>fully configurable to your system</strong>, not ours. If your judges score it, the platform scores it the same way.</p>
+    </div>
+    <div class="tile">
+      <h4><span class="star">&#10022;</span> Your artists' voice</h4>
+      <p>The AI panel calibrates to <strong>your judging standards and language</strong> &mdash; trained on how your artist judges actually critique, so the feedback sounds like Nuvo, because it is. Teacher-Only critique layer included.</p>
+    </div>
+    <div class="tile">
+      <h4><span class="star">&#10022;</span> Delivered your way</h4>
+      <p>Parent's phone, Dance360 portal, email, QR code at the awards table, alongside your live webcast &mdash; <strong>any channel, any moment</strong> you want the brand experience to land.</p>
+    </div>
+    <div class="tile">
+      <h4><span class="star">&#10022;</span> Prep-to-stage reconciliation</h4>
+      <p>The loop nobody has ever closed: what the platform helped a dancer prep <strong>reconciled against what your judges actually scored</strong>. Families see the growth. Your judging gains a validation layer no competitor can claim.</p>
+    </div>
+    <div class="tile">
+      <h4><span class="star">&#10022;</span> The residual effect</h4>
+      <p>This much athlete support compounds: season-over-season development data, deeper family trust, and the reputation as <strong>the convention that makes dancers better</strong> &mdash; education is already Nuvo's whole mission. This is that mission, delivered to every single entry.</p>
+    </div>
+    <div class="tile">
+      <h4><span class="star">&#10022;</span> Next to nothing to implement</h4>
+      <p>No build team, no infrastructure, no R&amp;D budget. <strong>The engine is live today</strong> &mdash; we reskin, configure, and launch it to your spec. You keep the revenue.</p>
+    </div>
+  </div>
+  <div style="color:var(--fine);font-size:12px;font-style:italic;padding:12px 2px 0;">* Every example above can be added to, removed, or modified in any way.</div>
+</div>
+
+<!-- ================= 3 WAYS TO WIN ================= -->
+<div class="wrap duo">
+  <div class="tile">
+    <h4><span class="star">&#10022;</span> Before the event &mdash; studios prep on your standards</h4>
+    <p>Your customer studios get NU Score ahead of the convention weekend. Dancers upload rehearsal runs and train against this exact report &mdash; <strong>less stress, better-prepared athletes, cleaner shows.</strong> A prep tool this good makes studios think twice before taking entries anywhere else.</p>
+  </div>
+  <div class="tile">
+    <h4><span class="star">&#10022;</span> At the event &mdash; reports only you can sell</h4>
+    <p>Recording is prohibited in your venues and the DanceOne Media Season Pass owns the footage pipeline. <strong>Nuvo is the only company on earth that can attach this report to these routines</strong> &mdash; a natural Media Season Pass upgrade at pure margin.</p>
+  </div>
+  <div class="tile">
+    <h4><span class="star">&#10022;</span> All season &mdash; the moat gets deeper</h4>
+    <p>Score history follows every routine across all 26 tour cities to <strong>The Dance Awards</strong>, layering development data onto C.O.D.A. analytics that no competitor can copy. Off-season subscriptions keep families in the Nuvo ecosystem 12 months a year.</p>
+  </div>
+  <div style="grid-column:1/-1;color:var(--fine);font-size:12px;font-style:italic;padding-top:2px;">* Every example above can be added to, removed, or modified in any way.</div>
+</div>
+
+<div class="band">
+  <div class="wrap">
+    <div class="stat"><div class="n">26</div><div class="l">2026&ndash;27 Tour Cities</div></div>
+    <div class="stat"><div class="n">2</div><div class="l">Dance Awards Finals</div></div>
+    <div class="stat"><div class="n">~13K</div><div class="l">Routines / Season*</div></div>
+    <div class="stat"><div class="n">10 MIN</div><div class="l">Stage to Report</div></div>
+    <div class="stat"><div class="n">$231K</div><div class="l">Year-One Potential</div></div>
+  </div>
+</div>
+
+<div class="wrap revsec">
+  <h2>The math <em>(illustrative)</em></h2>
+  <p class="sub">Conservative assumptions against your published 2026&ndash;27 tour &mdash; 26 cities from Anchorage to Miami, estimated at ~500 routines per event. Real entry counts will sharpen these numbers &mdash; likely upward.</p>
+  <div class="card rev">
+    <table>
+      <tr><td>Instant report attach &mdash; 25% of ~13,000 routines &times; $19 parent price</td><td>$61,750</td></tr>
+      <tr><td>Pre-comp studio prep &mdash; 150 studios &times; $79/mo &times; 6 months</td><td>$71,100</td></tr>
+      <tr><td>Season subscriptions &mdash; 1,000 families &times; $99</td><td>$99,000</td></tr>
+      <tr class="total"><td>Year-one direct revenue potential</td><td>$231,850</td></tr>
+    </table>
+    <div class="footnote">Excludes DanceOne sister brands (JUMP, 24 Seven, KĀOS, RADIX, Ovation, THE ONE Nationals, The Dance Awards, DancerPalooza) &mdash; the same engine white-labels across the entire DanceOne family for a multiple of this number. Retention value of studio lock-in not priced in. Routine volume is an estimate pending your actual entry data.<br><em>* Every pricing model above can be added to, removed, or modified in any way.</em></div>
+  </div>
+</div>
+
+<div class="cta wrap">
+  <h2 style="margin-bottom:14px;">The engine is <em>live today.</em></h2>
+  <p class="sub" style="margin:0 auto 24px;text-align:center;">This only works as an exclusive. <strong style="color:#fff;">One circuit gets it &mdash; first come, first served</strong> &mdash; and every other circuit spends the next five years explaining why their families still wait a day for critiques that go to somebody else's account.</p>
+  <a class="btn" href="https://routinex.org">See RoutineX in action &#10022;</a>
+  <div class="alt">15-minute call &bull; licensing or acquisition &bull; Shaun Tucker, Founder &mdash; routinex.org</div>
+</div>
+
+<footer>
+  <div class="wrap">
+    Concept demonstration created by RoutineX for evaluation by NUVO Dance Convention / DanceOne leadership.<br>
+    Not affiliated with or endorsed by NUVO Dance Convention, DanceOne, or Break The Floor Productions. All NUVO and DanceOne marks belong to their respective owners.<br>
+    Sample report is illustrative and does not depict a real dancer or actual judge critique.
+  </div>
+</footer>
+
+<script>
+  // animate judge-table bars when visible
+  const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.querySelectorAll('.mini i').forEach(i=>{i.style.width=i.dataset.w;});io.unobserve(e.target);}});},{threshold:.3});
+  document.querySelectorAll('.jt').forEach(t=>io.observe(t));
+  // count-up score
+  const el=document.getElementById('bigScore');
+  const io2=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){io2.unobserve(el);let v=244;const tgt=293;const step=()=>{v=Math.min(tgt,v+2);el.textContent=v;if(v<tgt)requestAnimationFrame(step);};requestAnimationFrame(step);}});},{threshold:.4});
+  io2.observe(el);
+</script>
+</body>
+</html>
