@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import RoutineXLogo from "@/components/RoutineXLogo";
+import AppStoreBadge from "@/components/AppStoreBadge";
 
 export default function Footer() {
   return (
@@ -37,7 +38,7 @@ export default function Footer() {
               tonight.
             </p>
 
-            <div className="mt-10">
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-5">
               <a
                 href="/signup"
                 className="btn-sunset group inline-flex items-center gap-2 rounded-full px-9 py-4 text-base font-bold"
@@ -45,6 +46,7 @@ export default function Footer() {
                 Analyze a routine
                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </a>
+              <AppStoreBadge variant="white" height={56} />
             </div>
 
             <p className="mt-5 text-sm text-white/40">
@@ -58,7 +60,10 @@ export default function Footer() {
       <div className="py-10 bg-[#FBF8F3]">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <RoutineXLogo size="sm" wordmarkClassName="text-[#221A29]" />
+            <div className="flex flex-col sm:flex-row items-center gap-5">
+              <RoutineXLogo size="sm" wordmarkClassName="text-[#221A29]" />
+              <AppStoreBadge variant="black" height={40} />
+            </div>
 
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-[#7A7284]">
               <a href="/our-approach" className="hover:text-[#221A29] transition-colors">

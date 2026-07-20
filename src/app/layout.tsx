@@ -36,6 +36,12 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
+  // Smart App Banner — iOS Safari shows the native "Open in App Store"
+  // banner at the top of every page, the same way the big consumer apps
+  // do it. Does not render inside the Capacitor WKWebView shell.
+  itunes: {
+    appId: "6763345348",
+  },
   title: {
     default: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
     template: "%s | RoutineX",
@@ -130,7 +136,9 @@ const jsonLd = {
       "@type": "SoftwareApplication",
       name: "RoutineX",
       applicationCategory: "SportApplication",
-      operatingSystem: "Web",
+      operatingSystem: "iOS, Web",
+      installUrl:
+        "https://apps.apple.com/us/app/routinex-dance-cheer-ai/id6763345348",
       description:
         "Upload any dance or cheer routine and get competition-standard scoring with detailed, actionable feedback powered by AI trained on real judging rubrics.",
       offers: [

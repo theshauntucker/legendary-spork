@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import Image from "next/image";
+import AppStoreBadge from "@/components/AppStoreBadge";
 
 /**
  * Hero — bright editorial. Ivory paper, serif headline, one primary CTA.
@@ -94,6 +95,10 @@ export default function Hero() {
               <Clock className="h-4 w-4 text-[#C2410C]" />
               Results in under 5 minutes
             </span>
+          </div>
+
+          <div className="mt-8 flex justify-center">
+            <AppStoreBadge variant="black" height={52} />
           </div>
         </motion.div>
 
