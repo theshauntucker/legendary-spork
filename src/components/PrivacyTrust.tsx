@@ -1,58 +1,92 @@
-import { Shield, Lock, CheckCircle } from "lucide-react";
+"use client";
+
+import { motion } from "framer-motion";
+import { ShieldCheck, Lock, EyeOff } from "lucide-react";
+
+const pillars = [
+  {
+    icon: ShieldCheck,
+    title: "The video stays on your device",
+    copy: "Your routine is processed right on your phone. The full video is never uploaded and never touches our servers.",
+  },
+  {
+    icon: Lock,
+    title: "Only still frames are analyzed",
+    copy: "Small snapshots at key moments are what the AI judges see — and they auto-delete within 24 hours, or instantly if you choose.",
+  },
+  {
+    icon: EyeOff,
+    title: "No humans. No selling. Ever.",
+    copy: "No person ever views your content, and nothing is shared or sold. Only the written feedback is saved to your account.",
+  },
+];
 
 export default function PrivacyTrust() {
   return (
-    <section className="py-14 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary-900 via-primary-800 to-accent-900">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Shield className="w-8 h-8 text-gold-500" />
-            <h2 className="text-3xl md:text-4xl font-bold text-white">
-              Your Athlete's Privacy is Sacred
-            </h2>
-          </div>
-          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-            A dance mom emailed us with a question we hear a lot. We want to answer it completely.
+    <section className="relative py-16 sm:py-24 bg-[#F4EEE3]">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center"
+        >
+          <p className="eyebrow text-[#B0356B] mb-4">Privacy first</p>
+          <h2 className="text-4xl sm:text-5xl font-semibold tracking-tight font-[family-name:var(--font-display)] text-[#221A29]">
+            Her video never leaves your phone.
+          </h2>
+        </motion.div>
+
+        {/* Real parent question — serif pull quote */}
+        <motion.blockquote
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mt-10 mx-auto max-w-2xl text-center"
+        >
+          <p className="text-xl sm:text-2xl italic leading-relaxed text-[#443B4E] font-[family-name:var(--font-display)]">
+            &ldquo;What happens to the videos of the children being uploaded?
+            Privacy is a real issue and we want to protect our children.&rdquo;
           </p>
+          <cite className="mt-4 block text-sm not-italic text-[#8B8492]">
+            — a dance mom, before she signed up. Fair question. Here&apos;s the
+            complete answer.
+          </cite>
+        </motion.blockquote>
+
+        <div className="mt-12 grid md:grid-cols-3 gap-5">
+          {pillars.map((p, i) => (
+            <motion.div
+              key={p.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: i * 0.1 }}
+              className="lux-card rounded-2xl p-7 text-left"
+            >
+              <p.icon className="h-6 w-6 text-[#B0356B]" />
+              <h3 className="mt-4 font-bold text-[17px] text-[#221A29]">
+                {p.title}
+              </h3>
+              <p className="mt-2 text-[15px] text-[#5D5565] leading-relaxed">
+                {p.copy}
+              </p>
+            </motion.div>
+          ))}
         </div>
 
-        <div className="bg-white/5 border border-gold-400/30 rounded-lg p-6 mb-12 italic text-gray-300 text-base leading-relaxed">
-          <p className="mb-2 text-gold-300 font-semibold not-italic">💬 From a real parent:</p>
-          "I really love the idea of this product. Would love to try it — but I'm wondering about your privacy policy. What happens to the videos of the children being uploaded? Privacy in this world is a real issue and we want to protect our children. Are videos sold to third parties? I'm looking for any information about safety, privacy, and security."
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
-          <div className="bg-white/10 backdrop-blur rounded-lg p-6 border border-white/20">
-            <CheckCircle className="w-8 h-8 text-gold-400 mb-4" />
-            <h3 className="text-xl font-bold text-white mb-3">Videos Stay on Your Device</h3>
-            <p className="text-gray-300">
-              Your video is processed right on your phone. Nothing is uploaded to our servers.
-              The full video never leaves your device.
-            </p>
-          </div>
-          <div className="bg-white/10 backdrop-blur rounded-lg p-6 border border-white/20">
-            <Lock className="w-8 h-8 text-gold-400 mb-4" />
-            <h3 className="text-xl font-bold text-white mb-3">Only Thumbnails Are Analyzed</h3>
-            <p className="text-gray-300">
-              We extract small still-frame snapshots at key moments. These low-resolution
-              images are what get analyzed by AI — not your full video.
-            </p>
-          </div>
-          <div className="bg-white/10 backdrop-blur rounded-lg p-6 border border-white/20">
-            <Shield className="w-8 h-8 text-gold-400 mb-4" />
-            <h3 className="text-xl font-bold text-white mb-3">No Storage. No Viewing. Ever.</h3>
-            <p className="text-gray-300">
-              We don't store your videos. No human ever sees the footage. We don't sell data.
-              Only your AI-generated feedback is saved.
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-gold-500/10 border-l-4 border-gold-500 rounded-lg p-6 text-center">
-          <p className="text-lg text-white font-semibold">
-            Your child's privacy isn't an afterthought — it's how we built RoutineX from day one.
-          </p>
-        </div>
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mt-10 text-center text-base font-semibold text-[#221A29]"
+        >
+          Your child&apos;s privacy isn&apos;t an afterthought — it&apos;s how
+          RoutineX was built from day one.
+        </motion.p>
       </div>
     </section>
   );

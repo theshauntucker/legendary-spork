@@ -1,84 +1,97 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Heart } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import RoutineXLogo from "@/components/RoutineXLogo";
 
 export default function Footer() {
   return (
     <footer className="relative">
-      {/* Final CTA */}
-      <section className="relative py-24 sm:py-32 overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary-900/20 to-primary-900/40" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-600/20 rounded-full blur-3xl" />
-        </div>
-
-        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+      {/* ── Final CTA — the stage moment ── */}
+      <section className="relative overflow-hidden stage-dark text-white">
+        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-24 sm:py-32 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-[family-name:var(--font-display)] leading-tight">
-              Don&apos;t Let Your Athlete{" "}
-              <span className="gradient-text">Fall Behind</span>
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight font-[family-name:var(--font-display)] leading-[1.08]">
+              Walk into the next competition
+              <br className="hidden sm:block" />{" "}
+              <em
+                className="italic"
+                style={{
+                  background:
+                    "linear-gradient(120deg, #F472B6 0%, #FB923C 55%, #FBBF24 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                already knowing.
+              </em>
             </h2>
-            <p className="mt-6 text-lg sm:text-xl text-surface-200 max-w-2xl mx-auto">
-              Every routine is a chance to improve. RoutineX gives your athlete the detailed, professional feedback they need to climb from Gold to Diamond.
+            <p className="mt-6 text-lg text-white/60 max-w-xl mx-auto leading-relaxed">
+              Three judges. A 300-point scorecard. Notes your dancer can use
+              tonight.
             </p>
 
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="mt-10">
               <a
-                href="#pricing"
-                className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-8 py-4 text-lg font-bold text-white shadow-lg shadow-primary-600/25 hover:shadow-primary-600/40 transition-all animate-pulse-glow"
+                href="/signup"
+                className="btn-sunset group inline-flex items-center gap-2 rounded-full px-9 py-4 text-base font-bold"
               >
-                Get 2 Analyses — $2.99
+                Analyze a routine
                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </a>
             </div>
 
-            <p className="mt-6 text-sm text-surface-200">
-              
-              <br />
-              🎉 First analysis on us. Then just $1.99 each, or $4.99/mo for Season Member.
+            <p className="mt-5 text-sm text-white/40">
+              First analysis $1.99 · Results in under 5 minutes
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Footer bar */}
-      <div className="border-t border-white/10 py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <RoutineXLogo size="sm" />
+      {/* ── Footer bar ── */}
+      <div className="py-10 bg-[#FBF8F3]">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <RoutineXLogo size="sm" wordmarkClassName="text-[#221A29]" />
 
-            <div className="flex items-center gap-6 text-xs text-surface-200">
-              <a href="/privacy" className="hover:text-white transition-colors">
-                Privacy Policy
-              </a>
-              <a href="/terms" className="hover:text-white transition-colors">
-                Terms of Service
-              </a>
-              <a href="/our-approach" className="hover:text-white transition-colors">
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-[#7A7284]">
+              <a href="/our-approach" className="hover:text-[#221A29] transition-colors">
                 Our Approach
               </a>
-              <a href="/guides" className="hover:text-white transition-colors">
+              <a href="/guides" className="hover:text-[#221A29] transition-colors">
                 Competition Guides
               </a>
-              <a href="/contact" className="hover:text-white transition-colors">
+              <a href="/events" className="hover:text-[#221A29] transition-colors">
+                Events Calendar
+              </a>
+              <a href="/studio/signup" className="hover:text-[#221A29] transition-colors">
+                For Studios
+              </a>
+              <a href="/privacy" className="hover:text-[#221A29] transition-colors">
+                Privacy
+              </a>
+              <a href="/terms" className="hover:text-[#221A29] transition-colors">
+                Terms
+              </a>
+              <a href="/contact" className="hover:text-[#221A29] transition-colors">
                 Contact
               </a>
             </div>
 
-            <p className="text-xs text-surface-200 flex items-center gap-1">
-              Made with <Heart className="h-3 w-3 text-accent-500 fill-accent-500" /> for the dance &amp; cheer community
+            <p className="text-xs text-[#8B8492]">
+              Made for the families backstage.
             </p>
           </div>
 
-          <p className="mt-4 text-center text-xs text-surface-200/50">
-            &copy; {new Date().getFullYear()} RoutineX. All rights reserved. Not affiliated with any competition organization.
+          <p className="mt-6 text-center text-[11px] text-[#9A93A5]">
+            &copy; {new Date().getFullYear()} RoutineX. All rights reserved.
+            Not affiliated with any competition organization.
           </p>
         </div>
       </div>

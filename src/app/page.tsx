@@ -1,18 +1,14 @@
 import type { Metadata } from "next";
 import Hero from "@/components/Hero";
-import VideoDemo from "@/components/VideoDemo";
 import HowItWorks from "@/components/HowItWorks";
-import Features from "@/components/Features";
-import CodaSocial from "@/components/CodaSocial";
 import SampleAnalysis from "@/components/SampleAnalysis";
-import Competitions from "@/components/Competitions";
-import Pricing from "@/components/Pricing";
-import Testimonials from "@/components/Testimonials";
-import FAQ from "@/components/FAQ";
+import Features from "@/components/Features";
 import PrivacyTrust from "@/components/PrivacyTrust";
+import Testimonials from "@/components/Testimonials";
+import Pricing from "@/components/Pricing";
+import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
 import StickyBottomCTA from "@/components/StickyBottomCTA";
-import BaydaWidget from "@/components/BaydaWidget";
 
 export const metadata: Metadata = {
   alternates: {
@@ -22,20 +18,17 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main>
+    <div data-bright-page>
       <Hero />
-      <PrivacyTrust />
       <HowItWorks />
-      <Features />
-      <CodaSocial />
       <SampleAnalysis />
-      <Competitions />
-      <Pricing />
+      <Features />
+      <PrivacyTrust />
       <Testimonials />
+      <Pricing />
       <FAQ />
       <Footer />
       <StickyBottomCTA />
-      <BaydaWidget />
-    </main>
+    </div>
   );
 }

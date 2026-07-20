@@ -11,7 +11,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sparkles, Trophy, Building2 } from "lucide-react";
+import { Sparkles, Building2 } from "lucide-react";
 
 type ShellKey = "analyzer" | "coda" | "studio";
 
@@ -23,6 +23,9 @@ type ShellDef = {
   activeMatch: (pathname: string) => boolean;
 };
 
+// Coda (the social shell) is intentionally hidden from all navigation —
+// product direction July 2026: the story is pure scoring. Routes stay
+// quietly functional for existing users; no entry points advertised.
 const SHELLS: ShellDef[] = [
   {
     key: "analyzer",
@@ -35,19 +38,6 @@ const SHELLS: ShellDef[] = [
       p.startsWith("/analysis") ||
       p.startsWith("/processing") ||
       p.startsWith("/routines"),
-  },
-  {
-    key: "coda",
-    label: "Coda",
-    href: "/home",
-    icon: Trophy,
-    activeMatch: (p) =>
-      p === "/home" ||
-      p.startsWith("/u/") ||
-      p.startsWith("/find") ||
-      p.startsWith("/inbox") ||
-      p.startsWith("/events") ||
-      p.startsWith("/threads"),
   },
   {
     key: "studio",
@@ -70,6 +60,10 @@ export function ShellSwitcher({
     // Only show the Studio pill to people who actually have a studio role.
     return profileType === "studio" || profileType === "choreographer";
   });
+
+  // A one-pill switcher is noise — render nothing unless there's an
+  // actual choice to make.
+  if (visible.length < 2) return null;
 
   return (
     <nav

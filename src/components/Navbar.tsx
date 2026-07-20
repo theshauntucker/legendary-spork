@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, LogOut, Calendar, Settings } from "lucide-react";
+import { Menu, X, LogOut, Settings } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -10,12 +11,11 @@ import { ShellSwitcher } from "@/components/ShellSwitcher";
 import RoutineXLogo from "@/components/RoutineXLogo";
 
 const navLinks = [
-  { label: "How It Works", href: "/#how-it-works" },
-  { label: "Events", href: "/events", icon: "calendar", badge: "New" },
-  { label: "Guides", href: "/guides" },
+  { label: "How it works", href: "/#how-it-works" },
+  { label: "Sample report", href: "/#sample-analysis" },
   { label: "Pricing", href: "/#pricing" },
-  { label: "Studio", href: "/studio/signup", badge: "New" },
   { label: "FAQ", href: "/#faq" },
+  { label: "For Studios", href: "/studio/signup" },
 ];
 
 export default function Navbar() {
@@ -25,6 +25,11 @@ export default function Navbar() {
   const [profileType, setProfileType] = useState<
     "dancer" | "parent" | "studio" | "choreographer" | null
   >(null);
+
+  const pathname = usePathname();
+  // Bright editorial chrome on the marketing homepage; dark glass on
+  // every app surface (dashboard, upload, analysis, studio, …).
+  const bright = pathname === "/";
 
   useEffect(() => {
     const supabase = createClient();
@@ -59,49 +64,56 @@ export default function Navbar() {
     window.location.href = "/";
   };
 
+  const linkCls = bright
+    ? "text-sm text-[#5D5565] hover:text-[#221A29] transition-colors"
+    : "text-sm text-surface-200 hover:text-white transition-colors";
+
   return (
-    <nav className="fixed top-8 left-0 right-0 z-50 glass">
+    <nav
+      className={
+        bright
+          ? "fixed top-0 left-0 right-0 z-50 bg-[#FBF8F3]/85 backdrop-blur-xl border-b border-[#221A29]/[0.07]"
+          : "fixed top-0 left-0 right-0 z-50 glass"
+      }
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo — official sunset X + wordmark */}
           <a href="/" className="flex items-center">
-            <RoutineXLogo size="md" />
+            <RoutineXLogo
+              size="md"
+              wordmarkClassName={bright ? "text-[#221A29]" : "text-white"}
+            />
           </a>
 
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-7">
             {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="relative text-sm text-surface-200 hover:text-white transition-colors flex items-center gap-1.5"
-              >
-                {link.icon === "calendar" && <Calendar className="h-3.5 w-3.5 text-primary-400" />}
+              <a key={link.href} href={link.href} className={linkCls}>
                 {link.label}
-                {link.badge && (
-                  <span className="absolute -top-2 -right-5 text-[9px] font-bold bg-primary-500 text-white px-1.5 py-0.5 rounded-full leading-none">
-                    {link.badge}
-                  </span>
-                )}
               </a>
             ))}
 
             {loading ? (
-              <div className="w-24 h-9 rounded-full bg-white/5 animate-pulse" />
+              <div
+                className={`w-24 h-9 rounded-full animate-pulse ${
+                  bright ? "bg-[#221A29]/[0.05]" : "bg-white/5"
+                }`}
+              />
             ) : user ? (
               <div className="flex items-center gap-3">
                 <ShellSwitcher profileType={profileType} />
                 <NotificationBell />
                 <a
                   href="/settings"
-                  className="inline-flex items-center gap-1.5 text-sm text-surface-200 hover:text-white transition-colors"
+                  className={linkCls}
                   aria-label="Settings"
                 >
                   <Settings className="h-4 w-4" />
                 </a>
                 <button
                   onClick={handleLogout}
-                  className="inline-flex items-center gap-1.5 text-sm text-surface-200 hover:text-white transition-colors"
+                  className={linkCls}
                   aria-label="Log out"
                 >
                   <LogOut className="h-4 w-4" />
@@ -109,17 +121,18 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <a
-                  href="/login"
-                  className="text-sm text-surface-200 hover:text-white transition-colors"
-                >
-                  Log In
+                <a href="/login" className={linkCls}>
+                  Log in
                 </a>
                 <a
                   href="/signup"
-                  className="rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+                  className={
+                    bright
+                      ? "btn-ink rounded-full px-5 py-2 text-sm font-semibold"
+                      : "rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+                  }
                 >
-                  Get Started
+                  Get started
                 </a>
               </div>
             )}
@@ -127,7 +140,7 @@ export default function Navbar() {
 
           {/* Mobile toggle */}
           <button
-            className="md:hidden text-white"
+            className={`md:hidden ${bright ? "text-[#221A29]" : "text-white"}`}
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
           >
@@ -147,21 +160,21 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden glass border-t border-white/10"
+            className={
+              bright
+                ? "md:hidden bg-[#FBF8F3]/95 backdrop-blur-xl border-t border-[#221A29]/[0.07]"
+                : "md:hidden glass border-t border-white/10"
+            }
           >
             <div className="px-4 py-4 space-y-3">
               {navLinks.map((link) => (
                 <a
                   key={link.href}
                   href={link.href}
-                  className="flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors"
+                  className={`block ${linkCls}`}
                   onClick={() => setMobileOpen(false)}
                 >
-                  {link.icon === "calendar" && <Calendar className="h-3.5 w-3.5 text-primary-400" />}
                   {link.label}
-                  {link.badge && (
-                    <span className="text-[9px] font-bold bg-primary-500 text-white px-1.5 py-0.5 rounded-full">{link.badge}</span>
-                  )}
                 </a>
               ))}
 
@@ -172,7 +185,7 @@ export default function Navbar() {
                   </div>
                   <a
                     href="/settings"
-                    className="flex items-center gap-2 text-sm text-surface-200 hover:text-white transition-colors"
+                    className={`flex items-center gap-2 ${linkCls}`}
                     onClick={() => setMobileOpen(false)}
                   >
                     <Settings className="h-4 w-4" />
@@ -183,26 +196,30 @@ export default function Navbar() {
                       setMobileOpen(false);
                       handleLogout();
                     }}
-                    className="block w-full text-left text-sm text-surface-200 hover:text-white transition-colors"
+                    className={`block w-full text-left ${linkCls}`}
                   >
-                    Log Out
+                    Log out
                   </button>
                 </>
               ) : (
                 <>
                   <a
                     href="/login"
-                    className="block text-sm text-surface-200 hover:text-white transition-colors"
+                    className={`block ${linkCls}`}
                     onClick={() => setMobileOpen(false)}
                   >
-                    Log In
+                    Log in
                   </a>
                   <a
                     href="/signup"
-                    className="block w-full text-center rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-2.5 text-sm font-semibold text-white"
+                    className={
+                      bright
+                        ? "btn-ink block w-full text-center rounded-full px-5 py-2.5 text-sm font-semibold"
+                        : "block w-full text-center rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-2.5 text-sm font-semibold text-white"
+                    }
                     onClick={() => setMobileOpen(false)}
                   >
-                    Get Started
+                    Get started
                   </a>
                 </>
               )}

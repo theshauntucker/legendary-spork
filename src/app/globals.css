@@ -363,3 +363,77 @@ body {
     size: letter;
   }
 }
+
+/* ── Bright editorial theme (marketing surfaces) ──────────────────────
+ * Scoped via body:has([data-bright-page]) so app surfaces stay dark.
+ * Warm ivory paper, deep plum ink, sunset gradient reserved as the
+ * luxury accent. The score report + final CTA stay dark ("stage
+ * moments") for contrast.
+ */
+body:has([data-bright-page]) {
+  background-color: #FBF8F3;
+  color: #221A29;
+}
+body:has([data-bright-page]) ::selection {
+  background: rgba(236, 72, 153, 0.16);
+  color: #221A29;
+}
+
+.lux-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(34, 26, 41, 0.08);
+  box-shadow:
+    0 1px 2px rgba(34, 26, 41, 0.04),
+    0 18px 44px -20px rgba(34, 26, 41, 0.16);
+}
+
+.btn-ink {
+  background: #221A29;
+  color: #ffffff;
+  transition: background 180ms ease;
+}
+.btn-ink:hover { background: #362A42; }
+
+.btn-outline-ink {
+  border: 1.5px solid rgba(34, 26, 41, 0.22);
+  color: #221A29;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+.btn-outline-ink:hover { border-color: rgba(34, 26, 41, 0.5); background: rgba(34, 26, 41, 0.03); }
+
+.btn-sunset {
+  background: linear-gradient(135deg, #EC4899 0%, #F97316 55%, #FBBF24 100%);
+  color: #ffffff;
+  box-shadow: 0 12px 32px -12px rgba(236, 72, 153, 0.5);
+  transition: opacity 180ms ease, box-shadow 180ms ease;
+}
+.btn-sunset:hover { opacity: 0.93; box-shadow: 0 14px 36px -12px rgba(236, 72, 153, 0.6); }
+
+/* Sunset gradient text tuned dark enough to stay legible on ivory. */
+.sunset-text {
+  background: linear-gradient(120deg, #D6336E 0%, #E85D04 55%, #D97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.eyebrow {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.hairline-sunset {
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #EC4899, #F97316, #FBBF24);
+}
+
+/* Deep stage backdrop for dark moments on the bright page. */
+.stage-dark {
+  background:
+    radial-gradient(1100px 480px at 50% -10%, rgba(236, 72, 153, 0.13), transparent 60%),
+    radial-gradient(900px 420px at 85% 110%, rgba(251, 191, 36, 0.10), transparent 60%),
+    #15101C;
+}

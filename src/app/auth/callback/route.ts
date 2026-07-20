@@ -62,16 +62,13 @@ export async function GET(request: Request) {
             .eq("user_id", user.id)
             .maybeSingle();
 
-          if (!profile) {
-            return NextResponse.redirect(`${origin}/welcome`);
-          }
-
-          // Studio owners land on the studio dashboard.
-          if (profile.profile_type === "studio") {
+          // Coda (social) is hidden as of July 2026 — everyone lands on
+          // the analyzer dashboard; studio owners on the studio board.
+          // /welcome (Coda onboarding) is intentionally out of the flow.
+          if (profile?.profile_type === "studio") {
             return NextResponse.redirect(`${origin}/studio/dashboard`);
           }
-          // Everyone else (dancer, parent, choreographer) lands on Coda feed.
-          return NextResponse.redirect(`${origin}/home`);
+          return NextResponse.redirect(`${origin}/dashboard`);
         }
       }
 

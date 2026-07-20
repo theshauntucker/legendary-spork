@@ -125,39 +125,33 @@ export default function SampleAnalysis() {
   const awardLevel = "High Gold";
 
   return (
-    <section id="sample-analysis" className="relative py-14 sm:py-20">
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/3 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/3 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
-      </div>
-
+    <section id="sample-analysis" className="relative py-16 sm:py-24 bg-[#F4EEE3]">
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <p className="text-sm font-semibold uppercase tracking-wider text-primary-400">
-            What You Get
-          </p>
-          <h2 className="mt-3 text-4xl sm:text-5xl font-bold font-[family-name:var(--font-display)]">
-            Sample Analysis Report
+          <p className="eyebrow text-[#B0356B] mb-4">The report</p>
+          <h2 className="text-4xl sm:text-5xl font-semibold tracking-tight font-[family-name:var(--font-display)] text-[#221A29]">
+            Judge-level detail, on every upload.
           </h2>
-          <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
-            Here&apos;s exactly what a RoutineX analysis looks like. Every upload gets this level of detail.
+          <p className="mt-5 text-lg text-[#5D5565] max-w-xl mx-auto">
+            This is a real sample analysis — the same depth every routine
+            receives.
           </p>
         </motion.div>
 
-        {/* Analysis Card */}
+        {/* Analysis Card — the dark stage moment */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="glass rounded-3xl overflow-hidden"
+          className="rounded-3xl overflow-hidden bg-[#15101C] text-white ring-1 ring-black/20 shadow-[0_44px_90px_-32px_rgba(34,26,41,0.55)]"
         >
           {/* Report Header */}
           <div className="bg-gradient-to-r from-primary-700/50 to-accent-600/50 p-6 sm:p-8">
@@ -425,18 +419,18 @@ export default function SampleAnalysis() {
           </div>
 
           {/* CTA inside report */}
-          <div className="bg-gradient-to-r from-primary-700/30 to-accent-600/30 p-6 sm:p-8 text-center">
+          <div className="border-t border-white/[0.07] p-6 sm:p-8 text-center">
             <p className="text-lg font-bold">
-              Want this for your athlete&apos;s routine?
+              Every routine deserves this level of coaching.
             </p>
-            <p className="text-sm text-surface-200 mt-1 mb-4">
-              Your first full analysis is just $1.99 — less than your morning coffee.
+            <p className="text-sm text-surface-200 mt-1 mb-5">
+              Upload once and see the whole report on your dancer&apos;s routine.
             </p>
             <a
               href="/signup"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-6 py-3 font-semibold text-white hover:opacity-90 transition-opacity"
+              className="btn-sunset inline-flex items-center gap-2 rounded-full px-7 py-3.5 font-bold"
             >
-              Get 2 Analyses — $2.99
+              Analyze your routine
               <ChevronRight className="h-4 w-4" />
             </a>
           </div>

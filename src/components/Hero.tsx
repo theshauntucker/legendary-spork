@@ -1,335 +1,218 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Users, Star, Shield, Zap, Trophy, Check, Crown, Sparkles } from "lucide-react";
-import RoutineXLogo from "@/components/RoutineXLogo";
-import { startCheckout } from "@/lib/checkout";
+import { ArrowRight, ShieldCheck, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import Image from "next/image";
+
+/**
+ * Hero — bright editorial. Ivory paper, serif headline, one primary CTA.
+ * The product (a dark, cinematic score card) is the visual — no pricing
+ * grids, no badge spam. Pricing lives once, in <Pricing />.
+ */
+
+const categories = [
+  { label: "Technique", score: 32.2, max: 35 },
+  { label: "Performance", score: 33.2, max: 35 },
+  { label: "Choreography", score: 18.3, max: 20 },
+  { label: "Overall Impression", score: 9.0, max: 10 },
+];
+
+const competitions = [
+  "Star Power",
+  "JUMP",
+  "NUVO",
+  "NexStar",
+  "Revolution",
+  "UCA",
+];
 
 export default function Hero() {
-  const [subLoading, setSubLoading] = useState(false);
-
-  // Web → Stripe Checkout redirect; iOS → native StoreKit IAP.
-  // Branch logic lives in src/lib/checkout.ts — DO NOT call /api/checkout
-  // directly from any component, that path bypasses Apple's IAP requirement.
-  const handleSubscribe = async () => {
-    setSubLoading(true);
-    const result = await startCheckout("subscription");
-    if (!result.ok) {
-      if (!result.cancelled) {
-        alert(result.error || "Something went wrong. Please try again.");
-      }
-      setSubLoading(false);
-      return;
-    }
-    if (!result.redirected) {
-      window.location.href = "/dashboard?from=iap";
-    }
-  };
-
   return (
-    <section className="relative overflow-hidden pt-4 sm:pt-8 pb-20">
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-primary-400/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-accent-600/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary-500/30 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent-500/25 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+    <section className="relative overflow-hidden pt-6 sm:pt-14 pb-16 sm:pb-24">
+      {/* Soft warm wash — barely there */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full bg-gradient-to-r from-pink-200/40 via-orange-100/40 to-amber-100/40 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-
-        {/* ── Brand lockup ── */}
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        {/* ── Headline block ── */}
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex justify-center mb-6"
+          transition={{ duration: 0.6 }}
+          className="text-center max-w-3xl mx-auto"
         >
-          <RoutineXLogo size="xl" stacked />
-        </motion.div>
-
-        {/* ── Headline ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-3"
-        >
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary-500/30 bg-primary-500/10 px-4 py-1.5 mb-6">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500" />
-            </span>
-            <span className="text-sm text-primary-200">For competitive dancers, cheer athletes, dance moms &amp; studio owners</span>
+          <div className="flex justify-center mb-7">
+            <Image
+              src="/sunset-x.png"
+              alt="RoutineX"
+              width={64}
+              height={64}
+              priority
+              style={{ width: 64, height: 64 }}
+            />
           </div>
 
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] font-[family-name:var(--font-display)]">
-            Score Every Routine.{" "}
-            <span className="gradient-text">Track the Whole Season.</span>
+          <p className="eyebrow text-[#B0356B] mb-5">
+            AI video analysis for competitive dance &amp; cheer
+          </p>
+
+          <h1 className="text-[2.6rem] leading-[1.06] sm:text-6xl lg:text-[4.4rem] font-semibold tracking-tight font-[family-name:var(--font-display)] text-[#221A29]">
+            Know her score{" "}
+            <em className="italic sunset-text">before</em>
+            <br className="hidden sm:block" /> the judges do.
           </h1>
 
-          <p className="mx-auto mt-5 max-w-2xl text-base sm:text-lg text-surface-200 leading-relaxed">
-            Upload any routine and get <span className="text-white font-semibold">competition-standard scoring, timestamped judge notes, and a Coach&apos;s Playbook</span> in under 5 minutes. Then step into <span className="text-white font-semibold">Coda</span> — the private, photo-free social platform built for dancers, cheer athletes, and the studios who coach them.
+          <p className="mx-auto mt-6 max-w-xl text-base sm:text-lg text-[#5D5565] leading-relaxed">
+            Upload a routine. Three AI judges score it on a real 300-point
+            rubric — technique, performance, choreography — with timestamped
+            notes on exactly what to fix before competition day.
           </p>
 
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-5 text-sm text-surface-200">
-            <div className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-primary-400" /><span>Competition-Calibrated Scoring</span></div>
-            <div className="flex items-center gap-1.5"><Zap className="h-4 w-4 text-accent-400" /><span>Results in Under 5 Minutes</span></div>
-            <div className="flex items-center gap-1.5"><Trophy className="h-4 w-4 text-gold-400" /><span>Trophies + Aura Profile</span></div>
-            <div className="flex items-center gap-1.5"><Users className="h-4 w-4 text-primary-400" /><span>Studio & Choreographer Pages</span></div>
-          </div>
-        </motion.div>
-
-        {/* ── Pricing cards — right here at the top ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-10 max-w-3xl mx-auto"
-        >
-          {/* First analysis $1.99 */}
-          <a
-            href="/signup"
-            className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-5 py-3.5 mb-4 hover:bg-emerald-500/20 transition-colors group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20 shrink-0">
-                <Sparkles className="h-4 w-4 text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white">Your first analysis is $1.99</p>
-                <p className="text-xs text-emerald-300/80">Less than your morning coffee. See your score in under 5 minutes.</p>
-              </div>
-            </div>
-            <ArrowRight className="h-4 w-4 text-emerald-400 shrink-0 group-hover:translate-x-0.5 transition-transform" />
-          </a>
-
-          {/* Season Member — featured hero card */}
-          <div
-            className="relative glass rounded-3xl p-7 border-2 border-primary-500/60 flex flex-col mb-4 ring-2 ring-primary-500/20 ring-offset-2 ring-offset-transparent"
-            style={{ boxShadow: "0 0 40px rgba(139,92,246,0.2)" }}
-          >
-            <div className="absolute -top-3 left-5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-primary-500 via-accent-500 to-gold-400 px-3 py-1 text-xs font-bold text-white">
-              <Crown className="h-3 w-3" />
-              MOST POPULAR
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-2">
-              <div>
-                <h3 className="text-xl font-bold text-white">Season Member</h3>
-                <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-4xl font-extrabold text-white">$4.99</span>
-                  <span className="text-surface-200 text-sm">/month</span>
-                </div>
-                <p className="text-xs text-primary-300 font-semibold mt-1">Introductory rate — locked in forever 🔒</p>
-                <p className="text-xs text-surface-200/60 italic mt-1">Upload after every rehearsal. Watch your scores climb all season.</p>
-              </div>
-
-              <div className="sm:text-right shrink-0">
-                <ul className="space-y-1.5 text-sm text-surface-200 mb-4 sm:text-left">
-                  {[
-                    "4 analyses per month",
-                    "Full season tracking dashboard",
-                    "Timestamped judge notes",
-                    "Re-submission score tracking",
-                    "Cancel anytime",
-                  ].map((item) => (
-                    <li key={item} className="flex items-center gap-2">
-                      <Check className="h-3.5 w-3.5 text-primary-400 shrink-0" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={handleSubscribe}
-                  disabled={subLoading}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-7 py-3.5 font-bold text-white hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  {subLoading ? "Loading..." : "Subscribe — $4.99/mo"}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* BOGO + Pack side by side */}
-          <div className="grid sm:grid-cols-2 gap-4 mb-5">
-            {/* BOGO */}
-            <div className="relative glass rounded-3xl p-6 border border-yellow-500/40 flex flex-col">
-              <div className="absolute -top-3 left-5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-yellow-500 to-amber-400 px-3 py-1 text-xs font-bold text-white">
-                <Zap className="h-3 w-3" />
-                BOGO
-              </div>
-              <div className="mt-3 mb-3">
-                <h3 className="text-base font-bold text-white">Buy One Get One</h3>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="text-3xl font-extrabold text-white">$2.99</span>
-                  <span className="text-surface-200 text-xs">2 analyses</span>
-                </div>
-                <p className="text-xs text-yellow-300 font-semibold mt-0.5">$1.50 each — BOGO deal</p>
-              </div>
-              <ul className="space-y-1.5 mb-4 flex-1">
-                {["2 full AI analyses", "Competition-standard scoring", "Timestamped judge notes", "Never expire"].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-xs text-surface-200">
-                    <Check className="h-3 w-3 text-yellow-400 shrink-0" />{item}
-                  </li>
-                ))}
-              </ul>
-              <a href="/signup" className="w-full flex items-center justify-center gap-2 rounded-full border-2 border-yellow-500 px-5 py-3 font-bold text-white hover:bg-yellow-500/20 transition-colors text-sm">
-                Claim BOGO — $2.99 <ArrowRight className="h-4 w-4" />
-              </a>
-            </div>
-
-            {/* Competition Pack */}
-            <div className="relative glass rounded-3xl p-6 border border-primary-500/30 flex flex-col">
-              <div className="absolute -top-3 left-5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-primary-600 to-gold-500 px-3 py-1 text-xs font-bold text-white">
-                BEST VALUE
-              </div>
-              <div className="mt-3 mb-3">
-                <h3 className="text-base font-bold text-white">Competition Pack</h3>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="text-3xl font-extrabold text-white">$9.99</span>
-                  <span className="text-surface-200 text-xs">5 analyses</span>
-                </div>
-                <p className="text-xs text-primary-400 font-semibold mt-0.5">$1.99 each — 5 analyses</p>
-              </div>
-              <ul className="space-y-1.5 mb-4 flex-1">
-                {["5 full AI analyses", "$1.99 each — 5 analyses", "All styles supported", "Never expire"].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-xs text-surface-200">
-                    <Check className="h-3 w-3 text-primary-400 shrink-0" />{item}
-                  </li>
-                ))}
-              </ul>
-              <a href="/signup" className="w-full flex items-center justify-center gap-2 rounded-full border border-primary-500/60 px-5 py-3 font-bold text-white hover:bg-primary-500/20 transition-colors text-sm">
-                Get 5 Analyses — $9.99 <ArrowRight className="h-4 w-4" />
-              </a>
-            </div>
-          </div>
-
-          <p className="text-center text-xs text-surface-200/60 mb-1">
-            Just need one? <a href="/signup" className="underline hover:text-white transition-colors">Single analysis — $1.99</a>
-          </p>
-          <p className="text-center text-xs text-surface-200/50 mt-1">
-            Already have an account? <a href="/login" className="hover:text-white transition-colors underline">Log in</a>
-          </p>
-        </motion.div>
-
-        {/* ── FOR STUDIO OWNERS ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="mt-16 max-w-4xl mx-auto"
-        >
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-gold-500/40 bg-gold-500/10 px-3 py-1">
-              <Users className="h-3.5 w-3.5 text-gold-400" />
-              <span className="text-xs font-bold uppercase tracking-wider text-gold-300">For Studio Owners</span>
-            </div>
-          </div>
-
-          <h2 className="text-center text-3xl sm:text-5xl font-extrabold tracking-tight leading-[1.1] font-[family-name:var(--font-display)]">
-            Run your whole studio on <span className="gradient-text">one board.</span>
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-center text-base sm:text-lg text-surface-200 leading-relaxed">
-            Team Board, Music Hub with in-state collision detection, Season Schedule, and a shared credit pool — one subscription for every choreographer on staff.
-          </p>
-
-          {/* Studio Subscription Card */}
-          <div
-            className="relative glass rounded-3xl p-7 border-2 border-gold-500/60 flex flex-col mt-8 ring-2 ring-gold-500/20 ring-offset-2 ring-offset-transparent"
-            style={{ boxShadow: "0 0 40px rgba(234,179,8,0.18)" }}
-          >
-            <div className="absolute -top-3 left-5 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-gold-500 via-accent-500 to-primary-500 px-3 py-1 text-xs font-bold text-white">
-              <Crown className="h-3 w-3" />
-              RUNS YOUR WHOLE STUDIO
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-2">
-              <div>
-                <h3 className="text-xl font-bold text-white">Studio Subscription</h3>
-                <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-4xl font-extrabold text-white">$99</span>
-                  <span className="text-surface-200 text-sm">/month</span>
-                </div>
-                <p className="text-sm font-bold text-emerald-300 mt-1">🎁 30-day free trial — no credit card required</p>
-                <p className="text-xs text-gold-300 font-semibold mt-1">🔒 Founding-studio pricing — locked in forever</p>
-              </div>
-
-              <div className="sm:text-right shrink-0">
-                <ul className="space-y-1.5 text-sm text-surface-200 mb-4 sm:text-left">
-                  {[
-                    "100 analyses/mo — shared across staff",
-                    "Team Board for every routine",
-                    "Music Hub with collision detection",
-                    "Season Schedule + travel",
-                    "Cancel anytime in settings",
-                  ].map((item) => (
-                    <li key={item} className="flex items-center gap-2">
-                      <Check className="h-3.5 w-3.5 text-gold-400 shrink-0" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <a
-                  href="/studio/signup"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-7 py-3.5 font-bold text-white hover:opacity-90 transition-opacity text-sm"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  Start 30-Day Free Trial
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* 6-feature wow grid */}
-          <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {[
-              { name: "Team Board", desc: "Every routine, every dancer, every event" },
-              { name: "Music Hub", desc: "Never share a song with a rival studio" },
-              { name: "Season Schedule", desc: "Comp calendar, hotel blocks, travel" },
-              { name: "Shared Credits", desc: "One pool. Every choreographer." },
-              { name: "Coach's Playbook", desc: "Auto-generated per routine" },
-              { name: "Dancer Roster", desc: "Track levels, events, readiness" },
-            ].map((f) => (
-              <div key={f.name} className="rounded-xl glass border border-white/10 px-3 py-2.5">
-                <div className="text-sm font-bold text-white">{f.name}</div>
-                <div className="text-xs text-surface-200/80 mt-0.5">{f.desc}</div>
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-4 text-center text-xs text-surface-200/60">
-            Already run a studio?{" "}
-            <a href="/studio/dashboard" className="text-gold-300 hover:underline font-medium">
-              Open your dashboard
+          <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3.5">
+            <a
+              href="/signup"
+              className="btn-sunset inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-bold"
+            >
+              Analyze a routine
+              <ArrowRight className="h-4.5 w-4.5" />
             </a>
-          </p>
+            <a
+              href="#sample-analysis"
+              className="btn-outline-ink inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-semibold"
+            >
+              See a sample report
+            </a>
+          </div>
+
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-[#7A7284]">
+            <span className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="h-4 w-4 text-[#B0356B]" />
+              Video never leaves your phone
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Clock className="h-4 w-4 text-[#C2410C]" />
+              Results in under 5 minutes
+            </span>
+          </div>
         </motion.div>
 
-        {/* ── Trust row ── */}
+        {/* ── The product: dark score card ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.15 }}
+          className="relative mt-14 sm:mt-16 max-w-2xl mx-auto"
+        >
+          {/* glow under the card */}
+          <div className="absolute -inset-6 rounded-[40px] bg-gradient-to-r from-pink-400/25 via-orange-300/20 to-amber-300/25 blur-2xl -z-10" />
+
+          <div className="rounded-[26px] bg-[#15101C] text-white ring-1 ring-black/30 shadow-[0_40px_80px_-30px_rgba(34,26,41,0.5)] overflow-hidden">
+            {/* Card header */}
+            <div className="px-6 sm:px-8 pt-6 sm:pt-7 pb-5 border-b border-white/[0.07]">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/40 mb-1.5">
+                    RoutineX Score Report
+                  </p>
+                  <p className="font-semibold text-white text-base sm:text-lg leading-snug">
+                    Teen Jazz Solo — &ldquo;Into the Light&rdquo;
+                  </p>
+                  <p className="text-xs text-white/45 mt-1">
+                    Teen &bull; Jazz &bull; 2:45
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p
+                    className="text-5xl sm:text-6xl font-extrabold leading-none"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #F472B6 0%, #FB923C 55%, #FBBF24 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                    }}
+                  >
+                    274
+                  </p>
+                  <p className="text-[11px] text-white/45 mt-1">out of 300</p>
+                  <span className="inline-block mt-1.5 rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-0.5 text-[11px] font-bold text-amber-200">
+                    High Gold
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Category bars */}
+            <div className="px-6 sm:px-8 py-5 space-y-3.5">
+              {categories.map((c, i) => (
+                <div key={c.label}>
+                  <div className="flex items-baseline justify-between mb-1.5">
+                    <span className="text-[13px] text-white/70">{c.label}</span>
+                    <span className="text-[13px] font-bold text-white">
+                      {c.score.toFixed(1)}
+                      <span className="text-white/35 font-medium"> / {c.max}</span>
+                    </span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${(c.score / c.max) * 100}%` }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.9, delay: 0.3 + i * 0.12, ease: "easeOut" }}
+                      className="h-full rounded-full bg-gradient-to-r from-pink-500 via-orange-400 to-amber-300"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Timestamped notes preview */}
+            <div className="px-6 sm:px-8 pb-6 sm:pb-7 space-y-2">
+              <div className="flex items-start gap-3 rounded-xl bg-white/[0.05] px-3.5 py-2.5">
+                <span className="shrink-0 text-[11px] font-mono font-bold text-pink-300/90 pt-0.5">
+                  1:23
+                </span>
+                <AlertCircle className="shrink-0 h-3.5 w-3.5 text-amber-300 mt-0.5" />
+                <span className="text-[13px] text-white/70 leading-snug">
+                  Arm placement dropped during pirouette — easy fix
+                </span>
+              </div>
+              <div className="flex items-start gap-3 rounded-xl bg-white/[0.05] px-3.5 py-2.5">
+                <span className="shrink-0 text-[11px] font-mono font-bold text-pink-300/90 pt-0.5">
+                  2:15
+                </span>
+                <CheckCircle2 className="shrink-0 h-3.5 w-3.5 text-emerald-300 mt-0.5" />
+                <span className="text-[13px] text-white/70 leading-snug">
+                  Floor work: creative and well-executed — standout moment
+                </span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── Competition strip ── */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-surface-200"
+          transition={{ duration: 0.8, delay: 0.45 }}
+          className="mt-14 text-center"
         >
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-primary-400" />
-            <span>Early access — join our first users</span>
-          </div>
-          <div className="hidden sm:block h-4 w-px bg-surface-800" />
-          <div className="flex items-center gap-1">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="h-4 w-4 fill-gold-400 text-gold-400" />
+          <p className="eyebrow text-[#9A93A5] mb-4">
+            Calibrated to the rubrics used at
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2.5">
+            {competitions.map((c) => (
+              <span
+                key={c}
+                className="text-sm sm:text-base font-semibold tracking-wide text-[#7A7284]"
+              >
+                {c}
+              </span>
             ))}
-            <span className="ml-1">from studio owners nationwide</span>
+            <span className="text-sm text-[#9A93A5]">&amp; more</span>
           </div>
-          <div className="hidden sm:block h-4 w-px bg-surface-800" />
-          <div>Works with <span className="text-white font-semibold">every</span> major competition</div>
         </motion.div>
-
       </div>
     </section>
   );

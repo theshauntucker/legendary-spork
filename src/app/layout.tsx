@@ -6,7 +6,6 @@ import "./globals.css";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
 
 import Navbar from "@/components/Navbar";
-import CountdownBanner from "@/components/CountdownBanner";
 import { AtmosphereProvider } from "@/components/AtmosphereProvider";
 import { BottomNav } from "@/components/BottomNav";
 import NativeIapBoot from "@/components/NativeIapBoot";
@@ -89,9 +88,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "RoutineX — Your Athlete's Secret Weapon",
+    title: "RoutineX — Know the Score Before the Judges Do",
     description:
-      "AI-powered video analysis for competitive dancers & cheer teams. First analysis just $1.99 — less than your morning coffee — or $4.99/mo for Season Member.",
+      "AI video analysis for competitive dance & cheer. Three judges, a 300-point scorecard, and timestamped notes on every routine.",
     images: ["/opengraph-image"],
   },
   robots: {
@@ -150,13 +149,6 @@ const jsonLd = {
           description: "5 AI-powered dance or cheer routine analyses — only $1.99 each",
         },
       ],
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "5",
-        ratingCount: "48",
-        bestRating: "5",
-        worstRating: "1",
-      },
     },
     {
       "@type": "Organization",
@@ -209,7 +201,6 @@ export default async function RootLayout({
               first Buy click doesn't race the Capacitor bridge. No-op
               everywhere else. */}
           <NativeIapBoot />
-          {!inIosApp && <CountdownBanner />}
           {/* Top Navbar always renders (web + iOS shell). Apple's reviewer
               must be able to reach Settings -> Delete Account, and the
               Navbar is the only durable cross-surface nav. */}
