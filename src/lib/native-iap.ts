@@ -126,6 +126,182 @@ function isCancelError(err: any): boolean {
   );
 }
 
+/* ────────────────────────────────────────────────────────────────────────
+ * Receipt extraction
+ *
+ * REGRESSION FIXED 2026-08-10 — this is why five App Store purchases
+ * between Aug 3–9 charged the customer and granted zero credits.
+ *
+ * The old code read the receipt as:
+ *     transaction.transactionReceipt ?? transaction.appStoreReceipt
+ *
+ * Neither field exists on a cdv-purchase v13 `Transaction`. Those are
+ * cordova-plugin-purchase v11 shapes. In v13 the base64 app receipt
+ * lives on the PARENT receipt (`transaction.parentReceipt.nativeData
+ * .appStoreReceipt`), not the transaction. So `receipt` was always ""
+ * → the approved handler took the `!receipt` branch → purchaseNative()
+ * resolved {ok:false} → startCheckout() bailed BEFORE calling
+ * submitReceiptToServer() → the server never saw the purchase.
+ *
+ * Symptom signature: Apple reports revenue, /api/iap/validate-receipt
+ * shows zero requests (not zero successes — zero requests), and the
+ * buyer sees "we couldn't read the receipt" after being charged.
+ *
+ * The app receipt is a single device-wide blob covering every
+ * transaction, so pulling it off store.localReceipts is equally valid
+ * and is our most reliable source. We try every known shape.
+ * ──────────────────────────────────────────────────────────────────────── */
+function extractTransactionReceipt(transaction: any, store: any): string {
+  const candidates: Array<unknown> = [
+    // cdv-purchase v13 — the canonical location.
+    transaction?.parentReceipt?.nativeData?.appStoreReceipt,
+    transaction?.parentReceipt?.nativeData?.latest_receipt,
+    transaction?.parentReceipt?.appStoreReceipt,
+    // Some adapter versions hang it directly off the transaction.
+    transaction?.nativeData?.appStoreReceipt,
+    transaction?.appStoreReceipt,
+    // Legacy cordova-plugin-purchase v11 shapes (kept for safety).
+    transaction?.transactionReceipt,
+    transaction?.receipt,
+  ];
+
+  // Device-wide app receipt from the store's local receipt list. This is
+  // the same blob Apple's verifyReceipt expects and it covers every
+  // transaction on the device, so it is a valid fallback for any txn.
+  const localReceipts: any[] = Array.isArray(store?.localReceipts)
+    ? store.localReceipts
+    : [];
+  for (const r of localReceipts) {
+    candidates.push(
+      r?.nativeData?.appStoreReceipt,
+      r?.nativeData?.latest_receipt,
+      r?.appStoreReceipt
+    );
+  }
+
+  for (const c of candidates) {
+    if (typeof c === "string" && c.length > 0) return c;
+  }
+  return "";
+}
+
+/** Pull a transaction id out of whatever shape the plugin hands us. */
+function extractTransactionId(transaction: any): string {
+  const candidates = [
+    transaction?.transactionId,
+    transaction?.id,
+    transaction?.nativeData?.transactionId,
+    transaction?.originalTransactionId,
+  ];
+  for (const c of candidates) {
+    if (c !== undefined && c !== null && String(c).length > 0) return String(c);
+  }
+  return "";
+}
+
+/** Pull the product id a transaction relates to. */
+function extractProductId(transaction: any, fallback?: string): string {
+  const candidates = [
+    transaction?.products?.[0]?.id,
+    transaction?.productId,
+    transaction?.nativeData?.productId,
+    fallback,
+  ];
+  for (const c of candidates) {
+    if (typeof c === "string" && c.length > 0) return c;
+  }
+  return "";
+}
+
+/**
+ * Current Supabase user id, or null if signed out / unavailable.
+ * Used as Apple's appAccountToken so server notifications can resolve
+ * a purchase to an account without the client in the loop.
+ * Never throws — a missing token degrades to the old behaviour.
+ */
+async function getCurrentUserId(): Promise<string | null> {
+  try {
+    const { createClient } = await import("./supabase/client");
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return user?.id ?? null;
+  } catch (err) {
+    console.warn("[native-iap] could not resolve user id for appAccountToken:", err);
+    return null;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+ * Pending-purchase queue
+ *
+ * A purchase is money that has ALREADY left the customer's account by
+ * the time we see it. It must never be dropped because of a network
+ * blip, a backgrounded app, or a receipt we couldn't parse on the first
+ * pass. Every approved transaction is written here BEFORE we attempt
+ * server fulfillment and only removed once the server confirms.
+ *
+ * recoverPendingPurchases() replays this queue at every app boot.
+ * ──────────────────────────────────────────────────────────────────────── */
+const PENDING_KEY = "routinex.iap.pending.v1";
+
+interface PendingPurchase {
+  transactionId: string;
+  productId: string;
+  /** Base64 app receipt. May be "" if we couldn't read it at queue time —
+   *  the boot sweep re-reads it from store.localReceipts on retry. */
+  receipt: string;
+  queuedAtMs: number;
+}
+
+function readPendingQueue(): PendingPurchase[] {
+  try {
+    if (typeof localStorage === "undefined") return [];
+    const raw = localStorage.getItem(PENDING_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writePendingQueue(queue: PendingPurchase[]): void {
+  try {
+    if (typeof localStorage === "undefined") return;
+    // Drop anything older than 60 days — Apple will have long since
+    // re-delivered or expired it, and we don't want unbounded growth.
+    const cutoff = Date.now() - 60 * 24 * 60 * 60 * 1000;
+    const fresh = queue.filter((p) => p.queuedAtMs > cutoff);
+    localStorage.setItem(PENDING_KEY, JSON.stringify(fresh));
+  } catch (err) {
+    console.warn("[native-iap] could not persist pending queue:", err);
+  }
+}
+
+function queuePendingPurchase(entry: Omit<PendingPurchase, "queuedAtMs">): void {
+  if (!entry.transactionId) return;
+  const queue = readPendingQueue();
+  const existing = queue.findIndex((p) => p.transactionId === entry.transactionId);
+  const record: PendingPurchase = { ...entry, queuedAtMs: Date.now() };
+  if (existing >= 0) {
+    // Keep the better receipt if we now have one.
+    record.receipt = entry.receipt || queue[existing].receipt;
+    record.queuedAtMs = queue[existing].queuedAtMs;
+    queue[existing] = record;
+  } else {
+    queue.push(record);
+  }
+  writePendingQueue(queue);
+  console.info("[native-iap] queued pending purchase:", entry.transactionId);
+}
+
+function clearPendingPurchase(transactionId: string): void {
+  const queue = readPendingQueue().filter((p) => p.transactionId !== transactionId);
+  writePendingQueue(queue);
+}
+
 /**
  * Track which product IDs have actually been loaded (StoreKit returned
  * them as valid). store.get() can return null for two distinct reasons:
@@ -334,6 +510,15 @@ export async function bootNativeIap(): Promise<boolean> {
   if (!isIosShell()) return false;
   try {
     await ensureStoreInitialized();
+    // Fulfil anything Apple charged for but we never confirmed. Runs
+    // after init so store.localTransactions and localReceipts are
+    // populated. Deliberately awaited-but-guarded: a recovery failure
+    // must not change the boot result.
+    try {
+      await recoverPendingPurchases();
+    } catch (err) {
+      console.warn("[native-iap] boot recovery sweep failed:", err);
+    }
     return lastInitializeErrors.length === 0;
   } catch (err) {
     console.error("[native-iap] bootNativeIap failed:", err);
@@ -479,31 +664,53 @@ export async function purchaseNative(
             transaction.products?.some((p: any) => p.id === productId) ||
             transaction.products?.[0]?.id === productId
           ) {
-            // Pull the latest receipt + transactionId out of the event.
-            // cdv-purchase exposes the StoreKit receipt as
-            // transaction.transactionReceipt OR via the verify() flow.
-            const receipt =
-              transaction.transactionReceipt ??
-              transaction.appStoreReceipt ??
-              "";
-            const txnId =
-              transaction.transactionId ??
-              transaction.id ??
-              "";
-            if (!receipt || !txnId) {
-              console.error("[native-iap] approved but missing receipt/txnId:", transaction);
+            const receipt = extractTransactionReceipt(transaction, store);
+            const txnId = extractTransactionId(transaction);
+
+            // The customer has been charged by this point. Persist the
+            // transaction locally BEFORE anything else so that even if
+            // the app is killed on the next line, the boot sweep will
+            // fulfil it. Money must never depend on the happy path.
+            queuePendingPurchase({ transactionId: txnId, productId, receipt });
+
+            if (!txnId) {
+              // No id at all means we can't dedupe or reconcile. Leave the
+              // transaction unfinished so Apple re-delivers it at next
+              // launch, when the boot sweep will pick it up.
+              console.error("[native-iap] approved but no transactionId:", transaction);
               safeResolve({
                 ok: false,
-                error: "Purchase was approved but we couldn't read the receipt. Please try Restore Purchases from Settings.",
+                error:
+                  "Your purchase went through, but we couldn't read the confirmation. Re-open the app and your credits will be applied automatically.",
                 cancelled: false,
               });
               cleanup();
               return;
             }
+
+            if (!receipt) {
+              // Charged, id known, receipt not readable yet. Do NOT finish
+              // the transaction — Apple re-delivers unfinished transactions
+              // on every launch and by then store.localReceipts is
+              // populated, so the boot sweep resolves it.
+              console.error(
+                "[native-iap] approved but no receipt blob available; queued for boot recovery:",
+                { txnId, productId }
+              );
+              safeResolve({
+                ok: false,
+                error:
+                  "Your purchase went through. We're still confirming it with Apple — re-open the app in a moment and your credits will be there.",
+                cancelled: false,
+              });
+              cleanup();
+              return;
+            }
+
             safeResolve({
               ok: true,
               receipt,
-              transactionId: String(txnId),
+              transactionId: txnId,
               productId,
             });
             // Note: we DO NOT call transaction.finish() here. Server-side
@@ -535,7 +742,17 @@ export async function purchaseNative(
       offHandlers.push(() => subscription?.unregister?.());
       offHandlers.push(() => errorSub?.unregister?.());
 
-      await offer.order();
+      // Stamp the Supabase user id onto the transaction as Apple's
+      // appAccountToken. This is what lets App Store Server Notifications
+      // map a purchase back to an account server-to-server, without any
+      // help from the client — the backstop in
+      // /api/iap/server-notification depends on it. The Apple adapter
+      // requires a UUID, which Supabase user ids already are. If the
+      // adapter version ignores the field this is a harmless no-op.
+      const appAccountToken = await getCurrentUserId();
+      await offer.order(
+        appAccountToken ? { applicationUsername: appAccountToken } : undefined
+      );
     } catch (err: any) {
       const cancelled = isCancelError(err);
       const error = cancelled
@@ -574,29 +791,189 @@ export async function finishTransaction(transactionId: string): Promise<void> {
   }
 }
 
-/** POST the receipt to our server for validation + fulfillment. */
+/**
+ * POST the receipt to our server for validation + fulfillment.
+ *
+ * Retries transient failures (network errors and 5xx) with backoff — the
+ * customer has already been charged, so giving up after one attempt is
+ * not acceptable. 4xx responses are terminal and returned immediately;
+ * retrying them would just burn time on a deterministic rejection.
+ *
+ * Whatever happens here, the caller keeps the transaction in the pending
+ * queue until this returns ok, and never calls finishTransaction() on a
+ * failure — so Apple re-delivers and the boot sweep gets another shot.
+ */
 export async function submitReceiptToServer(args: {
   receipt: string;
   transactionId: string;
   productId: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
-  try {
-    const res = await fetch("/api/iap/validate-receipt", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(args),
-    });
-    if (!res.ok) {
+  const MAX_ATTEMPTS = 3;
+  let lastError = "Receipt validation failed";
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetch("/api/iap/validate-receipt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(args),
+      });
+      if (res.ok) return { ok: true };
+
       const data = await res.json().catch(() => null);
-      return { ok: false, error: data?.error ?? `HTTP ${res.status}` };
+      lastError = data?.error ?? `HTTP ${res.status}`;
+
+      // 4xx is a decision, not a hiccup — don't hammer it.
+      if (res.status >= 400 && res.status < 500) {
+        return { ok: false, error: lastError };
+      }
+    } catch (err) {
+      lastError = extractErrorMessage(err, "Network error during receipt validation");
     }
-    return { ok: true };
-  } catch (err) {
-    return {
-      ok: false,
-      error: extractErrorMessage(err, "Network error during receipt validation"),
-    };
+
+    if (attempt < MAX_ATTEMPTS) {
+      await new Promise((r) => setTimeout(r, attempt * 1200));
+    }
   }
+
+  console.error("[native-iap] receipt submission exhausted retries:", lastError);
+  return { ok: false, error: lastError };
+}
+
+/**
+ * Call once the server has confirmed a purchase and credits are in
+ * Supabase: drops it from the pending queue and tells StoreKit the
+ * transaction is consumed.
+ *
+ * Order matters. We clear our queue first, then finish with Apple. If
+ * finish() fails, Apple re-delivers the transaction and the boot sweep
+ * re-submits it — which is idempotent server-side. The reverse order
+ * could leave a finished transaction stuck in our queue forever.
+ */
+export async function markPurchaseFulfilled(transactionId: string): Promise<void> {
+  if (!transactionId) return;
+  clearPendingPurchase(transactionId);
+  await finishTransaction(transactionId);
+}
+
+/**
+ * Replay every purchase we know about but haven't confirmed with the
+ * server yet. Runs at app boot (see NativeIapBoot).
+ *
+ * Two sources, deliberately overlapping:
+ *   1. Our own localStorage pending queue — covers the case where the
+ *      app was killed or offline mid-fulfillment.
+ *   2. store.localTransactions — covers transactions Apple re-delivers
+ *      because they were never finish()ed, including purchases made by
+ *      a build that never managed to submit them at all.
+ *
+ * (2) is what retroactively rescues the Aug 3–9 purchases: those
+ * transactions were never finished, so StoreKit re-delivers them on the
+ * next launch and this sweep fulfils them without the user doing
+ * anything. Fulfillment is idempotent server-side, so double-submitting
+ * is harmless.
+ *
+ * Never throws — boot must not be able to crash the app.
+ */
+export async function recoverPendingPurchases(): Promise<number> {
+  if (!isIosShell()) return 0;
+
+  let store: any;
+  try {
+    const mod: any = await importCdvPurchase();
+    const CdvPurchase = mod.CdvPurchase ?? mod.default?.CdvPurchase ?? mod;
+    await ensureStoreInitialized();
+    store = CdvPurchase.store;
+  } catch (err) {
+    console.warn("[native-iap] recovery: store unavailable, will retry next boot:", err);
+    return 0;
+  }
+
+  // Merge both sources, keyed by transaction id.
+  const byTxnId = new Map<string, PendingPurchase>();
+
+  for (const p of readPendingQueue()) {
+    byTxnId.set(p.transactionId, p);
+  }
+
+  try {
+    const localTransactions: any[] = Array.isArray(store?.localTransactions)
+      ? store.localTransactions
+      : [];
+    for (const txn of localTransactions) {
+      // Only unfinished transactions need fulfilling. cdv-purchase marks
+      // consumed/finished ones with state "finished".
+      const state = String(txn?.state ?? "").toLowerCase();
+      if (state === "finished") continue;
+
+      const transactionId = extractTransactionId(txn);
+      const productId = extractProductId(txn);
+      if (!transactionId || !productId) continue;
+      if (!IAP_PRODUCTS[productId]) continue;
+
+      const receipt = extractTransactionReceipt(txn, store);
+      const existing = byTxnId.get(transactionId);
+      byTxnId.set(transactionId, {
+        transactionId,
+        productId,
+        receipt: receipt || existing?.receipt || "",
+        queuedAtMs: existing?.queuedAtMs ?? Date.now(),
+      });
+    }
+  } catch (err) {
+    console.warn("[native-iap] recovery: could not read localTransactions:", err);
+  }
+
+  if (byTxnId.size === 0) return 0;
+  console.info(`[native-iap] recovery: ${byTxnId.size} unconfirmed purchase(s) to replay`);
+
+  let recovered = 0;
+  for (const pending of byTxnId.values()) {
+    // A pending entry queued without a receipt can usually be completed
+    // now — the device-wide app receipt is available once the store has
+    // initialized, and it covers every transaction on the device.
+    const receipt = pending.receipt || extractTransactionReceipt({}, store);
+    if (!receipt) {
+      console.warn(
+        "[native-iap] recovery: still no receipt for",
+        pending.transactionId,
+        "— leaving queued"
+      );
+      continue;
+    }
+
+    const result = await submitReceiptToServer({
+      receipt,
+      transactionId: pending.transactionId,
+      productId: pending.productId,
+    });
+
+    if (result.ok) {
+      clearPendingPurchase(pending.transactionId);
+      await finishTransaction(pending.transactionId);
+      recovered++;
+      console.info("[native-iap] recovery: fulfilled", pending.transactionId);
+    } else if (/not authenticated/i.test(result.error)) {
+      // Signed out right now. Keep it queued — it'll go through on the
+      // next boot after they log in. This is expected, not an error.
+      console.info(
+        "[native-iap] recovery: user not signed in yet, keeping",
+        pending.transactionId,
+        "queued"
+      );
+    } else {
+      console.warn(
+        "[native-iap] recovery: fulfillment failed for",
+        pending.transactionId,
+        result.error
+      );
+    }
+  }
+
+  if (recovered > 0) {
+    console.info(`[native-iap] recovery: ${recovered} purchase(s) fulfilled`);
+  }
+  return recovered;
 }
 
 /**
@@ -665,23 +1042,29 @@ export async function restoreNativePurchases(): Promise<IapRestoreResult> {
     // entitlement. POST each receipt for idempotent server-side fulfillment.
     const approvedHandler = async (transaction: any) => {
       try {
-        const productId =
-          transaction.products?.[0]?.id ??
-          transaction.productId ??
-          "";
-        const receipt =
-          transaction.transactionReceipt ??
-          transaction.appStoreReceipt ??
-          "";
-        const txnId =
-          transaction.transactionId ??
-          transaction.id ??
-          "";
-        if (!productId || !receipt || !txnId) return;
+        // Same v13 receipt-shape fix as purchaseNative — the old code read
+        // transaction.transactionReceipt, which is always undefined here,
+        // so Restore Purchases silently restored nothing.
+        const productId = extractProductId(transaction);
+        const receipt = extractTransactionReceipt(transaction, store);
+        const txnId = extractTransactionId(transaction);
+        if (!productId || !txnId) return;
+
+        queuePendingPurchase({ transactionId: txnId, productId, receipt });
+        if (!receipt) return;
+
         // Server-side validate-receipt is idempotent — duplicates short
         // out via the apple_transaction_id unique constraint.
-        await submitReceiptToServer({ receipt, transactionId: String(txnId), productId });
-        restored.push(productId);
+        const result = await submitReceiptToServer({
+          receipt,
+          transactionId: txnId,
+          productId,
+        });
+        if (result.ok) {
+          clearPendingPurchase(txnId);
+          await finishTransaction(txnId);
+          restored.push(productId);
+        }
       } catch (err) {
         console.warn("[native-iap] restore: per-txn fulfillment failed:", err);
       }

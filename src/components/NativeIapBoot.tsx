@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { bootNativeIap, isIosShell } from "@/lib/native-iap";
+import { bootNativeIap, isIosShell, recoverPendingPurchases } from "@/lib/native-iap";
 
 /**
  * Pre-warms the StoreKit (cdv-purchase) store at app boot so the
@@ -34,8 +34,32 @@ import { bootNativeIap, isIosShell } from "@/lib/native-iap";
 export default function NativeIapBoot() {
   useEffect(() => {
     if (!isIosShell()) return;
-    // Fire and forget — bootNativeIap never throws, only logs.
+    // Fire and forget — bootNativeIap never throws, only logs. It also
+    // runs the pending-purchase recovery sweep once the store is up.
     void bootNativeIap();
+
+    /**
+     * Re-run recovery when the app comes back to the foreground.
+     *
+     * Two reasons this matters, both of them money:
+     *   1. On a cold boot the user often isn't signed in yet, so
+     *        /api/iap/validate-receipt 401s and the purchase stays
+     *        queued. By the time they've logged in and switched back,
+     *        this fires and fulfils it.
+     *   2. StoreKit sometimes delivers a pending transaction slightly
+     *        after launch. The boot sweep would have already run; this
+     *        catches the late arrival.
+     *
+     * Recovery is idempotent server-side and no-ops when the queue is
+     * empty, so running it often is cheap and safe.
+     */
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void recoverPendingPurchases();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, []);
 
   return null;

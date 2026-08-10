@@ -20,7 +20,12 @@
  *   // the receipt is validated server-side and credits are granted.
  */
 
-import { isIosShell, purchaseNative, submitReceiptToServer } from "./native-iap";
+import {
+  isIosShell,
+  purchaseNative,
+  submitReceiptToServer,
+  markPurchaseFulfilled,
+} from "./native-iap";
 import { webTypeToIapProductId } from "./iap-products";
 
 export type CheckoutType =
@@ -51,8 +56,19 @@ export async function startCheckout(
       productId: purchase.productId,
     });
     if (!fulfilled.ok) {
-      return { ok: false, error: fulfilled.error };
+      // The customer HAS been charged. purchaseNative() already queued
+      // this transaction and we deliberately do not finish it, so Apple
+      // re-delivers it and the boot sweep in NativeIapBoot will fulfil
+      // it. Tell them that rather than implying the money vanished.
+      return {
+        ok: false,
+        error: `${fulfilled.error} — your purchase went through and your credits will be applied automatically next time you open the app.`,
+      };
     }
+
+    // Credits are persisted. Clear the pending queue and tell StoreKit
+    // the transaction is consumed so Apple stops re-delivering it.
+    await markPurchaseFulfilled(purchase.transactionId);
     return { ok: true, redirected: false };
   }
 

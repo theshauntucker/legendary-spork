@@ -317,6 +317,12 @@ export async function POST(request: NextRequest) {
       // is apple_transaction_id (added in the migration above).
       stripe_session_id: `apple:${transactionId}`,
       apple_transaction_id: transactionId,
+      // Renewals and refunds arrive via App Store Server Notifications
+      // carrying only the ORIGINAL transaction id. Recording it here is
+      // what lets /api/iap/server-notification map those events back to
+      // this user. Without it, every renewal is an orphan.
+      apple_original_transaction_id:
+        matchingPurchase.original_transaction_id ?? transactionId,
       payment_type: product.paymentType,
       amount_cents: product.amountCents,
       currency: "usd",
