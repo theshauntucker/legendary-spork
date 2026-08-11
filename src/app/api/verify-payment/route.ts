@@ -61,6 +61,19 @@ export async function POST(request: NextRequest) {
 
     const serviceClient = await createServiceClient();
 
+    // If this session was already recorded (by the webhook or an earlier
+    // verify call), credits were already granted — do NOT grant again.
+    // grantCredits is additive, so re-running it double-credits the user.
+    const { data: alreadyRecorded } = await serviceClient
+      .from("payments")
+      .select("id")
+      .eq("stripe_session_id", session_id)
+      .maybeSingle();
+
+    if (alreadyRecorded) {
+      return NextResponse.json({ verified: true, already_processed: true });
+    }
+
     const paymentType = session.metadata?.payment_type || "beta_access";
     const referralCode = session.metadata?.referral_code || null;
     const isBeta = paymentType === "beta_access";
