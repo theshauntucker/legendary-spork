@@ -266,16 +266,24 @@ export default async function DashboardPage({
 
   // Fetch analyses separately
   const videoIds = (videos ?? []).map((v: { id: string }) => v.id);
-  const analysesMap: Record<string, { id: string; total_score: number; award_level: string }[]> = {};
+  type AnalysisLite = {
+    id: string;
+    video_id: string;
+    total_score: number;
+    award_level: string;
+    progression: unknown;
+    created_at: string;
+  };
+  const analysesMap: Record<string, AnalysisLite[]> = {};
 
   if (videoIds.length > 0) {
     const { data: analyses } = await serviceClient
       .from("analyses")
-      .select("id, video_id, total_score, award_level")
+      .select("id, video_id, total_score, award_level, progression, created_at")
       .in("video_id", videoIds);
 
     if (analyses) {
-      for (const a of analyses as { id: string; video_id: string; total_score: number; award_level: string }[]) {
+      for (const a of analyses as AnalysisLite[]) {
         if (!analysesMap[a.video_id]) analysesMap[a.video_id] = [];
         analysesMap[a.video_id].push(a);
       }

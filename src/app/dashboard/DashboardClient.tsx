@@ -23,6 +23,15 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { startCheckout, type CheckoutType } from "@/lib/checkout";
 
+interface DashProgression {
+  isTracked?: boolean;
+  totalDelta?: number;
+  isPersonalBest?: boolean;
+  submissionNumber?: number;
+  seasonReport?: { nextFocus?: string; headline?: string } | null;
+  carriedPriorities?: string[];
+}
+
 interface VideoRecord {
   id: string;
   routine_name: string;
@@ -33,7 +42,13 @@ interface VideoRecord {
   status: string;
   created_at: string;
   thumbnail_path: string | null;
-  analyses: Array<{ id: string; total_score: number; award_level: string }>;
+  analyses: Array<{
+    id: string;
+    total_score: number;
+    award_level: string;
+    progression?: DashProgression | null;
+    created_at?: string;
+  }>;
 }
 
 const statusConfig: Record<
@@ -260,6 +275,228 @@ function SubscriptionHeroCard() {
   );
 }
 
+/** The full purchase stack — subscription hero + one-time cards. */
+function PurchaseBlock() {
+  return (
+    <div className="mb-10">
+      {/* Season Member — HERO CARD */}
+      <SubscriptionHeroCard />
+
+      {/* Divider */}
+      <div className="flex items-center gap-3 my-5">
+        <div className="flex-1 border-t border-white/10" />
+        <span className="text-xs text-surface-200/50 uppercase tracking-widest">or pay per routine</span>
+        <div className="flex-1 border-t border-white/10" />
+      </div>
+
+      {/* Single + BOGO + Pack — big hero cards */}
+      <div className="grid sm:grid-cols-3 gap-4">
+        <HeroPurchaseCard
+          variant="purple"
+          badge="✨ Pay Per Routine"
+          title="Single Analysis"
+          price="$1.99"
+          subPrice="One full analysis — no commitment"
+          tagline="Just need one score before the next comp? This is it."
+          features={[
+            "1 full AI analysis",
+            "Competition-standard scoring (out of 300)",
+            "Timestamped judge feedback",
+            "Never expires",
+          ]}
+          buttonText="Get 1 Analysis — $1.99"
+          type="single"
+        />
+        <HeroPurchaseCard
+          variant="gold"
+          badge="⚡ Buy One Get One Free"
+          title="BOGO — 2 Analyses"
+          price="$2.99"
+          subPrice="Just $1.50 each — buy one, get one free"
+          tagline="Perfect for a single competition day or trying us out."
+          features={[
+            "2 full AI analyses",
+            "Competition-standard scoring (out of 300)",
+            "Timestamped judge feedback",
+            "Never expire",
+          ]}
+          buttonText="Get 2 Analyses — $2.99"
+          type="bogo"
+        />
+        <HeroPurchaseCard
+          variant="purple"
+          badge="🏆 Best Value — Save $15"
+          title="Competition Pack"
+          price="$9.99"
+          subPrice="Only $1.99 per analysis — 5 total, never expire"
+          tagline="Stock up for the whole season. Use them whenever you need."
+          features={[
+            "5 full AI analyses",
+            "$1.99 each — buy 5 at once",
+            "All styles: dance, cheer, duo, group",
+            "Never expire — use all season",
+          ]}
+          buttonText="Get 5 Analyses — $9.99"
+          type="pack"
+        />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * My Season — the report hub a returning parent actually comes back for.
+ * Latest report front and center with its honest delta, then every dancer's
+ * season at a glance. Purchases live BELOW the story for returning users.
+ */
+function SeasonHub({ videos }: { videos: VideoRecord[] }) {
+  const analyzed = videos.filter((v) => v.status === "analyzed" && v.analyses?.length > 0);
+  if (analyzed.length === 0) return null;
+
+  // videos arrive newest-first from the server
+  const latest = analyzed[0];
+  const latestA = latest.analyses[0];
+  const prog = latestA.progression;
+  const delta = prog?.isTracked ? (prog.totalDelta ?? null) : null;
+  const nextFocus = prog?.seasonReport?.nextFocus ?? null;
+
+  // Group by dancer for the season strip
+  const byDancer = new Map<
+    string,
+    { name: string; scores: number[]; best: number; latest: number; latestAward: string; count: number }
+  >();
+  for (const v of analyzed) {
+    const name = (v.dancer_name || "Unnamed Dancer").trim();
+    const score = v.analyses[0]?.total_score ?? 0;
+    const award = v.analyses[0]?.award_level ?? "—";
+    const d = byDancer.get(name);
+    if (d) {
+      d.scores.unshift(score); // videos are newest-first; unshift → oldest-first
+      d.best = Math.max(d.best, score);
+      d.count += 1;
+    } else {
+      byDancer.set(name, { name, scores: [score], best: score, latest: score, latestAward: award, count: 1 });
+    }
+  }
+  const dancers = [...byDancer.values()].sort((a, b) => b.count - a.count).slice(0, 4);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.05 }}
+      className="mb-10"
+    >
+      {/* Latest report */}
+      <a
+        href={`/analysis/${latest.id}`}
+        className="block rounded-2xl border border-primary-500/25 bg-gradient-to-br from-primary-500/10 via-transparent to-gold-500/10 p-6 hover:border-primary-400/40 transition-colors group"
+      >
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+          <div className="flex-1 min-w-[200px]">
+            <div className="text-[11px] uppercase tracking-wider text-primary-300 font-bold mb-1.5">
+              Latest Report{latest.dancer_name ? ` · ${latest.dancer_name}` : ""}
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight mb-1">
+              {latest.routine_name || "Untitled"}
+            </h2>
+            <p className="text-sm text-surface-200">
+              {latest.style || "—"}{latest.entry_type ? ` · ${latest.entry_type}` : ""}
+            </p>
+            {nextFocus && (
+              <p className="mt-3 text-sm text-zinc-300 leading-relaxed">
+                <span className="text-primary-300 font-semibold">Next focus:</span> {nextFocus}
+              </p>
+            )}
+          </div>
+          <div className="text-right">
+            <div className="text-4xl font-extrabold text-white leading-none">
+              {latestA.total_score}
+              <span className="text-lg text-surface-200 font-semibold">/300</span>
+            </div>
+            <div className="text-sm font-bold text-gold-400 mt-1">{latestA.award_level}</div>
+            {delta !== null && (
+              <div
+                className={`mt-2 inline-block text-xs font-bold px-2.5 py-1 rounded-full ${
+                  delta > 0
+                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                    : delta === 0
+                      ? "bg-white/5 text-surface-200 border border-white/10"
+                      : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                }`}
+              >
+                {delta > 0 ? `▲ +${delta} vs last time` : delta === 0 ? "± 0 vs last time" : `${delta} vs last time`}
+              </div>
+            )}
+            {prog?.isPersonalBest && (
+              <div className="mt-1.5 text-[11px] font-bold text-gold-400">★ Personal Best</div>
+            )}
+          </div>
+          <ArrowRight className="h-5 w-5 text-surface-200 group-hover:text-white group-hover:translate-x-1 transition-all hidden sm:block" />
+        </div>
+      </a>
+
+      {/* Dancer season strip */}
+      {dancers.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-2 mt-4">
+          {dancers.map((d) => {
+            const lo = Math.min(...d.scores);
+            const hi = Math.max(...d.scores);
+            const span = Math.max(1, hi - lo);
+            const trendDelta =
+              d.scores.length > 1 ? d.scores[d.scores.length - 1] - d.scores[d.scores.length - 2] : null;
+            return (
+              <a
+                key={d.name}
+                href={`/dancers/${encodeURIComponent(d.name)}`}
+                className="rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:border-primary-500/30 transition-colors group"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-bold text-white truncate">{d.name}</div>
+                    <div className="text-xs text-surface-200 mt-0.5">
+                      {d.count} {d.count === 1 ? "routine" : "routines"} · best {d.best}
+                      {trendDelta !== null && (
+                        <span
+                          className={
+                            trendDelta > 0
+                              ? "text-emerald-400 font-semibold"
+                              : trendDelta < 0
+                                ? "text-amber-400 font-semibold"
+                                : "text-surface-200"
+                          }
+                        >
+                          {" "}· {trendDelta > 0 ? `+${trendDelta}` : trendDelta} last time
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {d.scores.length > 1 && (
+                    <div className="flex items-end gap-[3px] h-8 shrink-0">
+                      {d.scores.slice(-8).map((s, i, arr) => (
+                        <div
+                          key={i}
+                          className={`w-1.5 rounded-t ${
+                            i === arr.length - 1
+                              ? "bg-gradient-to-t from-primary-500 to-gold-400"
+                              : "bg-white/20"
+                          }`}
+                          style={{ height: `${25 + ((s - lo) / span) * 75}%` }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <ArrowRight className="h-4 w-4 text-surface-200 group-hover:text-white transition-colors shrink-0" />
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 export default function DashboardClient({
   user,
   videos,
@@ -328,6 +565,10 @@ export default function DashboardClient({
     router.refresh();
   };
 
+  const hasAnalyzedReports = videos.some(
+    (v) => v.status === "analyzed" && v.analyses?.length > 0
+  );
+
   return (
     <div className="min-h-screen py-12 px-4">
       <div className="fixed inset-0 -z-10">
@@ -374,70 +615,11 @@ export default function DashboardClient({
           </p>
         </motion.div>
 
-        {/* ── Get More Analyses — always visible, right at the top ── */}
-        <div className="mb-10">
-          {/* Season Member — HERO CARD */}
-          <SubscriptionHeroCard />
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 border-t border-white/10" />
-            <span className="text-xs text-surface-200/50 uppercase tracking-widest">or pay per routine</span>
-            <div className="flex-1 border-t border-white/10" />
-          </div>
-
-          {/* Single + BOGO + Pack — big hero cards */}
-          <div className="grid sm:grid-cols-3 gap-4">
-            <HeroPurchaseCard
-              variant="purple"
-              badge="✨ Pay Per Routine"
-              title="Single Analysis"
-              price="$1.99"
-              subPrice="One full analysis — no commitment"
-              tagline="Just need one score before the next comp? This is it."
-              features={[
-                "1 full AI analysis",
-                "Competition-standard scoring (out of 300)",
-                "Timestamped judge feedback",
-                "Never expires",
-              ]}
-              buttonText="Get 1 Analysis — $1.99"
-              type="single"
-            />
-            <HeroPurchaseCard
-              variant="gold"
-              badge="⚡ Buy One Get One Free"
-              title="BOGO — 2 Analyses"
-              price="$2.99"
-              subPrice="Just $1.50 each — buy one, get one free"
-              tagline="Perfect for a single competition day or trying us out."
-              features={[
-                "2 full AI analyses",
-                "Competition-standard scoring (out of 300)",
-                "Timestamped judge feedback",
-                "Never expire",
-              ]}
-              buttonText="Get 2 Analyses — $2.99"
-              type="bogo"
-            />
-            <HeroPurchaseCard
-              variant="purple"
-              badge="🏆 Best Value — Save $15"
-              title="Competition Pack"
-              price="$9.99"
-              subPrice="Only $1.99 per analysis — 5 total, never expire"
-              tagline="Stock up for the whole season. Use them whenever you need."
-              features={[
-                "5 full AI analyses",
-                "$1.99 each — buy 5 at once",
-                "All styles: dance, cheer, duo, group",
-                "Never expire — use all season",
-              ]}
-              buttonText="Get 5 Analyses — $9.99"
-              type="pack"
-            />
-          </div>
-        </div>
+        {/* ── Report-first for returning users, purchase-first for new ones.
+             A parent with reports comes back for the STORY — the latest score,
+             the delta, each dancer's season. The buy cards still exist, but
+             below the work, not in front of it. ── */}
+        {hasAnalyzedReports ? <SeasonHub videos={videos} /> : <PurchaseBlock />}
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
@@ -543,6 +725,9 @@ export default function DashboardClient({
           </div>
           <ArrowRight className="h-5 w-5 text-surface-200 group-hover:text-white group-hover:translate-x-1 transition-all" />
         </motion.a>
+
+        {/* Purchases for returning users — after the story, before the archive */}
+        {hasAnalyzedReports && <PurchaseBlock />}
 
         {/* Season Tracker CTA */}
         <motion.a

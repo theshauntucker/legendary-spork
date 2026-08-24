@@ -195,6 +195,7 @@ export default async function DancerSeasonPage({
         award_level,
         judge_scores,
         improvement_priorities,
+        progression,
         created_at
       )
     `)
@@ -219,13 +220,21 @@ export default async function DancerSeasonPage({
     award: string;
     judgeScores: Array<{ category: string; avg: number; max: number }> | null;
     improvementPriorities: unknown;
+    progression: {
+      isTracked?: boolean;
+      totalDelta?: number;
+      resolvedPriorities?: string[];
+      carriedPriorities?: string[];
+      seasonReport?: { nextFocus?: string } | null;
+    } | null;
   };
 
   const entries: Entry[] = [];
   for (const video of videos) {
     const analyses = (video.analyses ?? []) as Array<{
       id: string; total_score: number; award_level: string;
-      judge_scores: unknown; improvement_priorities: unknown; created_at: string;
+      judge_scores: unknown; improvement_priorities: unknown;
+      progression: unknown; created_at: string;
     }>;
     const analysis = analyses[0];
     if (!analysis) continue;
@@ -242,6 +251,7 @@ export default async function DancerSeasonPage({
       award: analysis.award_level ?? "—",
       judgeScores: analysis.judge_scores as Entry["judgeScores"],
       improvementPriorities: analysis.improvement_priorities,
+      progression: (analysis.progression as Entry["progression"]) ?? null,
     });
   }
 
@@ -617,6 +627,61 @@ export default async function DancerSeasonPage({
             </div>
           </div>
         )}
+
+        {/* ── The Work — measured by the progression engine ── */}
+        {(() => {
+          const latestProg = latestEntry.progression;
+          if (!latestProg?.isTracked) return null;
+          const landed = latestProg.resolvedPriorities ?? [];
+          const open = latestProg.carriedPriorities ?? [];
+          const nextFocus = latestProg.seasonReport?.nextFocus ?? null;
+          if (landed.length === 0 && open.length === 0 && !nextFocus) return null;
+          return (
+            <div className="glass rounded-3xl p-6 mb-6">
+              <h2 className="text-lg font-bold mb-1 flex items-center gap-2">
+                <Star className="h-5 w-5 text-gold-400" />
+                The Work
+              </h2>
+              <p className="text-xs text-surface-200 mb-5">
+                Measured against the previous judge sheet — fixes are only listed once the judges can see them.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {landed.length > 0 && (
+                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
+                    <div className="text-xs uppercase tracking-wider font-bold text-emerald-400 mb-2.5">
+                      ✓ Fixes that landed
+                    </div>
+                    <ul className="space-y-2">
+                      {landed.slice(0, 4).map((t, i) => (
+                        <li key={i} className="text-sm text-surface-100 leading-relaxed">{t}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {open.length > 0 && (
+                  <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-4">
+                    <div className="text-xs uppercase tracking-wider font-bold text-amber-400 mb-2.5">
+                      → Still working on
+                    </div>
+                    <ul className="space-y-2">
+                      {open.slice(0, 4).map((t, i) => (
+                        <li key={i} className="text-sm text-surface-100 leading-relaxed">{t}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+              {nextFocus && (
+                <div className="mt-4 rounded-xl border border-primary-500/25 bg-primary-500/[0.08] p-4">
+                  <div className="text-xs uppercase tracking-wider font-bold text-primary-300 mb-1.5">
+                    Next focus
+                  </div>
+                  <p className="text-sm text-white leading-relaxed">{nextFocus}</p>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ── Competition History ──────────────────── */}
         <div className="glass rounded-3xl p-6 mb-6">

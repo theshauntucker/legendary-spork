@@ -321,6 +321,75 @@ export async function POST(request: NextRequest) {
     const paymentType = session.metadata?.payment_type || "beta_access";
     const referralCode = session.metadata?.referral_code || null;
 
+    // ─── Practice Plan purchase early branch ─────────────────────────────
+    // $4.99 content purchase — grants ZERO analysis credits. Records the
+    // payment, marks the plan queued, and fires generation in the background.
+    // Must run BEFORE the credit branches: the generic fallthrough grants
+    // 1 credit to unknown payment types.
+    if (paymentType === "practice_plan") {
+      const videoId = session.metadata?.video_id;
+      if (!userId || !videoId) {
+        console.error("Webhook: practice_plan session missing user_id/video_id", session.id);
+        return NextResponse.json({ received: true });
+      }
+      const serviceClient = await createServiceClient();
+      try {
+        // Idempotency on payments
+        const { data: existingPay } = await serviceClient
+          .from("payments")
+          .select("id")
+          .eq("stripe_session_id", session.id)
+          .maybeSingle();
+        if (!existingPay) {
+          await serviceClient.from("payments").insert({
+            user_id: userId,
+            stripe_session_id: session.id,
+            stripe_payment_intent:
+              typeof session.payment_intent === "string" ? session.payment_intent : null,
+            payment_type: "practice_plan",
+            amount_cents: session.amount_total || 499,
+            currency: session.currency || "usd",
+            status: "completed",
+            credits_granted: 0,
+          }).then(({ error }) => {
+            if (error && error.code !== "23505") {
+              console.error("Practice plan payment insert error:", error);
+            }
+          });
+        }
+
+        // Mark the plan paid-and-queued. Generation itself is triggered by the
+        // plan viewer page (the customer lands there from the success_url and
+        // its first poll kicks generation) — never inside this webhook, which
+        // must return to Stripe fast to avoid retry storms.
+        const { data: planRow } = await serviceClient
+          .from("practice_plans")
+          .select("id, status")
+          .eq("video_id", videoId)
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (planRow && planRow.status !== "ready") {
+          await serviceClient
+            .from("practice_plans")
+            .update({ status: "queued", source: "purchase", updated_at: new Date().toISOString() })
+            .eq("id", planRow.id);
+        } else if (!planRow) {
+          await serviceClient.from("practice_plans").insert({
+            user_id: userId,
+            video_id: videoId,
+            status: "queued",
+            source: "purchase",
+            stripe_session_id: session.id,
+          });
+        }
+      } catch (err) {
+        console.error("Webhook practice_plan handling failed:", err);
+        // Plan row stays pending/queued; the viewer page retriggers.
+      }
+      return NextResponse.json({ received: true });
+    }
+
     // ─── Studio subscription early branch (additive) ─────────────────────
     // Studio checkouts set payment_type="studio_subscription" and studio_id
     // on session metadata (the /studio/signup flow creates the studios row

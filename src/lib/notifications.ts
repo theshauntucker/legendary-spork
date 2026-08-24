@@ -1088,3 +1088,184 @@ export async function notifyReferralSuccess(
     console.error("notifyReferralSuccess failed:", err);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Retention emails — the come-back loop
+// ---------------------------------------------------------------------------
+
+interface ReportReadyPayload {
+  analysisId: string;
+  dancerName: string | null;
+  routineName: string;
+  style: string | null;
+  totalScore: number;
+  awardLevel: string;
+  nextFocus?: string | null;
+  progression?: {
+    totalDelta: number;
+    baselineScore: number;
+    submissionNumber: number;
+    isPersonalBest: boolean;
+  } | null;
+}
+
+const AWARD_COLORS: Record<string, string> = {
+  Gold: "#ca8a04",
+  "High Gold": "#eab308",
+  Platinum: "#a855f7",
+  Diamond: "#f59e0b",
+};
+
+/**
+ * Sent to the CUSTOMER the moment their analysis is ready.
+ * This is the single highest-leverage retention email in the product: it is
+ * the payoff moment, and until Aug 2026 only the admin ever received it.
+ */
+export async function sendReportReadyEmail(
+  customerEmail: string,
+  p: ReportReadyPayload
+) {
+  const who = p.dancerName ? `${p.dancerName}'s` : "Your dancer's";
+  const awardColor = AWARD_COLORS[p.awardLevel] || "#a855f7";
+  const reportUrl = `https://routinex.org/analysis/${p.analysisId}`;
+
+  const deltaChip = p.progression
+    ? p.progression.totalDelta > 0
+      ? `<span style="display:inline-block;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);color:#34d399;font-size:13px;font-weight:700;padding:4px 12px;border-radius:999px;">▲ +${p.progression.totalDelta} since last time</span>`
+      : p.progression.totalDelta === 0
+        ? `<span style="display:inline-block;background:rgba(161,161,170,0.12);border:1px solid rgba(161,161,170,0.35);color:#a1a1aa;font-size:13px;font-weight:700;padding:4px 12px;border-radius:999px;">Held steady vs last time</span>`
+        : `<span style="display:inline-block;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;font-size:13px;font-weight:700;padding:4px 12px;border-radius:999px;">${p.progression.totalDelta} vs last time — the report shows exactly why</span>`
+    : "";
+
+  const pbChip = p.progression?.isPersonalBest
+    ? `<span style="display:inline-block;background:linear-gradient(90deg,#9333EA,#EC4899,#F59E0B);color:#ffffff;font-size:13px;font-weight:700;padding:4px 12px;border-radius:999px;margin-left:6px;">★ Personal Best</span>`
+    : "";
+
+  const subject = p.progression?.isPersonalBest
+    ? `${who} new personal best: ${p.totalScore}/300 — ${p.awardLevel}`
+    : `${who} score is in: ${p.totalScore}/300 — ${p.awardLevel}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Your RoutineX report is ready</title></head>
+<body style="margin:0;padding:0;background:#0a0118;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f3f4f6;">
+  <div style="display:none;max-height:0;overflow:hidden;">${who} full judge sheet for "${p.routineName}" is ready to open.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0118;padding:24px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#18181B;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">
+        <tr><td style="height:5px;background:linear-gradient(90deg,#9333EA,#EC4899,#F59E0B);line-height:5px;font-size:0;">&nbsp;</td></tr>
+        <tr><td style="padding:34px 34px 6px 34px;">
+          <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#C084FC;">RoutineX &middot; Report Ready</div>
+          <h1 style="margin:12px 0 0 0;font-family:Georgia,'Times New Roman',serif;font-weight:800;font-size:28px;line-height:1.2;color:#FFFFFF;">The judges are done with &ldquo;${p.routineName}&rdquo;.</h1>
+        </td></tr>
+        <tr><td align="center" style="padding:26px 34px 4px 34px;">
+          <div style="font-size:56px;font-weight:800;color:#FFFFFF;line-height:1;">${p.totalScore}<span style="font-size:22px;color:#71717A;font-weight:600;">/300</span></div>
+          <div style="margin-top:8px;font-size:18px;font-weight:800;color:${awardColor};text-transform:uppercase;letter-spacing:2px;">${p.awardLevel}</div>
+          <div style="margin-top:14px;">${deltaChip}${pbChip}</div>
+        </td></tr>
+        ${p.nextFocus ? `<tr><td style="padding:22px 34px 0 34px;">
+          <div style="background:rgba(147,51,234,0.10);border:1px solid rgba(147,51,234,0.3);border-radius:12px;padding:16px 18px;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C084FC;margin-bottom:6px;">The one thing to work on next</div>
+            <div style="font-size:15px;line-height:1.55;color:#E4E4E7;">${p.nextFocus}</div>
+          </div>
+        </td></tr>` : ""}
+        <tr><td align="center" style="padding:28px 34px 6px 34px;">
+          <a href="${reportUrl}" style="display:inline-block;background:linear-gradient(135deg,#9333EA,#EC4899,#F59E0B);color:#FFFFFF;font-size:16px;font-weight:700;text-decoration:none;padding:15px 40px;border-radius:999px;">Open the Full Judge Sheet &rarr;</a>
+        </td></tr>
+        <tr><td style="padding:20px 34px 30px 34px;font-size:13px;line-height:1.6;color:#71717A;" align="center">
+          Timestamped notes, all three judges, and${p.progression ? " what changed since last submission" : " a prioritized improvement plan"} are inside.
+        </td></tr>
+        <tr><td style="padding:0 34px 26px 34px;font-size:12px;color:#52525B;" align="center">RoutineX &middot; routinex.org &middot; Your dancer&rsquo;s secret weapon</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await sendCustomerEmail(customerEmail, subject, html, { useFounderFrom: true });
+}
+
+interface RecapDancerLine {
+  dancerName: string;
+  latestScore: number;
+  latestAward: string;
+  delta: number | null;
+  routineName: string;
+  openPriority: string | null;
+}
+
+/**
+ * Weekly season recap — sent by /api/cron/season-recap to users with recent
+ * activity. Pure value, one CTA, no discount begging.
+ */
+export async function sendSeasonRecapEmail(
+  customerEmail: string,
+  p: {
+    weekCount: number;
+    seasonCount: number;
+    dancers: RecapDancerLine[];
+    bestScore: number;
+  }
+) {
+  const subject =
+    p.weekCount > 0
+      ? `Your dancer's week: ${p.weekCount} ${p.weekCount === 1 ? "routine" : "routines"} scored`
+      : `Your season so far — and what to run next`;
+
+  const rows = p.dancers
+    .slice(0, 4)
+    .map((d) => {
+      const deltaHtml =
+        d.delta === null
+          ? ""
+          : d.delta > 0
+            ? `<span style="color:#34d399;font-weight:700;">&nbsp;+${d.delta}</span>`
+            : d.delta < 0
+              ? `<span style="color:#fbbf24;font-weight:700;">&nbsp;${d.delta}</span>`
+              : `<span style="color:#a1a1aa;font-weight:700;">&nbsp;&plusmn;0</span>`;
+      return `<tr>
+        <td style="padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+          <div style="font-size:15px;font-weight:700;color:#FFFFFF;">${d.dancerName}</div>
+          <div style="font-size:13px;color:#71717A;margin-top:2px;">${d.routineName}</div>
+          ${d.openPriority ? `<div style="font-size:12px;color:#C084FC;margin-top:4px;">Working on: ${d.openPriority}</div>` : ""}
+        </td>
+        <td align="right" style="padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.06);white-space:nowrap;">
+          <span style="font-size:18px;font-weight:800;color:#FFFFFF;">${d.latestScore}</span><span style="font-size:12px;color:#71717A;">/300</span>${deltaHtml}
+          <div style="font-size:11px;color:${AWARD_COLORS[d.latestAward] || "#a855f7"};font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">${d.latestAward}</div>
+        </td>
+      </tr>`;
+    })
+    .join("");
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Your RoutineX season recap</title></head>
+<body style="margin:0;padding:0;background:#0a0118;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f3f4f6;">
+  <div style="display:none;max-height:0;overflow:hidden;">Where your dancer's season stands this week.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0118;padding:24px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#18181B;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">
+        <tr><td style="height:5px;background:linear-gradient(90deg,#9333EA,#EC4899,#F59E0B);line-height:5px;font-size:0;">&nbsp;</td></tr>
+        <tr><td style="padding:34px 34px 10px 34px;">
+          <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#C084FC;">RoutineX &middot; Season Recap</div>
+          <h1 style="margin:12px 0 0 0;font-family:Georgia,'Times New Roman',serif;font-weight:800;font-size:26px;line-height:1.25;color:#FFFFFF;">Where the season stands.</h1>
+          <p style="margin:10px 0 0 0;font-size:14px;color:#A1A1AA;">${p.seasonCount} ${p.seasonCount === 1 ? "routine" : "routines"} scored this season &middot; personal best ${p.bestScore}/300</p>
+        </td></tr>
+        <tr><td style="padding:8px 34px 4px 34px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
+        </td></tr>
+        <tr><td align="center" style="padding:26px 34px 8px 34px;">
+          <a href="https://routinex.org/dashboard" style="display:inline-block;background:linear-gradient(135deg,#9333EA,#EC4899,#F59E0B);color:#FFFFFF;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:999px;">See the Full Season &rarr;</a>
+        </td></tr>
+        <tr><td style="padding:18px 34px 30px 34px;font-size:13px;line-height:1.6;color:#71717A;" align="center">
+          Run this week's practice through the judges before the next competition does.
+        </td></tr>
+        <tr><td style="padding:0 34px 26px 34px;font-size:12px;color:#52525B;" align="center">RoutineX &middot; routinex.org</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await sendCustomerEmail(customerEmail, subject, html, { useFounderFrom: true });
+}

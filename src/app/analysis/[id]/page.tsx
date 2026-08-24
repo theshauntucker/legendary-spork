@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { isSeasonMember } from "@/lib/practice-plan";
 import AnalysisReport from "./AnalysisReport";
 
 function formatDurationFromSeconds(seconds: number | undefined): string {
@@ -94,6 +95,8 @@ export default async function AnalysisPage({
       }
 
       analysisData = {
+        practicePlanStatus: "none" as string,
+        isSeasonMember: false as boolean,
         id: video.id,
         routineName: video.routine_name,
         dancerName: video.dancer_name || "Dancer",
@@ -111,6 +114,17 @@ export default async function AnalysisPage({
         analysisMethod,
         frames: frameUrls,
       };
+
+      // Practice Plan upsell state
+      const { data: planRow } = await serviceClient
+        .from("practice_plans")
+        .select("status")
+        .eq("video_id", video.id)
+        .maybeSingle();
+      analysisData.practicePlanStatus = planRow?.status ?? "none";
+      analysisData.isSeasonMember =
+        user.email === (process.env.ADMIN_EMAIL || "22tucker22@comcast.net") ||
+        (await isSeasonMember(serviceClient, user.id));
     } else {
       analysisData = generateFallbackAnalysis(id);
     }

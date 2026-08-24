@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { useCredit } from "@/lib/credits";
 import { STYLE_CRITERIA, ENTRY_TYPE_CRITERIA, getCompetitionContext } from "@/lib/dance-criteria";
-import { notifyAnalysisComplete, notifyAnalysisError } from "@/lib/notifications";
+import { notifyAnalysisComplete, notifyAnalysisError, sendReportReadyEmail } from "@/lib/notifications";
 import {
   loadDancerHistory,
   resolveDancerId,
@@ -258,7 +258,7 @@ export async function POST(request: NextRequest) {
       console.error("Failed to deduct credit (analysis still saved):", creditErr);
     }
 
-    // Notify admin — isolated
+    // Notify admin + customer — isolated
     try {
       const userEmail = video.user_id
         ? (await serviceClient.auth.admin.getUserById(userId)).data.user?.email || "unknown"
@@ -270,8 +270,37 @@ export async function POST(request: NextRequest) {
         analysis.totalScore,
         analysis.awardLevel
       );
+
+      // The payoff email — send the CUSTOMER their report the moment it's done.
+      if (userEmail !== "unknown" && analysisId) {
+        await sendReportReadyEmail(userEmail, {
+          analysisId: videoId, // /analysis/[id] routes by VIDEO id
+          dancerName: video.dancer_name || null,
+          routineName: video.routine_name || "Untitled",
+          style: video.style || null,
+          totalScore: analysis.totalScore,
+          awardLevel: analysis.awardLevel,
+          nextFocus:
+            analysis.seasonReport?.nextFocus ||
+            analysis.improvementPriorities?.[0]?.item ||
+            null,
+          progression: progression.isTracked
+            ? {
+                totalDelta: progression.totalDelta,
+                baselineScore: progression.baselineScore,
+                submissionNumber: progression.submissionNumber,
+                isPersonalBest: progression.isPersonalBest,
+              }
+            : null,
+        });
+        // Log the send so crons and support can see the customer was told.
+        await serviceClient
+          .from("user_email_sends")
+          .insert({ user_id: userId, email_kind: "report_ready" })
+          .then(() => {}, () => {});
+      }
     } catch (notifyErr) {
-      console.error("Admin notify failed:", notifyErr);
+      console.error("Notify failed:", notifyErr);
     }
 
     return NextResponse.json({ success: true, analysisId });

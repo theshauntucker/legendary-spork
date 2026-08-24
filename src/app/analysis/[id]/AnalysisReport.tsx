@@ -78,6 +78,8 @@ interface AnalysisData {
   analysisMethod?: "ai" | "simulated";
   frames?: AnalysisFrame[];
   progression?: ProgressionData | null;
+  practicePlanStatus?: string;
+  isSeasonMember?: boolean;
 }
 
 interface CategoryDelta {
@@ -863,6 +865,47 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
                     <ChevronRight className="h-4 w-4 text-surface-200" />
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Practice Plan — the natural next step after reading the roadmap */}
+          {analysis.analysisMethod !== "simulated" && (
+            <div className="px-6 sm:px-8 pb-8" data-print-hide>
+              <div className="rounded-2xl border border-primary-500/25 bg-gradient-to-br from-primary-500/10 via-accent-500/5 to-gold-500/10 p-6 sm:p-7">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                  <div className="flex-1">
+                    <div className="text-[11px] uppercase tracking-wider text-primary-300 font-bold mb-1.5">
+                      {analysis.practicePlanStatus === "ready" ? "Your practice plan is ready" : "Turn this report into results"}
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-bold text-white mb-1.5">
+                      {analysis.practicePlanStatus === "ready"
+                        ? `${analysis.dancerName}'s 2-week practice plan`
+                        : `Get ${analysis.dancerName}'s 2-week practice plan`}
+                    </h3>
+                    <p className="text-sm text-surface-200 leading-relaxed">
+                      {analysis.practicePlanStatus === "ready"
+                        ? "Built from this judge sheet — open it, print it, run it."
+                        : "4 days a week, 20–30 minutes a day — every drill traces to a note the judges made above. Then re-submit and watch the Season Tracker measure what moved."}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-center">
+                    <a
+                      href={`/practice-plan/${analysis.id}`}
+                      className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-6 py-3 font-bold text-white text-sm whitespace-nowrap"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      {analysis.practicePlanStatus === "ready"
+                        ? "Open the Plan"
+                        : analysis.isSeasonMember
+                          ? "Build It — Included"
+                          : "Get the Plan — $4.99"}
+                    </a>
+                    {analysis.practicePlanStatus !== "ready" && !analysis.isSeasonMember && (
+                      <p className="text-[11px] text-surface-200 mt-2">Free for Season Members</p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
