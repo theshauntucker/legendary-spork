@@ -7,10 +7,10 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
 
 import Navbar from "@/components/Navbar";
 import { AtmosphereProvider } from "@/components/AtmosphereProvider";
-import { BottomNav } from "@/components/BottomNav";
 import NativeIapBoot from "@/components/NativeIapBoot";
 import { isNativeIosShell } from "@/lib/native-shell";
 import MarketingPixels from "@/components/MarketingPixels";
+import BaydaWidget from "@/components/BaydaWidget";
 
 // iPhone / mobile rendering tuned to match modern app sites:
 // - viewportFit: "cover" lets the page render under the notch / home
@@ -220,8 +220,13 @@ export default async function RootLayout({
           <main className="pt-24 pb-24 md:pb-0">
             {children}
           </main>
-          <BottomNav />
         </AtmosphereProvider>
+        {/* Bayda — the AI competition assistant. Was built and then never
+            mounted anywhere (found Aug 2026), so no parent could reach her.
+            Now global: she answers scoring questions on the marketing pages
+            (closes the "what does Platinum mean / is this worth $1.99"
+            objection) and competition-day questions once they're logged in. */}
+        <BaydaWidget />
         <Analytics />
         <SpeedInsights />
         {/* Marketing / advertising pixels — public marketing pages only.

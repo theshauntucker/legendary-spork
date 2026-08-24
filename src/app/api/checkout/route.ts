@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
               currency: "usd",
               product_data: {
                 name: "RoutineX — Season Member",
-                description: "4 AI-powered dance analyses per month. Introductory rate — locked in for as long as you stay subscribed.",
+                description: "4 AI-powered dance analyses per month. Introductory rate — locked in for as long as you stay subscribed. Cancel anytime. Backed by our money-back guarantee — if it misses the mark, email us and we credit your account immediately.",
               },
               unit_amount: 499, // $4.99/month
               recurring: { interval: "month" },
@@ -83,20 +83,20 @@ export async function POST(request: NextRequest) {
     const productConfig = isPack
       ? {
           name: "RoutineX — Competition Pack (5 Analyses)",
-          description: "5 AI-powered dance routine analyses for $9.99 ($1.99 each). Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.",
+          description: "5 AI-powered dance routine analyses for $9.99 ($1.99 each). Your video never leaves your device — only still-frame thumbnails are analyzed. Backed by our money-back guarantee — if it misses the mark, email us and we credit your account immediately.",
           unit_amount: 999, // $9.99
           payment_type: "video_analysis",
         }
       : isBogo
       ? {
           name: "RoutineX — Buy One Get One (2 Analyses)",
-          description: "Buy one analysis, get one free — 2 full AI-powered dance routine analyses for $2.99 ($1.50 each). Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.",
+          description: "Buy one analysis, get one free — 2 full AI-powered dance routine analyses for $2.99 ($1.50 each). Your video never leaves your device — only still-frame thumbnails are analyzed. Backed by our money-back guarantee — if it misses the mark, email us and we credit your account immediately.",
           unit_amount: 299, // $2.99
           payment_type: "bogo",
         }
       : {
           name: "RoutineX — Single Analysis",
-          description: "1 full AI-powered dance routine analysis for $1.99. Your video never leaves your device — only still-frame thumbnails are analyzed. Nothing is uploaded, stored, or seen by anyone.",
+          description: "1 full AI-powered dance routine analysis for $1.99. Your video never leaves your device — only still-frame thumbnails are analyzed. Backed by our money-back guarantee — if it misses the mark, email us and we credit your account immediately.",
           unit_amount: 199, // $1.99
           payment_type: "single",
         };

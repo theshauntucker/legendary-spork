@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, ArrowRight } from "lucide-react";
 import { startCheckout } from "@/lib/checkout";
+import { Guarantee } from "@/components/Guarantee";
 
 /**
  * Pricing — the only pricing section on the page. Three consumer tiers
@@ -236,6 +237,17 @@ export default function Pricing() {
               </a>
             </div>
           </div>
+        </motion.div>
+
+        {/* Guarantee — the last thing they read before deciding */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="mt-8"
+        >
+          <Guarantee variant="light" />
         </motion.div>
       </div>
     </section>

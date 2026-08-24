@@ -101,7 +101,7 @@ export default function ReferralsClient() {
         >
           <motion.div variants={fadeLift}>
             <Link
-              href="/home"
+              href="/dashboard"
               style={{
                 color: "#9ca3af",
                 fontSize: 14,

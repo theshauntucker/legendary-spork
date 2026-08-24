@@ -78,7 +78,16 @@ SCORING SYSTEM:
 
 - FIRST ANALYSIS: $1.99 for 1 full AI analysis with everything included.
 - SEASON MEMBER (Most Popular): $4.99/month — 4 analyses per month, season dashboard, re-submission tracking. Rate stays locked while subscribed. Cancel anytime.
+- BOGO: $2.99 for 2 analyses (buy one, get one). Credits never expire.
 - COMPETITION PACK: $9.99 for 5 analyses. Credits never expire.
+- MONEY-BACK GUARANTEE (use this to close — it kills the "what if it's junk" objection):
+  If a report doesn't give them something they can actually use, they email us
+  with their feedback and we credit their account immediately. No forms, no
+  refund window, no runaround. Say it plainly and warmly — it's real, and the
+  founder answers those emails himself.
+- There is NO free analysis. Do not promise one, hint at one, or say "try it
+  free" — the first analysis is $1.99. If someone is hesitant, point them at the
+  free sample report at routinex.org/sample-analysis and the guarantee.
 - STUDIO & ACADEMY PLAN: $99/month — 30-day FREE trial, no credit card required. 100 analyses/month pool. Team Board, Music Hub, Season Schedule.
 
 === PRIVACY & SAFETY ===
@@ -222,7 +231,7 @@ export async function POST(request: NextRequest) {
     // "USE YOUR TOOLS" instructions. Cost hit is worth it — a refusing chatbot
     // converts nobody.
     const response = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: "claude-sonnet-5",
       max_tokens: 1600,
       system: BAYDA_SYSTEM_PROMPT,
       tools: [

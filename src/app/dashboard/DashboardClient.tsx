@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { startCheckout, type CheckoutType } from "@/lib/checkout";
+import { Guarantee } from "@/components/Guarantee";
 
 interface DashProgression {
   isTracked?: boolean;
@@ -340,6 +341,8 @@ function PurchaseBlock() {
           type="pack"
         />
       </div>
+
+      <Guarantee variant="compact" className="mt-5" />
     </div>
   );
 }

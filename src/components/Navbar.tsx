@@ -7,7 +7,6 @@ import { Menu, X, LogOut, Settings } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { NotificationBell } from "@/components/NotificationBell";
-import { ShellSwitcher } from "@/components/ShellSwitcher";
 import RoutineXLogo from "@/components/RoutineXLogo";
 
 const navLinks = [
@@ -102,7 +101,6 @@ export default function Navbar() {
               />
             ) : user ? (
               <div className="flex items-center gap-3">
-                <ShellSwitcher profileType={profileType} />
                 <NotificationBell />
                 <a
                   href="/settings"
@@ -181,7 +179,6 @@ export default function Navbar() {
               {user ? (
                 <>
                   <div className="py-2">
-                    <ShellSwitcher profileType={profileType} />
                   </div>
                   <a
                     href="/settings"

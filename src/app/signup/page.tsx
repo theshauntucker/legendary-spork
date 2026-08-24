@@ -162,7 +162,11 @@ function SignupForm() {
             <CheckCircle className="mx-auto h-12 w-12 text-green-400 mb-4" />
             <h2 className="text-xl font-bold">Account Created!</h2>
             <p className="mt-2 text-surface-200 text-sm">
-              Your first analysis is just $1.99. Taking you to your dashboard...
+              Your first analysis is just $1.99. Taking you to checkout...
+            </p>
+            <p className="mt-3 text-xs text-emerald-300/90 leading-relaxed">
+              Backed by our money-back guarantee — if the report misses the mark,
+              email us and we credit your account immediately.
             </p>
           </motion.div>
         ) : (

@@ -16,7 +16,7 @@ const WELCOME_MESSAGE: Message = {
 const QUICK_PROMPTS = [
   "How does RoutineX work?",
   "What's the scoring system?",
-  "Is it really free to try?",
+  "What does it cost?",
   "What competitions do you cover?",
   "What are all the features of RoutineX?",
 ];

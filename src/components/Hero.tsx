@@ -95,6 +95,10 @@ export default function Hero() {
               <Clock className="h-4 w-4 text-[#C2410C]" />
               Results in under 5 minutes
             </span>
+            <span className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="h-4 w-4 text-emerald-600" />
+              Money-back guarantee
+            </span>
           </div>
 
           <div className="mt-8 flex justify-center">
