@@ -107,6 +107,7 @@ export default async function AnalysisPage({
         timelineNotes: analysis.timeline_notes,
         improvementPriorities: analysis.improvement_priorities,
         competitionComparison: analysis.competition_comparison,
+        progression: analysis.progression ?? null,
         analysisMethod,
         frames: frameUrls,
       };

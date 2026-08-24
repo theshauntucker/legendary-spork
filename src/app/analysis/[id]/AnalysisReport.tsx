@@ -77,6 +77,297 @@ interface AnalysisData {
   };
   analysisMethod?: "ai" | "simulated";
   frames?: AnalysisFrame[];
+  progression?: ProgressionData | null;
+}
+
+interface CategoryDelta {
+  category: string;
+  current: number;
+  previous: number;
+  delta: number;
+  direction: "up" | "down" | "flat";
+}
+
+interface ProgressionData {
+  isTracked: boolean;
+  submissionNumber: number;
+  baselineScore: number;
+  baselineAwardLevel: string;
+  baselineDate: string;
+  baselineIsSameRoutine: boolean;
+  currentScore: number;
+  totalDelta: number;
+  direction: "up" | "down" | "flat";
+  categoryDeltas: CategoryDelta[];
+  awardLevelChanged: boolean;
+  isPersonalBest: boolean;
+  bestScore: number;
+  firstScore: number;
+  pointsGainedAllTime: number;
+  seasonAverage: number;
+  resolvedPriorities: string[];
+  carriedPriorities: string[];
+  scoreHistory: Array<{ n: number; score: number; date: string; routineName: string; awardLevel: string }>;
+  seasonReport?: {
+    headline?: string;
+    whatImproved?: string[];
+    whatSlipped?: string[];
+    prioritiesLanded?: string[];
+    nextFocus?: string;
+    coachNote?: string;
+  } | null;
+}
+
+/**
+ * Season Progress — the honest delta.
+ *
+ * Every number here is measured against this dancer's own previous judge sheet.
+ * Nothing is inflated. A flat or negative delta is shown as plainly as a gain,
+ * because a parent who can trust the down weeks is a parent who believes the up
+ * weeks.
+ */
+function SeasonProgress({ p, dancerName }: { p: ProgressionData; dancerName: string }) {
+  const up = p.totalDelta > 0;
+  const flat = p.totalDelta === 0;
+  const sr = p.seasonReport;
+
+  const deltaColor = up ? "text-emerald-400" : flat ? "text-zinc-300" : "text-amber-400";
+  const deltaBg = up
+    ? "from-emerald-500/15 to-emerald-500/5 border-emerald-500/25"
+    : flat
+      ? "from-zinc-500/10 to-zinc-500/5 border-zinc-500/25"
+      : "from-amber-500/15 to-amber-500/5 border-amber-500/25";
+
+  const history = Array.isArray(p.scoreHistory) ? p.scoreHistory : [];
+  const hiScore = history.length ? Math.max(...history.map((h) => h.score)) : p.currentScore;
+  const loScore = history.length ? Math.min(...history.map((h) => h.score)) : p.currentScore;
+  const span = Math.max(1, hiScore - loScore);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.15 }}
+      className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm overflow-hidden"
+    >
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-white/10">
+        <div className="flex items-center gap-2.5">
+          <TrendingUp className="w-5 h-5 text-primary-400" />
+          <div>
+            <h3 className="text-white font-bold text-lg leading-tight">Season Progress</h3>
+            <p className="text-xs text-zinc-500">
+              Submission #{p.submissionNumber} for {dancerName}
+              {p.baselineIsSameRoutine ? " · same routine" : " · vs. their last routine"}
+            </p>
+          </div>
+        </div>
+        {p.isPersonalBest && (
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-primary-500 to-gold-400 text-white">
+            ★ Personal Best
+          </span>
+        )}
+      </div>
+
+      {/* Headline delta */}
+      <div className={`m-5 rounded-xl border bg-gradient-to-br ${deltaBg} p-5`}>
+        <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
+          <div>
+            <div className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">
+              {p.baselineDate}
+            </div>
+            <div className="text-2xl font-bold text-zinc-400">{p.baselineScore}</div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-zinc-600 mb-2" />
+          <div>
+            <div className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">Today</div>
+            <div className="text-2xl font-bold text-white">{p.currentScore}</div>
+          </div>
+          <div className="ml-auto text-right">
+            <div className={`text-4xl font-extrabold ${deltaColor}`}>
+              {up ? "+" : ""}
+              {p.totalDelta}
+            </div>
+            <div className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">
+              {flat ? "no change" : up ? "points gained" : "points"}
+            </div>
+          </div>
+        </div>
+
+        {sr?.headline && (
+          <p className="mt-4 pt-4 border-t border-white/10 text-[15px] leading-relaxed text-zinc-200">
+            {sr.headline}
+          </p>
+        )}
+
+        {p.awardLevelChanged && (
+          <p className="mt-3 text-sm font-semibold text-white">
+            Award level moved: {p.baselineAwardLevel} → {getAwardLevel(p.currentScore)}
+          </p>
+        )}
+      </div>
+
+      {/* Category deltas */}
+      {p.categoryDeltas?.length > 0 && (
+        <div className="px-5 pb-5">
+          <div className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold mb-3">
+            Category by category
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {p.categoryDeltas.map((d) => {
+              const c =
+                d.direction === "up"
+                  ? "text-emerald-400"
+                  : d.direction === "down"
+                    ? "text-amber-400"
+                    : "text-zinc-500";
+              return (
+                <div
+                  key={d.category}
+                  className="flex items-center justify-between rounded-lg bg-white/[0.04] border border-white/5 px-3.5 py-2.5"
+                >
+                  <span className="text-sm text-zinc-300">{d.category}</span>
+                  <span className="flex items-baseline gap-2">
+                    <span className="text-xs text-zinc-600">
+                      {d.previous} → {d.current}
+                    </span>
+                    <span className={`text-sm font-bold tabular-nums ${c}`}>
+                      {d.delta > 0 ? "+" : ""}
+                      {d.delta.toFixed(1)}
+                    </span>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* What actually changed */}
+      {(sr?.whatImproved?.length || sr?.whatSlipped?.length) ? (
+        <div className="px-5 pb-5 grid gap-4 sm:grid-cols-2">
+          {sr?.whatImproved && sr.whatImproved.length > 0 && (
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
+              <div className="flex items-center gap-2 mb-2.5">
+                <CheckCircle className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs uppercase tracking-wider font-bold text-emerald-400">
+                  What improved
+                </span>
+              </div>
+              <ul className="space-y-2">
+                {sr.whatImproved.map((t, i) => (
+                  <li key={i} className="text-sm text-zinc-300 leading-relaxed">
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {sr?.whatSlipped && sr.whatSlipped.length > 0 && (
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-4">
+              <div className="flex items-center gap-2 mb-2.5">
+                <AlertCircle className="w-4 h-4 text-amber-400" />
+                <span className="text-xs uppercase tracking-wider font-bold text-amber-400">
+                  Watch this
+                </span>
+              </div>
+              <ul className="space-y-2">
+                {sr.whatSlipped.map((t, i) => (
+                  <li key={i} className="text-sm text-zinc-300 leading-relaxed">
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {/* Priorities they were given last time */}
+      {sr?.prioritiesLanded && sr.prioritiesLanded.length > 0 && (
+        <div className="px-5 pb-5">
+          <div className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold mb-3">
+            The notes from last time
+          </div>
+          <ul className="space-y-2">
+            {sr.prioritiesLanded.map((t, i) => (
+              <li
+                key={i}
+                className="text-sm text-zinc-300 leading-relaxed rounded-lg bg-white/[0.03] border border-white/5 px-3.5 py-2.5"
+              >
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Season sparkline */}
+      {history.length > 1 && (
+        <div className="px-5 pb-5">
+          <div className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold mb-3">
+            Season so far
+          </div>
+          <div className="flex items-end gap-1.5 h-24">
+            {history.map((h, i) => {
+              const pct = 18 + ((h.score - loScore) / span) * 82;
+              const isLast = i === history.length - 1;
+              return (
+                <div key={i} className="flex-1 flex flex-col items-center justify-end gap-1.5 min-w-0">
+                  <span className={`text-[10px] font-bold tabular-nums ${isLast ? "text-white" : "text-zinc-500"}`}>
+                    {h.score}
+                  </span>
+                  <div
+                    className={`w-full rounded-t ${
+                      isLast
+                        ? "bg-gradient-to-t from-primary-500 to-gold-400"
+                        : "bg-white/15"
+                    }`}
+                    style={{ height: `${pct}%` }}
+                    title={`${h.routineName} — ${h.date}`}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex justify-between mt-2 text-[11px] text-zinc-600">
+            <span>First: {p.firstScore}</span>
+            <span>Season avg: {p.seasonAverage}</span>
+            <span>Best: {p.bestScore}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Next focus + coach note */}
+      {(sr?.nextFocus || sr?.coachNote) && (
+        <div className="px-5 pb-5">
+          <div className="rounded-xl border border-primary-500/25 bg-gradient-to-br from-primary-500/10 to-transparent p-4">
+            {sr?.nextFocus && (
+              <>
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className="w-4 h-4 text-primary-400" />
+                  <span className="text-xs uppercase tracking-wider font-bold text-primary-400">
+                    Next focus
+                  </span>
+                </div>
+                <p className="text-sm text-white leading-relaxed font-medium">{sr.nextFocus}</p>
+              </>
+            )}
+            {sr?.coachNote && (
+              <p className="mt-3 text-sm text-zinc-400 leading-relaxed italic">{sr.coachNote}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="px-5 py-3 border-t border-white/10 bg-white/[0.02]">
+        <p className="text-[11px] text-zinc-600 leading-relaxed">
+          Scored on the same standard as every other routine — no bonus for returning. Every point
+          here was earned in the frames.
+        </p>
+      </div>
+    </motion.div>
+  );
 }
 
 const awardLevels = [
@@ -367,6 +658,13 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
               </div>
             </div>
           </div>
+
+          {/* Season Progress — only when this dancer has a prior judge sheet */}
+          {analysis.progression?.isTracked && (
+            <div className="px-6 sm:px-8 pt-6">
+              <SeasonProgress p={analysis.progression} dancerName={analysis.dancerName} />
+            </div>
+          )}
 
           {/* Score Breakdown */}
           <div className="p-6 sm:p-8">

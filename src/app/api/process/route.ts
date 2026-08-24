@@ -3,6 +3,14 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { useCredit } from "@/lib/credits";
 import { STYLE_CRITERIA, ENTRY_TYPE_CRITERIA, getCompetitionContext } from "@/lib/dance-criteria";
 import { notifyAnalysisComplete, notifyAnalysisError } from "@/lib/notifications";
+import {
+  loadDancerHistory,
+  resolveDancerId,
+  buildHistoryPrompt,
+  computeProgression,
+  reconcileScore,
+  type DancerHistory,
+} from "@/lib/progression";
 
 export const maxDuration = 300; // 5 min max for AI analysis
 
@@ -18,30 +26,6 @@ interface PreprocessingMetadata {
   durationFormatted: string;
   resolution: string;
   frames: Array<{ timestamp: number; label: string; path: string }>;
-}
-
-// Full routine history for progression-aware analysis
-interface SubmissionHistory {
-  submissionNumber: number;
-  totalScore: number;
-  awardLevel: string;
-  analyzedAt: string;
-  improvementPriorities: Array<{ priority: number; item: string }>;
-}
-
-interface ParentAnalysisContext {
-  // Most recent submission data (for score boost baseline)
-  totalScore: number;
-  awardLevel: string;
-  analyzedAt: string;
-  judgeScores: Array<{ category: string; avg: number; max: number }>;
-  improvementPriorities: Array<{ priority: number; item: string }>;
-  // Full history across all submissions
-  allSubmissions: SubmissionHistory[];
-  totalSubmissions: number;
-  firstScore: number;
-  bestScore: number;
-  totalPointsGained: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -90,70 +74,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No frames available" }, { status: 400 });
     }
 
-    // ── Fetch FULL routine history for progression-aware analysis ──────────────
-    let parentContext: ParentAnalysisContext | null = null;
-    if (parentVideoId) {
-      try {
-        // Find all analyzed videos with the same routine name for this user
-        const { data: siblingVideos } = await serviceClient
-          .from("videos")
-          .select("id, created_at")
-          .eq("user_id", userId)
-          .eq("routine_name", video.routine_name)
-          .eq("status", "analyzed")
-          .neq("id", videoId)
-          .order("created_at", { ascending: true });
-
-        if (siblingVideos && siblingVideos.length > 0) {
-          const siblingIds = siblingVideos.map(v => v.id);
-
-          // Fetch all analyses for sibling videos
-          const { data: allAnalyses } = await serviceClient
-            .from("analyses")
-            .select("video_id, total_score, award_level, judge_scores, improvement_priorities, created_at")
-            .in("video_id", siblingIds)
-            .order("created_at", { ascending: true });
-
-          if (allAnalyses && allAnalyses.length > 0) {
-            const latestAnalysis = allAnalyses[allAnalyses.length - 1];
-            const firstAnalysis = allAnalyses[0];
-            const bestScore = Math.max(...allAnalyses.map(a => a.total_score));
-
-            const allSubmissions: SubmissionHistory[] = allAnalyses.map((a, idx) => ({
-              submissionNumber: idx + 1,
-              totalScore: a.total_score,
-              awardLevel: a.award_level,
-              analyzedAt: new Date(a.created_at).toLocaleDateString("en-US", {
-                month: "long", day: "numeric", year: "numeric",
-              }),
-              improvementPriorities: (a.improvement_priorities as Array<{ priority: number; item: string }>)
-                .slice(0, 3)
-                .map(p => ({ priority: p.priority, item: p.item })),
-            }));
-
-            parentContext = {
-              totalScore: latestAnalysis.total_score,
-              awardLevel: latestAnalysis.award_level,
-              analyzedAt: new Date(latestAnalysis.created_at).toLocaleDateString("en-US", {
-                month: "long", day: "numeric", year: "numeric",
-              }),
-              judgeScores: (latestAnalysis.judge_scores as Array<{ category: string; avg: number; max: number }>)
-                .map(s => ({ category: s.category, avg: s.avg, max: s.max })),
-              improvementPriorities: (latestAnalysis.improvement_priorities as Array<{ priority: number; item: string }>)
-                .slice(0, 3)
-                .map(p => ({ priority: p.priority, item: p.item })),
-              allSubmissions,
-              totalSubmissions: allAnalyses.length,
-              firstScore: firstAnalysis.total_score,
-              bestScore,
-              totalPointsGained: latestAnalysis.total_score - firstAnalysis.total_score,
-            };
-          }
+    // ── Season tracking: resolve this dancer, then load their full history ──────
+    // This runs on EVERY upload, not just explicit re-submissions. Previously
+    // progression context only loaded when a parent clicked "Submit Improved
+    // Routine", which meant ~95% of analyses were scored with no memory of the
+    // dancer at all. Season tracking is only valuable if it is always on.
+    let dancerId: string | null = video.dancer_id ?? null;
+    if (!dancerId) {
+      dancerId = await resolveDancerId(serviceClient, {
+        userId,
+        dancerName: video.dancer_name,
+        studioName: video.studio_name,
+        ageGroup: video.age_group,
+        style: video.style,
+      });
+      if (dancerId) {
+        try {
+          await serviceClient.from("videos").update({ dancer_id: dancerId }).eq("id", videoId);
+        } catch (linkErr) {
+          console.warn("Could not link dancer_id on video:", linkErr);
         }
-      } catch (parentErr) {
-        // Non-fatal — proceed without parent context if fetch fails
-        console.warn("Could not fetch routine history:", parentErr);
       }
+    }
+
+    const history: DancerHistory | null = await loadDancerHistory(serviceClient, {
+      userId,
+      dancerId,
+      dancerName: video.dancer_name,
+      routineName: video.routine_name || "",
+      excludeVideoId: videoId,
+    });
+
+    if (history) {
+      console.log(
+        `Season context loaded: submission #${history.submissionNumber}, baseline ${history.baseline?.totalScore}/300 (${history.baselineIsSameRoutine ? "same routine" : "different routine"})`
+      );
     }
 
     // Download frames from Supabase storage
@@ -181,53 +136,42 @@ export async function POST(request: NextRequest) {
 
     const durationStr = meta.durationFormatted || formatDuration(meta.duration);
 
-    // Run the AI analysis (with parent context if available)
-    const { analysis, usedAI } = await analyzeWithClaude(frames, routineMetadata, durationStr, parentContext);
+    // Run the AI analysis (progression-aware when the dancer has a season history)
+    const { analysis, usedAI } = await analyzeWithClaude(frames, routineMetadata, durationStr, history);
 
-    // ── Confidence-building score boost for re-submissions ──────────────────────
-    // When a dancer comes back with the same routine, we guarantee their score
-    // improves to show progress and build confidence — regardless of AI output.
-    if (parentContext && typeof analysis.totalScore === "number") {
-      const minProgress = 2;   // Always at least 2 pts above the best ever score
-      const extraBoost = Math.floor(Math.random() * 7) + 2; // +2 to +8 extra
-      // Use bestScore as baseline — never let a new submission score below their best
-      const targetScore = Math.min(
-        298,
-        Math.max(
-          parentContext.bestScore + minProgress,
-          analysis.totalScore + extraBoost
-        )
-      );
-      const actualBoost = targetScore - analysis.totalScore;
-
-      if (actualBoost > 0) {
-        // Distribute boost evenly across all judge scores
-        const judgeCount = analysis.judgeScores?.reduce(
-          (sum: number, cat: { judges: number[] }) => sum + (cat.judges?.length || 0), 0
-        ) || 9;
-        const perJudge = actualBoost / judgeCount;
-
-        if (Array.isArray(analysis.judgeScores)) {
-          for (const category of analysis.judgeScores) {
-            if (Array.isArray(category.judges)) {
-              category.judges = category.judges.map((score: number) =>
-                Math.round((score + perJudge) * 10) / 10
-              );
-              category.avg = Math.round(
-                (category.judges.reduce((s: number, j: number) => s + j, 0) /
-                  category.judges.length) * 10
-              ) / 10;
-            }
-          }
-        }
-
-        analysis.totalScore = targetScore;
-        analysis.awardLevel = getAwardLevel(targetScore);
-        if (analysis.competitionComparison) {
-          analysis.competitionComparison.yourScore = targetScore;
-        }
-        console.log(`Score boost applied: ${targetScore - actualBoost} → ${targetScore} (+${actualBoost})`);
+    // ── SCORE INTEGRITY ────────────────────────────────────────────────────────
+    // The total is DERIVED from the judge sheet, never taken on faith from the
+    // model. This is what previously shipped "90/300" reports to paying
+    // customers: the model returned a single judge's 100-point total instead of
+    // the 3-judge 300-point total. A parent can add up the judge sheet
+    // themselves — the headline number has to match it, every time.
+    //
+    // There is deliberately NO score boost here. Re-submissions are scored on
+    // exactly the same standard as first submissions. If a dancer improved, the
+    // number goes up because the dancing got better. That is the entire value of
+    // the Season Tracker — a manufactured gain is worth nothing to a parent who
+    // is about to compare it against a real competition sheet.
+    {
+      const reconciled = reconcileScore(analysis);
+      if (reconciled.integrity?.correctedMismatch) {
+        console.warn(
+          `Score integrity: model reported ${reconciled.integrity.reportedTotal}, judge sheet derives ${reconciled.totalScore}. Using derived.`
+        );
       }
+      analysis.totalScore = reconciled.totalScore;
+      analysis.awardLevel = reconciled.awardLevel;
+      analysis.scoreIntegrity = reconciled.integrity;
+      if (analysis.competitionComparison) {
+        analysis.competitionComparison.yourScore = reconciled.totalScore;
+      }
+    }
+
+    // ── PROGRESSION: measure, don't manufacture ───────────────────────────────
+    const progression = computeProgression(analysis, history);
+    if (progression.isTracked) {
+      console.log(
+        `Progression: ${progression.baselineScore} → ${progression.currentScore} (${progression.totalDelta >= 0 ? "+" : ""}${progression.totalDelta}), submission #${progression.submissionNumber}`
+      );
     }
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -236,8 +180,14 @@ export async function POST(request: NextRequest) {
     // (analysis insert, credit deduction, email) are each wrapped so they
     // cannot cascade into markVideoError() and falsely mark a successfully
     // analyzed routine as an error.
-    const hasValidScore = typeof analysis?.totalScore === "number" && analysis.totalScore > 0;
+    // A score below 200/300 is not a low score — it means the judge could not
+    // evaluate the footage as a dance routine at all (wrong video, a band, a
+    // black screen). Shipping "0/300" as a real report and charging a credit for
+    // it is worse than failing. Fail cleanly instead, so the credit is kept.
+    const hasValidScore =
+      typeof analysis?.totalScore === "number" && analysis.totalScore >= 200 && analysis.totalScore <= 300;
     if (!hasValidScore) {
+      console.error(`Unusable analysis (score ${analysis?.totalScore}) for video ${videoId} — not charging a credit`);
       await markVideoError(serviceClient, videoId);
       return NextResponse.json({ error: "Analysis returned invalid score" }, { status: 500 });
     }
@@ -273,6 +223,10 @@ export async function POST(request: NextRequest) {
           timeline_notes: analysis.timelineNotes,
           improvement_priorities: analysis.improvementPriorities,
           competition_comparison: analysis.competitionComparison,
+          progression: progression.isTracked
+            ? { ...progression, seasonReport: analysis.seasonReport ?? null }
+            : null,
+          score_integrity: analysis.scoreIntegrity ?? null,
         })
         .select("id")
         .single();
@@ -423,7 +377,7 @@ async function analyzeWithClaude(
     originalFileSize: number;
   },
   durationStr: string,
-  parentContext: ParentAnalysisContext | null = null
+  history: DancerHistory | null = null
 ) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
@@ -446,39 +400,9 @@ async function analyzeWithClaude(
   const competitionContext = getCompetitionContext(metadata.ageGroup, metadata.style, metadata.entryType);
   const isGroupEntry = entryTypeCriteria.additionalMetrics.length > 0;
 
-  // ── Build routine history section (only if this is a tracked re-submission) ──
-  const routineHistorySection = parentContext
-    ? `
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ROUTINE HISTORY — SUBMISSION #${parentContext.totalSubmissions + 1}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-This dancer has been submitting this routine for ongoing coaching. They have come back ${parentContext.totalSubmissions} time${parentContext.totalSubmissions !== 1 ? "s" : ""} — that commitment and dedication deserves to be celebrated and rewarded.
-
-FULL PROGRESSION HISTORY:
-${parentContext.allSubmissions.map(s => `  Submission ${s.submissionNumber} (${s.analyzedAt}): ${s.totalScore}/300 — ${s.awardLevel}
-    Working on: ${s.improvementPriorities.map(p => p.item).join(", ")}`).join("\n")}
-
-TRAJECTORY SUMMARY:
-  • Started at: ${parentContext.firstScore}/300 (${parentContext.allSubmissions[0]?.awardLevel ?? ""})
-  • Best score: ${parentContext.bestScore}/300
-  • Total improvement: +${parentContext.totalPointsGained} points over ${parentContext.totalSubmissions} submission${parentContext.totalSubmissions !== 1 ? "s" : ""}
-
-Most Recent Analysis (${parentContext.analyzedAt}):
-  Score: ${parentContext.totalScore}/300 (${parentContext.awardLevel})
-  Category breakdown: ${parentContext.judgeScores.map(s => `${s.category} ${s.avg}/${s.max}`).join(", ")}
-  Was working on: ${parentContext.improvementPriorities.map(p => `${p.priority}. ${p.item}`).join("; ")}
-
-YOUR TASK FOR THIS SUBMISSION #${parentContext.totalSubmissions + 1}:
-1. You are their ongoing coach who has watched every submission. Write feedback that references this ENTIRE journey, not just the last one.
-2. Be generous and encouraging — this dancer has proven their dedication by coming back repeatedly. Score higher than you would for a first-time submission.
-3. In each category's feedback, speak to specific improvements you see over the course of their ${parentContext.totalSubmissions}-submission arc. Name specific things from their history.
-4. Frame improvement priorities as the NEXT chapter of their growth — they've already come so far.
-5. The dancer and their parent see the full history side-by-side — make this report feel like the continuation of an ongoing coaching relationship.
-
-This dancer has been putting in the work for ${parentContext.totalSubmissions} submission${parentContext.totalSubmissions !== 1 ? "s" : ""}. Every time you analyze them, acknowledge that arc. Make them proud of the journey.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-`
-    : "";
+  // ── Season history: same rubric, more context. Never a thumb on the scale. ──
+  const routineHistorySection = history && history.baseline ? buildHistoryPrompt(history) : "";
+  const parentContext = history?.baseline ?? null;
 
   content.push({
     type: "text",
@@ -604,11 +528,48 @@ Now provide your complete analysis as a JSON object with EXACTLY this structure.
     "top5Threshold": <estimated top 5% threshold>,
     "benchmarkContext": "${competitionContext.benchmarkContext}",
     "ageStyleNote": "${competitionContext.ageStyleNote}"
-  }
+  }${parentContext ? `,
+  "seasonReport": {
+    "headline": "<one sentence a parent can read out loud, naming the single most important thing that changed since ${parentContext.analyzedAt}. Honest — if the routine did not move, say that plainly and warmly.>",
+    "whatImproved": [
+      "<specific, observable improvement vs the last report — name the element and the timestamp. Empty array if nothing measurably improved. Do NOT invent improvements.>"
+    ],
+    "whatSlipped": [
+      "<anything that is weaker than the last report. Empty array if nothing slipped. Being honest here is what makes the improvements credible.>"
+    ],
+    "prioritiesLanded": [
+      "<for each priority they were told to work on: quote it, then state 'fixed', 'partially fixed', or 'still present' with what you see in the frames>"
+    ],
+    "nextFocus": "<the ONE thing that will move their score most before the next competition, stated as a concrete action>",
+    "coachNote": "<2-3 sentences, coach to dancer, about where they are in their season. Warm, specific, never generic praise.>"
+  }` : ""}
 }
 
+CRITICAL — TOTAL SCORE ARITHMETIC:
+"totalScore" MUST equal the sum of the four category averages, multiplied by 3
+(the panel size). One judge scores 100 points across the four categories; three
+judges score 300. Example: category averages 30.6 + 31.7 + 18.3 + 9.2 = 89.8,
+so totalScore = 89.8 × 3 = 269. Do NOT return a single judge's 100-point total.
+The judge sheet and the headline number must agree — a parent will add them up.
+
 SCORING PHILOSOPHY:
-Think of yourself as the encouraging judge on the panel — not the harshest, not the most generous, but the one who sees the best in a dancer while still being honest. Scores should be realistic and comparable to what this dancer would receive at a real regional competition.
+You are the fair judge on the panel — warm in how you write, exacting in how you
+score. Your written feedback should encourage; your NUMBER must be accurate.
+
+The single test every score has to pass: this parent is going to hold your sheet
+next to the real score their dancer receives at their next competition. If your
+number is consistently higher than the real one, we have taught them nothing and
+they will never trust us again. Score what you actually see.
+
+USE THE FULL RANGE. Do not default to the middle. A routine with visible
+technical breakdowns belongs in Gold, and saying so — kindly, with a clear path
+out — is more useful to that dancer than a comfortable High Gold. Reserve
+Diamond for work that would genuinely place at a national level. Most routines
+are NOT High Gold; make the number reflect what is in the frames.
+
+Never adjust a score for effort, loyalty, repeat submissions, the dancer's age
+relative to their division, or how much you want to encourage them. Encouragement
+lives in the words, never in the points.
 
 SCORING GUIDELINES:
 - Gold: 260-269 (significant issues present)
