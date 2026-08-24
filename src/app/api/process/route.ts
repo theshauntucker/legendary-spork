@@ -139,6 +139,26 @@ export async function POST(request: NextRequest) {
     // Run the AI analysis (progression-aware when the dancer has a season history)
     const { analysis, usedAI } = await analyzeWithClaude(frames, routineMetadata, durationStr, history);
 
+    // ── NEVER SELL A SIMULATED REPORT ─────────────────────────────────────────
+    // analyzeWithClaude() falls back to generateSimulatedAnalysis() whenever the
+    // Anthropic call fails — a bad model ID, an expired key, an outage. That
+    // fallback used to be saved and charged for like a real judge sheet, which
+    // means a silent config mistake would ship invented scores to a paying
+    // parent and they'd never know. A simulated result is a FAILED run: mark it
+    // an error, keep the credit, and page the admin. Fail loud, not fake.
+    if (!usedAI) {
+      console.error(
+        `Analysis fell back to SIMULATED for video ${videoId} — Anthropic call failed. Not charging a credit.`
+      );
+      notifyAnalysisError(
+        "unknown",
+        "Claude Vision call failed — simulated fallback blocked. Check ANTHROPIC_API_KEY and the model ID in /api/process.",
+        `videoId: ${videoId}`
+      ).catch(() => {});
+      await markVideoError(serviceClient, videoId);
+      return NextResponse.json({ error: "Analysis engine unavailable" }, { status: 503 });
+    }
+
     // ── SCORE INTEGRITY ────────────────────────────────────────────────────────
     // The total is DERIVED from the judge sheet, never taken on faith from the
     // model. This is what previously shipped "90/300" reports to paying
