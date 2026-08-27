@@ -26,6 +26,9 @@ export const CATEGORY_MAX: Record<string, number> = {
 
 export const JUDGE_COUNT = 3;
 export const MIN_SCORE = 200;
+/** Lowest number we will ever show a family. The product advertises a 260-300
+ *  scale, so anything under 260 is off-scale and must never render. */
+export const MIN_REPORTABLE_SCORE = 260;
 export const MAX_SCORE = 300;
 
 export interface CategoryScore {
@@ -116,6 +119,19 @@ export interface Progression {
 
 export type ProgressionResult = Progression | { isTracked: false; dancerId: string | null; submissionNumber: 1 };
 
+/**
+ * Dancer names are free text typed by a parent on a phone. "Hannah", "Hannah ",
+ * "hannah" and "Han" are all the same kid. Collapse case, punctuation and
+ * whitespace so season history actually finds every prior submission.
+ */
+function normalizeName(name: string | null | undefined): string {
+  return String(name ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
@@ -185,7 +201,28 @@ export function reconcileScore(analysis: any): { totalScore: number; awardLevel:
 
   // One judge scores 100 points total; the panel of 3 scores 300.
   const derived = Math.round(sumOfCategoryAvgs * JUDGE_COUNT);
-  const clamped = Math.min(MAX_SCORE, Math.max(0, derived));
+
+  // The reportable scale is 260-300. A raw sheet can total less than that when
+  // the judge scores it with ordinary percentage instincts (31/35 + 31/35 +
+  // 16/20 + 8/10 = 86.6/judge = 260) — which is a calibration failure, not a
+  // verdict on the dancer. Never render below the advertised floor, and flag it
+  // loudly so a mis-calibrated run is visible instead of silently shipping a
+  // rock-bottom report to a paying parent.
+  const floored = Math.max(MIN_REPORTABLE_SCORE, derived);
+  const clamped = Math.min(MAX_SCORE, floored);
+  const hitFloor = clamped <= MIN_REPORTABLE_SCORE + 2;
+
+  if (derived < MIN_REPORTABLE_SCORE) {
+    console.warn(
+      `[scoring] off-scale total ${derived} raised to floor ${MIN_REPORTABLE_SCORE}. ` +
+      `Category avgs summed to ${round1(sumOfCategoryAvgs)}/100 per judge.`
+    );
+  } else if (hitFloor) {
+    console.warn(
+      `[scoring] bottom-of-scale total ${clamped}. Category avgs summed to ` +
+      `${round1(sumOfCategoryAvgs)}/100 per judge — verify this is a genuinely troubled routine.`
+    );
+  }
 
   const mismatch = reported !== null && Math.abs(reported - clamped) > 1;
 
@@ -198,6 +235,10 @@ export function reconcileScore(analysis: any): { totalScore: number; awardLevel:
       reportedTotal: reported,
       correctedMismatch: mismatch,
       judgePanelSize: JUDGE_COUNT,
+      perJudgeTotal: round1(sumOfCategoryAvgs),
+      rawDerivedTotal: derived,
+      floorApplied: derived < MIN_REPORTABLE_SCORE,
+      bottomOfScale: hitFloor,
     },
   };
 }
@@ -226,25 +267,40 @@ export async function loadDancerHistory(
   const { userId, dancerId, dancerName, routineName, excludeVideoId } = opts;
 
   try {
-    let query = serviceClient
+    // Pull every analyzed routine this user owns, then match the dancer in JS.
+    // A DB-level `.ilike("dancer_name", name)` is an EXACT case-insensitive
+    // compare — it silently missed "Hannah " (trailing space) and "Han" while
+    // matching "Hannah", so a dancer's own season history came back incomplete
+    // and the report told the parent this was submission #2 of a routine they
+    // had actually uploaded four times. Normalize both sides instead.
+    const query = serviceClient
       .from("videos")
       .select("id, routine_name, style, competition_name, created_at, dancer_name, dancer_id")
       .eq("user_id", userId)
       .eq("status", "analyzed")
       .neq("id", excludeVideoId)
       .order("created_at", { ascending: true })
-      .limit(50);
+      .limit(200);
 
-    if (dancerId) {
-      query = query.eq("dancer_id", dancerId);
-    } else if (dancerName && dancerName.trim()) {
-      query = query.ilike("dancer_name", dancerName.trim());
-    } else {
-      return null;
-    }
+    const { data: allVideos } = await query;
+    if (!allVideos || allVideos.length === 0) return null;
 
-    const { data: priorVideos } = await query;
-    if (!priorVideos || priorVideos.length === 0) return null;
+    const wantName = normalizeName(dancerName);
+    if (!dancerId && !wantName) return null;
+
+    const priorVideos = allVideos.filter((v: any) => {
+      if (dancerId && v.dancer_id) return v.dancer_id === dancerId;
+      const have = normalizeName(v.dancer_name);
+      if (!have || !wantName) return false;
+      // Exact normalized match, or one is a clear prefix of the other
+      // ("Han" / "Hannah") — same family, same season.
+      return (
+        have === wantName ||
+        (have.length >= 3 && wantName.startsWith(have)) ||
+        (wantName.length >= 3 && have.startsWith(wantName))
+      );
+    });
+    if (priorVideos.length === 0) return null;
 
     const ids = priorVideos.map((v: any) => v.id);
     const { data: priorAnalyses } = await serviceClient
@@ -383,25 +439,52 @@ CHRONIC NOTES — these have appeared in multiple reports and are still not reso
 ${h.recurringPriorities.map((p) => `  • ${p}`).join("\n")}` : ""}
 
 ━━ HOW TO USE THIS HISTORY ━━
+This history is CONTEXT, not a penalty. Read these carefully — returning dancers
+are the ones most likely to be mis-scored.
+
 1. SCORE THIS ROUTINE ON EXACTLY THE SAME STANDARD you would use for a dancer
-   you have never seen. Do NOT inflate the score because they returned. Do NOT
-   award points for effort, loyalty, or repeat submissions. The number must
-   survive being compared to a real competition sheet — a parent will hold this
-   report next to their actual judge's score, and if we are generous we are
-   worthless to them.
-2. If the routine genuinely improved, the score will rise on its own merits.
-   If it did not improve, do not raise it. An honest flat score with a clear
-   explanation of what still needs work is far more valuable than a fake gain.
-3. In each category's feedback, be SPECIFIC about what changed since the last
+   you have never seen. Do NOT inflate because they returned. Equally — and this
+   is the failure we actually see — do NOT let the accumulated list of past notes
+   make you harsher. Seeing a dancer's flaws written down three times does not
+   make those flaws worse than they are in today's frames. Score the frames.
+
+2. START FROM THE BASELINE, NOT FROM ZERO. Their last sheet is the anchor. If
+   this routine looks comparable in quality, the score should be comparable — not
+   lower. A drop of more than 3 points requires a specific, nameable reason you
+   can point to in a frame. If you cannot name it, you do not have it, and the
+   score should hold.
+
+3. IMPROVEMENT IS REAL AND MUST BE PAID FOR IN POINTS. If a priority from the
+   last report is now fixed or partially fixed, that is worth points in the
+   relevant category — that is literally what the dancer paid to find out. Say
+   what improved AND let the number move. An honest gain is not inflation.
+   If it genuinely did not improve, hold the score flat and explain why.
+
+4. In each category's feedback, be SPECIFIC about what changed since the last
    report. Name the actual element: "the double pirouette at 0:47 now finishes
    in a clean fourth where it previously travelled" beats "great improvement."
-4. Explicitly address the priorities they were told to work on. For each one,
+
+5. Explicitly address the priorities they were told to work on. For each one,
    say whether you can now see it fixed, partially fixed, or still present.
-5. If a chronic note above is STILL visible, say so plainly and escalate the
-   drill — repeating the same advice a third time without acknowledging it has
-   not worked is how we lose their trust.
-6. Their new improvementPriorities should reflect what is true NOW, not a copy
+
+6. If a chronic note is STILL visible, name it plainly and give a sharper drill.
+   But do NOT double-deduct for it. It was already reflected in the last score.
+   Charging a dancer again for the same unfixed note every single report is how a
+   score marches downward while the dancing stands still — that is a scoring bug,
+   not rigor. Deduct once, in the category where it lives, at today's severity.
+
+7. IF THE ROUTINE NAME MATCHES A PRIOR SUBMISSION, treat it as the same routine
+   unless the frames clearly show different choreography. Do not describe it as
+   "a different routine" while comparing it to a submission of the same name —
+   that reads as confusion to the parent and undermines the whole report.
+
+8. Their new improvementPriorities should reflect what is true NOW, not a copy
    of the old list.
+
+9. FINAL CHECK. Add your four category averages. If the total is below 87 per
+   judge, or more than 3 points below their baseline sheet, stop and re-read the
+   frames. A returning, training dancer almost never gets meaningfully worse.
+   If your number says she did, the number is probably wrong.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `;
 }
