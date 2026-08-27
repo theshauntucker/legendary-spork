@@ -31,8 +31,23 @@ async function sendEmail(subject: string, html: string) {
       to: OWNER_EMAIL,
       subject,
       html,
-    } as Parameters<typeof resend.emails.send>[0]);
-    console.log("Email sent:", subject, "ID:", (result as { id?: string } | null)?.id);
+    });
+
+    // The Resend SDK (v6) does NOT throw on API errors — it returns
+    // { data: null, error: {...} }. This code used to read `result.id` (which
+    // is always undefined; the id lives at result.data.id) and never looked at
+    // result.error, so a REJECTED send logged the exact same
+    // "Email sent" line as a successful one. Every owner alert could have been
+    // failing for weeks and the logs would look perfectly healthy.
+    if (result.error) {
+      console.error(
+        "OWNER EMAIL REJECTED by Resend:",
+        subject,
+        JSON.stringify(result.error)
+      );
+      return;
+    }
+    console.log("Owner email sent:", subject, "id:", result.data?.id);
   } catch (err) {
     console.error("Failed to send notification email:", subject, err);
   }
@@ -316,19 +331,28 @@ async function sendCustomerEmail(
   try {
     const result = await resend.emails.send({
       from,
+      // Resend SDK v6 expects camelCase `replyTo`. This was `reply_to` (the raw
+      // REST field name), which the SDK does not map — so the reply-to was
+      // being dropped on every customer email.
+      replyTo: opts?.replyTo || FOUNDER_REPLY_TO,
       to,
-      reply_to: opts?.replyTo || FOUNDER_REPLY_TO,
       subject,
       html,
-    } as Parameters<typeof resend.emails.send>[0]);
-    console.log(
-      "Customer email sent:",
-      subject,
-      "to:",
-      to,
-      "id:",
-      (result as { id?: string } | null)?.id
-    );
+    });
+
+    // Same silent-failure trap as the owner path: the SDK returns
+    // { data, error } and never throws on an API rejection.
+    if (result.error) {
+      console.error(
+        "CUSTOMER EMAIL REJECTED by Resend:",
+        subject,
+        "to:",
+        to,
+        JSON.stringify(result.error)
+      );
+      return;
+    }
+    console.log("Customer email sent:", subject, "to:", to, "id:", result.data?.id);
   } catch (err) {
     console.error("Failed to send customer email:", subject, "to:", to, err);
   }
