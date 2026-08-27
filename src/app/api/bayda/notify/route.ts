@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const resend = new Resend(key);
 
     await resend.emails.send({
-      from: "RoutineX <onboarding@resend.dev>",
+      from: "RoutineX Alerts <notifications@routinex.org>",
       to: OWNER_EMAIL,
       subject: "Someone is chatting with Bayda!",
       html: `

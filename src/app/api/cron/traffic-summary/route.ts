@@ -49,6 +49,23 @@ export async function GET(request: NextRequest) {
     0
   );
 
+  // Analyses that FAILED in the last 24h. This is the number that matters for
+  // "is the product actually working" — a quiet day with 0 errors is fine, a
+  // quiet day with 3 errors means people tried and got nothing.
+  const { count: failedAnalyses } = await serviceClient
+    .from("videos")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "error")
+    .gte("updated_at", since);
+
+  // Videos still stuck mid-processing for more than 15 minutes — these are
+  // customers currently staring at a spinner.
+  const { count: stuckVideos } = await serviceClient
+    .from("videos")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "processing")
+    .lt("updated_at", new Date(Date.now() - 15 * 60 * 1000).toISOString());
+
   const today = new Date().toLocaleDateString("en-US", {
     timeZone: "America/New_York",
     weekday: "long",
@@ -64,6 +81,8 @@ export async function GET(request: NextRequest) {
       { page: "Analyses Run", views: analyses || 0 },
       { page: "Payments", views: payments || 0 },
       { page: "Revenue", views: totalRevenue > 0 ? Number((totalRevenue / 100).toFixed(0)) : 0 },
+      { page: "⚠️ Failed Analyses", views: failedAnalyses || 0 },
+      { page: "⚠️ Stuck >15min", views: stuckVideos || 0 },
     ],
     period: today,
   });

@@ -20,12 +20,19 @@ async function sendEmail(subject: string, html: string) {
 
   try {
     const result = await resend.emails.send({
-      from: "RoutineX <onboarding@resend.dev>",
+      // Send owner alerts from the VERIFIED routinex.org domain, not the shared
+      // onboarding@resend.dev sandbox sender. OWNER_EMAIL is a comcast.net
+      // address, and Comcast aggressively filters mail from shared/unaligned
+      // sender domains — which is why owner alerts silently stopped arriving
+      // while /api/contact (which already sends from notifications@routinex.org)
+      // kept landing fine. Same mailbox, same provider, different From.
+      from: "RoutineX Alerts <notifications@routinex.org>",
+      replyTo: OWNER_EMAIL,
       to: OWNER_EMAIL,
       subject,
       html,
-    });
-    console.log("Email sent:", subject, "ID:", (result as any)?.id);
+    } as Parameters<typeof resend.emails.send>[0]);
+    console.log("Email sent:", subject, "ID:", (result as { id?: string } | null)?.id);
   } catch (err) {
     console.error("Failed to send notification email:", subject, err);
   }
@@ -258,14 +265,23 @@ export async function notifyCritical(
 // Customer-facing email infrastructure
 // ---------------------------------------------------------------------------
 
+// ALWAYS send customer mail from the verified routinex.org domain.
+//
+// This used to fall back to `onboarding@resend.dev` unless the env var
+// RESEND_USE_FOUNDER_DOMAIN was set to "true" — and that var is not set in
+// production. onboarding@resend.dev is Resend's shared SANDBOX sender: it is
+// only permitted to deliver to the Resend account owner's own verified address,
+// so every customer-facing email (welcome, report-ready, season recap) was
+// either rejected outright or filed as spam. Customers reported never receiving
+// mail we believed we had sent.
+//
+// routinex.org is a verified sending domain — /api/contact already sends from
+// notifications@routinex.org and those reliably arrive. There is no scenario
+// where the sandbox sender is the better choice, so the fallback is gone.
 const TEAM_FROM = "The RoutineX Team <hello@routinex.org>";
-const TEAM_FROM_FALLBACK = "RoutineX <onboarding@resend.dev>";
 const TEAM_REPLY_TO = process.env.OWNER_EMAIL || "22tucker22@comcast.net";
 
-// Kept as aliases so existing callers (`useFounderFrom: true`) keep working.
-// Voice is now the clean Team voice across all customer email.
 const FOUNDER_FROM = TEAM_FROM;
-const FOUNDER_FROM_FALLBACK = TEAM_FROM_FALLBACK;
 const FOUNDER_REPLY_TO = TEAM_REPLY_TO;
 
 /**
@@ -289,13 +305,13 @@ async function sendCustomerEmail(
     return;
   }
 
+  // Every branch resolves to the verified routinex.org domain. A custom
+  // fromName still gets a real, deliverable address behind it.
   const from = opts?.useFounderFrom
-    ? process.env.RESEND_USE_FOUNDER_DOMAIN === "true"
-      ? FOUNDER_FROM
-      : FOUNDER_FROM_FALLBACK
+    ? FOUNDER_FROM
     : opts?.fromName
-    ? `${opts.fromName} <onboarding@resend.dev>`
-    : "RoutineX <onboarding@resend.dev>";
+    ? `${opts.fromName} <hello@routinex.org>`
+    : TEAM_FROM;
 
   try {
     const result = await resend.emails.send({
