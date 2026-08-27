@@ -256,6 +256,24 @@ export async function POST(request: NextRequest) {
       }
       analysisId = analysisRecord.id;
     } catch (analysisErr) {
+      // A 23505 here means a concurrent run already wrote THIS video's analysis.
+      // That is the duplicate-processing race: two invocations both pass the
+      // idempotency check at the top, both call Claude, one wins the insert.
+      // The loser must NOT charge a credit — that is exactly how a customer got
+      // billed 3 credits for 1 report (Aug 20, 2026). Treat it as "already
+      // done": reuse the winner's analysis id and skip the deduction below.
+      const code = (analysisErr as { code?: string } | null)?.code;
+      if (code === "23505") {
+        console.warn(
+          `Duplicate analysis insert for video ${videoId} — another run already saved it. Not charging a second credit.`
+        );
+        const { data: winner } = await serviceClient
+          .from("analyses")
+          .select("id")
+          .eq("video_id", videoId)
+          .maybeSingle();
+        return NextResponse.json({ success: true, analysisId: winner?.id ?? null, duplicate: true });
+      }
       console.error("Analysis insert failed (video still marked analyzed):", analysisErr);
     }
 
@@ -271,11 +289,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Deduct credit — isolated
-    try {
-      await useCredit(serviceClient, userId);
-    } catch (creditErr) {
-      console.error("Failed to deduct credit (analysis still saved):", creditErr);
+    // Deduct credit — ONLY if a report actually landed in the database.
+    // Previously this ran unconditionally, so a failed insert still billed the
+    // customer for a report they never received. A credit is payment for a
+    // saved, viewable analysis; no analysisId means no product was delivered.
+    if (analysisId) {
+      try {
+        await useCredit(serviceClient, userId);
+      } catch (creditErr) {
+        console.error("Failed to deduct credit (analysis still saved):", creditErr);
+      }
+    } else {
+      console.error(
+        `No analysis row saved for video ${videoId} — deliberately NOT charging a credit.`
+      );
     }
 
     // Notify admin + customer — isolated
