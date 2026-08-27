@@ -12,6 +12,9 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+/** Same model + env override as the scoring engine. See /api/process. */
+const SCORING_MODEL = process.env.SCORING_MODEL || "claude-opus-4-8";
+
 export interface PracticePlanContent {
   title: string;
   summary: string;
@@ -152,7 +155,7 @@ Return ONLY a JSON object with EXACTLY this structure:
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-opus-5",
+      model: SCORING_MODEL,
       max_tokens: 8192,
       messages: [{ role: "user", content: prompt }],
     }),

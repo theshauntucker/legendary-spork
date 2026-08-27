@@ -14,6 +14,22 @@ import {
 
 export const maxDuration = 300; // 5 min max for AI analysis
 
+/**
+ * Scoring model.
+ *
+ * OUTAGE Aug 27 2026: swapping this to "claude-opus-5" broke every analysis —
+ * six consecutive "Claude Vision call failed" alerts. The API key itself was
+ * fine (claude-sonnet-5 answered live on /api/bayda at the same time), so the
+ * failure was specific to Opus 5 on this account. Reverted to claude-opus-4-8,
+ * which has 131 successful analyses behind it.
+ *
+ * Now env-overridable so the model can be changed WITHOUT a deploy: set
+ * SCORING_MODEL in Vercel to try a new model, and clear it to fall straight
+ * back to the known-good default. Never hardcode an unproven model again.
+ */
+const SCORING_MODEL = process.env.SCORING_MODEL || "claude-opus-4-8";
+
+
 interface FrameData {
   timestamp: number;
   label: string;
@@ -674,7 +690,7 @@ Return ONLY the JSON object, no other text.`,
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-opus-5",
+        model: SCORING_MODEL,
         max_tokens: 8192,
         messages: [{ role: "user", content }],
       }),
