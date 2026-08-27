@@ -11,6 +11,49 @@ function getResend(): Resend | null {
   return new Resend(key);
 }
 
+/**
+ * Derive a readable text/plain alternative from an HTML email body.
+ *
+ * Sending HTML with NO text/plain part is one of the strongest spam signals
+ * there is — essentially every legitimate bulk sender ships
+ * multipart/alternative, and filters weight its absence heavily. Combined with
+ * a young, low-volume sending domain, HTML-only is how a perfectly
+ * authenticated email still lands in spam (confirmed Aug 2026: a customer found
+ * our message in her spam folder even though SPF/DKIM/DMARC all pass).
+ *
+ * This is intentionally simple — it does not need to be a full renderer, it
+ * needs to produce something a human could read if their client shows it.
+ */
+function htmlToPlainText(html: string): string {
+  return html
+    // Anchors become "label (url)" so links survive the conversion.
+    .replace(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (_m, href, label) => {
+      const text = String(label).replace(/<[^>]+>/g, "").trim();
+      return text && !text.includes(href) ? `${text} (${href})` : href;
+    })
+    .replace(/<\s*br\s*\/?\s*>/gi, "\n")
+    .replace(/<\/\s*(p|div|tr|h[1-6]|li|table)\s*>/gi, "\n")
+    .replace(/<\s*li\b[^>]*>/gi, "• ")
+    .replace(/<\s*(style|script)\b[\s\S]*?<\/\s*\1\s*>/gi, "")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&mdash;/gi, "—")
+    .replace(/&ndash;/gi, "–")
+    .replace(/&rsquo;|&#39;/gi, "'")
+    .replace(/&ldquo;|&rdquo;|&quot;/gi, '"')
+    .replace(/&middot;/gi, "·")
+    .replace(/&rarr;/gi, "->")
+    .replace(/&plusmn;/gi, "+/-")
+    .replace(/&[a-z#0-9]+;/gi, "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .join("\n")
+    .trim();
+}
+
 async function sendEmail(subject: string, html: string) {
   const resend = getResend();
   if (!resend) {
@@ -31,6 +74,7 @@ async function sendEmail(subject: string, html: string) {
       to: OWNER_EMAIL,
       subject,
       html,
+      text: htmlToPlainText(html),
     });
 
     // The Resend SDK (v6) does NOT throw on API errors — it returns
@@ -338,6 +382,9 @@ async function sendCustomerEmail(
       to,
       subject,
       html,
+      // multipart/alternative. HTML-only is a heavy spam signal and is how a
+      // fully authenticated message still lands in the junk folder.
+      text: htmlToPlainText(html),
     });
 
     // Same silent-failure trap as the owner path: the SDK returns
