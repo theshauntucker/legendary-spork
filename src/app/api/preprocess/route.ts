@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { isInternalRequest } from "@/lib/internal-auth";
 
 export const maxDuration = 300; // Allow up to 5 minutes for video processing
 
@@ -7,9 +8,12 @@ export async function POST(request: NextRequest) {
   try {
     const { videoId, internalSecret } = await request.json();
 
-    // Basic auth check — only allow internal calls
-    const expectedSecret = process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 20);
-    if (!internalSecret || internalSecret !== expectedSecret) {
+    // SECURITY: the previous check compared against
+    // SUPABASE_SERVICE_ROLE_KEY.slice(0, 20) — the base64 of the standard JWT
+    // header, which is the SAME for every Supabase project. Verified
+    // bypassable in production 2026-08-27. Now a real shared secret.
+    if (!isInternalRequest(request, internalSecret)) {
+      console.warn("Rejected unauthenticated /api/preprocess call");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

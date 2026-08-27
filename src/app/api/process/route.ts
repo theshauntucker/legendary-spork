@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { isInternalRequest } from "@/lib/internal-auth";
 import { useCredit } from "@/lib/credits";
 import { STYLE_CRITERIA, ENTRY_TYPE_CRITERIA, getCompetitionContext } from "@/lib/dance-criteria";
 import { notifyAnalysisComplete, notifyAnalysisError, sendReportReadyEmail } from "@/lib/notifications";
@@ -49,6 +50,16 @@ export async function POST(request: NextRequest) {
   let userId: string | undefined;
 
   try {
+    // SECURITY: this route burns a paid credit and spends Anthropic money on
+    // every call. It is invoked only server-to-server (/api/analyze,
+    // /api/videos/[id]/retry, /api/videos/[id]/status), so it requires the
+    // internal shared secret. Before this gate it accepted {videoId, userId}
+    // from anyone on the internet.
+    if (!isInternalRequest(request)) {
+      console.warn("Rejected unauthenticated /api/process call");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     videoId = body.videoId;
     userId = body.userId;

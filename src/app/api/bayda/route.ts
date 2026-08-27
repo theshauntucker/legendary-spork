@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { rateLimit, clientKey } from "@/lib/internal-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -203,6 +204,19 @@ async function notifyChatStarted(firstMessage: string) {
 type InMsg = { role: "user" | "assistant"; content: string };
 
 export async function POST(request: NextRequest) {
+  // SECURITY: this endpoint is public by design (Bayda answers questions on the
+  // marketing pages) but every call spends Anthropic money. Unlimited, a single
+  // script could run up the API bill. 20 messages / 5 min per IP is far above
+  // any real parent's usage and well below an abusive one.
+  {
+    const limit = rateLimit(clientKey(request, "bayda"), { max: 20, windowMs: 5 * 60 * 1000 });
+    if (!limit.ok) {
+      return NextResponse.json(
+        { reply: "I'm getting a lot of questions right now — give me a minute and try again!" },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfterSec) } }
+      );
+    }
+  }
   try {
     const { messages, isFirstMessage } = (await request.json()) as {
       messages: InMsg[];

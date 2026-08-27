@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getUserCredits } from "@/lib/credits";
 import { minHammingAcrossFrames, DHASH_DUPLICATE_THRESHOLD } from "@/lib/dhash";
+import { internalHeaders } from "@/lib/internal-auth";
 
 interface FrameInput {
   timestamp: number;
@@ -301,7 +302,7 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
     fetch(`${baseUrl}/api/process`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: internalHeaders(),
       body: JSON.stringify({ videoId: video.id, userId: user.id, parentVideoId }),
     }).catch((err) => console.error("Failed to trigger background processing:", err));
 

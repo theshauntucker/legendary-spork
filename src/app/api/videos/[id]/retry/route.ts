@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { internalHeaders } from "@/lib/internal-auth";
 
 export async function POST(
   _request: NextRequest,
@@ -53,7 +54,7 @@ export async function POST(
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
     fetch(`${baseUrl}/api/process`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: internalHeaders(),
       body: JSON.stringify({
         videoId: video.id,
         userId: user.id,
