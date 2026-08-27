@@ -10,6 +10,9 @@ import {
   buildHistoryPrompt,
   computeProgression,
   reconcileScore,
+  buildRegradeNote,
+  SAME_ROUTINE_DROP_TOLERANCE,
+  UNEXPLAINED_GAIN_TOLERANCE,
   type DancerHistory,
 } from "@/lib/progression";
 
@@ -164,7 +167,8 @@ export async function POST(request: NextRequest) {
     const durationStr = meta.durationFormatted || formatDuration(meta.duration);
 
     // Run the AI analysis (progression-aware when the dancer has a season history)
-    const { analysis, usedAI } = await analyzeWithClaude(frames, routineMetadata, durationStr, history);
+    // eslint-disable-next-line prefer-const
+    let { analysis, usedAI } = await analyzeWithClaude(frames, routineMetadata, durationStr, history);
 
     // ── NEVER SELL A SIMULATED REPORT ─────────────────────────────────────────
     // analyzeWithClaude() falls back to generateSimulatedAnalysis() whenever the
@@ -212,6 +216,75 @@ export async function POST(request: NextRequest) {
         analysis.competitionComparison.yourScore = reconciled.totalScore;
       }
     }
+
+    // ── SECOND LOOK: catch a sheet that contradicts itself ────────────────────
+    // We sample at most 20 frames of a routine, so two passes over the SAME
+    // video never see identical evidence. That noise used to reach the parent
+    // as a verdict: one dancer's re-submission of the same routine came back 14
+    // points lower with nothing named as having slipped. The number said she got
+    // meaningfully worse; the report could not say how.
+    //
+    // This does NOT adjust the score. It detects the contradiction — the sheet
+    // moved but the judge listed no reason — and sends it back for one re-grade
+    // with the baseline sheet attached. The judge may return the same number
+    // with a real explanation, and we keep it. Checked in BOTH directions so
+    // this can never become a one-way thumb on the scale.
+    if (usedAI && history?.baseline && history.baselineIsSameRoutine) {
+      const baselineScore = Number(history.baseline.totalScore);
+      const currentScore = Number(analysis.totalScore);
+      const delta = baselineScore - currentScore; // positive = dropped
+
+      const named = (field: string): number => {
+        const arr = analysis?.seasonReport?.[field];
+        return Array.isArray(arr)
+          ? arr.filter((x: unknown) => String(x ?? "").trim().length > 0).length
+          : 0;
+      };
+
+      const unexplainedDrop = delta > SAME_ROUTINE_DROP_TOLERANCE && named("whatSlipped") === 0;
+      const unexplainedGain = -delta > UNEXPLAINED_GAIN_TOLERANCE && named("whatImproved") === 0;
+
+      if (unexplainedDrop || unexplainedGain) {
+        const direction = unexplainedDrop ? "drop" : "gain";
+        console.warn(
+          `[second-look] same routine "${history.baseline.routineName}" moved ${baselineScore} → ${currentScore} ` +
+          `(${delta > 0 ? "-" : "+"}${Math.abs(delta)}) with nothing named as ${direction === "drop" ? "slipped" : "improved"}. Re-grading once.`
+        );
+        try {
+          const note = buildRegradeNote(history, analysis, delta, direction);
+          const second = await analyzeWithClaude(frames, routineMetadata, durationStr, history, note);
+
+          if (second.usedAI && second.analysis && Array.isArray(second.analysis.judgeScores)) {
+            const r2 = reconcileScore(second.analysis);
+            second.analysis.totalScore = r2.totalScore;
+            second.analysis.awardLevel = r2.awardLevel;
+            second.analysis.scoreIntegrity = {
+              ...r2.integrity,
+              secondLook: {
+                applied: true,
+                reason: direction === "drop" ? "unexplained drop" : "unexplained gain",
+                firstPassTotal: currentScore,
+                baselineTotal: baselineScore,
+                finalTotal: r2.totalScore,
+              },
+            };
+            if (second.analysis.competitionComparison) {
+              second.analysis.competitionComparison.yourScore = r2.totalScore;
+            }
+            console.log(
+              `[second-look] re-graded ${currentScore} → ${r2.totalScore} (baseline ${baselineScore}).`
+            );
+            analysis = second.analysis;
+          } else {
+            console.warn("[second-look] re-grade did not return a usable sheet — keeping first pass.");
+          }
+        } catch (err) {
+          // A failed second look must never cost the customer their report.
+          console.error("[second-look] re-grade failed, keeping first pass:", err);
+        }
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     // ── PROGRESSION: measure, don't manufacture ───────────────────────────────
     const progression = computeProgression(analysis, history);
@@ -480,7 +553,8 @@ async function analyzeWithClaude(
     originalFileSize: number;
   },
   durationStr: string,
-  history: DancerHistory | null = null
+  history: DancerHistory | null = null,
+  regradeNote: string | null = null
 ) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
@@ -730,6 +804,10 @@ Provide 5-7 improvement priorities based on what you actually observe. Even exce
 
 Return ONLY the JSON object, no other text.`,
   });
+
+  if (regradeNote) {
+    content.push({ type: "text", text: regradeNote });
+  }
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {

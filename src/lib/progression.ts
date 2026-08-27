@@ -403,6 +403,93 @@ export async function loadDancerHistory(
  * standard applied consistently, and gives the judge the dancer's history so
  * the written feedback can be specific about what actually changed.
  */
+/**
+ * Test-retest tolerance for the SAME routine.
+ *
+ * We sample up to 20 frames out of a full routine. Two runs of the identical
+ * video do not see identical evidence, so a few points of movement between
+ * reports is measurement noise, not the dancer changing. A swing wider than
+ * this, with nothing named in whatSlipped/whatImproved to explain it, means the
+ * report contradicts itself — the sheet moved but the judge could not say why.
+ */
+export const SAME_ROUTINE_DROP_TOLERANCE = 3;
+export const UNEXPLAINED_GAIN_TOLERANCE = 6;
+
+/**
+ * Build the head-judge note for a second-look re-grade.
+ *
+ * This does NOT tell the judge what to score. It shows them their own sheet
+ * next to the baseline sheet and points out that they moved the number without
+ * naming a reason. They may come back with the same score and a real
+ * explanation — that outcome is fine and we keep it.
+ */
+export function buildRegradeNote(
+  h: DancerHistory,
+  analysis: any,
+  delta: number,
+  direction: "drop" | "gain"
+): string {
+  const b = h.baseline!;
+  const current: CategoryScore[] = Array.isArray(analysis?.judgeScores) ? analysis.judgeScores : [];
+
+  const table = current
+    .map((c) => {
+      const prev = b.categoryAvgs[c.category];
+      const max = CATEGORY_MAX[c.category] ?? c.max ?? 0;
+      const move =
+        typeof prev === "number" ? round1(c.avg - prev) : null;
+      const moveStr =
+        move === null ? "(no baseline)" : move === 0 ? "unchanged" : `${move > 0 ? "+" : ""}${move}`;
+      return `  ${c.category.padEnd(18)} baseline ${typeof prev === "number" ? prev : "?"}/${max}  →  now ${c.avg}/${max}   ${moveStr}`;
+    })
+    .join("\n");
+
+  const problem =
+    direction === "drop"
+      ? `You scored this ${Math.abs(delta)} points BELOW their last report on the SAME routine, but you listed nothing in "whatSlipped". Those two statements cannot both be true.`
+      : `You scored this ${Math.abs(delta)} points ABOVE their last report on the SAME routine, but you listed nothing in "whatImproved". Those two statements cannot both be true.`;
+
+  return `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECOND LOOK — HEAD JUDGE REVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Your sheet has been checked against this dancer's previous report on this same
+routine ("${b.routineName}", ${b.totalScore}/300, judged ${b.analyzedAt}).
+
+${problem}
+
+Here is your sheet next to theirs:
+
+${table}
+
+  TOTAL              baseline ${b.totalScore}/300  →  now ${analysis?.totalScore}/300   ${delta > 0 ? "-" : "+"}${Math.abs(delta)}
+
+Re-examine the frames and return a corrected JSON object. Rules for this pass:
+
+1. We sample at most 20 frames from the routine. Two passes over the same video
+   do not see the same evidence. A few points of drift is sampling noise, NOT
+   the dancer getting worse. Do not report noise as a verdict on a child.
+
+2. For EVERY category where you moved more than 1 point from the baseline, you
+   must either (a) name the specific frame and the specific element that
+   justifies the move, in that category's feedback, or (b) return that category
+   to the baseline value. No unexplained movement.
+
+3. If a priority from their last report is now fixed or partially fixed, that
+   is a real gain and it belongs in the number — put it there and say so in
+   "whatImproved". Landing a note the dancer worked on for weeks is exactly
+   what they paid to find out.
+
+4. If the routine genuinely IS weaker, keep the lower score and name every
+   regression in "whatSlipped" with a timestamp. An honest decline with
+   evidence is acceptable. An unexplained one is not.
+
+5. Do not inflate to be kind and do not deduct to seem rigorous. Return the
+   sheet you can defend frame by frame.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
+}
+
 export function buildHistoryPrompt(h: DancerHistory): string {
   const b = h.baseline!;
   const trend = h.allSubmissions
@@ -439,8 +526,8 @@ CHRONIC NOTES — these have appeared in multiple reports and are still not reso
 ${h.recurringPriorities.map((p) => `  • ${p}`).join("\n")}` : ""}
 
 ━━ HOW TO USE THIS HISTORY ━━
-This history is CONTEXT, not a penalty. Read these carefully — returning dancers
-are the ones most likely to be mis-scored.
+This history is CONTEXT, not a penalty. Read it carefully — returning dancers are
+the ones most likely to be mis-scored.
 
 1. SCORE THIS ROUTINE ON EXACTLY THE SAME STANDARD you would use for a dancer
    you have never seen. Do NOT inflate because they returned. Equally — and this
@@ -448,24 +535,38 @@ are the ones most likely to be mis-scored.
    make you harsher. Seeing a dancer's flaws written down three times does not
    make those flaws worse than they are in today's frames. Score the frames.
 
-2. START FROM THE BASELINE, NOT FROM ZERO. Their last sheet is the anchor. If
-   this routine looks comparable in quality, the score should be comparable — not
-   lower. A drop of more than 3 points requires a specific, nameable reason you
-   can point to in a frame. If you cannot name it, you do not have it, and the
-   score should hold.
+2. START FROM THE BASELINE, NOT FROM ZERO. Their last judge sheet is printed
+   above — it is the anchor. If this routine looks comparable in quality, the
+   score should be comparable, NOT lower.
 
-3. IMPROVEMENT IS REAL AND MUST BE PAID FOR IN POINTS. If a priority from the
-   last report is now fixed or partially fixed, that is worth points in the
-   relevant category — that is literally what the dancer paid to find out. Say
-   what improved AND let the number move. An honest gain is not inflation.
-   If it genuinely did not improve, hold the score flat and explain why.
+   Apply this PER CATEGORY, not just to the total. Take each category's baseline
+   value and ask: is what I see in today's frames better, the same, or worse?
+   Moving a category more than 1 point in either direction requires a specific
+   element and timestamp you can name in that category's feedback. If you cannot
+   name it, you do not have it — hold that category at its baseline value.
+
+   We sample at most 20 frames from the routine, so two passes over the same
+   video never see identical evidence. A couple of points of drift is sampling
+   noise. Do not report noise to a parent as their child getting worse.
+
+3. LANDED NOTES ARE WORTH POINTS. Go through the priorities they were told to
+   work on, one at a time. For each one you can now see fixed or partially
+   fixed, RAISE the category it lives in — a fully landed note is typically
+   worth +0.5 to +1.5 in that category, a partial fix about half that. This is
+   not a bonus and it is not generosity: the dancer drilled it for weeks and the
+   frames now show it, so the sheet has to show it too. A report that says
+   "your pirouette is fixed" next to an unchanged number is the fastest way to
+   teach a parent that our scores mean nothing.
+
+   If a note genuinely is NOT landed, say so and hold the points. Never credit a
+   fix you cannot see.
 
 4. In each category's feedback, be SPECIFIC about what changed since the last
    report. Name the actual element: "the double pirouette at 0:47 now finishes
    in a clean fourth where it previously travelled" beats "great improvement."
 
-5. Explicitly address the priorities they were told to work on. For each one,
-   say whether you can now see it fixed, partially fixed, or still present.
+5. Explicitly address every priority they were told to work on. For each one,
+   state whether you can now see it fixed, partially fixed, or still present.
 
 6. If a chronic note is STILL visible, name it plainly and give a sharper drill.
    But do NOT double-deduct for it. It was already reflected in the last score.
@@ -481,10 +582,14 @@ are the ones most likely to be mis-scored.
 8. Their new improvementPriorities should reflect what is true NOW, not a copy
    of the old list.
 
-9. FINAL CHECK. Add your four category averages. If the total is below 87 per
-   judge, or more than 3 points below their baseline sheet, stop and re-read the
-   frames. A returning, training dancer almost never gets meaningfully worse.
-   If your number says she did, the number is probably wrong.
+9. FINAL CHECK before you return the JSON. Add your four category averages.
+   (a) If the total is below 87 per judge, re-read the frames — that is the
+       bottom of our entire scale and it is almost never where a training
+       dancer belongs.
+   (b) If the total moved more than 3 points from their baseline in EITHER
+       direction, make sure the reason is written down in whatImproved or
+       whatSlipped with a timestamp. A number that moves without an
+       explanation will be sent back to you for a second look.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `;
 }
