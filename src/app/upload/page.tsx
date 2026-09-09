@@ -236,7 +236,16 @@ function UploadPageInner() {
         if (response.status === 402 && data.code === "NO_CREDITS") {
           setStage("idle"); setProgress(0);
           // Web → Stripe redirect; iOS → native StoreKit IAP. Branches in lib/checkout.
-          const result = await startCheckout("single");
+          // Ladder: 99¢ intro (once) → regular single. If the intro has been
+          // used the server answers INTRO_USED and we fall through to $1.99.
+          let result = await startCheckout("intro");
+          if (
+            !result.ok &&
+            !result.cancelled &&
+            !/went through/i.test(result.error || "") // never re-charge after a fulfilled-but-unconfirmed purchase
+          ) {
+            result = await startCheckout("single");
+          }
           if (!result.ok) {
             if (result.cancelled) return; // user cancelled IAP, leave them on /upload
             throw new Error(result.error || "Unable to start checkout. Please try again.");
@@ -300,6 +309,17 @@ function UploadPageInner() {
           </h1>
           <p className="mt-3 text-surface-200">Upload your video and get a full AI analysis in under 2 minutes.</p>
           <div className="mt-4"><UploadTrustBadge /></div>
+          {searchParams.get("welcome") === "free" && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.15 }}
+              className="mt-6 mx-auto max-w-md rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-5 py-4 text-left"
+            >
+              <p className="text-sm font-bold text-white">✨ Your first analysis is on us.</p>
+              <p className="mt-1 text-xs text-emerald-200/80 leading-relaxed">
+                One free credit is already on your account. Pick a routine, hit analyze, and the full judge sheet is yours in a couple of minutes.
+              </p>
+            </motion.div>
+          )}
         </div>
 
         <motion.form

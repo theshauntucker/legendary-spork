@@ -5,6 +5,7 @@ import {
   grantCredits,
   grantSubscriptionCycle,
   hasCreditsInDb,
+  isIntroOfferEligible,
   BETA_CREDITS,
   SUBSCRIPTION_CREDITS,
 } from "@/lib/credits";
@@ -302,6 +303,8 @@ export default async function DashboardPage({
     user.id,
     user.email
   );
+  // 99¢ intro offer — shown until the account's first completed purchase
+  const introEligible = await isIntroOfferEligible(serviceClient, user.id, user.email);
 
   return (
     <DashboardClient
@@ -315,6 +318,7 @@ export default async function DashboardPage({
         total: creditStatus.totalCredits,
         used: creditStatus.usedCredits,
       }}
+      introEligible={introEligible}
     />
   );
 }

@@ -133,7 +133,7 @@ export default function GuidesHubPage() {
                 href="/signup"
                 className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-6 py-3 font-semibold text-white hover:opacity-90 transition-opacity"
               >
-                Score a practice routine — first analysis $1.99
+                Score a practice routine — first analysis free
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>

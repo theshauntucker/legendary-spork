@@ -29,6 +29,7 @@
  */
 
 export type IapPaymentType =
+  | "intro"
   | "single"
   | "bogo"
   | "video_analysis"
@@ -52,6 +53,14 @@ export interface IapProduct {
 
 export const IAP_PRODUCTS: Record<string, IapProduct> = {
   // ── Consumables (one-time analysis credits) ───────────────────────────────
+  routinex_intro: {
+    productId: "routinex_intro",
+    name: "RoutineX Second Analysis (Intro Offer)",
+    paymentType: "intro",
+    mode: "consumable",
+    creditsGranted: 1, // $0.99 → 1 analysis, one per account (UI-gated; see isIntroOfferEligible)
+    amountCents: 99,
+  },
   routinex_single: {
     productId: "routinex_single",
     name: "RoutineX Single Analysis",
@@ -113,9 +122,11 @@ export function getIapProduct(productId: string): IapProduct {
  * existing Pricing/Hero/Dashboard components pass.
  */
 export function webTypeToIapProductId(
-  type: "single" | "bogo" | "pack" | "subscription" | "studio_subscription"
+  type: "intro" | "single" | "bogo" | "pack" | "subscription" | "studio_subscription"
 ): string {
   switch (type) {
+    case "intro":
+      return "routinex_intro";
     case "single":
       return "routinex_single";
     case "bogo":

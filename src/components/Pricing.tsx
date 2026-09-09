@@ -49,7 +49,7 @@ export default function Pricing() {
             Simple pricing. Serious feedback.
           </h2>
           <p className="mt-5 text-lg text-[#5D5565] max-w-xl mx-auto">
-            Start with a single analysis. Stay for the season.
+            Your first analysis is free. Stay for the season.
           </p>
         </motion.div>
 
@@ -65,20 +65,21 @@ export default function Pricing() {
           >
             <h3 className="font-bold text-[#221A29]">First Analysis</h3>
             <p className="text-sm text-[#8B8492] mt-1">
-              See the full report on one routine.
+              The full report on one routine — on us.
             </p>
             <div className="mt-6 flex items-baseline gap-1.5">
               <span className="text-5xl font-semibold tracking-tight text-[#221A29] font-[family-name:var(--font-display)]">
-                $1.99
+                Free
               </span>
-              <span className="text-sm text-[#8B8492]">once</span>
+              <span className="text-sm text-[#8B8492]">no card required</span>
             </div>
             <ul className="mt-7 space-y-3 flex-1">
               {[
-                "One complete analysis",
+                "One complete analysis, free",
                 "300-point scorecard, three judges",
                 "Timestamped notes + Coach's Playbook",
-                "Results in under 5 minutes",
+                "Your second analysis: just 99¢",
+                "Then $1.99 each",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-[#B0356B] mt-0.5 shrink-0" />
@@ -90,7 +91,7 @@ export default function Pricing() {
               href="/signup"
               className="btn-outline-ink mt-8 w-full inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold"
             >
-              Start with one
+              Start free
             </a>
           </motion.div>
 

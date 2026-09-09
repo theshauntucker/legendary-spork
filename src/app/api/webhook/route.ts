@@ -649,7 +649,9 @@ export async function POST(request: NextRequest) {
     const isPack = paymentType === "video_analysis";
     const isBogo = paymentType === "bogo";
     const isSingle = paymentType === "single";
-    const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : isBogo ? 2 : isSingle ? 1 : 1;
+    // intro = 99¢ one-time second analysis → 1 credit
+    const isIntro = paymentType === "intro";
+    const creditsToGrant = isBeta ? BETA_CREDITS : isPack ? 5 : isBogo ? 2 : isSingle || isIntro ? 1 : 1;
 
     const serviceClient = await createServiceClient();
 
@@ -686,7 +688,7 @@ export async function POST(request: NextRequest) {
 
     // Record payment and grant credits
     try {
-      const amountFallback = isPack ? 999 : isBeta ? 999 : isBogo ? 299 : 199;
+      const amountFallback = isPack ? 999 : isBeta ? 999 : isBogo ? 299 : isIntro ? 99 : 199;
       const { error: insertError } = await serviceClient
         .from("payments")
         .insert({

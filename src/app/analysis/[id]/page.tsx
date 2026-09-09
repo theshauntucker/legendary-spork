@@ -97,6 +97,7 @@ export default async function AnalysisPage({
       analysisData = {
         practicePlanStatus: "none" as string,
         isSeasonMember: false as boolean,
+        showReviewPrompt: false as boolean,
         id: video.id,
         routineName: video.routine_name,
         dancerName: video.dancer_name || "Dancer",
@@ -125,6 +126,14 @@ export default async function AnalysisPage({
       analysisData.isSeasonMember =
         user.email === (process.env.ADMIN_EMAIL || "22tucker22@comcast.net") ||
         (await isSeasonMember(serviceClient, user.id));
+
+      // One-time "rate your report" prompt — only if this account has never answered it.
+      const { data: reviewRow } = await serviceClient
+        .from("review_prompts")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      analysisData.showReviewPrompt = !reviewRow;
     } else {
       analysisData = generateFallbackAnalysis(id);
     }

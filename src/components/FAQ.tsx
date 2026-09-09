@@ -27,7 +27,7 @@ const faqs = [
   },
   {
     q: "What does it cost?",
-    a: "Your first analysis is $1.99. From there, most families choose Season Member — $4.99/month for four analyses every month plus the season dashboard. Competition week? The Competition Pack is five analyses for $9.99, and credits never expire. Studios have their own plan with a shared analysis pool.",
+    a: "Your first analysis is free — no card required. Your second is just 99¢. From there, a single analysis is $1.99, and most families choose Season Member — $4.99/month for four analyses every month plus the season dashboard. Competition week? The Competition Pack is five analyses for $9.99, and credits never expire. Studios have their own plan with a shared analysis pool.",
   },
   {
     q: "Can I get a refund?",

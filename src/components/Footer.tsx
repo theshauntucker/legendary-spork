@@ -50,7 +50,7 @@ export default function Footer() {
             </div>
 
             <p className="mt-5 text-sm text-white/40">
-              First analysis $1.99 · Results in under 5 minutes
+              First analysis free · Results in under 5 minutes
             </p>
           </motion.div>
         </div>

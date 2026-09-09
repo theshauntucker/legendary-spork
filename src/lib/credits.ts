@@ -33,6 +33,32 @@ interface CreditStatus {
 }
 
 /**
+ * Intro offer eligibility — "free first, 99¢ second, then regular pricing".
+ *
+ * A user can buy the 99¢ intro analysis exactly once, and only if they have
+ * never completed a purchase of any kind (Stripe or Apple). Admins are never
+ * eligible (they don't pay). Checked server-side at checkout AND used by the
+ * dashboard to decide whether to show the intro card.
+ */
+export async function isIntroOfferEligible(
+  serviceClient: SupabaseClient,
+  userId: string,
+  userEmail?: string
+): Promise<boolean> {
+  if (isAdmin(userEmail)) return false;
+  const { count, error } = await serviceClient
+    .from("payments")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("status", "completed");
+  if (error) {
+    console.error("isIntroOfferEligible: payments lookup failed", error.message);
+    return false; // fail closed — regular pricing
+  }
+  return (count ?? 0) === 0;
+}
+
+/**
  * Check if a user has credits remaining to analyze a video.
  * Admins always have credits.
  */

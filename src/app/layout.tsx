@@ -144,6 +144,13 @@ const jsonLd = {
       offers: [
         {
           "@type": "Offer",
+          name: "First Analysis",
+          price: "0",
+          priceCurrency: "USD",
+          description: "Your first AI-powered competition-standard dance or cheer routine analysis is free",
+        },
+        {
+          "@type": "Offer",
           name: "Single Analysis",
           price: "1.99",
           priceCurrency: "USD",

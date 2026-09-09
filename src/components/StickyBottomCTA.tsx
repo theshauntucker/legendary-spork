@@ -30,7 +30,7 @@ export default function StickyBottomCTA() {
           <div className="mx-auto max-w-lg lux-card rounded-2xl px-4 py-3 flex items-center justify-between gap-3 backdrop-blur-xl">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-[#221A29] truncate">
-                First analysis — $1.99
+                First analysis — free
               </p>
               <p className="text-xs text-[#7A7284] truncate">
                 The full judge report, in under 5 minutes.

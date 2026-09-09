@@ -226,6 +226,45 @@ export async function notifyAnalysisError(
     `
   );
 }
+/**
+ * Rate-your-report prompt: a low rating or a written note from a customer.
+ * Reply-to is the customer so Shaun can answer straight from his inbox.
+ */
+export async function notifyReportFeedback(p: {
+  userEmail: string;
+  rating: number | null;
+  feedback: string;
+  analysisId?: string;
+  platform: string;
+}) {
+  const resend = getResend();
+  if (!resend) return;
+  const stars = p.rating ? "★".repeat(p.rating) + "☆".repeat(5 - p.rating) : "no rating";
+  const subject = p.rating && p.rating <= 3
+    ? `⚠️ ${stars} report rating from ${p.userEmail}`
+    : `💬 Report feedback from ${p.userEmail} (${stars})`;
+  const safeFeedback = p.feedback ? p.feedback.replace(/[<>]/g, "") : "(no written feedback)";
+  const html = `
+    <div style="font-family: sans-serif; max-width: 520px;">
+      <h2 style="color: #7c3aed; margin: 0 0 12px 0;">Rate-your-report prompt</h2>
+      <p><strong>Customer:</strong> ${p.userEmail}</p>
+      <p><strong>Rating:</strong> ${stars}${p.rating ? ` (${p.rating}/5)` : ""} · <strong>Platform:</strong> ${p.platform}</p>
+      ${p.analysisId ? `<p><strong>Report:</strong> <a href="https://routinex.org/analysis/${p.analysisId}">routinex.org/analysis/${p.analysisId}</a></p>` : ""}
+      <p><strong>What they said:</strong></p>
+      <blockquote style="border-left: 3px solid #7c3aed; padding-left: 12px; color: #374151; white-space: pre-wrap;">${safeFeedback}</blockquote>
+      <p style="color:#6b7280;font-size:12px;">Reply to this email and it goes straight to them. If the report missed, the guarantee says credit the account.</p>
+    </div>`;
+  const result = await resend.emails.send({
+    from: "RoutineX Alerts <notifications@routinex.org>",
+    to: process.env.OWNER_EMAIL || "22tucker22@comcast.net",
+    replyTo: p.userEmail,
+    subject,
+    html,
+    text: htmlToPlainText(html),
+  });
+  if (result.error) console.error("notifyReportFeedback rejected:", JSON.stringify(result.error));
+}
+
 export async function notifyAdminReport(
   reporterEmail: string,
   targetKind: string,
@@ -352,7 +391,7 @@ async function sendCustomerEmail(
   to: string,
   subject: string,
   html: string,
-  opts?: { fromName?: string; replyTo?: string; useFounderFrom?: boolean }
+  opts?: { fromName?: string; replyTo?: string; useFounderFrom?: boolean; from?: string }
 ) {
   const resend = getResend();
   if (!resend) {
@@ -366,7 +405,9 @@ async function sendCustomerEmail(
 
   // Every branch resolves to the verified routinex.org domain. A custom
   // fromName still gets a real, deliverable address behind it.
-  const from = opts?.useFounderFrom
+  const from = opts?.from
+    ? opts.from // must be an address on the verified routinex.org domain
+    : opts?.useFounderFrom
     ? FOUNDER_FROM
     : opts?.fromName
     ? `${opts.fromName} <hello@routinex.org>`
@@ -1270,6 +1311,80 @@ export async function sendReportReadyEmail(
 </html>`;
 
   await sendCustomerEmail(customerEmail, subject, html, { useFounderFrom: true });
+}
+
+/**
+ * September 2026 thank-you campaign — sent by /api/admin/thank-you-campaign.
+ * From Shaun personally. One free analysis added to every account, plus the
+ * App Store review ask and the app download nudge.
+ */
+export async function sendThankYouCreditEmail(
+  customerEmail: string,
+  p: { firstName?: string | null; creditsAvailable: number }
+) {
+  const first = (p.firstName || "").trim().split(" ")[0];
+  const greeting = first ? `Hi ${first},` : "Hi there,";
+  const creditLine =
+    p.creditsAvailable > 1
+      ? `you now have <strong style="color:#FBBF24;">${p.creditsAvailable} analyses</strong> ready to use`
+      : `there&rsquo;s <strong style="color:#FBBF24;">a free analysis</strong> waiting on your account`;
+  const subject = first
+    ? `${first}, thank you — a free analysis is on your account`
+    : "Thank you — a free analysis is on your account";
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Thank you from RoutineX</title></head>
+<body style="margin:0;padding:0;background:#0a0118;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f3f4f6;">
+  <div style="display:none;max-height:0;overflow:hidden;">We added a free analysis to your RoutineX account as a thank-you. Here's what changed, and one small favor.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0118;padding:24px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#18181B;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">
+        <tr><td style="height:5px;background:linear-gradient(90deg,#9333EA,#EC4899,#F59E0B);line-height:5px;font-size:0;">&nbsp;</td></tr>
+        <tr><td style="padding:34px 34px 8px 34px;">
+          <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#C084FC;">RoutineX &middot; A note from the founder</div>
+          <h1 style="margin:12px 0 0 0;font-family:Georgia,'Times New Roman',serif;font-weight:800;font-size:27px;line-height:1.2;color:#FFFFFF;">Thank you. Seriously.</h1>
+        </td></tr>
+        <tr><td style="padding:18px 34px 0 34px;font-size:16px;line-height:1.65;color:#E4E4E7;">
+          <p style="margin:0 0 14px 0;">${greeting}</p>
+          <p style="margin:0 0 14px 0;">I&rsquo;m Shaun, the founder of RoutineX. The feedback you all have sent in these last few weeks &mdash; and the number of you who&rsquo;ve passed the app along to other dancers, cheer athletes, and studios &mdash; has been the best part of building this. So, thank you.</p>
+          <p style="margin:0 0 14px 0;">As a small way of saying it back: <strong style="color:#ffffff;">I&rsquo;ve added a free analysis to your account.</strong> No card, no catch &mdash; ${creditLine}. Upload any routine, even a phone video from rehearsal, and you&rsquo;ll get the full three-judge sheet with timestamped notes in about two minutes.</p>
+        </td></tr>
+        <tr><td align="center" style="padding:22px 34px 6px 34px;">
+          <a href="https://routinex.org/upload" style="display:inline-block;background:linear-gradient(135deg,#9333EA,#EC4899,#F59E0B);color:#FFFFFF;font-size:16px;font-weight:700;text-decoration:none;padding:15px 40px;border-radius:999px;">Use my free analysis &rarr;</a>
+        </td></tr>
+        <tr><td style="padding:24px 34px 0 34px;font-size:16px;line-height:1.65;color:#E4E4E7;">
+          <p style="margin:0 0 14px 0;"><strong style="color:#ffffff;">Two things that changed based on your feedback:</strong></p>
+          <p style="margin:0 0 10px 0;">&#10024; <strong style="color:#ffffff;">Every new account now starts with a free analysis.</strong> Then the second one is just 99&cent;, and regular pricing after that. If you&rsquo;ve been meaning to tell a teammate or your studio about RoutineX, this is the moment &mdash; they can try it for nothing.</p>
+          <p style="margin:0 0 14px 0;">&#128241; <strong style="color:#ffffff;">The RoutineX app is on the App Store.</strong> Uploading straight from your camera roll is the easiest way to use it &mdash; and your video never leaves your phone, only still frames are analyzed.</p>
+        </td></tr>
+        <tr><td align="center" style="padding:6px 34px 0 34px;">
+          <a href="https://apps.apple.com/us/app/routinex-dance-cheer-ai/id6763345348" style="display:inline-block;padding:13px 26px;border-radius:999px;background:rgba(255,255,255,0.06);color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;border:1px solid rgba(255,255,255,0.14);">Get the iOS app</a>
+        </td></tr>
+        <tr><td style="padding:26px 34px 0 34px;">
+          <div style="background:rgba(147,51,234,0.10);border:1px solid rgba(147,51,234,0.3);border-radius:14px;padding:18px 20px;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C084FC;margin-bottom:6px;">One small favor</div>
+            <div style="font-size:15px;line-height:1.6;color:#E4E4E7;">If RoutineX has helped your dancer, a quick App Store review is the single biggest thing that helps other dance and cheer families find us. It takes about 30 seconds and I read every one.</div>
+            <div style="margin-top:14px;"><a href="https://apps.apple.com/us/app/routinex-dance-cheer-ai/id6763345348?action=write-review" style="display:inline-block;padding:12px 22px;border-radius:999px;background:linear-gradient(90deg,#9333EA,#EC4899,#F59E0B);color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;">Leave a review &#11088;</a></div>
+          </div>
+        </td></tr>
+        <tr><td style="padding:24px 34px 0 34px;font-size:16px;line-height:1.65;color:#E4E4E7;">
+          <p style="margin:0 0 14px 0;">And if a report ever misses the mark, just reply to this email. I answer these myself, and if it didn&rsquo;t give you something you can use, I credit your account. That&rsquo;s the guarantee.</p>
+          <p style="margin:0 0 4px 0;">Merde, and good luck this season.</p>
+          <p style="margin:0;color:#ffffff;font-weight:700;">Shaun Tucker</p>
+          <p style="margin:2px 0 0 0;font-size:13px;color:#A1A1AA;">Founder, RoutineX &middot; <a href="mailto:shaun@routinex.org" style="color:#C084FC;text-decoration:none;">shaun@routinex.org</a></p>
+        </td></tr>
+        <tr><td style="padding:28px 34px 26px 34px;font-size:12px;color:#52525B;" align="center">RoutineX &middot; routinex.org &middot; Your dancer&rsquo;s secret weapon<br/>You&rsquo;re receiving this because you have a RoutineX account.</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  await sendCustomerEmail(customerEmail, subject, html, {
+    from: "Shaun Tucker <shaun@routinex.org>",
+    replyTo: "shaun@routinex.org",
+  });
 }
 
 interface RecapDancerLine {

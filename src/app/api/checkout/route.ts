@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { isIntroOfferEligible } from "@/lib/credits";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
 
     const body = await request.json().catch(() => ({}));
-    const type = body.type || "single"; // "single"=$1.99 (1), "bogo"=$2.99 (2), "pack"=$9.99 (5)
+    const type = body.type || "single"; // "intro"=$0.99 (1, once), "single"=$1.99 (1), "bogo"=$2.99 (2), "pack"=$9.99 (5)
     const referralCode = body.referralCode || null;
 
     // Get the authenticated user — required for payment tracking
@@ -22,6 +23,22 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    // ── 99¢ intro offer — one per account, first purchase only ─────────────
+    // Ladder: free first analysis → 99¢ second → regular pricing. The UI only
+    // shows the intro card to eligible users; this is the server-side gate so
+    // nobody can replay it.
+    const isIntro = type === "intro";
+    if (isIntro) {
+      const svc = await createServiceClient();
+      const eligible = await isIntroOfferEligible(svc, user.id, user.email);
+      if (!eligible) {
+        return NextResponse.json(
+          { error: "The 99¢ intro offer has already been used on this account.", code: "INTRO_USED" },
+          { status: 409 }
+        );
+      }
     }
 
     // Look up the user's referral code from their account if not passed
@@ -80,7 +97,14 @@ export async function POST(request: NextRequest) {
 
     // ── One-time purchases ────────────────────────────────────────────────────
     const isBogo = type === "bogo";
-    const productConfig = isPack
+    const productConfig = isIntro
+      ? {
+          name: "RoutineX — Second Analysis (Intro Offer)",
+          description: "Your second full AI-powered routine analysis for just 99¢ — a one-time welcome price. Your video never leaves your device — only still-frame thumbnails are analyzed. Backed by our money-back guarantee — if it misses the mark, email us and we credit your account immediately.",
+          unit_amount: 99, // $0.99
+          payment_type: "intro",
+        }
+      : isPack
       ? {
           name: "RoutineX — Competition Pack (5 Analyses)",
           description: "5 AI-powered dance routine analyses for $9.99 ($1.99 each). Your video never leaves your device — only still-frame thumbnails are analyzed. Backed by our money-back guarantee — if it misses the mark, email us and we credit your account immediately.",

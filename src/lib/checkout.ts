@@ -29,6 +29,7 @@ import {
 import { webTypeToIapProductId } from "./iap-products";
 
 export type CheckoutType =
+  | "intro"
   | "single"
   | "bogo"
   | "pack"

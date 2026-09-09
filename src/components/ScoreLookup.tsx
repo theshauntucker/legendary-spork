@@ -123,7 +123,7 @@ export default function ScoreLookup() {
             href="/signup"
             className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
           >
-            Get one consistent baseline score — first analysis $1.99
+            Get one consistent baseline score — first analysis free
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

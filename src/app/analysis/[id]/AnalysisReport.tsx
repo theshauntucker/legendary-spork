@@ -24,6 +24,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import RoutineXLogo from "@/components/RoutineXLogo";
+import RateReportPrompt from "@/components/RateReportPrompt";
 
 interface JudgeScore {
   category: string;
@@ -67,6 +68,8 @@ interface AnalysisData {
   judgeScores: JudgeScore[];
   timelineNotes: TimelineNote[];
   improvementPriorities: ImprovementItem[];
+  /** True when this account has never answered the one-time review prompt. */
+  showReviewPrompt?: boolean;
   competitionComparison: {
     yourScore: number;
     avgRegional: number;
@@ -539,6 +542,9 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
         <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />
       </div>
+
+      {/* One-time "how did this report land?" → App Store review / private feedback */}
+      {analysis.showReviewPrompt && <RateReportPrompt analysisId={analysis.id} />}
 
       <div className="mx-auto max-w-4xl">
         {/* Top Bar */}

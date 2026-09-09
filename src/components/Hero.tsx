@@ -75,7 +75,7 @@ export default function Hero() {
               href="/signup"
               className="btn-sunset inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-bold"
             >
-              Analyze a routine
+              Analyze a routine — free
               <ArrowRight className="h-4.5 w-4.5" />
             </a>
             <a

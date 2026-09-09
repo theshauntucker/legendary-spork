@@ -267,7 +267,7 @@ function SubscriptionHeroCard() {
               Cancel anytime. No commitment.
             </p>
             <p className="text-xs text-surface-200/40 text-center">
-              Your first analysis is just $1.99 — upgrade anytime.
+              Your first analysis is free — upgrade anytime.
             </p>
           </div>
         </div>
@@ -276,10 +276,97 @@ function SubscriptionHeroCard() {
   );
 }
 
+/** 99¢ intro card — "free first, 99¢ second, then regular pricing". Only rendered
+ *  for accounts that have never completed a purchase (server-checked). */
+function IntroOfferCard() {
+  const [loading, setLoading] = React.useState(false);
+  const handlePurchase = async () => {
+    setLoading(true);
+    const result = await startCheckout("intro");
+    if (!result.ok) {
+      if (!result.cancelled) alert(result.error || "Something went wrong. Please try again.");
+      setLoading(false);
+      return;
+    }
+    if (!result.redirected) window.location.href = "/dashboard?from=iap";
+  };
+  return (
+    <div
+      className="relative rounded-3xl overflow-hidden border-2 border-emerald-400/50 mb-5"
+      style={{ boxShadow: "0 0 30px rgba(52,211,153,0.18), 0 0 60px rgba(52,211,153,0.08)" }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-surface-900/95 via-surface-900/85 to-emerald-950/60" />
+      <div className="absolute top-0 left-0 right-0 flex justify-center">
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-400 text-white text-xs font-extrabold uppercase tracking-widest px-6 py-1 rounded-b-xl">
+          ✨ Welcome offer — one time only
+        </div>
+      </div>
+      <div className="relative px-6 pt-10 pb-6 flex flex-col sm:flex-row sm:items-center gap-6">
+        <div className="flex-1">
+          <h3 className="text-xl sm:text-2xl font-extrabold text-white mb-1">Your second analysis for 99¢</h3>
+          <p className="text-sm text-emerald-200/90 font-semibold mb-3">Half the regular price. Just once, just for you.</p>
+          <ul className="space-y-1.5 text-sm text-surface-200">
+            {["1 full AI analysis — all three judges, out of 300", "Timestamped notes + Coach's Playbook", "Never expires", "Money-back guarantee"].map((f) => (
+              <li key={f} className="flex items-center gap-2"><span className="text-emerald-400 font-bold">✓</span>{f}</li>
+            ))}
+          </ul>
+        </div>
+        <div className="w-full sm:w-60 flex flex-col items-center gap-2">
+          <div className="flex items-baseline gap-2">
+            <span className="text-5xl font-black text-white">99¢</span>
+            <span className="text-sm text-surface-200/60 line-through">$1.99</span>
+          </div>
+          <button
+            onClick={handlePurchase}
+            disabled={loading}
+            className="w-full py-3.5 rounded-2xl font-extrabold text-white bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-90 transition-all shadow-lg disabled:opacity-50"
+          >
+            {loading ? "Loading..." : "Get it for 99¢ →"}
+          </button>
+          <p className="text-[11px] text-surface-200/50 text-center">Then $1.99 each, or $4.99/mo for 4.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Fresh account with a free credit and no report yet — send them to upload,
+ *  not to a wall of prices. */
+function FreeAnalysisHero({ remaining }: { remaining: number }) {
+  return (
+    <motion.a
+      href="/upload"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="block mb-10 rounded-3xl p-6 sm:p-8 border-2 border-emerald-400/50 bg-gradient-to-br from-emerald-500/15 via-surface-900/80 to-surface-900 hover:border-emerald-300/70 transition-colors group"
+      style={{ boxShadow: "0 0 30px rgba(52,211,153,0.18)" }}
+    >
+      <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+        <div className="flex-1">
+          <p className="text-xs font-bold uppercase tracking-widest text-emerald-300 mb-2">✨ Your first analysis is on us</p>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+            {remaining === 1 ? "1 free analysis" : `${remaining} analyses`} waiting on your account.
+          </h2>
+          <p className="mt-2 text-surface-200 text-sm sm:text-base">
+            Upload any routine — practice run, last comp, phone video. Three judges, a 300-point scorecard, and timestamped notes in about two minutes.
+          </p>
+        </div>
+        <div className="w-full sm:w-56 py-4 rounded-2xl font-extrabold text-lg text-center text-white bg-gradient-to-r from-emerald-500 to-teal-400 shadow-lg group-hover:opacity-90 transition-all">
+          Upload a routine →
+        </div>
+      </div>
+    </motion.a>
+  );
+}
+
 /** The full purchase stack — subscription hero + one-time cards. */
-function PurchaseBlock() {
+function PurchaseBlock({ introEligible }: { introEligible: boolean }) {
   return (
     <div className="mb-10">
+      {/* 99¢ intro — first purchase only */}
+      {introEligible && <IntroOfferCard />}
+
       {/* Season Member — HERO CARD */}
       <SubscriptionHeroCard />
 
@@ -504,10 +591,13 @@ export default function DashboardClient({
   user,
   videos,
   credits,
+  introEligible = false,
 }: {
   user: { email: string; name: string };
   videos: VideoRecord[];
   credits: { remaining: number; total: number; used: number };
+  /** True when the account has never completed a purchase → show the 99¢ intro card. */
+  introEligible?: boolean;
 }) {
   const router = useRouter();
 
@@ -622,7 +712,13 @@ export default function DashboardClient({
              A parent with reports comes back for the STORY — the latest score,
              the delta, each dancer's season. The buy cards still exist, but
              below the work, not in front of it. ── */}
-        {hasAnalyzedReports ? <SeasonHub videos={videos} /> : <PurchaseBlock />}
+        {hasAnalyzedReports ? (
+          <SeasonHub videos={videos} />
+        ) : credits.remaining > 0 ? (
+          <FreeAnalysisHero remaining={credits.remaining} />
+        ) : (
+          <PurchaseBlock introEligible={introEligible} />
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
@@ -666,7 +762,7 @@ export default function DashboardClient({
               <p className="text-surface-200 text-sm max-w-lg mx-auto">
                 {credits.used > 0
                   ? "Pick up more credits to keep improving your routines all season long."
-                  : "Grab more credits below — a single analysis is just $1.99, or get 2 for $2.99 (buy one, get one)."}
+                  : "Grab more credits below — a single analysis is $1.99, or get 2 for $2.99 (buy one, get one)."}
               </p>
             </div>
             <div className="grid sm:grid-cols-3 gap-4">
@@ -730,7 +826,7 @@ export default function DashboardClient({
         </motion.a>
 
         {/* Purchases for returning users — after the story, before the archive */}
-        {hasAnalyzedReports && <PurchaseBlock />}
+        {hasAnalyzedReports && <PurchaseBlock introEligible={introEligible} />}
 
         {/* Season Tracker CTA */}
         <motion.a

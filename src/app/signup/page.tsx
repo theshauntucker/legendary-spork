@@ -14,7 +14,6 @@ import {
   Gift,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { startCheckout } from "@/lib/checkout";
 import UploadTrustBadge from "@/components/UploadTrustBadge";
 import RoutineXLogo from "@/components/RoutineXLogo";
 
@@ -85,7 +84,14 @@ function SignupForm() {
       }
     }
 
-    // Free first analysis removed 2026-06-30 — new users purchase before analyzing.
+    // Free first analysis — REINSTATED 2026-09-09. Grant it synchronously so
+    // the upload page already shows a credit when it mounts. auth/callback
+    // only runs for confirmation-email links, so this is the reliable path.
+    try {
+      await fetch("/api/free-credit", { method: "POST" });
+    } catch (err) {
+      console.error("Free credit grant failed:", err);
+    }
 
     setSuccess(true);
 
@@ -96,32 +102,22 @@ function SignupForm() {
       body: JSON.stringify({ type: "signup", email, name, referralCode: referralCode.trim() || undefined }),
     }).catch(() => {});
 
-    // $1.99 up front — send new users to checkout for their first analysis.
-    // startCheckout() forks: web -> Stripe redirect, iOS shell -> native
-    // StoreKit IAP (Apple 3.1.1 — never open Stripe inside the app WebView).
-    try {
-      const result = await startCheckout("single", {
-        referralCode: referralCode.trim() || undefined,
-      });
-      if (result.ok) {
-        if (result.redirected) return; // web — Stripe Checkout is navigating
-        // iOS IAP complete — credits already granted server-side
-        window.location.href = "/dashboard?from=iap";
-        return;
-      }
-      if (!result.cancelled) {
-        console.error("Checkout failed:", result.error);
-      }
-    } catch (err) {
-      console.error("Checkout redirect failed:", err);
+    // Record referral code if present (fire and forget)
+    if (referralCode.trim()) {
+      fetch("/api/referral", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: referralCode.trim() }),
+      }).catch(() => {});
     }
 
-    // Fallback if checkout could not start — send to dashboard to purchase there.
+    // Straight to the upload screen — the free credit is already on the
+    // account, and the fastest path to a paying customer is a finished report.
     setLoading(false);
     setTimeout(() => {
-      router.push("/dashboard");
+      router.push("/upload?welcome=free");
       router.refresh();
-    }, 1200);
+    }, 900);
   };
 
   return (
@@ -162,7 +158,7 @@ function SignupForm() {
             <CheckCircle className="mx-auto h-12 w-12 text-green-400 mb-4" />
             <h2 className="text-xl font-bold">Account Created!</h2>
             <p className="mt-2 text-surface-200 text-sm">
-              Your first analysis is just $1.99. Taking you to checkout...
+              Your first analysis is on us. Taking you to the upload screen...
             </p>
             <p className="mt-3 text-xs text-emerald-300/90 leading-relaxed">
               Backed by our money-back guarantee — if the report misses the mark,

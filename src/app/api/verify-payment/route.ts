@@ -94,7 +94,9 @@ export async function POST(request: NextRequest) {
       : isSingle
       ? 1
       : 1;
-    const amountFallback = isSubscription ? 499 : isPack ? 999 : isBeta ? 999 : isBogo ? 299 : 199;
+    // intro = 99¢ one-time second analysis → 1 credit (falls into the final `1` above)
+    const isIntro = paymentType === "intro";
+    const amountFallback = isSubscription ? 499 : isPack ? 999 : isBeta ? 999 : isBogo ? 299 : isIntro ? 99 : 199;
 
     // Try to record payment (may already exist from webhook — that's fine)
     const { error: insertError } = await serviceClient
