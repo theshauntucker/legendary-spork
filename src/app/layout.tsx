@@ -11,6 +11,7 @@ import NativeIapBoot from "@/components/NativeIapBoot";
 import { isNativeIosShell } from "@/lib/native-shell";
 import MarketingPixels from "@/components/MarketingPixels";
 import BaydaWidget from "@/components/BaydaWidget";
+import SplashIntro from "@/components/SplashIntro";
 
 // iPhone / mobile rendering tuned to match modern app sites:
 // - viewportFit: "cover" lets the page render under the notch / home
@@ -211,6 +212,8 @@ export default async function RootLayout({
         />
       </head>
       <body>
+        {/* Sunset-X draw-in on app open / first page load of a session. */}
+        <SplashIntro />
         <AtmosphereProvider atmosphere="daytime">
           {/* Pre-warms StoreKit inside the iOS Capacitor shell so the
               first Buy click doesn't race the Capacitor bridge. No-op
