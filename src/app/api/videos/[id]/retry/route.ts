@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { internalHeaders } from "@/lib/internal-auth";
+import { isAdmin } from "@/lib/credits";
 
 export async function POST(
   _request: NextRequest,
@@ -20,13 +21,15 @@ export async function POST(
 
     const serviceClient = await createServiceClient();
 
-    // Verify the video belongs to this user and is in error/processing state
-    const { data: video, error } = await serviceClient
+    // Verify the video belongs to this user (the founder can re-run any
+    // customer's failed analysis after an outage) and is in error/processing state
+    const admin = isAdmin(user.email);
+    let query = serviceClient
       .from("videos")
       .select("id, status, user_id, preprocessing_metadata")
-      .eq("id", id)
-      .eq("user_id", user.id)
-      .single();
+      .eq("id", id);
+    if (!admin) query = query.eq("user_id", user.id);
+    const { data: video, error } = await query.single();
 
     if (error || !video) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
@@ -57,7 +60,7 @@ export async function POST(
       headers: internalHeaders(),
       body: JSON.stringify({
         videoId: video.id,
-        userId: user.id,
+        userId: video.user_id,
       }),
     }).catch((err) => {
       console.error("Failed to trigger retry processing:", err);

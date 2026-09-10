@@ -862,10 +862,10 @@ Return ONLY the JSON object, no other text.`,
       body: JSON.stringify({
         model: SCORING_MODEL,
         max_tokens: 8192,
-        // Low temperature: the same routine re-judged should land on the same
-        // sheet unless the dancing changed. At the default (1.0) two passes over
-        // identical frames drifted several points for no reason.
-        temperature: 0.2,
+        // NOTE: do not send `temperature` — the current scoring model rejects it
+        // with a 400 ("temperature is deprecated for this model"), which took
+        // every analysis down on 2026-09-10. Re-judge consistency is enforced
+        // after the fact by alignScoresToVerdict instead.
         messages: [{ role: "user", content }],
       }),
     });
