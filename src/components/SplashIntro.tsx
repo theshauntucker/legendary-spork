@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 /**
- * SplashIntro — the real Sunset X (public/splash-x.png, cropped from sunset-x.png) takes the stage
+ * SplashIntro — the real Sunset X (public/splash-x-hd.webp — 1536px, smooth re-derived edge, 33KB) takes the stage
  * when the app opens / the site loads.
  *
  * Staging: black house, a warm spotlight cone drops from above, the mark lands
@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
  */
 
 const KEY = "rx_splash_v2";
-const LOGO = "/splash-x.png"; // sunset-x.png cropped to the strokes (no transparent padding)
+const LOGO = "/splash-x-hd.webp"; // 1536px, re-edged from sunset-x.png (the 1080 source has a hard aliased edge)
 
 export default function SplashIntro() {
   const [show, setShow] = useState(false);
