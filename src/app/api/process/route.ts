@@ -14,6 +14,7 @@ import {
   SAME_ROUTINE_DROP_TOLERANCE,
   UNEXPLAINED_GAIN_TOLERANCE,
   type DancerHistory,
+  alignScoresToVerdict,
 } from "@/lib/progression";
 
 export const maxDuration = 300; // 5 min max for AI analysis
@@ -202,8 +203,17 @@ export async function POST(request: NextRequest) {
     // number goes up because the dancing got better. That is the entire value of
     // the Season Tracker — a manufactured gain is worth nothing to a parent who
     // is about to compare it against a real competition sheet.
+    // ── VERDICT ALIGNMENT: the words and the numbers must agree ──────────────
+    // The judge declares a tier per category (and up/same/down vs the last run of
+    // the same routine, with evidence). The sheet is then made to honour those
+    // declarations — a category the judge called "High Gold" can't sit in the
+    // Gold band, and a named improvement moves its category. Logged in
+    // score_integrity.verdictAlignment. See alignScoresToVerdict().
+    const verdictAlignment = usedAI ? alignScoresToVerdict(analysis, history) : null;
+
     {
       const reconciled = reconcileScore(analysis);
+      if (verdictAlignment) reconciled.integrity.verdictAlignment = verdictAlignment;
       if (reconciled.integrity?.correctedMismatch) {
         console.warn(
           `Score integrity: model reported ${reconciled.integrity.reportedTotal}, judge sheet derives ${reconciled.totalScore}. Using derived.`
@@ -255,7 +265,9 @@ export async function POST(request: NextRequest) {
           const second = await analyzeWithClaude(frames, routineMetadata, durationStr, history, note);
 
           if (second.usedAI && second.analysis && Array.isArray(second.analysis.judgeScores)) {
+            const va2 = alignScoresToVerdict(second.analysis, history);
             const r2 = reconcileScore(second.analysis);
+            r2.integrity.verdictAlignment = va2;
             second.analysis.totalScore = r2.totalScore;
             second.analysis.awardLevel = r2.awardLevel;
             second.analysis.scoreIntegrity = {
@@ -646,6 +658,22 @@ Here are the frames:`,
 Now provide your complete analysis as a JSON object with EXACTLY this structure. Be specific and accurate — reference only what you actually see in the frames. Use the REAL timestamps from the frames shown above.
 
 {
+  "verdict": {
+    "tier": "<Gold|High Gold|Platinum|Diamond — the tier this routine belongs in, decided BEFORE you pick numbers>",
+    "why": "<one sentence: the single biggest reason it sits in that tier and not the one above or below>",
+    "categoryTiers": {
+      "Technique": "<Gold|High Gold|Platinum|Diamond>",
+      "Performance": "<Gold|High Gold|Platinum|Diamond>",
+      "Choreography": "<Gold|High Gold|Platinum|Diamond>",
+      "Overall Impression": "<Gold|High Gold|Platinum|Diamond>"
+    }${parentContext?.sameRoutine ? `,
+    "vsLast": {
+      "Technique": { "direction": "<up|same|down>", "evidence": "<timestamp + what you see that is better/worse than last time, or 'no visible change'>" },
+      "Performance": { "direction": "<up|same|down>", "evidence": "<...>" },
+      "Choreography": { "direction": "<up|same|down>", "evidence": "<...>" },
+      "Overall Impression": { "direction": "<up|same|down>", "evidence": "<...>" }
+    }` : ""}
+  },
   "totalScore": <number 260-300>,
   "awardLevel": "<Gold|High Gold|Platinum|Diamond>",
   "judgeScores": [
@@ -778,6 +806,20 @@ performance, and thoughtful choreography, it belongs at 90+ per judge (270+),
 not at 87. Competent work is HIGH GOLD, not Gold. Gold is reserved for routines
 with real, nameable breakdowns you can point to in a frame.
 
+DECIDE THE TIER FIRST, THEN THE NUMBERS. Fill in "verdict" before "judgeScores":
+name the tier for the routine and for each category, then choose judge numbers
+INSIDE those bands. If your feedback text says "solid", "trained", "mid-pack",
+"competition-ready" or "High Gold potential", the tier is High Gold or above and
+the numbers must be too. A sheet that says Gold under a paragraph that says
+"mid-pack" is a contradiction, and we treat it as a scoring error.
+${parentContext?.sameRoutine ? `
+SAME ROUTINE, RE-JUDGED: fill in "vsLast" honestly for every category. "up" means
+you can point to a timestamp that is better than the last report; "down" means
+you can point to one that is worse; otherwise "same". Then make the number match:
+an "up" category scores at least half a point above its baseline, a "down"
+category at least half a point below, a "same" category within about half a
+point. Never write "improved" in the feedback and hand back the same number.
+` : ""}
 The single most valuable thing you can do for this dancer is put them in the
 RIGHT tier. Under-scoring a good routine is exactly as damaging as inflating a
 weak one — it destroys trust the moment they compare it to a real judge sheet,
@@ -820,6 +862,10 @@ Return ONLY the JSON object, no other text.`,
       body: JSON.stringify({
         model: SCORING_MODEL,
         max_tokens: 8192,
+        // Low temperature: the same routine re-judged should land on the same
+        // sheet unless the dancing changed. At the default (1.0) two passes over
+        // identical frames drifted several points for no reason.
+        temperature: 0.2,
         messages: [{ role: "user", content }],
       }),
     });

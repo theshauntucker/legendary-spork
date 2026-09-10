@@ -53,6 +53,8 @@ export interface PriorSubmission {
   analyzedAtISO: string;
   categoryAvgs: Record<string, number>;
   priorities: Array<{ priority: number; item: string }>;
+  /** Timestamped notes from that report — lets the judge re-check the same moments. */
+  timelineNotes: Array<{ timestamp: string; note: string }>;
   sameRoutine: boolean;
 }
 
@@ -305,7 +307,7 @@ export async function loadDancerHistory(
     const ids = priorVideos.map((v: any) => v.id);
     const { data: priorAnalyses } = await serviceClient
       .from("analyses")
-      .select("id, video_id, total_score, award_level, judge_scores, improvement_priorities, created_at")
+      .select("id, video_id, total_score, award_level, judge_scores, improvement_priorities, timeline_notes, created_at")
       .in("video_id", ids)
       .order("created_at", { ascending: true });
 
@@ -335,6 +337,12 @@ export async function loadDancerHistory(
           categoryAvgs: categoryAvgMap(a.judge_scores),
           priorities: Array.isArray(a.improvement_priorities)
             ? a.improvement_priorities.slice(0, 5).map((p: any) => ({ priority: p.priority, item: String(p.item ?? "") }))
+            : [],
+          timelineNotes: Array.isArray(a.timeline_notes)
+            ? a.timeline_notes.slice(0, 10).map((t: any) => ({
+                timestamp: String(t.timestamp ?? t.time ?? ""),
+                note: String(t.note ?? t.observation ?? t.text ?? "").slice(0, 160),
+              }))
             : [],
           sameRoutine: (v.routine_name || "").trim().toLowerCase() === targetRoutine,
         };
@@ -519,6 +527,9 @@ MOST DIRECT COMPARISON — ${b.sameRoutine ? `the same routine ("${b.routineName
   Judge sheet: ${catLine}
   They were told to work on:
 ${b.priorities.map((p) => `    ${p.priority}. ${p.item}`).join("\n") || "    (none recorded)"}
+${b.sameRoutine && b.timelineNotes.length ? `
+  Moments you flagged last time in THIS routine — re-check these exact timestamps first:
+${b.timelineNotes.map((t) => `    ${t.timestamp}  ${t.note}`).join("\n")}` : ""}
 
 CAREER AVERAGE BY CATEGORY: ${careerLine || "(insufficient data)"}
 ${h.recurringPriorities.length ? `
@@ -726,4 +737,164 @@ export async function resolveDancerId(
     console.warn("resolveDancerId failed (continuing unlinked):", err);
     return null;
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VERDICT ALIGNMENT — the words and the numbers must agree.
+//
+// Observed failure (Hannah / "Fabulous", Sep 4 2026): the report text said
+// "solidly mid-pack, a real improvement in the battement" and the sheet said
+// 31.3 / 31.0 / 16.3 / 8.0 → 260, the literal floor, unchanged from last time.
+// The prompt asks the model to keep tier and numbers consistent and to move a
+// category when it names an improvement; it does not reliably do either. So the
+// model now DECLARES its verdict in structured form (tier per category, and
+// up/same/down vs the last run of the same routine, each with evidence), and
+// this code makes the judge sheet honour those declarations. Nothing here adds
+// points for effort or loyalty — it only removes the contradiction between what
+// the judge wrote and what the judge scored, and every change is logged in
+// score_integrity so a mis-scored run is visible.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type Tier = "Gold" | "High Gold" | "Platinum" | "Diamond";
+const TIERS: Tier[] = ["Gold", "High Gold", "Platinum", "Diamond"];
+
+/** Per-category bands for each tier — identical to the table in the scoring prompt. */
+export const CATEGORY_TIER_BANDS: Record<string, Record<Tier, [number, number]>> = {
+  Technique:            { Gold: [30.0, 31.4], "High Gold": [31.5, 32.6], Platinum: [32.7, 33.8], Diamond: [33.9, 35] },
+  Performance:          { Gold: [30.0, 31.4], "High Gold": [31.5, 32.6], Platinum: [32.7, 33.8], Diamond: [33.9, 35] },
+  Choreography:         { Gold: [17.0, 17.9], "High Gold": [18.0, 18.6], Platinum: [18.7, 19.3], Diamond: [19.4, 20] },
+  "Overall Impression": { Gold: [8.4, 8.9],   "High Gold": [9.0, 9.3],   Platinum: [9.4, 9.6],   Diamond: [9.7, 10] },
+};
+export const TOTAL_TIER_BANDS: Record<Tier, [number, number]> = {
+  Gold: [260, 269], "High Gold": [270, 279], Platinum: [280, 289], Diamond: [290, 300],
+};
+
+function asTier(x: unknown): Tier | null {
+  if (typeof x !== "string") return null;
+  const k = x.trim().toLowerCase().replace(/[_-]+/g, " ");
+  if (k === "gold") return "Gold";
+  if (k === "high gold" || k === "highgold") return "High Gold";
+  if (k === "platinum") return "Platinum";
+  if (k === "diamond") return "Diamond";
+  return null;
+}
+
+/** Shift every judge on a category by the same amount so the avg lands on `target`. */
+function setCategoryAvg(c: CategoryScore, target: number) {
+  const max = CATEGORY_MAX[c.category] ?? c.max ?? 0;
+  const t = round1(Math.min(max, Math.max(0, target)));
+  const cur = c.judges.reduce((s, j) => s + j, 0) / c.judges.length;
+  const delta = t - cur;
+  c.judges = c.judges.map((j) => round1(Math.min(max, Math.max(0, j + delta))));
+  c.avg = round1(c.judges.reduce((s, j) => s + j, 0) / c.judges.length);
+}
+
+export interface VerdictAlignment {
+  applied: boolean;
+  declaredTier: Tier | null;
+  categoryTiers: Record<string, Tier | null>;
+  changes: string[];
+  preAlignPerJudge: number;
+  postAlignPerJudge: number;
+}
+
+/**
+ * Make the judge sheet consistent with the model's own declared verdict.
+ * Runs BEFORE reconcileScore() so the derived total reflects the aligned sheet.
+ *
+ *   analysis.verdict = {
+ *     tier: "High Gold",
+ *     why: "...",
+ *     categoryTiers: { Technique: "High Gold", ... },
+ *     vsLast: { Technique: { direction: "up", evidence: "1:03 battement ..." }, ... }  // same routine only
+ *   }
+ */
+export function alignScoresToVerdict(analysis: any, history: DancerHistory | null): VerdictAlignment {
+  const cats: CategoryScore[] = Array.isArray(analysis?.judgeScores) ? analysis.judgeScores : [];
+  const verdict = analysis?.verdict ?? {};
+  const declaredTier = asTier(verdict.tier);
+  const changes: string[] = [];
+  const categoryTiers: Record<string, Tier | null> = {};
+
+  const pre = round1(cats.reduce((s, c) => s + (Number(c.avg) || 0), 0));
+  if (cats.length === 0) {
+    return { applied: false, declaredTier, categoryTiers, changes, preAlignPerJudge: pre, postAlignPerJudge: pre };
+  }
+
+  // Normalise judges/avg first (same rules as reconcileScore) so we shift real numbers.
+  for (const c of cats) {
+    const max = CATEGORY_MAX[c.category] ?? c.max ?? 0;
+    if (!Array.isArray(c.judges) || c.judges.length === 0) {
+      const a = round1(Math.min(max, Math.max(0, Number(c.avg) || 0)));
+      c.judges = [a, a, a];
+    }
+    c.judges = c.judges.map((j) => round1(Math.min(max, Math.max(0, Number(j) || 0))));
+    c.avg = round1(c.judges.reduce((s, j) => s + j, 0) / c.judges.length);
+  }
+
+  // 1. "vs last time" — a named improvement/regression on the SAME routine must move that category.
+  const base = history?.baseline && history.baselineIsSameRoutine ? history.baseline.categoryAvgs : null;
+  const vsLast = verdict.vsLast && typeof verdict.vsLast === "object" ? verdict.vsLast : null;
+  if (base && vsLast) {
+    for (const c of cats) {
+      const b = base[c.category];
+      const v = vsLast[c.category];
+      if (!Number.isFinite(b) || !v || typeof v !== "object") continue;
+      const dir = String(v.direction ?? "").toLowerCase();
+      const before = c.avg;
+      if (dir === "up" && c.avg < b + 0.3) setCategoryAvg(c, b + 0.5);
+      else if (dir === "down" && c.avg > b - 0.3) setCategoryAvg(c, b - 0.5);
+      else if (dir === "same" && Math.abs(c.avg - b) > 0.6) setCategoryAvg(c, c.avg > b ? b + 0.6 : b - 0.6);
+      if (c.avg !== before) changes.push(`${c.category}: ${before} → ${c.avg} (declared "${dir}" vs last time, baseline ${b})`);
+    }
+  }
+
+  // 2. Category tier bands — a category the judge called "High Gold" cannot score in the Gold band.
+  for (const c of cats) {
+    const bands = CATEGORY_TIER_BANDS[c.category];
+    if (!bands) continue;
+    const t = asTier(verdict.categoryTiers?.[c.category]) ?? declaredTier;
+    categoryTiers[c.category] = t;
+    if (!t) continue;
+    const [lo, hi] = bands[t];
+    const before = c.avg;
+    if (c.avg < lo) setCategoryAvg(c, lo);
+    else if (c.avg > hi) setCategoryAvg(c, hi);
+    if (c.avg !== before) changes.push(`${c.category}: ${before} → ${c.avg} (declared ${t}, band ${lo}-${hi})`);
+  }
+
+  // 3. Total must land inside the declared overall tier. Nudge in 0.3 steps, spreading
+  //    across categories that still have room inside their own band.
+  if (declaredTier) {
+    const [lo, hi] = TOTAL_TIER_BANDS[declaredTier];
+    const total = () => Math.round(cats.reduce((s, c) => s + c.avg, 0) * JUDGE_COUNT);
+    let guard = 0;
+    while (total() < lo && guard++ < 40) {
+      let moved = false;
+      for (const c of cats) {
+        const t = categoryTiers[c.category] ?? declaredTier;
+        const cap = CATEGORY_TIER_BANDS[c.category]?.[t]?.[1] ?? (CATEGORY_MAX[c.category] ?? c.max);
+        if (c.avg + 0.3 <= cap + 1e-9) { setCategoryAvg(c, c.avg + 0.3); moved = true; if (total() >= lo) break; }
+      }
+      if (!moved) break;
+    }
+    guard = 0;
+    while (total() > hi && guard++ < 40) {
+      let moved = false;
+      for (const c of cats) {
+        const t = categoryTiers[c.category] ?? declaredTier;
+        const floor = CATEGORY_TIER_BANDS[c.category]?.[t]?.[0] ?? 0;
+        if (c.avg - 0.3 >= floor - 1e-9) { setCategoryAvg(c, c.avg - 0.3); moved = true; if (total() <= hi) break; }
+      }
+      if (!moved) break;
+    }
+    const finalTotal = total();
+    if (finalTotal < lo || finalTotal > hi) changes.push(`total ${finalTotal} could not be brought inside declared ${declaredTier} (${lo}-${hi})`);
+  }
+
+  const post = round1(cats.reduce((s, c) => s + c.avg, 0));
+  if (changes.length) {
+    console.log(`[verdict-align] ${declaredTier ?? "no tier"}: per-judge ${pre} → ${post}. ${changes.join(" | ")}`);
+  }
+  return { applied: changes.length > 0, declaredTier, categoryTiers, changes, preAlignPerJudge: pre, postAlignPerJudge: post };
 }
