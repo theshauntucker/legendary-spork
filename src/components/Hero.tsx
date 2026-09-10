@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Clock, CheckCircle2, AlertCircle } from "lucide-react";
-import Image from "next/image";
+import HeroMark from "./HeroMark";
 import AppStoreBadge from "@/components/AppStoreBadge";
 
 /**
@@ -43,15 +43,8 @@ export default function Hero() {
           transition={{ duration: 0.6 }}
           className="text-center max-w-3xl mx-auto"
         >
-          <div className="flex justify-center mb-7">
-            <Image
-              src="/sunset-x.png"
-              alt="RoutineX"
-              width={64}
-              height={64}
-              priority
-              style={{ width: 64, height: 64 }}
-            />
+          <div className="flex justify-center mb-10 sm:mb-12">
+            <HeroMark />
           </div>
 
           <p className="eyebrow text-[#B0356B] mb-5">
