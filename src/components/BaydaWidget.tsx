@@ -30,36 +30,34 @@ const WELCOMES: Message[] = [
   {
     role: "assistant",
     content:
-      "Hey! I'm Bayda ✨ Think of me as the dance mom in the lobby who knows every score, every comp and every judge's pet peeve.\n\nAsk me literally anything — your comp, how scoring works, what judges look for. And **your first RoutineX analysis is free.** What are we working on?",
-    chips: ["How does RoutineX work?", "Is the first one really free?", "We have a comp coming up 😬"],
+      "Hi, I'm Bayda ✨ I can walk you through RoutineX, explain how your competition scores, or help with anything in the app.\n\nAnd **your first analysis is free.** What are you working on?",
+    chips: ["How does RoutineX work?", "Is the first one really free?", "We have a comp coming up"],
   },
   {
     role: "assistant",
     content:
-      "Hi, I'm Bayda! Quick question before anything else — are you a **dance parent, a dancer, or a studio owner?** I need to know how deep in the rhinestones you are. 💎",
+      "Hi, I'm Bayda. Are you a **dance parent, a dancer, or with a studio?** I'll point you to exactly what helps.",
     chips: ["Dance parent", "I'm the dancer", "Studio owner"],
   },
   {
     role: "assistant",
     content:
-      "Hey there! I'm Bayda. Imagine knowing your dancer's score **before** you walk into the ballroom — that's what RoutineX does, for any competition and any scoring system.\n\nWant the 30-second tour, or do you have a question?",
+      "Hi, I'm Bayda. Imagine knowing your dancer's score **before** you walk into the ballroom — that's what RoutineX does, for any competition and any scoring system.\n\nWant the 30-second tour, or do you have a question?",
     chips: ["Give me the 30-second tour", "What's in the report?", "What does it cost?"],
   },
 ];
 
 const LOADING_LINES = [
-  "Checking with the judges…",
-  "Fixing my bun…",
-  "Counting the 8s…",
-  "Finding a parking spot…",
-  "Glueing a rhinestone back on…",
-  "Reading the score sheet…",
+  "Thinking…",
+  "Checking the rubric…",
+  "Pulling that up…",
+  "Almost there…",
 ];
 
 const TEASERS = [
-  "Psst — your first analysis is free 👀",
+  "Your first analysis is free — want the quick tour?",
   "Comp coming up? Ask me anything ✨",
-  "Want to know what the judges see? 💎",
+  "Need help with the app? I'm right here.",
 ];
 
 /* ── Tiny, safe markdown: **bold**, [links](url), bare URLs, "- " bullets ─ */
@@ -290,7 +288,7 @@ export default function BaydaWidget() {
           {
             role: "assistant",
             content:
-              "Sorry, I tripped over a costume bag! Try that again — or email danceroutinex@gmail.com and a real human will help.",
+              "Sorry — that didn't go through. Try again, or email danceroutinex@gmail.com and a real person will help.",
             chips: ["Try again"],
           },
         ]);
@@ -413,7 +411,7 @@ export default function BaydaWidget() {
               </div>
               <div>
                 <p className="text-white text-sm font-semibold leading-tight">Bayda</p>
-                <p className="text-zinc-300 text-[11px] leading-tight">Your competition bestie · ask me anything</p>
+                <p className="text-zinc-300 text-[11px] leading-tight">Dance & cheer help · ask me anything</p>
               </div>
             </div>
             <button
