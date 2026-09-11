@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { getUserCredits } from "@/lib/credits";
+import { getUserCredits, grantFreeCreditIfNew } from "@/lib/credits";
 import { minHammingAcrossFrames, DHASH_DUPLICATE_THRESHOLD } from "@/lib/dhash";
 import { internalHeaders } from "@/lib/internal-auth";
 
@@ -40,6 +40,9 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
     const serviceClient = await createServiceClient();
+    // Free first analysis safety net — a brand-new account that somehow has
+    // no credits row yet gets its free credit here instead of a paywall.
+    await grantFreeCreditIfNew(serviceClient, user.id, user.email).catch(() => {});
     const creditStatus = await getUserCredits(serviceClient, user.id, user.email);
     if (!creditStatus.hasCredits) {
       return NextResponse.json({ error: "No credits remaining", code: "NO_CREDITS" }, { status: 402 });

@@ -266,9 +266,6 @@ function SubscriptionHeroCard() {
             <p className="text-xs text-surface-200/60 text-center">
               Cancel anytime. No commitment.
             </p>
-            <p className="text-xs text-surface-200/40 text-center">
-              Your first analysis is free — upgrade anytime.
-            </p>
           </div>
         </div>
       </div>
@@ -349,7 +346,7 @@ function FreeAnalysisHero({ remaining }: { remaining: number }) {
             {remaining === 1 ? "1 free analysis" : `${remaining} analyses`} waiting on your account.
           </h2>
           <p className="mt-2 text-surface-200 text-sm sm:text-base">
-            Upload any routine — practice run, last comp, phone video. Three judges, a 300-point scorecard, and timestamped notes in about two minutes.
+            Upload any routine — practice run, last comp, phone video. Three judges, a 300-point scorecard, and timestamped notes in a few minutes.
           </p>
         </div>
         <div className="w-full sm:w-56 py-4 rounded-2xl font-extrabold text-lg text-center text-white bg-gradient-to-r from-emerald-500 to-teal-400 shadow-lg group-hover:opacity-90 transition-all">
@@ -413,14 +410,14 @@ function PurchaseBlock({ introEligible }: { introEligible: boolean }) {
         />
         <HeroPurchaseCard
           variant="purple"
-          badge="🏆 Best Value — Save $15"
+          badge="🏆 Stock Up for the Season"
           title="Competition Pack"
           price="$9.99"
-          subPrice="Only $1.99 per analysis — 5 total, never expire"
+          subPrice="5 analyses in one checkout — never expire"
           tagline="Stock up for the whole season. Use them whenever you need."
           features={[
             "5 full AI analyses",
-            "$1.99 each — buy 5 at once",
+            "One checkout for the whole comp stretch",
             "All styles: dance, cheer, duo, group",
             "Never expire — use all season",
           ]}
@@ -789,11 +786,11 @@ export default function DashboardClient({
                 type="bogo"
               />
               <PurchaseCard
-                badge="🏆 Best Value"
+                badge="🏆 Stock Up"
                 badgeColor="text-gold-300 bg-gold-500/20"
                 title="Competition Pack"
                 price="$9.99"
-                description="5 analyses — only $1.99 each, never expire."
+                description="5 analyses in one checkout — never expire."
                 features={["5 full AI analyses", "$1.99 each — 5 analyses", "Never expire"]}
                 buttonText="Get 5 Analyses — $9.99"
                 buttonStyle="border border-primary-500/60 hover:bg-primary-500/10"
@@ -1097,6 +1094,13 @@ export default function DashboardClient({
             Members can open the Stripe billing portal to cancel; iOS-only
             subscribers are told to manage via Apple ID. */}
         <div className="mt-12 text-center">
+          <a
+            href="/referrals"
+            className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary-400/30 bg-primary-500/10 px-4 py-2 text-sm font-semibold text-primary-200 hover:bg-primary-500/20 transition-colors"
+          >
+            🎁 Refer a friend — you both get a free analysis
+          </a>
+          <br />
           <button
             type="button"
             onClick={handleManageSubscription}

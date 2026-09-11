@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import {
-  grantCredits,
+  applyPaymentCredits,
   grantSubscriptionCycle,
   BETA_CREDITS,
   SUBSCRIPTION_CREDITS,
 } from "@/lib/credits";
+import { fulfillReferralOnPayment } from "@/lib/referral-fulfillment";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { sendWelcomeEmail, notifyWelcomeSent } from "@/lib/notifications";
 
@@ -71,6 +72,12 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (alreadyRecorded) {
+      // Recorded by another path. Make sure its credits landed (exactly-once;
+      // no-op if they already did) and the referral reward is settled.
+      await applyPaymentCredits(serviceClient, session_id).catch((err) =>
+        console.error("Verify-payment: apply on existing failed:", err)
+      );
+      await fulfillReferralOnPayment(serviceClient, user.id, session_id, session.amount_total || 0);
       return NextResponse.json({ verified: true, already_processed: true });
     }
 
@@ -114,6 +121,8 @@ export async function POST(request: NextRequest) {
         status: "completed",
         credits_granted: creditsToGrant,
         referral_code: referralCode,
+        // one-time purchases are granted via apply_payment_credits (exactly once)
+        credits_applied: isSubscription,
       });
 
     if (insertError && insertError.code !== "23505") {
@@ -171,9 +180,10 @@ export async function POST(request: NextRequest) {
         periodEnd
       );
     } else {
-      // Pack / single / beta — additive grant, grantCredits is idempotent-safe
-      await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
+      // Pack / single / BOGO / intro — exactly-once grant keyed on the session
+      await applyPaymentCredits(serviceClient, session_id);
     }
+    await fulfillReferralOnPayment(serviceClient, user.id, session_id, session.amount_total || 0);
 
     console.log(
       `Verify-payment: ${isSubscription ? "Reset" : "Granted"} ${creditsToGrant} credits for ${user.id} (${paymentType}) — webhook fallback`

@@ -7,6 +7,7 @@ import {
   SUBSCRIPTION_CREDITS,
 } from "@/lib/credits";
 import { notifyPayment } from "@/lib/notifications";
+import { fulfillReferralOnPayment } from "@/lib/referral-fulfillment";
 
 export const dynamic = "force-dynamic";
 
@@ -165,6 +166,11 @@ export async function POST(request: NextRequest) {
     .eq("apple_transaction_id", transactionId)
     .maybeSingle();
   if (existing) {
+    // Already fulfilled (e.g. Apple's server notification got here first).
+    // Settle the referral reward in case that path didn't — idempotent.
+    if (product.paymentType !== "studio_subscription") {
+      await fulfillReferralOnPayment(serviceClient, user.id, `apple:${transactionId}`, product.amountCents);
+    }
     return NextResponse.json(
       {
         ok: true,
@@ -333,6 +339,12 @@ export async function POST(request: NextRequest) {
       // Non-uniqueness errors are real failures. Uniqueness means another
       // request already inserted this row (race/idempotency) — safe to ignore.
       console.error("validate-receipt: payment insert failed", paymentErr);
+    }
+
+    // Referral reward (+1 friend, +1 referrer) on first paid purchase — same
+    // as the Stripe webhook. Idempotent; never throws.
+    if (product.paymentType !== "studio_subscription") {
+      await fulfillReferralOnPayment(serviceClient, user.id, `apple:${transactionId}`, product.amountCents);
     }
 
     // Notify the owner — mirrors the Stripe webhook so Apple IAP purchases

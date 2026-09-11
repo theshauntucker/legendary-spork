@@ -15,41 +15,33 @@ export async function GET() {
 
     const service = await createServiceClient();
 
-    // Fetch profile referral_code (auto-generated on insert by trigger)
-    const { data: profile } = await service
-      .from("profiles")
-      .select("referral_code, handle")
-      .eq("id", user.id)
-      .single();
-
-    let code = profile?.referral_code as string | null | undefined;
-
-    // Defensive: if somehow null (legacy row pre-trigger), generate one now.
-    if (!code) {
-      const newCode = Array.from({ length: 6 }, () =>
-        "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".charAt(
-          Math.floor(Math.random() * 32)
-        )
-      ).join("");
-      await service
-        .from("profiles")
-        .update({ referral_code: newCode })
-        .eq("id", user.id);
-      code = newCode;
+    // Every account gets a persisted code (referral_codes table). The old
+    // Coda-era profiles.referral_code is carried over where it existed.
+    const { data: code, error: codeErr } = await service.rpc(
+      "get_or_create_referral_code",
+      { p_user_id: user.id }
+    );
+    if (codeErr || !code) {
+      console.error("GET /api/referrals: code lookup failed", codeErr);
+      return NextResponse.json({ error: "Internal error" }, { status: 500 });
     }
 
-    // Stats from the view (lives in supabase-referrals.sql)
-    const { data: stats } = await service
-      .from("v_referral_stats")
-      .select("*")
-      .eq("referrer_user_id", user.id)
-      .single();
+    const { data: rows } = await service
+      .from("referrals")
+      .select("status, credit_granted_referrer, updated_at")
+      .eq("referrer_user_id", user.id);
 
-    const total = stats?.total_referrals ?? 0;
-    const credited = stats?.credited_count ?? 0;
-    const pending = stats?.pending_count ?? 0;
-    const capped = stats?.capped_count ?? 0;
-    const thisMonthCredits = stats?.this_month_credits ?? 0;
+    const list = rows ?? [];
+    const monthStart = new Date();
+    monthStart.setUTCDate(1);
+    monthStart.setUTCHours(0, 0, 0, 0);
+    const total = list.length;
+    const credited = list.filter((r) => r.status === "credited").length;
+    const pending = list.filter((r) => r.status === "pending").length;
+    const capped = list.filter((r) => r.status === "capped").length;
+    const thisMonthCredits = list.filter(
+      (r) => r.status === "credited" && r.updated_at && new Date(r.updated_at) >= monthStart
+    ).length;
 
     const origin =
       process.env.NEXT_PUBLIC_SITE_URL || "https://routinex.org";

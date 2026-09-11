@@ -60,9 +60,17 @@ export default async function AdminPage() {
       name: u.user_metadata?.full_name ?? "",
       createdAt: u.created_at,
       lastSignIn: u.last_sign_in_at ?? null,
-      totalCredits: credit?.total_credits ?? 0,
+      totalCredits: (credit?.total_credits ?? 0) + (credit?.carryover_credits ?? 0),
       usedCredits: credit?.used_credits ?? 0,
-      remaining: (credit?.total_credits ?? 0) - (credit?.used_credits ?? 0),
+      // Same formula as getUserCredits: expired subscription pool counts 0,
+      // never-expiring carryover always counts.
+      remaining:
+        (credit?.credit_source === "subscription" &&
+        credit?.expires_at &&
+        new Date(credit.expires_at).getTime() < Date.now()
+          ? 0
+          : Math.max(0, (credit?.total_credits ?? 0) - (credit?.used_credits ?? 0))) +
+        (credit?.carryover_credits ?? 0),
       isBeta: credit?.is_beta_member ?? false,
       totalPaid: userPayments.reduce((s: number, p: { amount_cents: number }) => s + p.amount_cents, 0),
       payments: userPayments,

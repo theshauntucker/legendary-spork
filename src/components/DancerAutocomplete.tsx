@@ -69,6 +69,11 @@ export default function DancerAutocomplete({
           setRoster([]);
         } else if (res.ok) {
           const data = await res.json();
+          if (data.studioMember === false) {
+            setIsStudioMember(false);
+            setRoster([]);
+            return;
+          }
           setIsStudioMember(true);
           setRoster(Array.isArray(data.dancers) ? data.dancers : []);
         } else {

@@ -13,7 +13,7 @@ interface Message {
 
 /* ── Conversion buttons Bayda can attach to a reply ─────────────────────── */
 const CTAS: Record<CtaKey, { label: string; href: string }> = {
-  signup: { label: "Get my free analysis →", href: "/signup?ref=bayda" },
+  signup: { label: "Get my free analysis →", href: "/signup?utm_source=bayda" },
   sample: { label: "See a sample report →", href: "/sample-analysis" },
   pricing: { label: "See plans & pricing →", href: "/pricing" },
   upload: { label: "Upload a routine →", href: "/upload" },

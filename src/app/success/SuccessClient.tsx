@@ -30,16 +30,16 @@ export default function SuccessClient({ sessionId }: { sessionId?: string }) {
         </h1>
 
         <p className="mt-4 text-surface-200">
-          Welcome to RoutineX! Your account is set up and ready to go.
+          Payment received — you&apos;re all set.
         </p>
 
         <div className="mt-8 space-y-3 text-left">
           <div className="flex items-start gap-3 rounded-xl bg-white/5 p-4">
             <Gift className="h-5 w-5 text-primary-400 mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium text-sm">Credits Added</p>
+              <p className="font-medium text-sm">Credits added</p>
               <p className="text-xs text-surface-200">
-                Your analysis credits are ready — upload a routine now to get started.
+                Your analyses are on your account and ready to use.
               </p>
             </div>
           </div>
@@ -47,9 +47,9 @@ export default function SuccessClient({ sessionId }: { sessionId?: string }) {
           <div className="flex items-start gap-3 rounded-xl bg-white/5 p-4">
             <Upload className="h-5 w-5 text-accent-400 mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium text-sm">Upload & Analyze</p>
+              <p className="font-medium text-sm">Upload & analyze</p>
               <p className="text-xs text-surface-200">
-                Head to your dashboard to upload a routine and get your detailed AI scoring report.
+                Pick a routine video on your phone — the full judge report is usually ready in 1–3 minutes.
               </p>
             </div>
           </div>
@@ -57,28 +57,29 @@ export default function SuccessClient({ sessionId }: { sessionId?: string }) {
           <div className="flex items-start gap-3 rounded-xl bg-white/5 p-4">
             <Star className="h-5 w-5 text-gold-400 mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium text-sm">RoutineX Member</p>
+              <p className="font-medium text-sm">Track the season</p>
               <p className="text-xs text-surface-200">
-                Your credits are ready. Head to your dashboard, upload a routine, and get your detailed AI scoring report.
+                Every report lands in your Season Tracker so you can watch the scores climb.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="mt-8 rounded-xl bg-gradient-to-r from-primary-700/30 to-accent-600/30 p-4">
-          <p className="text-sm font-medium">Share with your dance fam</p>
-          <p className="text-xs text-surface-200 mt-1">
-            Know a dance parent or coach who&apos;d love this? Spread the word!
-          </p>
-        </div>
-
         <a
-          href={sessionId ? `/dashboard?session_id=${sessionId}` : "/dashboard"}
-          className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-6 py-3 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+          href="/upload"
+          className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-7 py-3.5 text-sm font-bold text-white hover:opacity-90 transition-opacity"
         >
-          Go to Dashboard
+          Upload a Routine
           <ArrowRight className="h-4 w-4" />
         </a>
+        <div className="mt-4">
+          <a
+            href={sessionId ? `/dashboard?session_id=${sessionId}` : "/dashboard"}
+            className="text-sm text-surface-200 hover:text-white underline-offset-2 hover:underline"
+          >
+            Go to Dashboard
+          </a>
+        </div>
       </motion.div>
     </div>
   );

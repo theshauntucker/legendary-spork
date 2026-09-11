@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import {
-  grantCredits,
+  applyPaymentCredits,
   grantSubscriptionCycle,
-  hasCreditsInDb,
   BETA_CREDITS,
   SUBSCRIPTION_CREDITS,
 } from "@/lib/credits";
+import { fulfillReferralOnPayment } from "@/lib/referral-fulfillment";
 import { getStripe } from "@/lib/stripe";
 import { sendWelcomeEmail, notifyWelcomeSent } from "@/lib/notifications";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -62,23 +62,11 @@ export default async function SuccessPage({
         .maybeSingle();
 
       if (existingPayment) {
-        // Payment recorded — but were credits actually granted?
-        const hasCredits = await hasCreditsInDb(serviceClient, user.id);
-        if (!hasCredits) {
-          // Look up the actual payment to grant the correct number of credits
-          const { data: paymentRow } = await serviceClient
-            .from("payments")
-            .select("payment_type, credits_granted")
-            .eq("stripe_session_id", sessionId)
-            .maybeSingle();
-          const recoveryType = paymentRow?.payment_type || "beta_access";
-          const isBetaRecovery = recoveryType === "beta_access";
-          const recoveryCredits =
-            paymentRow?.credits_granted ||
-            (isBetaRecovery ? BETA_CREDITS : recoveryType === "video_analysis" ? 5 : 1);
-          await grantCredits(serviceClient, user.id, recoveryCredits, isBetaRecovery);
-          console.log(`Success page: Recovered ${recoveryCredits} missing credits for ${user.id}`);
-        }
+        // Recorded by another path — make sure its credits landed (exactly
+        // once; no-op if they already did) and settle any referral reward.
+        const { applied, credits } = await applyPaymentCredits(serviceClient, sessionId);
+        if (applied) console.log(`Success page: applied ${credits} pending credits for ${user.id}`);
+        await fulfillReferralOnPayment(serviceClient, user.id, sessionId, 0);
       } else {
         // Not yet processed by webhook — verify with Stripe and grant credits
         const stripe = getStripe();
@@ -136,6 +124,7 @@ export default async function SuccessPage({
               status: "completed",
               credits_granted: creditsToGrant,
               referral_code: referralCode,
+              credits_applied: isSubscription,
             });
 
           if (insertError && insertError.code !== "23505") {
@@ -214,18 +203,14 @@ export default async function SuccessPage({
             );
             await maybeWelcome(serviceClient, user.id, user.email || "", "subscription");
           } else {
-            // Pack / single / beta — additive grant, grantCredits is idempotent
-            await grantCredits(
-              serviceClient,
-              user.id,
-              creditsToGrant,
-              isBeta
-            );
+            // Pack / single / BOGO / intro — exactly-once grant keyed on the session
+            const { applied } = await applyPaymentCredits(serviceClient, sessionId);
             console.log(
-              `Success page: Granted ${creditsToGrant} credits to ${user.id} (${paymentType} — webhook fallback)`
+              `Success page: ${applied ? "Granted" : "Already granted"} ${creditsToGrant} credits for ${user.id} (${paymentType} — webhook fallback)`
             );
             await maybeWelcome(serviceClient, user.id, user.email || "", paymentType);
           }
+          await fulfillReferralOnPayment(serviceClient, user.id, sessionId, session.amount_total || 0);
         }
       }
     } catch (err) {

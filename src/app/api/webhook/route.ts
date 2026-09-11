@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import {
-  grantCredits,
-  hasCreditsInDb,
+  applyPaymentCredits,
   resetSubscriptionCredits,
   grantSubscriptionCycle,
   markSubscriptionExpires,
@@ -10,6 +9,7 @@ import {
   SUBSCRIPTION_CREDITS,
 } from "@/lib/credits";
 import { createServiceClient } from "@/lib/supabase/server";
+import { fulfillReferralOnPayment } from "@/lib/referral-fulfillment";
 import {
   notifyPayment,
   notifySubscriptionCanceled,
@@ -603,6 +603,8 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        await fulfillReferralOnPayment(serviceClient, userId, session.id, session.amount_total || 499);
+
         if (referralCode) {
           serviceClient.rpc("attribute_affiliate_revenue", {
             p_user_id: userId,
@@ -663,13 +665,14 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (existingPayment) {
-      // Payment recorded — but were credits actually granted?
-      const hasCredits = await hasCreditsInDb(serviceClient, userId);
-      if (!hasCredits) {
-        // Payment exists but credits missing — recover now
+      // Recorded by /success, /dashboard or verify-payment first. Make sure
+      // its credits landed (exactly once — no-op if they did) and settle the
+      // referral reward, which those paths may not have reached.
+      {
         try {
-          await grantCredits(serviceClient, userId, creditsToGrant, isBeta);
-          console.log(`Webhook: Recovered missing credits for ${userId}`);
+          const { applied } = await applyPaymentCredits(serviceClient, session.id);
+          if (applied) console.log(`Webhook: Applied pending credits for ${userId}`);
+          await fulfillReferralOnPayment(serviceClient, userId, session.id, session.amount_total || 0);
         } catch (err) {
           console.error("Webhook: Credit recovery failed:", {
             error: err instanceof Error ? err.message : String(err),
@@ -704,6 +707,7 @@ export async function POST(request: NextRequest) {
           status: "completed",
           credits_granted: creditsToGrant,
           referral_code: referralCode,
+          credits_applied: false, // granted below via apply_payment_credits
         });
 
       if (insertError) {
@@ -715,9 +719,9 @@ export async function POST(request: NextRequest) {
         console.log(`Webhook: Payment already recorded for session ${session.id}, ensuring credits granted...`);
       }
 
-      // Always attempt to grant credits — grantCredits is idempotent-safe
-      // (uses insert-first with unique constraint fallback)
-      await grantCredits(serviceClient, userId, creditsToGrant, isBeta);
+      // Exactly-once grant keyed on the session: whoever flips
+      // credits_applied first grants; a racing /success page no-ops.
+      await applyPaymentCredits(serviceClient, session.id);
     } catch (err) {
       console.error("Webhook: Failed to record payment or grant credits:", {
         error: err instanceof Error ? err.message : String(err),
@@ -755,8 +759,9 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Referral free-credit fulfillment REMOVED 2026-06-30: no referral program.
-    // Users pay for every analysis — no free credits are granted from referrals.
+    // Referral reward: +1 to the friend and +1 to whoever referred them, on
+    // the friend's first paid purchase. Idempotent; never throws.
+    await fulfillReferralOnPayment(serviceClient, userId, session.id, session.amount_total || 0);
 
     // Send payment notification email (non-blocking, ok to fail)
     const customerEmail = session.customer_email || session.customer_details?.email || userId;

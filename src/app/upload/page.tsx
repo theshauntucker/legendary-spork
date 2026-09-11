@@ -98,6 +98,63 @@ function UploadPageInner() {
     message: string;
   } | null>(null);
   const [forceUpload, setForceUpload] = useState(false);
+  // Credit balance, fetched on mount so an out-of-credits parent sees the
+  // offer up front instead of after filling out the whole form.
+  const [creditInfo, setCreditInfo] = useState<{
+    hasCredits: boolean;
+    remaining: number;
+    isAdmin: boolean;
+    introEligible?: boolean;
+  } | null>(null);
+  const [buying, setBuying] = useState(false);
+  const [buyError, setBuyError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/credits", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && d && typeof d.hasCredits === "boolean") setCreditInfo(d);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // 99¢ intro (once) → regular $1.99. Web → Stripe; iOS → StoreKit.
+  // Pick the product from server-side eligibility FIRST: on iOS, StoreKit
+  // charges the intro immediately, so "try intro, fall back" would sell the
+  // 99¢ analysis over and over.
+  const buyNextAnalysis = async () => {
+    setBuying(true);
+    setBuyError("");
+    try {
+      let eligible = creditInfo?.introEligible;
+      if (eligible === undefined) {
+        const fresh = await fetch("/api/credits", { credentials: "include" })
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null);
+        eligible = !!fresh?.introEligible;
+      }
+      let result = await startCheckout(eligible ? "intro" : "single");
+      if (
+        eligible &&
+        !result.ok &&
+        !result.cancelled &&
+        !/went through/i.test(result.error || "")
+      ) {
+        result = await startCheckout("single");
+      }
+      if (!result.ok) {
+        if (!result.cancelled) setBuyError(result.error || "Unable to start checkout. Please try again.");
+        return;
+      }
+      if (!result.redirected) window.location.reload(); // iOS: credits granted in place
+    } finally {
+      setBuying(false);
+    }
+  };
   const [extractedFrames, setExtractedFrames] = useState<ExtractedFrame[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -236,10 +293,15 @@ function UploadPageInner() {
         if (response.status === 402 && data.code === "NO_CREDITS") {
           setStage("idle"); setProgress(0);
           // Web → Stripe redirect; iOS → native StoreKit IAP. Branches in lib/checkout.
-          // Ladder: 99¢ intro (once) → regular single. If the intro has been
-          // used the server answers INTRO_USED and we fall through to $1.99.
-          let result = await startCheckout("intro");
+          // Ladder: 99¢ intro (once) → regular single. Eligibility comes from
+          // the server first — StoreKit would charge the intro every time.
+          const fresh = await fetch("/api/credits", { credentials: "include" })
+            .then((r) => (r.ok ? r.json() : null))
+            .catch(() => null);
+          const introOk = !!fresh?.introEligible;
+          let result = await startCheckout(introOk ? "intro" : "single");
           if (
+            introOk &&
             !result.ok &&
             !result.cancelled &&
             !/went through/i.test(result.error || "") // never re-charge after a fulfilled-but-unconfirmed purchase
@@ -307,9 +369,40 @@ function UploadPageInner() {
           <h1 className="text-3xl sm:text-4xl font-bold font-[family-name:var(--font-display)]">
             Upload Your Routine
           </h1>
-          <p className="mt-3 text-surface-200">Upload your video and get a full AI analysis in under 2 minutes.</p>
+          <p className="mt-3 text-surface-200">Upload your video and get a full AI analysis — usually in 1–3 minutes.</p>
           <div className="mt-4"><UploadTrustBadge /></div>
-          {searchParams.get("welcome") === "free" && (
+          {creditInfo && !creditInfo.hasCredits && !creditInfo.isAdmin && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+              className="mt-6 mx-auto max-w-md rounded-2xl border border-primary-400/30 bg-primary-500/10 px-5 py-4 text-left"
+            >
+              <p className="text-sm font-bold text-white">
+                {creditInfo.introEligible
+                  ? "Your next analysis is just 99¢."
+                  : "You're out of analyses."}
+              </p>
+              <p className="mt-1 text-xs text-surface-200 leading-relaxed">
+                {creditInfo.introEligible
+                  ? "Your free one is used — grab the one-time 99¢ welcome price, then come right back and upload."
+                  : "Add one for $1.99, or see packs and Season Member ($4.99/mo for 4)."}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={buyNextAnalysis}
+                  disabled={buying}
+                  className="rounded-full bg-gradient-to-r from-primary-600 via-accent-500 to-gold-500 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                >
+                  {buying ? "Opening checkout…" : creditInfo.introEligible ? "Get it for 99¢ →" : "Get 1 Analysis — $1.99"}
+                </button>
+                <a href="/dashboard" className="text-xs text-primary-300 hover:text-primary-200">
+                  See all options
+                </a>
+              </div>
+              {buyError && <p className="mt-2 text-xs text-red-300">{buyError}</p>}
+            </motion.div>
+          )}
+          {searchParams.get("welcome") === "free" && creditInfo?.hasCredits !== false && (
             <motion.div
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.15 }}
               className="mt-6 mx-auto max-w-md rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-5 py-4 text-left"

@@ -119,7 +119,10 @@ export async function getUserCredits(
     };
   }
 
-  const remaining = credits.total_credits - credits.used_credits;
+  // carryover_credits = never-expiring credits (free, 99¢, single, BOGO, pack,
+  // referral) held alongside a subscription pool. See
+  // supabase-credits-2026-09-carryover-referrals.sql.
+  const carryover: number = credits.carryover_credits ?? 0;
 
   // Subscription credits expire at end of billing period if the user cancels.
   // Pack credits have expires_at=NULL and never expire. If the subscription
@@ -130,12 +133,15 @@ export async function getUserCredits(
   const expired =
     credits.credit_source === "subscription" && expiresAt !== null && expiresAt < nowMs;
 
+  const poolRemaining = expired ? 0 : Math.max(0, credits.total_credits - credits.used_credits);
+  const remaining = poolRemaining + carryover;
+
   return {
-    hasCredits: !expired && remaining > 0,
-    remaining: expired ? 0 : remaining,
+    hasCredits: remaining > 0,
+    remaining,
     isBetaMember: credits.is_beta_member,
     isAdmin: false,
-    totalCredits: credits.total_credits,
+    totalCredits: credits.total_credits + carryover,
     usedCredits: credits.used_credits,
     creditSource: credits.credit_source ?? "pack",
     expiresAt: credits.expires_at ?? null,
@@ -235,6 +241,75 @@ export async function grantCredits(
 }
 
 /**
+ * The free first analysis — every account gets exactly one, ever.
+ *
+ * "Ever" is enforced by the existence of a user_credits row: paid, gifted,
+ * referred or previously-granted accounts all have one and are skipped.
+ * Admins (unlimited) and studio members (shared pool) are skipped too.
+ *
+ * Called from every door a new user can come through — /api/free-credit
+ * (signup), /auth/callback (email links) and the dashboard (safety net) —
+ * so no path can leave a new account at zero. Idempotent: the insert-first
+ * grant hits the unique constraint if two callers race, and we swallow that.
+ *
+ * Returns true only when it actually granted.
+ */
+export async function grantFreeCreditIfNew(
+  serviceClient: SupabaseClient,
+  userId: string,
+  userEmail?: string
+): Promise<boolean> {
+  if (isAdmin(userEmail)) return false;
+
+  const { data: existing } = await serviceClient
+    .from("user_credits")
+    .select("user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (existing) return false;
+
+  const studio = await getStudioForUser(serviceClient, userId);
+  if (studio) return false;
+
+  const { error } = await serviceClient.from("user_credits").insert({
+    user_id: userId,
+    total_credits: 1,
+    used_credits: 0,
+    is_beta_member: false,
+  });
+  if (error) {
+    // 23505 = another request granted it a split-second earlier. Fine.
+    if (error.code !== "23505") {
+      console.error("grantFreeCreditIfNew: insert failed", error.message);
+    }
+    return false;
+  }
+  console.log(`free-credit: granted first analysis to ${userId}`);
+  return true;
+}
+
+/**
+ * Grant the credits for a one-time Stripe purchase EXACTLY ONCE.
+ *
+ * The webhook, /success, /api/verify-payment and the dashboard all race on
+ * the same checkout session. The payments row is the lock: the first caller
+ * to flip payments.credits_applied false→true grants (through add_credits,
+ * so carryover rules apply); every later caller is a no-op. Rows created
+ * before 2026-09-11 default to credits_applied=true (already granted).
+ */
+export async function applyPaymentCredits(
+  serviceClient: SupabaseClient,
+  stripeSessionId: string
+): Promise<{ applied: boolean; credits: number }> {
+  const { data, error } = await serviceClient.rpc("apply_payment_credits", {
+    p_stripe_session_id: stripeSessionId,
+  });
+  if (error) throw new Error(`apply_payment_credits failed: ${error.message}`);
+  const r = data as { status?: string; credits?: number } | null;
+  return { applied: r?.status === "applied", credits: r?.credits ?? 0 };
+}
+
+/**
  * Check if a user has credits in the database.
  * Used by webhook/success/dashboard to verify credits were actually granted.
  */
@@ -244,11 +319,11 @@ export async function hasCreditsInDb(
 ): Promise<boolean> {
   const { data } = await serviceClient
     .from("user_credits")
-    .select("total_credits")
+    .select("total_credits, carryover_credits")
     .eq("user_id", userId)
     .maybeSingle();
 
-  return !!data && data.total_credits > 0;
+  return !!data && data.total_credits + (data.carryover_credits ?? 0) > 0;
 }
 
 /**
@@ -322,7 +397,7 @@ export async function grantSubscriptionCycle(
 ): Promise<void> {
   const { data: existing } = await serviceClient
     .from("user_credits")
-    .select("total_credits, used_credits, credit_source, expires_at")
+    .select("total_credits, used_credits, credit_source, expires_at, billing_period_start")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -336,7 +411,25 @@ export async function grantSubscriptionCycle(
     existingExpiresAt !== null &&
     existingExpiresAt > now;
 
-  if (!isLiveSubRow) {
+  // Idempotency: this exact billing period was already credited (webhook and
+  // /success racing on the same checkout, or Stripe/Apple re-delivering).
+  if (
+    existing?.credit_source === "subscription" &&
+    existing.billing_period_start &&
+    Math.abs(new Date(existing.billing_period_start).getTime() - periodStart.getTime()) < 60_000
+  ) {
+    return;
+  }
+
+  // A NEW period that starts at/after the current one ends is a renewal —
+  // use-it-or-lose-it reset (Apple renews a little before expiry, which used
+  // to fall into the extend branch and roll unused credits over).
+  const isRenewal =
+    isLiveSubRow &&
+    existingExpiresAt !== null &&
+    periodStart.getTime() >= existingExpiresAt - 6 * 60 * 60 * 1000;
+
+  if (!isLiveSubRow || isRenewal) {
     // First-ever sub, expired sub, or pack-sourced row: reset.
     await resetSubscriptionCredits(
       serviceClient,
@@ -348,21 +441,13 @@ export async function grantSubscriptionCycle(
     return;
   }
 
-  // Resubscribe inside an active period — ADD, don't reset.
-  // We use the add_credits RPC to atomically increment total, then fix the
-  // period window via a direct update (safe — single row, single user).
-  const { error: addErr } = await serviceClient.rpc("add_credits", {
-    p_user_id: userId,
-    p_credits: credits,
-    p_is_beta: false,
-  });
-  if (addErr) {
-    throw new Error(`add_credits (subscription extend) failed: ${addErr.message}`);
-  }
-
+  // Resubscribe inside an active period — ADD to the subscription pool, don't
+  // reset. (Not add_credits: that RPC now routes credits on a live
+  // subscription row into never-expiring carryover, which is for purchases.)
   const { error: updErr } = await serviceClient
     .from("user_credits")
     .update({
+      total_credits: (existing?.total_credits ?? 0) + credits,
       credit_source: "subscription",
       billing_period_start: periodStart.toISOString(),
       expires_at: periodEnd.toISOString(),

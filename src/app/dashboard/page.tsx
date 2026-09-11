@@ -2,10 +2,10 @@ import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import {
   getUserCredits,
-  grantCredits,
+  applyPaymentCredits,
   grantSubscriptionCycle,
-  hasCreditsInDb,
   isIntroOfferEligible,
+  grantFreeCreditIfNew,
   BETA_CREDITS,
   SUBSCRIPTION_CREDITS,
 } from "@/lib/credits";
@@ -13,6 +13,7 @@ import { getStripe } from "@/lib/stripe";
 import { sendWelcomeEmail, notifyWelcomeSent } from "@/lib/notifications";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import DashboardClient from "./DashboardClient";
+import { fulfillReferralOnPayment } from "@/lib/referral-fulfillment";
 
 // VIP welcome email — only fires on the user's first completed payment.
 async function maybeWelcome(
@@ -123,6 +124,7 @@ export default async function DashboardPage({
               status: "completed",
               credits_granted: creditsToGrant,
               referral_code: referralCode,
+              credits_applied: isSubscription,
             });
 
           if (insertError && insertError.code !== "23505") {
@@ -200,18 +202,14 @@ export default async function DashboardPage({
             );
             await maybeWelcome(serviceClient, user.id, user.email || "", "subscription");
           } else {
-            // Pack / single / beta — additive grant
-            await grantCredits(
-              serviceClient,
-              user.id,
-              creditsToGrant,
-              isBeta
-            );
+            // Pack / single / BOGO / intro — exactly-once grant keyed on the session
+            const { applied } = await applyPaymentCredits(serviceClient, sessionId);
             console.log(
-              `Dashboard: Granted ${creditsToGrant} credits to ${user.id} (${paymentType} — webhook fallback)`
+              `Dashboard: ${applied ? "Granted" : "Already granted"} ${creditsToGrant} credits for ${user.id} (${paymentType} — webhook fallback)`
             );
             await maybeWelcome(serviceClient, user.id, user.email || "", paymentType);
           }
+          await fulfillReferralOnPayment(serviceClient, user.id, sessionId, session.amount_total || 0);
         }
       }
     } catch (err) {
@@ -223,32 +221,35 @@ export default async function DashboardPage({
     }
   }
 
-  // ALWAYS check: if user has completed payments but no credits, recover them.
-  // This catches cases where webhook, success page, and session_id fallbacks all failed.
+  // ALWAYS: apply any completed one-time purchase whose credits never landed
+  // (every path crashed between recording the payment and granting). Exactly
+  // once — apply_payment_credits no-ops on anything already applied.
   try {
-    const hasCredits = await hasCreditsInDb(serviceClient, user.id);
-    if (!hasCredits) {
-      const { data: completedPayment } = await serviceClient
-        .from("payments")
-        .select("payment_type, credits_granted")
-        .eq("user_id", user.id)
-        .eq("status", "completed")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (completedPayment) {
-        const isBeta = completedPayment.payment_type === "beta_access";
-        const creditsToGrant = completedPayment.credits_granted || (isBeta ? BETA_CREDITS : 1);
-        await grantCredits(serviceClient, user.id, creditsToGrant, isBeta);
-        console.log(
-          `Dashboard: Recovered ${creditsToGrant} missing credits for ${user.id} from existing payment`
-        );
+    const { data: unapplied } = await serviceClient
+      .from("payments")
+      .select("stripe_session_id")
+      .eq("user_id", user.id)
+      .eq("status", "completed")
+      .eq("credits_applied", false)
+      .limit(10);
+    for (const row of unapplied ?? []) {
+      if (!row.stripe_session_id) continue;
+      const { applied, credits } = await applyPaymentCredits(serviceClient, row.stripe_session_id);
+      if (applied) {
+        console.log(`Dashboard: Recovered ${credits} missing credits for ${user.id} (${row.stripe_session_id})`);
       }
     }
   } catch (err) {
     console.error("Dashboard: Credit recovery check failed:", err);
   }
+
+  // Safety net for the free first analysis: any account that reaches the
+  // dashboard without a credits row (signup call dropped, app webview, email
+  // link) gets it now. Runs AFTER paid-credit recovery so a paying customer's
+  // missing credits are restored first. One per account, ever.
+  await grantFreeCreditIfNew(serviceClient, user.id, user.email).catch((err) =>
+    console.error("Dashboard: free credit safety net failed:", err)
+  );
 
   // Auto-fix videos stuck in "processing" for over 7 minutes
   await serviceClient

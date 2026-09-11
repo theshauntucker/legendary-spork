@@ -9,6 +9,7 @@ import {
   SUBSCRIPTION_CREDITS,
 } from "@/lib/credits";
 import { notifyCritical, notifyPayment } from "@/lib/notifications";
+import { fulfillReferralOnPayment } from "@/lib/referral-fulfillment";
 
 export const dynamic = "force-dynamic";
 
@@ -406,7 +407,12 @@ async function handleNotification(
         console.warn(
           `[iap-notification] race on ${appleTxnId} — client fulfilled concurrently, reversing our grant`
         );
-        await reverseGrant(serviceClient, userId, product.creditsGranted);
+        // Only consumables can double-grant; subscription cycles are
+        // idempotent per billing period (grantSubscriptionCycle), so
+        // "reversing" one would take away credits the user paid for.
+        if (product.mode !== "subscription") {
+          await reverseGrant(serviceClient, userId, product.creditsGranted);
+        }
         return NextResponse.json({ ok: true, alreadyFulfilled: true }, { status: 200 });
       }
       if (payErr) {
@@ -416,6 +422,10 @@ async function handleNotification(
       console.log(
         `[iap-notification] fulfilled ${product.productId} (${product.creditsGranted} credits) for user ${userId} via server notification`
       );
+
+      if (product.paymentType !== "studio_subscription" && !isRenewal) {
+        await fulfillReferralOnPayment(serviceClient, userId, `apple:${appleTxnId}`, product.amountCents);
+      }
 
       // Tell Shaun. This is the alert that was missing — an App Store sale
       // now produces an email whether or not the app behaved.
@@ -519,16 +529,22 @@ async function reverseGrant(
   try {
     const { data: row } = await serviceClient
       .from("user_credits")
-      .select("total_credits")
+      .select("total_credits, carryover_credits, credit_source, expires_at")
       .eq("user_id", userId)
       .maybeSingle();
     if (!row) return;
+    // Purchases on a live subscription row land in carryover_credits
+    // (add_credits) — take the duplicate back from the same place.
+    const liveSub =
+      row.credit_source === "subscription" &&
+      (!row.expires_at || new Date(row.expires_at).getTime() > Date.now());
     await serviceClient
       .from("user_credits")
-      .update({
-        total_credits: Math.max(0, row.total_credits - credits),
-        updated_at: new Date().toISOString(),
-      })
+      .update(
+        liveSub
+          ? { carryover_credits: Math.max(0, (row.carryover_credits ?? 0) - credits), updated_at: new Date().toISOString() }
+          : { total_credits: Math.max(0, row.total_credits - credits), updated_at: new Date().toISOString() }
+      )
       .eq("user_id", userId);
   } catch (err) {
     console.error("[iap-notification] could not reverse duplicate grant:", err);

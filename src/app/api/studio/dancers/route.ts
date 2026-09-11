@@ -27,7 +27,9 @@ export async function GET(request: NextRequest) {
 
   const membership = await loadStudioMembership(supabase, user.id);
   if (!membership) {
-    return NextResponse.json({ error: "Not a studio member" }, { status: 403 });
+    // Every family's upload page asks this on mount — answer 200/empty rather
+    // than a 403 that fills every non-studio user's console with errors.
+    return NextResponse.json({ dancers: [], studioMember: false });
   }
 
   const url = new URL(request.url);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { grantCredits } from "@/lib/credits";
 
 export const dynamic = "force-dynamic";
 
@@ -24,26 +25,31 @@ export async function POST(request: NextRequest) {
 
   const serviceClient = await createServiceClient();
 
-  // Upsert user_credits row if it doesn't exist
+  if (amount > 0) {
+    // Gifts never expire — grantCredits routes them into carryover on a
+    // subscription row, or revives an expired subscription row as a pack row.
+    await grantCredits(serviceClient, userId, amount, false);
+    return NextResponse.json({ success: true });
+  }
+
+  // Negative adjustment: take from never-expiring carryover first, then the pool.
   const { data: existing } = await serviceClient
     .from("user_credits")
-    .select("total_credits, used_credits")
+    .select("total_credits, used_credits, carryover_credits")
     .eq("user_id", userId)
-    .single();
-
-  if (!existing) {
-    // Create row first
-    await serviceClient.from("user_credits").insert({
-      user_id: userId,
-      total_credits: Math.max(0, amount),
-      used_credits: 0,
-      is_beta_member: false,
-    });
-  } else {
-    const newTotal = Math.max(0, existing.total_credits + amount);
+    .maybeSingle();
+  if (existing) {
+    let remove = -amount;
+    const carry = existing.carryover_credits ?? 0;
+    const fromCarry = Math.min(carry, remove);
+    remove -= fromCarry;
     await serviceClient
       .from("user_credits")
-      .update({ total_credits: newTotal, updated_at: new Date().toISOString() })
+      .update({
+        carryover_credits: carry - fromCarry,
+        total_credits: Math.max(0, existing.total_credits - remove),
+        updated_at: new Date().toISOString(),
+      })
       .eq("user_id", userId);
   }
 
@@ -76,11 +82,16 @@ export async function PUT(request: NextRequest) {
       is_beta_member: false,
     });
   } else {
+    // An exact reset turns the row into a plain never-expiring pack row.
     await serviceClient
       .from("user_credits")
       .update({
         total_credits: totalCredits,
         used_credits: usedCredits ?? 0,
+        carryover_credits: 0,
+        credit_source: "pack",
+        expires_at: null,
+        billing_period_start: null,
         updated_at: new Date().toISOString(),
       })
       .eq("user_id", userId);

@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
           },
         },
         success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}&type=subscription`,
-        cancel_url: `${baseUrl}/#pricing`,
+        cancel_url: `${baseUrl}/dashboard`,
       });
       return NextResponse.json({ url: subSession.url });
     }
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
         },
       ],
       success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/#pricing`,
+      cancel_url: `${baseUrl}/dashboard`,
     });
 
     return NextResponse.json({ url: session.url });

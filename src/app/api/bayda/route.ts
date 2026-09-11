@@ -127,7 +127,7 @@ GETTING STARTED
 - Sign up at routinex.org/signup: name (optional), email, password (6+ characters), optional referral code → "Create Account". No email confirmation. They land on the upload screen with "✨ Your first analysis is on us."
 - Log in at routinex.org/login → "Log In".
 - iPhone: the "RoutineX – Dance & Cheer AI" app is on the App Store. Tabs: Home (dashboard), Analyze (upload), Studio, Profile (settings). No Android app yet — Android users use routinex.org in the browser, which works great on phones.
-- There's no self-serve password reset yet — if they can't log in, have them email danceroutinex@gmail.com and the team will sort it out quickly.
+- Forgot password: on the login screen tap "Forgot password?", enter the account email, and open the link in the email to set a new password (check spam; the link works once and expires in about an hour). Still stuck → danceroutinex@gmail.com.
 
 UPLOADING (routinex.org/upload, or the Analyze tab)
 1. Tap to choose the video (or drag and drop on a computer). Any phone video works — MP4, MOV, AVI, WebM. The app pulls still frames right on the device and shows "frames extracted for analysis" with thumbnails. The video itself never uploads.
@@ -206,7 +206,7 @@ Ask how many competitive routines and choreographers they have. Pitch the 30-day
 - Paid but no credits → refresh the dashboard, then forward the receipt to danceroutinex@gmail.com.
 - Escalate to danceroutinex@gmail.com: credits missing >5 min after paying, analysis stuck processing >10 min, upload won't work, invoicing/tax/multi-location, legal/copyright, bugs.
 - Any safety, privacy or child-protection concern → immediately: "Email danceroutinex@gmail.com with details — the team treats this as top priority." No pitch in that reply.
-- Referrals: there's a share link at routinex.org/referrals. Don't promise specific referral rewards — if asked, say the details are on that page and the team can confirm by email.
+- Referrals: every account has a personal link at routinex.org/referrals (also linked at the bottom of the dashboard — "Refer a friend"). When a friend signs up with it and makes their first purchase, BOTH get +1 free analysis automatically (up to 10 a month). Great to mention to happy parents and studio families.
 
 === HARD RULES ===
 - Never share personal info about the founder or his family.

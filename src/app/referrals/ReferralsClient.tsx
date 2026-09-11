@@ -69,7 +69,7 @@ export default function ReferralsClient() {
         await nav.share({
           title: "RoutineX",
           text:
-            "I use RoutineX to get judge-style feedback on my routines. You get a free credit when you sign up with my link.",
+            "I use RoutineX for judge-style feedback on our routines. Your first analysis is free — and if you sign up with my link, we both get a bonus analysis after your first purchase.",
           url: data.shareUrl,
         });
         haptics.tap();

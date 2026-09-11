@@ -6,36 +6,48 @@ import RoutineXLogo from "@/components/RoutineXLogo";
 
 const FAQS: { q: string; a: string }[] = [
   {
+    q: "Is my first analysis really free?",
+    a: "Yes. Every new account gets one complete analysis free — no card required. Your second analysis is a one-time 99¢ welcome price. After that it's $1.99 per analysis, 2 for $2.99, 5 for $9.99, or Season Member at $4.99/month for 4 analyses every month.",
+  },
+  {
     q: "How does the video analysis actually work?",
-    a: "You upload a routine, our AI samples still frames across the video, and three simulated judges score it across Technique (35), Performance (35), Choreography (20), and Overall Impression (10). You get a total on the 260-300 competition scale, plus an Award Level badge and written feedback. Most analyses finish in 30-60 seconds.",
+    a: "You upload a routine and your phone pulls still frames from it — the video itself never leaves your device. Three simulated judges score those frames on Technique (35), Performance (35), Choreography (20), and Overall Impression (10), and you get a total on the 300-point competition scale, an award level, timestamped notes, and an improvement roadmap. Most analyses finish in 1–3 minutes.",
   },
   {
     q: "Is my video private? Who can see it?",
-    a: "Every upload is private by default. You choose visibility per-item: public, followers only, studio only, or fully private. We never show photos of dancers anywhere on RoutineX — identity is shown through aura gradients, glyphs, and badges. Visibility is enforced at the database layer, not just in the UI.",
+    a: "Your video never leaves your device — only still frames are analyzed, and those are deleted automatically within 24 hours (or instantly with \"Delete My Video Frames\" on any report). No person ever watches your video. Reports are private to your account.",
+  },
+  {
+    q: "I paid but my credits aren't showing.",
+    a: "Open your dashboard — it re-checks your payment automatically. In the iPhone app, go to Profile and tap \"Restore Purchases\", or close and reopen the app. Still missing after a few minutes? Email us with your account email and we'll fix it the same day.",
+  },
+  {
+    q: "My analysis failed or got stuck.",
+    a: "On the processing screen, tap \"Retry Analysis\" or \"Re-upload Video\". A credit is only used when a report is actually delivered, so a failed attempt never costs you anything.",
   },
   {
     q: "How do I cancel my subscription?",
-    a: "If you're on the web, go to your Profile > Billing and click Cancel Subscription. If you subscribed through the iOS app, you'll cancel in Settings > Apple ID > Subscriptions > RoutineX. Cancellations take effect at the end of your current billing period — you keep your credits until then.",
+    a: "On the web, tap \"Manage subscription\" at the bottom of your dashboard to open billing and cancel. If you subscribed in the iOS app, cancel in iPhone Settings > Apple ID > Subscriptions > RoutineX. Cancellation takes effect at the end of your current billing period — you keep your credits until then.",
   },
   {
-    q: "My analysis failed or I was charged but didn't get credits.",
-    a: "Email us with your account email and approximate time of the issue. We refund or re-credit the same day, usually within an hour. Billing issues are our #1 priority in the support queue.",
+    q: "I forgot my password.",
+    a: "On the login screen, tap \"Forgot password?\", enter your email, and we'll send you a link to set a new one.",
   },
   {
     q: "Does RoutineX work for cheer, or only dance?",
-    a: "Both. Cheer is a first-class citizen — separate rubric, separate judge language, built with input from USASF-level gyms. Pick your discipline when you upload; the scoring adjusts accordingly.",
+    a: "Both. Choose Cheer as the style when you upload and the judging language adjusts for stunts, tumbling, jumps, motions, and synchronization.",
   },
   {
     q: "What's the Studio Plan?",
-    a: "$99/month for your whole studio. Unlocks Team Board, Coach's Playbook, Music Hub with in-state song collision detection, Dancer Roster, Season Schedule, and a shared pool of 100 analyses per month. No per-seat pricing.",
+    a: "$99/month for your whole studio, with a 30-day free trial and no card required. Includes Team Board, Coach's Playbook, Music Hub with song collision detection, Dancer Roster, Season Schedule, and a shared pool of 100 analyses per month. No per-seat pricing.",
   },
   {
     q: "Can I delete my account and data?",
-    a: "Yes — go to Settings > Account > Delete Account. This permanently removes your profile, routines, and all associated data. You can also email us to request deletion if you prefer.",
+    a: "Yes — go to Settings and tap \"Delete Account\". This permanently removes your account, routines, reports, and credits. You can also email us to request deletion.",
   },
   {
     q: "How do I reach a real human?",
-    a: "Use the form below. A real person (usually Shaun or someone on our team) reads every message and replies within 24 hours — typically much faster during US business hours.",
+    a: "Use the form below or email danceroutinex@gmail.com. A real person (usually Shaun, our founder) reads every message and replies within 24 hours — typically much faster.",
   },
 ];
 

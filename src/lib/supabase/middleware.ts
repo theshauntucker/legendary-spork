@@ -52,8 +52,14 @@ export async function updateSession(request: NextRequest) {
   // Redirect logged-in users away from auth pages
   const authPaths = ["/login", "/signup"];
   if (user && authPaths.some((p) => pathname.startsWith(p))) {
+    // Honor ?redirect= / ?next= (same-site paths only) so an already-signed-in
+    // user sent to /login?next=/referrals lands on /referrals, not the dashboard.
+    const wanted =
+      request.nextUrl.searchParams.get("redirect") || request.nextUrl.searchParams.get("next") || "";
+    const safe = wanted.startsWith("/") && !wanted.startsWith("//") && !wanted.startsWith("/\\");
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.search = "";
+    url.pathname = safe ? wanted.split("?")[0] : "/dashboard";
     return NextResponse.redirect(url);
   }
 

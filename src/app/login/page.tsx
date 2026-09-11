@@ -10,7 +10,20 @@ import RoutineXLogo from "@/components/RoutineXLogo";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/dashboard";
+  // Accept both ?redirect= and ?next= (referrals + studio guards send ?next=).
+  // Same-site relative paths only.
+  const rawRedirect = searchParams.get("redirect") || searchParams.get("next") || "";
+  const redirect = (() => {
+    if (!rawRedirect.startsWith("/") || typeof window === "undefined") return "/dashboard";
+    try {
+      // Resolve like the browser will (it strips tabs/newlines), then insist
+      // on our own origin — blocks "/\t/evil.com"-style open redirects.
+      const u = new URL(rawRedirect, window.location.origin);
+      return u.origin === window.location.origin ? u.pathname + u.search + u.hash : "/dashboard";
+    } catch {
+      return "/dashboard";
+    }
+  })();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -83,7 +96,15 @@ function LoginForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Password</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium">Password</label>
+              <a
+                href={email ? `/forgot-password?email=${encodeURIComponent(email)}` : "/forgot-password"}
+                className="text-xs text-primary-300 hover:text-primary-200"
+              >
+                Forgot password?
+              </a>
+            </div>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}

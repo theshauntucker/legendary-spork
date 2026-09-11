@@ -162,7 +162,7 @@ const jsonLd = {
           name: "Competition Pack (5 Analyses)",
           price: "9.99",
           priceCurrency: "USD",
-          description: "5 AI-powered dance or cheer routine analyses — only $1.99 each",
+          description: "5 AI-powered dance or cheer routine analyses that never expire",
         },
       ],
     },

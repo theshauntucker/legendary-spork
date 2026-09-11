@@ -124,9 +124,9 @@ export async function notifyPayment(
   const amount = (amountCents / 100).toFixed(2);
   const typeLabel =
     paymentType === "subscription"
-      ? `Season Member ($${amount}/mo, 10 credits)`
+      ? `Season Member ($${amount}/mo, 4 credits)`
       : paymentType === "subscription_renewal"
-      ? `Season Member Renewal ($${amount}/mo, 10 credits reset)`
+      ? `Season Member Renewal ($${amount}/mo, 4 credits reset)`
       : paymentType === "studio_subscription"
       ? `Studio Plan ($${amount}/mo, 100 pool credits)`
       : paymentType === "video_analysis"
@@ -1470,4 +1470,38 @@ export async function sendSeasonRecapEmail(
 </html>`;
 
   await sendCustomerEmail(customerEmail, subject, html, { useFounderFrom: true });
+}
+
+
+/**
+ * Password reset — sent by /api/auth/forgot-password. The link carries a
+ * one-time recovery token that /reset-password verifies in the browser.
+ */
+export async function sendPasswordResetEmail(customerEmail: string, resetUrl: string) {
+  const subject = "Reset your RoutineX password";
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>${subject}</title></head>
+<body style="margin:0;padding:0;background:#0a0118;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f3f4f6;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0118;padding:24px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#18181B;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">
+        <tr><td style="height:5px;background:linear-gradient(90deg,#9333EA,#EC4899,#F59E0B);line-height:5px;font-size:0;">&nbsp;</td></tr>
+        <tr><td style="padding:34px 34px 8px 34px;">
+          <div style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#C084FC;">RoutineX &middot; Account</div>
+          <h1 style="margin:12px 0 0 0;font-family:Georgia,'Times New Roman',serif;font-weight:800;font-size:26px;line-height:1.25;color:#FFFFFF;">Reset your password</h1>
+          <p style="margin:14px 0 0 0;font-size:15px;line-height:1.6;color:#A1A1AA;">Tap the button below to choose a new password. The link works once and expires in about an hour.</p>
+        </td></tr>
+        <tr><td align="center" style="padding:26px 34px 8px 34px;">
+          <a href="${resetUrl}" style="display:inline-block;background:linear-gradient(135deg,#9333EA,#EC4899,#F59E0B);color:#FFFFFF;font-size:16px;font-weight:700;text-decoration:none;padding:15px 40px;border-radius:999px;">Choose a New Password &rarr;</a>
+        </td></tr>
+        <tr><td style="padding:18px 34px 30px 34px;font-size:13px;line-height:1.6;color:#71717A;" align="center">
+          Didn&rsquo;t ask for this? You can ignore this email &mdash; your password won&rsquo;t change.<br />Questions? Just reply, or email danceroutinex@gmail.com.
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+  await sendCustomerEmail(customerEmail, subject, html);
 }
