@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/season-recap",
       "schedule": "0 16 * * 1"
+    },
+    {
+      "path": "/api/cron/retry-errored",
+      "schedule": "*/10 * * * *"
     }
   ]
 }

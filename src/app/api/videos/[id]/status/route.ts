@@ -24,7 +24,7 @@ export async function GET(
 
     const { data: video, error } = await serviceClient
       .from("videos")
-      .select("id, status, thumbnail_path, analysis_id, updated_at, user_id")
+      .select("id, status, thumbnail_path, analysis_id, updated_at, user_id, preprocessing_metadata")
       .eq("id", id)
       .eq("user_id", user.id)
       .single();
@@ -81,6 +81,12 @@ export async function GET(
       thumbnailPath: video.thumbnail_path,
       analysisId: video.analysis_id,
       updatedAt: video.updated_at,
+      // True when the analysis engine was unavailable and the retry cron will
+      // keep re-running this video — the UI shows "we'll email you" instead of
+      // a red error screen.
+      retryQueued: Boolean(
+        (video.preprocessing_metadata as { autoRetry?: unknown } | null)?.autoRetry
+      ),
     });
   } catch (err) {
     console.error("Status check error:", err);

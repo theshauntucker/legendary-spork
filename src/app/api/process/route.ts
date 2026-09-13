@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { isInternalRequest } from "@/lib/internal-auth";
+import { isInternalRequest, escapeHtml } from "@/lib/internal-auth";
 import { useCredit } from "@/lib/credits";
 import { STYLE_CRITERIA, ENTRY_TYPE_CRITERIA, getCompetitionContext } from "@/lib/dance-criteria";
 import { notifyAnalysisComplete, notifyAnalysisError, sendReportReadyEmail } from "@/lib/notifications";
@@ -47,6 +47,38 @@ interface PreprocessingMetadata {
   durationFormatted: string;
   resolution: string;
   frames: Array<{ timestamp: number; label: string; path: string }>;
+  /** Set when the Anthropic call failed and the cron should keep retrying. */
+  autoRetry?: { attempts: number; lastError: string; lastAt: string; queuedAt: string };
+}
+
+/**
+ * Anthropic failures that are NOT our bug and WILL clear on their own once
+ * someone acts (billing) or the API recovers (overload/rate-limit/timeout).
+ * For these we queue the video for automatic retry instead of stranding the
+ * customer on a red error screen.
+ */
+function classifyAiError(msg: string): { retryable: boolean; diagnosis: string } {
+  if (/credit balance|billing|purchase credits/i.test(msg)) {
+    return {
+      retryable: true,
+      diagnosis:
+        "ANTHROPIC ACCOUNT IS OUT OF CREDITS. Add funds at console.anthropic.com → Plans & Billing (turn on auto-reload). The video is queued and will retry automatically every 10 minutes for 24 hours — nothing else to do once credits are added.",
+    };
+  }
+  if (/overloaded|529|rate.?limit|429|timeout|timed out|ECONNRESET|fetch failed|500|502|503|504/i.test(msg)) {
+    return {
+      retryable: true,
+      diagnosis:
+        "Transient Anthropic error (overload / rate limit / network). Queued for automatic retry every 10 minutes — no action needed unless it keeps failing.",
+    };
+  }
+  if (/401|403|authentication|invalid x-api-key|api key/i.test(msg)) {
+    return { retryable: true, diagnosis: "ANTHROPIC_API_KEY rejected. Check the key in Vercel env vars. Queued for retry so it resumes as soon as the key is fixed." };
+  }
+  if (/model|not found|404/i.test(msg)) {
+    return { retryable: true, diagnosis: `Model "${SCORING_MODEL}" rejected. Check SCORING_MODEL in Vercel. Queued for retry so it resumes once fixed.` };
+  }
+  return { retryable: false, diagnosis: "Unrecognized failure — check Vercel logs for /api/process." };
 }
 
 export async function POST(request: NextRequest) {
@@ -169,7 +201,7 @@ export async function POST(request: NextRequest) {
 
     // Run the AI analysis (progression-aware when the dancer has a season history)
     // eslint-disable-next-line prefer-const
-    let { analysis, usedAI } = await analyzeWithClaude(frames, routineMetadata, durationStr, history);
+    let { analysis, usedAI, aiError } = await analyzeWithClaude(frames, routineMetadata, durationStr, history);
 
     // ── NEVER SELL A SIMULATED REPORT ─────────────────────────────────────────
     // analyzeWithClaude() falls back to generateSimulatedAnalysis() whenever the
@@ -179,16 +211,47 @@ export async function POST(request: NextRequest) {
     // parent and they'd never know. A simulated result is a FAILED run: mark it
     // an error, keep the credit, and page the admin. Fail loud, not fake.
     if (!usedAI) {
+      const errMsg = aiError || "unknown";
+      const { retryable, diagnosis } = classifyAiError(errMsg);
+      const prev = meta.autoRetry;
+      const attempts = (prev?.attempts ?? 0) + 1;
+      const nowIso = new Date().toISOString();
+
       console.error(
-        `Analysis fell back to SIMULATED for video ${videoId} — Anthropic call failed. Not charging a credit.`
+        `Analysis fell back to SIMULATED for video ${videoId} (attempt ${attempts}) — Anthropic call failed: ${errMsg}. Not charging a credit.`
       );
-      notifyAnalysisError(
-        "unknown",
-        "Claude Vision call failed — simulated fallback blocked. Check ANTHROPIC_API_KEY and the model ID in /api/process.",
-        `videoId: ${videoId}`
-      ).catch(() => {});
-      await markVideoError(serviceClient, videoId);
-      return NextResponse.json({ error: "Analysis engine unavailable" }, { status: 503 });
+
+      let customerEmail = "unknown";
+      try {
+        const { data: u } = await serviceClient.auth.admin.getUserById(userId);
+        customerEmail = u?.user?.email ?? "unknown";
+      } catch {}
+
+      // Queue for the retry cron (only retryable failures; cap at 24h of tries).
+      const MAX_ATTEMPTS = 144;
+      const queue = retryable && attempts < MAX_ATTEMPTS;
+      const nextMeta: PreprocessingMetadata = {
+        ...meta,
+        autoRetry: queue
+          ? { attempts, lastError: errMsg.slice(0, 300), lastAt: nowIso, queuedAt: prev?.queuedAt ?? nowIso }
+          : undefined,
+      };
+      await serviceClient
+        .from("videos")
+        .update({ status: "error", preprocessing_metadata: nextMeta, updated_at: nowIso })
+        .eq("id", videoId);
+
+      // Page the founder on the first failure, then every 6th retry (≈ hourly),
+      // and when we finally give up — not 144 times.
+      const shouldAlert = attempts === 1 || attempts % 6 === 0 || !queue;
+      if (shouldAlert) {
+        notifyAnalysisError(
+          customerEmail,
+          `${diagnosis}<br><br><code style="font-size:12px;color:#6b7280">${escapeHtml(errMsg.slice(0, 400))}</code>`,
+          `videoId: ${videoId} · routine "${video.routine_name ?? ""}" · attempt ${attempts}${queue ? " · auto-retry queued" : " · GAVE UP — needs manual retry"}`
+        ).catch(() => {});
+      }
+      return NextResponse.json({ error: "Analysis engine unavailable", queued: queue }, { status: 503 });
     }
 
     // ── SCORE INTEGRITY ────────────────────────────────────────────────────────
@@ -572,7 +635,7 @@ async function analyzeWithClaude(
 
   if (!apiKey) {
     console.warn("ANTHROPIC_API_KEY not set — using simulated analysis");
-    return { analysis: generateSimulatedAnalysis(frames, metadata, durationStr), usedAI: false };
+    return { analysis: generateSimulatedAnalysis(frames, metadata, durationStr), usedAI: false, aiError: "ANTHROPIC_API_KEY not set" };
   }
 
   const maxFrames = 20;
@@ -873,7 +936,7 @@ Return ONLY the JSON object, no other text.`,
     if (!response.ok) {
       const errorData = await response.text();
       console.error("Claude API error:", response.status, errorData);
-      throw new Error(`Claude API returned ${response.status}`);
+      throw new Error(`Claude API returned ${response.status}: ${errorData.slice(0, 300)}`);
     }
 
     const data = await response.json();
@@ -929,11 +992,12 @@ Return ONLY the JSON object, no other text.`,
     }
     analysis.awardLevel = getAwardLevel(analysis.totalScore);
 
-    return { analysis, usedAI: true };
+    return { analysis, usedAI: true, aiError: undefined as string | undefined };
   } catch (err) {
     console.error("Claude Vision analysis failed:", err);
     console.warn("Falling back to simulated analysis");
-    return { analysis: generateSimulatedAnalysis(frames, metadata, durationStr), usedAI: false };
+    const aiError = err instanceof Error ? err.message : String(err);
+    return { analysis: generateSimulatedAnalysis(frames, metadata, durationStr), usedAI: false, aiError };
   }
 }
 

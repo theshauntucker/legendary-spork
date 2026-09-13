@@ -22,6 +22,7 @@ export default function ProcessingPage() {
   const [analysisId, setAnalysisId] = useState<string | null>(null);
   const [stuckMinutes, setStuckMinutes] = useState(0);
   const [retrying, setRetrying] = useState(false);
+  const [queued, setQueued] = useState(false);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -34,6 +35,7 @@ export default function ProcessingPage() {
 
         const data = await res.json();
         setStatus(data.status);
+        setQueued(Boolean(data.retryQueued));
 
         if (data.status === "analyzed" && data.analysisId) {
           setAnalysisId(data.analysisId);
@@ -42,7 +44,8 @@ export default function ProcessingPage() {
             router.push(`/analysis/${videoId}`);
           }, 2000);
         } else if (data.status === "error") {
-          clearInterval(interval);
+          // Queued videos keep polling (slowly) — the cron will finish them.
+          if (!data.retryQueued) clearInterval(interval);
         } else if (data.status === "processing") {
           const elapsedMs = Date.now() - startedAt;
           const elapsed = Math.floor(elapsedMs / 60000);
@@ -113,7 +116,7 @@ export default function ProcessingPage() {
             >
               <CheckCircle className="mx-auto h-20 w-20 text-green-400" />
             </motion.div>
-          ) : status === "error" ? (
+          ) : status === "error" && !queued ? (
             <div className="mx-auto h-20 w-20 rounded-full bg-red-500/10 flex items-center justify-center">
               <span className="text-3xl">!</span>
             </div>
@@ -125,6 +128,8 @@ export default function ProcessingPage() {
         <h1 className="text-2xl font-bold font-[family-name:var(--font-display)] mb-2">
           {status === "analyzed"
             ? "Analysis Complete!"
+            : status === "error" && queued
+            ? "The Judges Are Backed Up"
             : status === "error"
             ? "Something Went Wrong"
             : "Analyzing Your Routine"}
@@ -133,6 +138,8 @@ export default function ProcessingPage() {
         <p className="text-surface-200 mb-8">
           {status === "analyzed"
             ? "Your full scorecard is ready. Redirecting..."
+            : status === "error" && queued
+            ? "Your routine is safely in the queue and will be scored automatically. We'll email you the moment your report is ready — you can close this page."
             : status === "error"
             ? "There was an issue processing your video. You can retry or re-upload."
             : stuckMinutes >= 3
@@ -141,7 +148,7 @@ export default function ProcessingPage() {
         </p>
 
         {/* Stage progress */}
-        {status !== "error" && (
+        {(status !== "error" || queued) && (
           <div className="glass rounded-2xl p-6 text-left space-y-4">
             {stages.map((stage, i) => {
               const isComplete = i < currentStageIndex || status === "analyzed";
@@ -185,7 +192,7 @@ export default function ProcessingPage() {
         )}
 
         {/* Error actions */}
-        {status === "error" && (
+        {status === "error" && !queued && (
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
             <button
               onClick={handleRetry}
