@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { isSeasonMember } from "@/lib/practice-plan";
 import AnalysisReport from "./AnalysisReport";
+import type { Milestone } from "@/components/MilestoneCelebration";
 
 function formatDurationFromSeconds(seconds: number | undefined): string {
   if (!seconds || !isFinite(seconds)) return "—";
@@ -98,6 +99,8 @@ export default async function AnalysisPage({
         practicePlanStatus: "none" as string,
         isSeasonMember: false as boolean,
         showReviewPrompt: false as boolean,
+        milestones: [] as Milestone[],
+        shareLine: "" as string,
         id: video.id,
         routineName: video.routine_name,
         dancerName: video.dancer_name || "Dancer",
@@ -134,6 +137,95 @@ export default async function AnalysisPage({
         .eq("user_id", user.id)
         .maybeSingle();
       analysisData.showReviewPrompt = !reviewRow;
+
+      // ── Milestone celebrations ──────────────────────────────────────────
+      // Highest-value first; the client shows the first one this account
+      // hasn't already seen and then burns it. Each carries exactly one ask.
+      const { count: analyzedCount } = await serviceClient
+        .from("videos")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("status", "analyzed");
+
+      const totalAnalyses = analyzedCount ?? 1;
+      const progression = analysisData.progression as
+        | { isPersonalBest?: boolean; submissionNumber?: number; awardLevelChanged?: boolean; direction?: string; totalDelta?: number; baselineAwardLevel?: string }
+        | null;
+      const award = String(analysisData.awardLevel || "");
+      const dancer = analysisData.dancerName || "Our dancer";
+      const milestones: Milestone[] = [];
+
+      if (/diamond/i.test(award)) {
+        milestones.push({
+          key: "diamond_first",
+          eyebrow: "Top of the board",
+          title: "That's a Diamond.",
+          stat: `${analysisData.totalScore}/300`,
+          body: `Only the cleanest routines land here. ${dancer} earned every point of it.`,
+          ask: "review",
+        });
+      }
+
+      if (progression?.awardLevelChanged && progression.direction === "up") {
+        milestones.push({
+          key: "award_level_up",
+          eyebrow: "Level up",
+          title: `${progression.baselineAwardLevel || "Last time"} → ${award}`,
+          stat: progression.totalDelta ? `+${progression.totalDelta} pts` : undefined,
+          body: "A whole award level, on the same routine. That's not luck — that's the work showing up.",
+          ask: "share",
+        });
+      }
+
+      if (progression?.isPersonalBest && (progression.submissionNumber ?? 1) > 1) {
+        milestones.push({
+          key: "personal_best",
+          eyebrow: "Personal best",
+          title: `${dancer}'s highest score yet.`,
+          stat: `${analysisData.totalScore}/300`,
+          body: "Every rep between those two uploads is in this number. Go tell somebody.",
+          ask: "share",
+        });
+      }
+
+      if (totalAnalyses >= 3) {
+        milestones.push({
+          key: "three_analyses",
+          eyebrow: "Three routines in",
+          title: "You're running a real season.",
+          body: "Most parents stop at one. You're tracking progress like a coach does.",
+          ask: "refer",
+        });
+      }
+
+      if (totalAnalyses === 1) {
+        milestones.push({
+          key: "first_report",
+          eyebrow: "Your first report",
+          title: "Three judges just scored your routine.",
+          body: "Before you close it — what's the one thing in here you didn't expect?",
+          ask: "feedback",
+        });
+      }
+
+      // Drop the ones this account has already celebrated.
+      const { data: seenRows } = milestones.length
+        ? await serviceClient
+            .from("milestone_events")
+            .select("milestone_key")
+            .eq("user_id", user.id)
+            .in("milestone_key", milestones.map((m) => m.key))
+        : { data: [] as { milestone_key: string }[] };
+
+      const seen = new Set((seenRows ?? []).map((r) => r.milestone_key));
+      const unseen = milestones.filter((m) => !seen.has(m.key));
+
+      analysisData.milestones = unseen;
+      analysisData.shareLine = `${dancer} scored ${analysisData.totalScore}/300 — ${award}`;
+
+      // One popup per report. A celebration outranks the star prompt — the
+      // review ask will still be waiting on the next report, it never expires.
+      if (unseen.length) analysisData.showReviewPrompt = false;
     } else {
       analysisData = generateFallbackAnalysis(id);
     }

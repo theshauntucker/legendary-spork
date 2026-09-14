@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { escapeHtml } from "@/lib/internal-auth";
 
 const OWNER_EMAIL = process.env.OWNER_EMAIL || "22tucker22@comcast.net";
 
@@ -1504,4 +1505,67 @@ export async function sendPasswordResetEmail(customerEmail: string, resetUrl: st
 </body>
 </html>`;
   await sendCustomerEmail(customerEmail, subject, html);
+}
+
+/**
+ * Any note a parent leaves through an engagement prompt — the pre-analysis
+ * question, the star prompt, a milestone card. Reply-to is the customer, so
+ * Shaun answers straight from his inbox.
+ */
+export async function notifyFeedbackNote(p: {
+  userEmail: string;
+  kind: string;
+  promptKey: string | null;
+  choice: string;
+  body: string;
+  rating: number | null;
+  analysisId?: string;
+  platform: string;
+  creditGranted: boolean;
+}) {
+  const resend = getResend();
+  if (!resend) return;
+
+  const label =
+    p.kind === "pre_analysis"
+      ? "Pre-analysis question"
+      : p.kind === "report_rating"
+        ? "Report rating"
+        : p.kind === "milestone"
+          ? "Milestone card"
+          : "Idea box";
+
+  const stars = p.rating ? "★".repeat(p.rating) + "☆".repeat(5 - p.rating) : "";
+  const isMiss = p.rating !== null && p.rating <= 3;
+  const subject = isMiss
+    ? `⚠️ ${stars} ${label} from ${p.userEmail}`
+    : `💬 ${label} from ${p.userEmail}${stars ? ` (${stars})` : ""}`;
+
+  const safeBody = p.body ? escapeHtml(p.body) : "(no written note)";
+  const html = `
+    <div style="font-family: sans-serif; max-width: 520px;">
+      <h2 style="color: #7c3aed; margin: 0 0 12px 0;">${label}</h2>
+      <p><strong>Customer:</strong> ${escapeHtml(p.userEmail)}</p>
+      ${p.rating ? `<p><strong>Rating:</strong> ${stars} (${p.rating}/5)</p>` : ""}
+      ${p.choice ? `<p><strong>They tapped:</strong> ${escapeHtml(p.choice)}</p>` : ""}
+      ${p.promptKey ? `<p style="color:#6b7280;font-size:12px;"><strong>Prompt:</strong> ${escapeHtml(p.promptKey)} · ${escapeHtml(p.platform)}</p>` : ""}
+      ${p.analysisId ? `<p><strong>Report:</strong> <a href="https://routinex.org/analysis/${encodeURIComponent(p.analysisId)}">routinex.org/analysis/${escapeHtml(p.analysisId)}</a></p>` : ""}
+      <p><strong>What they said:</strong></p>
+      <blockquote style="border-left: 3px solid #7c3aed; padding-left: 12px; color: #374151; white-space: pre-wrap;">${safeBody}</blockquote>
+      <p style="color:#6b7280;font-size:12px;">
+        ${p.creditGranted ? "A free analysis was credited to this account for the note." : "No credit issued (already claimed, or the note was too short)."}
+        ${isMiss ? " This one missed — the guarantee says credit the account." : ""}
+        Reply to this email and it goes straight to them.
+      </p>
+    </div>`;
+
+  const result = await resend.emails.send({
+    from: "RoutineX Alerts <notifications@routinex.org>",
+    to: process.env.OWNER_EMAIL || "22tucker22@comcast.net",
+    replyTo: p.userEmail,
+    subject,
+    html,
+    text: htmlToPlainText(html),
+  });
+  if (result.error) console.error("notifyFeedbackNote rejected:", JSON.stringify(result.error));
 }

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Loader2, CheckCircle, Video, BarChart3, Cpu, RotateCcw } from "lucide-react";
 import RoutineXLogo from "@/components/RoutineXLogo";
+import WaitRoomPrompt from "@/components/WaitRoomPrompt";
 
 const stages = [
   { key: "uploaded", label: "Video uploaded", icon: Video },
@@ -91,6 +92,9 @@ export default function ProcessingPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
+      {/* The wait is 1-3 minutes of dead air. Fill it with one good question. */}
+      {status === "processing" && <WaitRoomPrompt videoId={videoId} />}
+
       <div className="fixed inset-0 -z-10">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl" />

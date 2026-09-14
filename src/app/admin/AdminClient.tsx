@@ -7,7 +7,7 @@ import {
   ChevronDown, ChevronUp, Plus, Minus, RefreshCw,
   CheckCircle, AlertCircle, Activity, TrendingUp,
   Video, Star, ExternalLink, LogOut, Gift, Link2,
-  Trash2, Pause, Play, Edit3, Copy, X
+  Trash2, Pause, Play, Edit3, Copy, X, MessageSquare
 } from "lucide-react";
 import LiveOpsBar from "@/components/admin/LiveOpsBar";
 
@@ -280,6 +280,10 @@ export default function AdminClient({ users: initialUsers, affiliates: initialAf
               <RefreshCw className="h-3.5 w-3.5" />
               Refresh
             </button>
+            <a href="/admin/feedback" className="flex items-center gap-1.5 text-xs text-surface-200 hover:text-white glass rounded-lg px-3 py-2 transition-colors">
+              <MessageSquare className="h-3.5 w-3.5" />
+              Customer Inbox
+            </a>
             <a href="/dashboard" className="flex items-center gap-1.5 text-xs text-surface-200 hover:text-white glass rounded-lg px-3 py-2 transition-colors">
               <LogOut className="h-3.5 w-3.5" />
               My Dashboard

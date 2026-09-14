@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import RoutineXLogo from "@/components/RoutineXLogo";
 import RateReportPrompt from "@/components/RateReportPrompt";
+import MilestoneCelebration, { type Milestone } from "@/components/MilestoneCelebration";
 
 interface JudgeScore {
   category: string;
@@ -70,6 +71,10 @@ interface AnalysisData {
   improvementPriorities: ImprovementItem[];
   /** True when this account has never answered the one-time review prompt. */
   showReviewPrompt?: boolean;
+  /** Celebrations this report qualifies for, highest value first. */
+  milestones?: Milestone[];
+  /** Pre-built line for the "share the win" ask. */
+  shareLine?: string;
   competitionComparison: {
     yourScore: number;
     avgRegional: number;
@@ -545,6 +550,15 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
 
       {/* One-time "how did this report land?" → App Store review / private feedback */}
       {analysis.showReviewPrompt && <RateReportPrompt analysisId={analysis.id} />}
+
+      {/* Milestone celebration — fires once per account per milestone */}
+      {!!analysis.milestones?.length && (
+        <MilestoneCelebration
+          milestones={analysis.milestones}
+          videoId={analysis.id}
+          shareLine={analysis.shareLine || ""}
+        />
+      )}
 
       <div className="mx-auto max-w-4xl">
         {/* Top Bar */}
