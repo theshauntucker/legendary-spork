@@ -11,8 +11,10 @@ import Confetti from "@/components/Confetti";
  * Shows once per account, a few seconds after a parent has had a real look at
  * their report (time on page + a little scroll).
  *
- *   4–5 stars, iOS  → App Store review (deep-links out of the Capacitor shell)
- *   4–5 stars, web  → their words, captured as a publishable testimonial
+ *   4–5 stars       → App Store review, everywhere. iOS deep-links to the
+ *                     write-review sheet; web says "get the free app, then
+ *                     rate it" (Apple only counts reviews from downloads).
+ *                     A typed testimonial is the secondary option.
  *   1–3 stars       → a private note straight to Shaun, plus the guarantee
  *
  * Any written note earns a free analysis, once per account. Every outcome is
@@ -133,7 +135,7 @@ export default function RateReportPrompt({ analysisId }: { analysisId: string })
     setRating(n);
     if (n >= 4) {
       void record({ rating: n });
-      setStep(inIosShell() ? "store" : "testimonial");
+      setStep("store");
     } else {
       setStep("feedback");
     }
@@ -240,6 +242,7 @@ export default function RateReportPrompt({ analysisId }: { analysisId: string })
                 <p className="mt-1 text-xs leading-relaxed text-[#A1A1AA]">
                   A 30-second App Store review is the single biggest thing that helps other dance and
                   cheer families find RoutineX. Would you leave one?
+                  {!inIosShell() && " Grab the free app, then tap Rate."}
                 </p>
                 <button
                   onClick={openStore}

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import RoutineXLogo from "@/components/RoutineXLogo";
 import RateReportPrompt from "@/components/RateReportPrompt";
+import AppStoreReviewLink from "@/components/AppStoreReviewLink";
 import MilestoneCelebration, { type Milestone } from "@/components/MilestoneCelebration";
 
 interface JudgeScore {
@@ -1000,6 +1001,9 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
               </a>
             </div>
           </div>
+
+          {/* Always-visible App Store review link */}
+          <AppStoreReviewLink />
         </motion.div>
       </div>
     </div>
