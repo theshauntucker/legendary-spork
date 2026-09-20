@@ -34,6 +34,42 @@ export const maxDuration = 300; // 5 min max for AI analysis
  */
 const SCORING_MODEL = process.env.SCORING_MODEL || "claude-opus-4-8";
 
+/**
+ * Cheer calibration — added Sep 20 2026.
+ *
+ * Every cheer report so far landed 271–282 ("High Gold", "competition-ready"),
+ * and the first family to send back a real sheet reported 195/196 on a
+ * routine we called upper-middle of its division. The dance guidance above
+ * deliberately pushes competent work UP to High Gold; that is wrong for cheer,
+ * where real scoresheets pay for DIFFICULTY and take DEDUCTIONS that still
+ * frames usually cannot see. For cheer this block overrides that push.
+ */
+const CHEER_CALIBRATION = `
+━━ CHEER CALIBRATION — OVERRIDES THE TIER GUIDANCE ABOVE FOR THIS ROUTINE ━━
+Cheer is not judged like a dance competition. Real cheer scoresheets pay heavily
+for DIFFICULTY (skill level of stunts, pyramids, tumbling and jumps, and how many
+athletes perform them) and then subtract DEDUCTIONS for falls, bobbles, drops,
+touch-downs, and timing breaks. Clean execution of basic skills does NOT earn a
+high score.
+
+1. Do NOT start at High Gold. Start at Gold and move up only for difficulty and
+   execution you can point to in a specific frame.
+2. Still frames miss most cheer deductions — a bobble, a dropped flyer or a
+   touch-down happens between frames. If you cannot see a landing, a cradle, or a
+   tumbling pass complete, give NO credit for it. Say plainly in the feedback
+   what you could not verify.
+3. Judge difficulty against the division. Senior-division cheer is scored
+   against advanced skills: extended stunts with transitions, twisting
+   dismounts, multi-level pyramids, standing and running tumbling (layouts,
+   fulls). A routine built on preps, elevators, basic pyramid builds and little
+   or no visible tumbling is Gold-level difficulty for Senior, however clean.
+4. Never call a cheer routine "competition-ready" or "upper-middle of its
+   division" unless the frames show division-level difficulty executed cleanly.
+5. In improvementPriorities include at least one concrete difficulty
+   progression (the next skill to add) and at least one about eliminating the
+   deductions most likely to cost points.
+`;
+
 
 interface FrameData {
   timestamp: number;
@@ -903,6 +939,7 @@ SCORING GUIDELINES (total, 3-judge panel):
 - Choreography (max 20): ${styleCriteria.choreographyEmphasis.join(", ")}
 - Overall Impression (max 10): Polish, professionalism, memorability, competition readiness
 
+${metadata.style === "Cheer" ? CHEER_CALIBRATION : ""}
 Provide 10-15 timeline notes using ONLY timestamps from the frames shown. Each note MUST reference a DIFFERENT frame — never reuse the same timestamp.
 
 Provide 5-7 improvement priorities based on what you actually observe. Even exceptional routines have room to grow.
