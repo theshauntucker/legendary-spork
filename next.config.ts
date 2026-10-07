@@ -2,6 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Spotlight PDFs render with @react-pdf/renderer inside the function;
+  // keep it external and make sure the fonts + logo ship with the bundle.
+  serverExternalPackages: ["@react-pdf/renderer"],
+  outputFileTracingIncludes: {
+    "/api/spotlight/process": ["./public/fonts/**", "./public/sunset-x-on-dark.png"],
+    "/api/spotlight/pdf": ["./public/fonts/**", "./public/sunset-x-on-dark.png"],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "20mb",

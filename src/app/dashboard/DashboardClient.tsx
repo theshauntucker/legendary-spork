@@ -300,7 +300,7 @@ function IntroOfferCard() {
       </div>
       <div className="relative px-6 pt-10 pb-6 flex flex-col sm:flex-row sm:items-center gap-6">
         <div className="flex-1">
-          <h3 className="text-xl sm:text-2xl font-extrabold text-white mb-1">Your second analysis for 99¢</h3>
+          <h3 className="text-xl sm:text-2xl font-extrabold text-white mb-1">Your first analysis for 99¢</h3>
           <p className="text-sm text-emerald-200/90 font-semibold mb-3">Half the regular price. Just once, just for you.</p>
           <ul className="space-y-1.5 text-sm text-surface-200">
             {["1 full AI analysis — all three judges, out of 300", "Timestamped notes + Coach's Playbook", "Never expires", "Money-back guarantee"].map((f) => (
@@ -341,9 +341,9 @@ function FreeAnalysisHero({ remaining }: { remaining: number }) {
     >
       <div className="flex flex-col sm:flex-row sm:items-center gap-6">
         <div className="flex-1">
-          <p className="text-xs font-bold uppercase tracking-widest text-emerald-300 mb-2">✨ Your first analysis is on us</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-emerald-300 mb-2">✨ Ready when you are</p>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-            {remaining === 1 ? "1 free analysis" : `${remaining} analyses`} waiting on your account.
+            {remaining === 1 ? "1 analysis" : `${remaining} analyses`} waiting on your account.
           </h2>
           <p className="mt-2 text-surface-200 text-sm sm:text-base">
             Upload any routine — practice run, last comp, phone video. Three judges, a 300-point scorecard, and timestamped notes in a few minutes.

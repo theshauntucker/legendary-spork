@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { fulfillSpotlightPurchase } from "@/lib/spotlight/fulfill";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getIapProduct } from "@/lib/iap-products";
 import {
@@ -239,6 +240,17 @@ export async function POST(request: NextRequest) {
 
   // ── Fulfillment ───────────────────────────────────────────────────────────
   try {
+    if (product.paymentType === "spotlight") {
+      // $14.99 Spotlight report → its own credit pool + payment row, exactly once.
+      await fulfillSpotlightPurchase(serviceClient, {
+        userId: user.id,
+        sessionKey: `apple:${transactionId}`,
+        amountCents: product.amountCents,
+        appleTransactionId: transactionId,
+        appleOriginalTransactionId: matchingPurchase.original_transaction_id ?? transactionId,
+      });
+      return NextResponse.json({ ok: true, creditsGranted: 0, paymentType: "spotlight" });
+    }
     if (product.mode === "consumable") {
       // One-time purchase. Grant credits, write payment row.
       await grantCredits(serviceClient, user.id, product.creditsGranted, false);

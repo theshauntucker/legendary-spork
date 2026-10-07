@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { notifyNewSignup } from "@/lib/notifications";
-import { grantFreeCreditIfNew } from "@/lib/credits";
 
 /** Only same-site relative paths — never let ?next= bounce users off-site. */
 function safeNext(raw: string | null): string {
@@ -31,13 +30,8 @@ export async function GET(request: Request) {
           );
         }
 
-        // Free first analysis (reinstated 2026-09-09). Anyone arriving through
-        // an email link without a credits row gets it here, same as /signup.
-        // Users who are out of credits are NOT bounced to pricing any more —
-        // the dashboard shows the right offer (99¢ intro, then regular).
-        await grantFreeCreditIfNew(serviceClient, user.id, user.email).catch((err) =>
-          console.error("auth/callback free credit failed:", err)
-        );
+        // First analysis is 99¢ (Oct 2026) — no free credit on arrival. The
+        // dashboard and upload page show the one-time 99¢ welcome price.
 
         if (next === "/dashboard" || next === "/") {
           const { data: profile } = await serviceClient

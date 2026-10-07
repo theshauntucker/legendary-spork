@@ -84,15 +84,8 @@ function SignupForm() {
       }
     }
 
-    // Free first analysis — REINSTATED 2026-09-09. Grant it synchronously so
-    // the upload page already shows a credit when it mounts. auth/callback
-    // only runs for confirmation-email links, so this is the reliable path.
-    try {
-      await fetch("/api/free-credit", { method: "POST" });
-    } catch (err) {
-      console.error("Free credit grant failed:", err);
-    }
-
+    // First analysis is 99¢ (Oct 2026). No free credit is granted here —
+    // the upload page opens straight into the one-time 99¢ welcome price.
     setSuccess(true);
 
     // Notify admin of new signup immediately (fire and forget)
@@ -111,11 +104,11 @@ function SignupForm() {
       }).catch(() => {});
     }
 
-    // Straight to the upload screen — the free credit is already on the
-    // account, and the fastest path to a paying customer is a finished report.
+    // Straight to the upload screen — the fastest path to a paying customer
+    // is a finished report, and the first one is 99¢.
     setLoading(false);
     setTimeout(() => {
-      router.push("/upload?welcome=free");
+      router.push("/upload?welcome=1");
       router.refresh();
     }, 900);
   };
@@ -158,7 +151,7 @@ function SignupForm() {
             <CheckCircle className="mx-auto h-12 w-12 text-green-400 mb-4" />
             <h2 className="text-xl font-bold">Account Created!</h2>
             <p className="mt-2 text-surface-200 text-sm">
-              Your first analysis is on us. Taking you to the upload screen...
+              Your first analysis is 99¢. Taking you to the upload screen...
             </p>
             <p className="mt-3 text-xs text-emerald-300/90 leading-relaxed">
               Backed by our money-back guarantee — if the report misses the mark,
