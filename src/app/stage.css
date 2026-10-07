@@ -20,6 +20,8 @@
   background: var(--stage);
   color: var(--chalk);
   font-family: var(--st-sans);
+  /* Anything on a stage page still asking for the old serif gets the sans. */
+  --font-display: var(--st-sans);
 }
 /* Nav, Bayda and footer pick up the body face on stage pages too. */
 body:has([data-stage-page]) { font-family: "Albert Sans", ui-sans-serif, system-ui, sans-serif; }
@@ -29,9 +31,9 @@ body:has([data-stage-page]) { font-family: "Albert Sans", ui-sans-serif, system-
  * a light geometric sans for reading. One face carries the shouting; the
  * other stays quiet. */
 .st-display { font-family: var(--st-display-face); font-stretch: 62%; font-weight: 800; text-transform: uppercase; letter-spacing: 0; line-height: .88; }
-.st-hero-h1 { font-size: clamp(3.6rem, 9.4vw, 8.6rem); line-height: .84; }
-.st-h2 { font-family: var(--st-display-face); font-stretch: 62%; font-weight: 800; text-transform: uppercase; letter-spacing: 0; line-height: .9; font-size: clamp(2.6rem, 6vw, 5rem); }
-.st-runner { display: inline-flex; align-items: center; gap: .7rem; font-family: var(--st-sans); font-style: normal; font-weight: 400; font-size: .95rem; letter-spacing: .01em; color: var(--smoke); }
+.st-hero-h1 { font-size: clamp(3.4rem, 8vw, 7rem); line-height: .86; }
+.st-h2 { font-family: var(--st-display-face); font-stretch: 62%; font-weight: 800; text-transform: uppercase; letter-spacing: 0; line-height: .9; font-size: clamp(2.4rem, 4.4vw, 3.75rem); overflow-wrap: anywhere; }
+.st-runner { display: inline-flex; align-items: center; gap: .7rem; font-family: var(--st-sans); font-style: normal; font-weight: 400; font-size: .95rem; letter-spacing: .01em; color: #D2D0D8; }
 .st-runner::before { content: ""; width: 1.75rem; height: 1px; background: var(--brass); }
 .st-lede { font-family: var(--st-sans); font-weight: 300; font-size: clamp(1.08rem, 1.45vw, 1.3rem); line-height: 1.6; color: #C9C7CF; max-width: 36rem; }
 /* Buttons: small ovals. Solid chalk for the one action, a hairline twin
@@ -44,7 +46,7 @@ body:has([data-stage-page]) { font-family: "Albert Sans", ui-sans-serif, system-
 .st-btn-sunset:hover { background: #FFFFFF; }
 .st-btn-ghost { border: 1px solid rgba(244,242,247,.32); background: transparent; }
 .st-btn-ghost:hover { border-color: var(--chalk); background: rgba(244,242,247,.06); }
-@media (max-width: 639px) { .st-btn { white-space: normal; text-align: center; padding-block: .9rem; } }
+@media (max-width: 639px) { .st-btn { align-self: flex-start; min-height: 3rem; padding-inline: 1.5rem; font-size: .9rem; } }
 .st-hairline { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent); }
 .st-pool { position: absolute; pointer-events: none; border-radius: 50%; filter: blur(70px); }
 .st-frame { border-radius: 1.25rem; overflow: hidden; border: 1px solid rgba(255,255,255,.08); background: #000; box-shadow: 0 40px 100px -40px rgba(0,0,0,.9); }
