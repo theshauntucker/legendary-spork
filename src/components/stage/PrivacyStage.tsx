@@ -14,7 +14,7 @@ export default function PrivacyStage() {
       <div className="st-wrap grid gap-10 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-16">
         <div>
           <p className="st-runner">Privacy</p>
-          <h2 className="st-h2 mt-3">Your child&apos;s privacy isn&apos;t an afterthought.</h2>
+          <h2 className="st-h2 st-h2-side mt-3">Your child&apos;s privacy isn&apos;t an afterthought.</h2>
         </div>
         <dl className="grid gap-8 sm:grid-cols-2">
           {POINTS.map(([t, b]) => (

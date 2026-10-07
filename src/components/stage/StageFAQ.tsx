@@ -15,7 +15,7 @@ export default function StageFAQ() {
       <div className="st-wrap grid gap-10 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-16">
         <div>
           <p className="st-runner">Questions</p>
-          <h2 className="st-h2 mt-3">Things families ask before they upload.</h2>
+          <h2 className="st-h2 st-h2-side mt-3">Things families ask before they upload.</h2>
         </div>
         <div className="divide-y divide-white/10">
           {FAQ_ITEMS.map((f) => (

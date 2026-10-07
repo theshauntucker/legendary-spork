@@ -39,7 +39,7 @@ export default function StageHero({ image }: { image?: StageAsset }) {
       <motion.div style={{ y: poolY, opacity: fade }} className="st-pool -z-10 left-[55%] top-[5%] h-[60vh] w-[60vw] bg-[radial-gradient(closest-side,rgba(251,191,36,0.22),rgba(249,115,22,0.1),transparent)]" />
 
       <div className="st-wrap relative flex min-h-[100svh] flex-col pt-24 pb-14 sm:pt-28">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.2 }} className="hidden w-fit origin-left scale-75 lg:block">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.2 }} className="hidden w-fit origin-left scale-75" data-hero-mark>
           <HeroMark />
         </motion.div>
 

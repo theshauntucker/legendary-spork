@@ -32,8 +32,10 @@ body:has([data-stage-page]) { font-family: "Albert Sans", ui-sans-serif, system-
  * other stays quiet. */
 .st-display { font-family: var(--st-display-face); font-stretch: 62%; font-weight: 800; text-transform: uppercase; letter-spacing: 0; line-height: .88; }
 .st-hero-h1 { font-size: clamp(3.4rem, 8vw, 7rem); line-height: .86; }
-.st-h2 { font-family: var(--st-display-face); font-stretch: 62%; font-weight: 800; text-transform: uppercase; letter-spacing: 0; line-height: .9; font-size: clamp(2.4rem, 4.4vw, 3.75rem); overflow-wrap: anywhere; }
-.st-runner { display: inline-flex; align-items: center; gap: .7rem; font-family: var(--st-sans); font-style: normal; font-weight: 400; font-size: .95rem; letter-spacing: .01em; color: #D2D0D8; }
+.st-h2 { font-family: var(--st-display-face); font-stretch: 62%; font-weight: 800; text-transform: uppercase; letter-spacing: 0; line-height: .9; font-size: clamp(2.4rem, 4.4vw, 3.75rem); }
+/* Headings that sit in a narrow side column. */
+.st-h2-side { font-size: clamp(2.2rem, 3.5vw, 3rem); }
+.st-runner { display: inline-flex; align-items: center; gap: .7rem; font-family: var(--st-sans); font-style: normal; font-weight: 400; font-size: .95rem; letter-spacing: .01em; color: #D2D0D8; text-shadow: 0 1px 14px rgba(9,9,11,.85), 0 0 2px rgba(9,9,11,.6); }
 .st-runner::before { content: ""; width: 1.75rem; height: 1px; background: var(--brass); }
 .st-lede { font-family: var(--st-sans); font-weight: 300; font-size: clamp(1.08rem, 1.45vw, 1.3rem); line-height: 1.6; color: #C9C7CF; max-width: 36rem; }
 /* Buttons: small ovals. Solid chalk for the one action, a hairline twin
