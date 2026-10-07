@@ -6,6 +6,7 @@ import PrivacyStage from "@/components/stage/PrivacyStage";
 import FinalCurtain from "@/components/stage/FinalCurtain";
 import ReviewStrip from "@/components/stage/ReviewStrip";
 import { SPOTLIGHT_IMAGE } from "@/lib/stage-assets";
+import StageImage from "@/components/stage/StageImage";
 import { SAMPLE } from "@/lib/spotlight/sample";
 
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
     title: "RoutineX Spotlight — coaching, drawn on her",
     description: "A private technique breakdown of one dancer. Measured angles, corrections drawn on her frames, drills and a four-week plan. $14.99.",
     url: "/spotlight",
-    images: [{ url: "/spotlight-sample/og.jpg", width: 1200, height: 630, alt: "A dancer's frame with coaching lines drawn on it" }],
+    images: [{ url: "/stage/og-spotlight.jpg", width: 1200, height: 630, alt: "Silhouette of a dancer leaping across a competition stage" }],
   },
 };
 
@@ -36,13 +37,10 @@ export default function SpotlightPage() {
   return (
     <div data-stage-page>
       <section className="relative isolate overflow-hidden pt-28 pb-16 sm:pt-36 sm:pb-24">
-        {SPOTLIGHT_IMAGE && (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={SPOTLIGHT_IMAGE} alt="" className="absolute inset-0 -z-20 h-full w-full object-cover object-[70%_30%] opacity-70" />
-            <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,#09090B_0%,rgba(9,9,11,0.85)_40%,rgba(9,9,11,0.2)_100%),linear-gradient(180deg,rgba(9,9,11,0.3),#09090B_95%)]" />
-          </>
-        )}
+        <div className="absolute inset-0 -z-20">
+          <StageImage asset={SPOTLIGHT_IMAGE} priority sizes="100vw" className="h-full w-full object-cover object-[68%_35%]" />
+        </div>
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(9,9,11,0.92)_0%,rgba(9,9,11,0.7)_40%,rgba(9,9,11,0.15)_100%),linear-gradient(180deg,rgba(9,9,11,0.35),rgba(9,9,11,0.2)_60%,#09090B_100%)]" />
         <div className="st-wrap">
           <p className="st-runner">RoutineX Spotlight</p>
           <h1 className="st-display mt-4 max-w-4xl text-[2.9rem] sm:text-6xl lg:text-7xl">One dancer. Every frame. Drawn on.</h1>

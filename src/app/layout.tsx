@@ -91,7 +91,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     images: [
       {
-        url: "/opengraph-image",
+        url: "/stage/og.jpg",
         width: 1200,
         height: 630,
         alt: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
@@ -103,7 +103,7 @@ export const metadata: Metadata = {
     title: "RoutineX — Know the Score Before the Judges Do",
     description:
       "AI video analysis for competitive dance & cheer. Three judges, a 300-point scorecard, and timestamped notes on every routine.",
-    images: ["/opengraph-image"],
+    images: ["/stage/og.jpg"],
   },
   robots: {
     index: true,
@@ -175,7 +175,7 @@ const jsonLd = {
       "@type": "Product",
       name: "RoutineX Spotlight",
       url: `${BASE_URL}/spotlight`,
-      image: `${BASE_URL}/spotlight-sample/og.jpg`,
+      image: `${BASE_URL}/stage/og-spotlight.jpg`,
       description:
         "A private, in-depth technique breakdown of one competitive dancer: 60–80 frames tracked on-device, coaching lines and measured angles drawn on her own frames, priorities, drills, a four-week plan, delivered on the web and as a PDF.",
       brand: { "@type": "Brand", name: "RoutineX" },

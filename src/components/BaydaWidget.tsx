@@ -73,6 +73,7 @@ const LOADING_LINES = [
 const TEASERS = [
   "Your first analysis is 99¢ — want the quick tour?",
   "Comp coming up? Ask me anything ✨",
+  "Curious what a $14.99 Spotlight breakdown includes? Ask me.",
   "Need help with the app? I'm right here.",
 ];
 
@@ -216,18 +217,39 @@ export default function BaydaWidget() {
       /* private mode etc. */
     }
     if (seen) return;
-    const t = setTimeout(() => {
-      setTeaser(TEASERS[Math.floor(Math.random() * TEASERS.length)]);
-      try {
-        sessionStorage.setItem("bayda_teaser", "1");
-      } catch {
-        /* ignore */
-      }
-    }, 7000);
-    const hide = setTimeout(() => setTeaser(null), 7000 + 12000);
+    // On the marketing pages the hero CTAs own the first screen — the nudge
+    // waits until the visitor has scrolled past them, then a short beat.
+    const marketing = typeof window !== "undefined" && (window.location.pathname === "/" || window.location.pathname.startsWith("/spotlight") || window.location.pathname === "/pricing");
+    let t: ReturnType<typeof setTimeout> | null = null;
+    let hide: ReturnType<typeof setTimeout> | null = null;
+    const fire = (delay: number) => {
+      t = setTimeout(() => {
+        setTeaser(TEASERS[Math.floor(Math.random() * TEASERS.length)]);
+        try {
+          sessionStorage.setItem("bayda_teaser", "1");
+        } catch {
+          /* ignore */
+        }
+        hide = setTimeout(() => setTeaser(null), 12000);
+      }, delay);
+    };
+    let onScroll: (() => void) | null = null;
+    if (marketing) {
+      onScroll = () => {
+        if (window.scrollY > 480 && onScroll) {
+          window.removeEventListener("scroll", onScroll);
+          onScroll = null;
+          fire(4000);
+        }
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+    } else {
+      fire(7000);
+    }
     return () => {
-      clearTimeout(t);
-      clearTimeout(hide);
+      if (t) clearTimeout(t);
+      if (hide) clearTimeout(hide);
+      if (onScroll) window.removeEventListener("scroll", onScroll);
     };
   }, []);
 
