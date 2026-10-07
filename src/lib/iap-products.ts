@@ -29,6 +29,7 @@
  */
 
 export type IapPaymentType =
+  | "spotlight"
   | "intro"
   | "single"
   | "bogo"
@@ -55,7 +56,7 @@ export const IAP_PRODUCTS: Record<string, IapProduct> = {
   // ── Consumables (one-time analysis credits) ───────────────────────────────
   routinex_intro: {
     productId: "routinex_intro",
-    name: "RoutineX Second Analysis (Intro Offer)",
+    name: "RoutineX First Analysis (Welcome Offer)",
     paymentType: "intro",
     mode: "consumable",
     creditsGranted: 1, // $0.99 → 1 analysis, one per account (UI-gated; see isIntroOfferEligible)
@@ -76,6 +77,14 @@ export const IAP_PRODUCTS: Record<string, IapProduct> = {
     mode: "consumable",
     creditsGranted: 2, // $2.99 → 2 analyses (buy one get one)
     amountCents: 299,
+  },
+  routinex_spotlight: {
+    productId: "routinex_spotlight",
+    name: "RoutineX Spotlight — Dancer Breakdown",
+    paymentType: "spotlight",
+    mode: "consumable",
+    creditsGranted: 0, // $14.99 → 1 Spotlight report (separate credit pool, see lib/spotlight/fulfill.ts)
+    amountCents: 1499,
   },
   routinex_pack: {
     productId: "routinex_pack",
@@ -122,9 +131,11 @@ export function getIapProduct(productId: string): IapProduct {
  * existing Pricing/Hero/Dashboard components pass.
  */
 export function webTypeToIapProductId(
-  type: "intro" | "single" | "bogo" | "pack" | "subscription" | "studio_subscription"
+  type: "intro" | "single" | "bogo" | "pack" | "subscription" | "studio_subscription" | "spotlight"
 ): string {
   switch (type) {
+    case "spotlight":
+      return "routinex_spotlight";
     case "intro":
       return "routinex_intro";
     case "single":

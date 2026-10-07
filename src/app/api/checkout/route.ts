@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { isIntroOfferEligible } from "@/lib/credits";
+import { SPOTLIGHT_PRICE_CENTS } from "@/lib/spotlight/fulfill";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,39 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // ── RoutineX Spotlight — $14.99 one-dancer coaching report ──────────────
+    // Separate credit pool; the success page lands on the Spotlight upload
+    // flow (not /success) and its verify route settles the purchase.
+    if (type === "spotlight") {
+      const spotlightSession = await stripe.checkout.sessions.create({
+        mode: "payment",
+        payment_method_types: ["card"],
+        customer_email: user.email,
+        metadata: {
+          user_id: user.id,
+          payment_type: "spotlight",
+          ...(effectiveReferralCode ? { referral_code: effectiveReferralCode.toUpperCase() } : {}),
+        },
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: "RoutineX Spotlight — Full Dancer Breakdown",
+                description:
+                  "A private, in-depth technique report for one dancer: 60–80 frames tracked, coaching lines drawn on her own frames, measured angles, priorities, drills and a four-week plan, delivered as a PDF. Your video never leaves your device. Money-back guarantee.",
+              },
+              unit_amount: SPOTLIGHT_PRICE_CENTS,
+            },
+            quantity: 1,
+          },
+        ],
+        success_url: `${baseUrl}/spotlight/new?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/spotlight`,
+      });
+      return NextResponse.json({ url: spotlightSession.url });
+    }
+
     const isPack = type === "pack";
     const isSubscription = type === "subscription";
 
@@ -99,8 +133,8 @@ export async function POST(request: NextRequest) {
     const isBogo = type === "bogo";
     const productConfig = isIntro
       ? {
-          name: "RoutineX — Second Analysis (Intro Offer)",
-          description: "Your second full AI-powered routine analysis for just 99¢ — a one-time welcome price. Your video never leaves your device — only still-frame thumbnails are analyzed. Backed by our money-back guarantee — if it misses the mark, email us and we credit your account immediately.",
+          name: "RoutineX — First Analysis (Welcome Offer)",
+          description: "Your first full AI-powered routine analysis for just 99¢ — a one-time welcome price. Your video never leaves your device — only still-frame thumbnails are analyzed. Backed by our money-back guarantee — if it misses the mark, email us and we credit your account immediately.",
           unit_amount: 99, // $0.99
           payment_type: "intro",
         }

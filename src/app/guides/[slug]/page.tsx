@@ -217,7 +217,7 @@ export default async function GuidePage({
               </Link>
             </div>
             <p className="mt-4 text-xs text-surface-200/60">
-              First analysis on us. Second one 99¢. Then $1.99 each, or $4.99/mo
+              First analysis 99¢. Then $1.99 each, or $4.99/mo
               for Season Member.
             </p>
           </div>

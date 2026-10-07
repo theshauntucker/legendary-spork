@@ -1569,3 +1569,40 @@ export async function notifyFeedbackNote(p: {
   });
   if (result.error) console.error("notifyFeedbackNote rejected:", JSON.stringify(result.error));
 }
+
+/**
+ * Spotlight — "your report is ready". Premium, quiet, founder-signed.
+ */
+export async function sendSpotlightReadyEmail(
+  customerEmail: string,
+  p: { dancerName: string; reportId: string; headline: string }
+) {
+  const url = `https://routinex.org/spotlight/${p.reportId}`;
+  const pdf = `${url}/pdf`;
+  const first = (p.dancerName || "your dancer").split(" ")[0];
+  const subject = `${first}'s Spotlight report is ready`;
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>${subject}</title></head>
+<body style="margin:0;padding:0;background:#09090B;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#F4F4F5;">
+  <div style="display:none;max-height:0;overflow:hidden;">${escapeHtml(p.headline)}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#09090B;padding:32px 12px;"><tr><td align="center">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#111113;border:1px solid rgba(255,255,255,0.08);border-radius:18px;overflow:hidden;">
+      <tr><td style="height:4px;background:linear-gradient(90deg,#EC4899,#F97316,#FBBF24);font-size:0;line-height:0;">&nbsp;</td></tr>
+      <tr><td style="padding:36px 36px 8px;">
+        <p style="margin:0 0 10px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C084FC;font-weight:700;">RoutineX Spotlight</p>
+        <h1 style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.2;font-weight:700;color:#FFFFFF;">${escapeHtml(first)}'s breakdown is ready.</h1>
+        <p style="margin:0 0 22px;font-size:16px;line-height:1.6;color:#A1A1AA;">${escapeHtml(p.headline)}</p>
+        <p style="margin:0 0 26px;font-size:15px;line-height:1.6;color:#D4D4D8;">Every page is built from ${escapeHtml(first)}'s own frames — the lines, the angles and the coaching notes are drawn on her, not described in the abstract. Open it on your phone, or download the PDF and send it to her teacher.</p>
+        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+          <td style="border-radius:999px;background:linear-gradient(90deg,#9333EA,#EC4899,#F59E0B);"><a href="${url}" style="display:inline-block;padding:14px 26px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:999px;">Open the report</a></td>
+          <td style="width:12px;"></td>
+          <td style="border-radius:999px;border:1px solid rgba(255,255,255,0.18);"><a href="${pdf}" style="display:inline-block;padding:13px 22px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:999px;">Download PDF</a></td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:22px 36px 34px;">
+        <p style="margin:0;font-size:13px;line-height:1.6;color:#71717A;">Questions about anything in the report? Reply to this email — it comes straight to me.<br/>— Shaun, Founder, RoutineX</p>
+      </td></tr>
+    </table>
+  </td></tr></table>
+</body></html>`;
+  await sendCustomerEmail(customerEmail, subject, html, { useFounderFrom: true });
+}

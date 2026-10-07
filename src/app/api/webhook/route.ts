@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { fulfillSpotlightPurchase, SPOTLIGHT_PRICE_CENTS } from "@/lib/spotlight/fulfill";
 import { getStripe } from "@/lib/stripe";
 import {
   applyPaymentCredits,
@@ -320,6 +321,34 @@ export async function POST(request: NextRequest) {
     const userId = session.metadata?.user_id;
     const paymentType = session.metadata?.payment_type || "beta_access";
     const referralCode = session.metadata?.referral_code || null;
+
+    // ─── Spotlight purchase early branch ─────────────────────────────────
+    // $14.99 → one Spotlight credit in its own pool. Must run BEFORE the
+    // generic credit branches, which grant 1 analysis credit to unknown types.
+    if (paymentType === "spotlight") {
+      if (!userId) {
+        console.error("Webhook: spotlight session missing user_id", session.id);
+        return NextResponse.json({ received: true });
+      }
+      const serviceClient = await createServiceClient();
+      try {
+        const r = await fulfillSpotlightPurchase(serviceClient, {
+          userId,
+          sessionKey: session.id,
+          paymentIntent: typeof session.payment_intent === "string" ? session.payment_intent : null,
+          amountCents: session.amount_total,
+          currency: session.currency,
+          referralCode,
+        });
+        if (r.granted) {
+          notifyPayment(session.customer_email || "", userId, "spotlight", session.amount_total || SPOTLIGHT_PRICE_CENTS).catch(() => {});
+        }
+      } catch (err) {
+        console.error("Webhook spotlight fulfillment failed:", err);
+        return NextResponse.json({ error: "Spotlight fulfillment failed" }, { status: 500 });
+      }
+      return NextResponse.json({ received: true });
+    }
 
     // ─── Practice Plan purchase early branch ─────────────────────────────
     // $4.99 content purchase — grants ZERO analysis credits. Records the
