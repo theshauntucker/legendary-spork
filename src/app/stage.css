@@ -14,21 +14,37 @@
   --gel-orange: #F97316;
   --spot-gold: #FBBF24;
   --orchid: #C084FC;
+  --brass: #DDBB82;
+  --st-display-face: "Archivo", "Arial Narrow", Impact, sans-serif;
+  --st-sans: "Albert Sans", ui-sans-serif, system-ui, sans-serif;
   background: var(--stage);
   color: var(--chalk);
+  font-family: var(--st-sans);
 }
+/* Nav, Bayda and footer pick up the body face on stage pages too. */
+body:has([data-stage-page]) { font-family: "Albert Sans", ui-sans-serif, system-ui, sans-serif; }
 .st-wrap { margin-inline: auto; width: 100%; max-width: 76rem; padding-inline: 1.25rem; }
 @media (min-width: 640px) { .st-wrap { padding-inline: 2rem; } }
-.st-display { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.015em; line-height: 1.02; }
-.st-h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.012em; line-height: 1.08; font-size: clamp(2rem, 4.4vw, 3.4rem); }
-.st-runner { font-family: var(--font-display); font-style: italic; font-weight: 400; font-size: 1.05rem; color: var(--orchid); }
-.st-lede { font-size: clamp(1.05rem, 1.4vw, 1.25rem); line-height: 1.55; color: var(--smoke); max-width: 36rem; }
-.st-btn { display: inline-flex; align-items: center; gap: .5rem; border-radius: 999px; padding: .95rem 1.6rem; font-weight: 700; font-size: 1rem; color: #fff; transition: transform .15s ease, box-shadow .2s ease; }
+/* Type: condensed grotesk caps for display (scoreboard / stage-call energy),
+ * a light geometric sans for reading. One face carries the shouting; the
+ * other stays quiet. */
+.st-display { font-family: var(--st-display-face); font-stretch: 62%; font-weight: 800; text-transform: uppercase; letter-spacing: 0; line-height: .88; }
+.st-hero-h1 { font-size: clamp(3.6rem, 9.4vw, 8.6rem); line-height: .84; }
+.st-h2 { font-family: var(--st-display-face); font-stretch: 62%; font-weight: 800; text-transform: uppercase; letter-spacing: 0; line-height: .9; font-size: clamp(2.6rem, 6vw, 5rem); }
+.st-runner { display: inline-flex; align-items: center; gap: .7rem; font-family: var(--st-sans); font-style: normal; font-weight: 400; font-size: .95rem; letter-spacing: .01em; color: var(--smoke); }
+.st-runner::before { content: ""; width: 1.75rem; height: 1px; background: var(--brass); }
+.st-lede { font-family: var(--st-sans); font-weight: 300; font-size: clamp(1.08rem, 1.45vw, 1.3rem); line-height: 1.6; color: #C9C7CF; max-width: 36rem; }
+/* Buttons: small ovals. Solid chalk for the one action, a hairline twin
+ * for the second. No gradients, no glow — the sunset lives in the X and
+ * the stage light, not in the buttons. (.st-btn-sunset keeps its name so
+ * every page picks this up without markup changes.) */
+.st-btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 3.25rem; border-radius: 999px; padding: 0 1.85rem; font-family: var(--st-sans); font-weight: 500; font-size: .95rem; letter-spacing: .03em; line-height: 1; color: var(--chalk); white-space: nowrap; transition: background-color .25s ease, color .25s ease, border-color .25s ease; }
 .st-btn:active { transform: scale(.985); }
-.st-btn-sunset { background: linear-gradient(100deg, #9333EA 0%, #EC4899 50%, #F59E0B 100%); box-shadow: 0 14px 40px -14px rgba(236,72,153,.55), inset 0 1px 0 rgba(255,255,255,.25); }
-.st-btn-sunset:hover { box-shadow: 0 18px 46px -12px rgba(236,72,153,.7), inset 0 1px 0 rgba(255,255,255,.3); }
-.st-btn-ghost { border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.03); }
-.st-btn-ghost:hover { background: rgba(255,255,255,.07); }
+.st-btn-sunset { background: var(--chalk); color: var(--stage); }
+.st-btn-sunset:hover { background: #FFFFFF; }
+.st-btn-ghost { border: 1px solid rgba(244,242,247,.32); background: transparent; }
+.st-btn-ghost:hover { border-color: var(--chalk); background: rgba(244,242,247,.06); }
+@media (max-width: 639px) { .st-btn { white-space: normal; text-align: center; padding-block: .9rem; } }
 .st-hairline { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent); }
 .st-pool { position: absolute; pointer-events: none; border-radius: 50%; filter: blur(70px); }
 .st-frame { border-radius: 1.25rem; overflow: hidden; border: 1px solid rgba(255,255,255,.08); background: #000; box-shadow: 0 40px 100px -40px rgba(0,0,0,.9); }
@@ -41,5 +57,5 @@
 .st-rail::-webkit-scrollbar { display: none; }
 .st-rail > * { scroll-snap-align: start; flex: 0 0 auto; }
 .st-kicker { display: inline-flex; align-items: center; gap: .55rem; font-size: .85rem; color: var(--smoke); }
-.st-kicker::before { content: ""; width: 1.5rem; height: 1px; background: var(--spot-gold); }
-a:focus-visible, button:focus-visible { outline: 2px solid var(--spot-gold); outline-offset: 3px; }
+.st-kicker::before { content: ""; width: 1.5rem; height: 1px; background: var(--brass); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }

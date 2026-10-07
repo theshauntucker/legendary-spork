@@ -43,9 +43,9 @@ export default function StageHero({ image }: { image?: StageAsset }) {
           <HeroMark />
         </motion.div>
 
-        <motion.div style={{ opacity: fade }} initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.35, ease: [0.16, 1, 0.3, 1] }} className="mt-auto max-w-[44rem]">
+        <motion.div style={{ opacity: fade }} initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.35, ease: [0.16, 1, 0.3, 1] }} className="mt-auto max-w-[56rem]">
           <p className="st-runner">AI video analysis for competitive dance and cheer</p>
-          <h1 className="st-display mt-4 text-[2.9rem] sm:text-6xl lg:text-[4.9rem]">
+          <h1 className="st-display st-hero-h1 mt-5">
             See exactly what the judges see.
           </h1>
           <p className="st-lede mt-6">

@@ -26,7 +26,7 @@ export default function SpotlightSamplePage() {
         sample
         actions={
           <>
-            <Link href="/spotlight/new" className="st-btn st-btn-sunset !px-5 !py-2.5 !text-sm">Get this for your dancer — $14.99</Link>
+            <Link href="/spotlight/new" className="st-btn st-btn-sunset !min-h-[2.5rem] !px-5 !py-2.5 !text-sm">Get this for your dancer — $14.99</Link>
             <a href="/spotlight-sample/RoutineX-Spotlight-Sample.pdf" className="st-btn st-btn-ghost !px-5 !py-2.5 !text-sm">Download the sample PDF</a>
           </>
         }

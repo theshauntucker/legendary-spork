@@ -38,7 +38,7 @@ export default function StickyBottomCTA() {
             </div>
             <a
               href="/spotlight"
-              className="st-btn st-btn-sunset shrink-0 !px-4 !py-2 !text-sm"
+              className="st-btn st-btn-sunset shrink-0 !min-h-[2.5rem] !px-4 !py-2 !text-sm"
             >
               See it
               <ArrowRight className="h-3.5 w-3.5" />

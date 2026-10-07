@@ -128,7 +128,7 @@ export default function Navbar() {
                   className={
                     bright
                       ? "btn-ink rounded-full px-5 py-2 text-sm font-semibold"
-                      : "rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+                      : "rounded-full bg-[#F4F2F7] px-5 py-2 text-sm font-medium tracking-[0.02em] text-[#09090B] hover:bg-white transition-colors"
                   }
                 >
                   Get started
@@ -213,7 +213,7 @@ export default function Navbar() {
                     className={
                       bright
                         ? "btn-ink block w-full text-center rounded-full px-5 py-2.5 text-sm font-semibold"
-                        : "block w-full text-center rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-5 py-2.5 text-sm font-semibold text-white"
+                        : "block w-full text-center rounded-full bg-[#F4F2F7] px-5 py-3 text-sm font-medium tracking-[0.02em] text-[#09090B]"
                     }
                     onClick={() => setMobileOpen(false)}
                   >
