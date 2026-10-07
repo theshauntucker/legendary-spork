@@ -19,6 +19,10 @@ export default function FAQPage() {
   return (
     <main data-stage-page className="pt-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <div className="st-wrap pt-20 sm:pt-24">
+        <p className="st-runner">FAQ</p>
+        <h1 className="st-display mt-3 text-4xl sm:text-6xl">Questions parents ask first.</h1>
+      </div>
       <StageFAQ />
       <FinalCurtain />
     </main>

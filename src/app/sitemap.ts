@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { ALL_EVENTS } from "@/data/competitions";
 import { GUIDES } from "@/data/guides";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || "https://routinex.org";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -24,12 +24,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${BASE_URL}/spotlight/sample`,
       lastModified: now,
       changeFrequency: "monthly" as const,
-      priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/upload`,
-      lastModified: now,
-      changeFrequency: "monthly",
       priority: 0.8,
     },
     {
@@ -109,18 +103,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.6,
-    },
-    {
-      url: `${BASE_URL}/signup`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/login`,
-      lastModified: now,
-      changeFrequency: "yearly",
-      priority: 0.3,
     },
   ];
 

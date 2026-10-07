@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     template: "%s | RoutineX",
   },
   description:
-    "Upload a routine from your phone. RoutineX scores it like a competition panel in minutes, and Spotlight breaks one dancer down frame by frame with the corrections drawn on her own frames. Built for competitive dance and cheer families.",
+    "AI video analysis for competitive dance and cheer. Upload a routine, get a competition-style score in minutes — or a Spotlight breakdown of one dancer with the corrections drawn on her frames.",
   keywords: [
     "dance competition",
     "cheer competition",
