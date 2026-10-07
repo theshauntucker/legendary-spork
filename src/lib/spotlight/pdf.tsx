@@ -106,6 +106,18 @@ function AnnotatedFrame({ frame, src, prims, width }: { frame: SpotlightFrame; s
               return <Circle key={i} cx={X(p.p.x)} cy={Y(p.p.y)} r={(p.r ?? 3) * (W / 520)} fill={col} opacity={p.status === "note" ? 0.7 : 1} />;
             case "arc":
               return <Path key={i} d={arcPath(X(p.c.x), Y(p.c.y), p.r * H, p.start, p.end)} stroke={col} strokeWidth={2 * (W / 520)} fill="none" />;
+            case "ghost": {
+              const d = p.pts.map((q, k) => `${k === 0 ? "M" : "L"} ${X(q.x).toFixed(1)} ${Y(q.y).toFixed(1)}`).join(" ");
+              const e = p.pts[p.pts.length - 1];
+              return (
+                <React.Fragment key={i}>
+                  <Path d={d} stroke={col} strokeWidth={9 * (W / 520)} strokeLinecap="round" strokeLinejoin="round" fill="none" opacity={0.22} />
+                  <Path d={d} stroke={col} strokeWidth={2.2 * (W / 520)} strokeLinecap="round" strokeDasharray="6 5" fill="none" opacity={0.95} />
+                  <Circle cx={X(e.x)} cy={Y(e.y)} r={6 * (W / 520)} fill={col} opacity={0.28} />
+                  <Circle cx={X(e.x)} cy={Y(e.y)} r={3 * (W / 520)} fill={col} />
+                </React.Fragment>
+              );
+            }
             case "arrow": {
               const dx = X(p.b.x) - X(p.a.x), dy = Y(p.b.y) - Y(p.a.y), L = Math.hypot(dx, dy) || 1;
               const ux = dx / L, uy = dy / L, hx = X(p.b.x), hy = Y(p.b.y), h = 7 * (W / 520);
@@ -320,6 +332,67 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
         </View>
         <Footer dancer={report.dancer.name} page="Drills" />
       </Page>
+
+      {/* Judge's card + next time on stage */}
+      {(report.judgesCard?.length || report.onStage?.length) ? (
+        <Page size="LETTER" style={s.page}>
+          {report.judgesCard && report.judgesCard.length > 0 && (
+            <View>
+              <Text style={s.eyebrow}>From the judges&apos; table</Text>
+              <Text style={s.h2}>How this reads on a judge&apos;s card</Text>
+              <Text style={[s.muted, { marginTop: 6 }]}>Competition sheets weight technique first, then performance, choreography, presentation and overall impression — and the judge talks into a mic while {first} dances. This is what that tape would say.</Text>
+              <View style={[s.card, { marginTop: 12, padding: 0 }]}>
+                {report.judgesCard.map((j, i) => {
+                  const pts = Math.round((j.score / 10) * j.weight * 10) / 10;
+                  return (
+                    <View key={i} style={{ flexDirection: "row", gap: 10, paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: i ? 1 : 0, borderTopColor: C.line, alignItems: "flex-start" }} wrap={false}>
+                      <View style={{ width: 120 }}>
+                        <Text style={{ fontSize: 10, fontWeight: 700 }}>{j.name}</Text>
+                        <Text style={[s.muted, { fontSize: 8 }]}>{j.weight} pts on the sheet</Text>
+                      </View>
+                      <Text style={[s.body, { flex: 1, fontSize: 9.8 }]}>“{j.note}”</Text>
+                      <View style={{ width: 54, alignItems: "flex-end" }}>
+                        <Text style={{ fontFamily: "Playfair", fontSize: 15, color: C.gold }}>{pts}<Text style={{ fontSize: 8, color: C.faint }}>/{j.weight}</Text></Text>
+                        <View style={{ marginTop: 3, width: 54, height: 3, borderRadius: 2, backgroundColor: C.panel2 }}>
+                          <View style={{ width: Math.round((j.score / 10) * 54), height: 3, borderRadius: 2, backgroundColor: C.pink }} />
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: 1, borderTopColor: C.line, backgroundColor: C.panel2 }}>
+                  <Text style={s.muted}>Projected, one judge, 100-point sheet</Text>
+                  <Text style={{ fontFamily: "Playfair", fontSize: 20 }}>{Math.round(report.judgesCard.reduce((a, j) => a + (j.score / 10) * j.weight, 0))}<Text style={{ fontSize: 9, color: C.faint }}>/100</Text></Text>
+                </View>
+              </View>
+              <Text style={[s.footText, { marginTop: 6 }]}>Weights follow the most common competition sheet (technique 40 · performance 30 · choreography 15 · presentation 10 · overall 5). Your circuit&apos;s card may split differently; the notes carry over.</Text>
+            </View>
+          )}
+          {report.onStage && report.onStage.length > 0 && (
+            <View style={{ marginTop: 18 }}>
+              <Text style={s.eyebrow}>For {first}</Text>
+              <Text style={s.h2}>Next time on stage</Text>
+              <Text style={[s.muted, { marginTop: 4 }]}>Competition day, in order. Read it the night before, then once more in the hallway.</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+                {report.onStage.map((o, i) => (
+                  <View key={i} style={[s.card, { width: (frameW - 16) / 3, padding: 11 }]} wrap={false}>
+                    <Text style={[s.eyebrow, { fontSize: 7 }]}>{i + 1} · {o.moment.replace(/-/g, " ")}</Text>
+                    <Text style={[s.h3, { fontSize: 11, marginTop: 3 }]}>{o.title}</Text>
+                    <Text style={[s.body, { fontSize: 9.4 }]}>{o.cue}</Text>
+                  </View>
+                ))}
+              </View>
+              {report.forParent && report.forParent.length > 0 && (
+                <View style={[s.card, { marginTop: 10, backgroundColor: "transparent" }]}>
+                  <Text style={s.eyebrow}>For the parent</Text>
+                  {report.forParent.map((t, i) => <Text key={i} style={[s.body, { fontSize: 9.8, marginTop: 4 }]}>— {t}</Text>)}
+                </View>
+              )}
+            </View>
+          )}
+          <Footer dancer={report.dancer.name} page="Judge&apos;s card" />
+        </Page>
+      ) : null}
 
       {/* Plan + closing */}
       <Page size="LETTER" style={s.page}>

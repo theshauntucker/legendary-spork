@@ -206,6 +206,69 @@ export default function ReportView({
         </div>
       </section>
 
+      {/* ── Judge's card ───────────────────────────────────────────────── */}
+      {report.judgesCard && report.judgesCard.length > 0 && (
+        <section className="border-t border-white/[0.06]">
+          <div className="mx-auto max-w-5xl px-5 py-14 sm:px-8">
+            <p className="sl-eyebrow">From the judges&apos; table</p>
+            <h2 className="sl-h2">How this reads on a judge&apos;s card</h2>
+            <p className="mt-2 max-w-2xl text-zinc-400">Competition sheets weight technique first, then performance, choreography, presentation and overall impression — and the judge talks into a mic while {first} dances. This is what that tape would say.</p>
+            <div className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-[#0C0B10]">
+              {report.judgesCard.map((j, i) => {
+                const pts = Math.round((j.score / 10) * j.weight * 10) / 10;
+                return (
+                  <div key={i} className={`grid gap-3 px-5 py-5 sm:grid-cols-[11rem_1fr_6rem] sm:items-start sm:px-7 ${i > 0 ? "border-t border-white/[0.06]" : ""}`}>
+                    <div>
+                      <p className="font-semibold">{j.name}</p>
+                      <p className="mt-0.5 text-xs text-zinc-500">{j.weight} pts on the sheet</p>
+                    </div>
+                    <p className="text-[15px] leading-relaxed text-zinc-300">“{j.note}”</p>
+                    <div className="sm:text-right">
+                      <p className="font-[family-name:var(--font-display)] text-2xl text-amber-200">{pts}<span className="text-sm text-zinc-500">/{j.weight}</span></p>
+                      <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-white/10 sm:ml-auto"><div className="h-full rounded-full bg-gradient-to-r from-pink-500 to-amber-300" style={{ width: `${Math.round((j.score / 10) * 100)}%` }} /></div>
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="flex items-baseline justify-between border-t border-white/10 bg-white/[0.03] px-5 py-4 sm:px-7">
+                <p className="text-sm text-zinc-400">Projected, one judge, 100-point sheet</p>
+                <p className="font-[family-name:var(--font-display)] text-3xl text-white">{Math.round(report.judgesCard.reduce((a, j) => a + (j.score / 10) * j.weight, 0))}<span className="text-base text-zinc-500">/100</span></p>
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-zinc-500">Weights follow the most common competition sheet (technique 40 · performance 30 · choreography 15 · presentation 10 · overall 5). Your circuit&apos;s card may split differently; the notes carry over.</p>
+          </div>
+        </section>
+      )}
+
+      {/* ── Next time on stage ─────────────────────────────────────────── */}
+      {report.onStage && report.onStage.length > 0 && (
+        <section className="border-t border-white/[0.06] bg-white/[0.02]">
+          <div className="mx-auto max-w-5xl px-5 py-14 sm:px-8">
+            <p className="sl-eyebrow">For {first}</p>
+            <h2 className="sl-h2">Next time on stage</h2>
+            <p className="mt-2 text-zinc-400">Competition day, in order. Read it the night before, then once more in the hallway.</p>
+            <ol className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {report.onStage.map((o, i) => (
+                <li key={i} className="sl-card relative">
+                  <span className="absolute right-4 top-4 font-[family-name:var(--font-display)] text-3xl text-white/10">{i + 1}</span>
+                  <p className="sl-eyebrow text-[10px]">{o.moment.replace(/-/g, " ")}</p>
+                  <p className="mt-1 font-semibold">{o.title}</p>
+                  <p className="mt-2 text-[15px] leading-relaxed text-zinc-300">{o.cue}</p>
+                </li>
+              ))}
+            </ol>
+            {report.forParent && report.forParent.length > 0 && (
+              <div className="mt-8 rounded-2xl border border-white/10 p-6 sm:p-7">
+                <p className="sl-eyebrow">For the parent</p>
+                <ul className="mt-3 space-y-2 text-[15px] leading-relaxed text-zinc-300">
+                  {report.forParent.map((t, i) => <li key={i} className="flex gap-3"><span className="text-amber-300">—</span><span>{t}</span></li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* ── Plan + closing ─────────────────────────────────────────────── */}
       <section className="mx-auto max-w-5xl px-5 py-14 sm:px-8">
         <p className="sl-eyebrow">The next four weeks</p>

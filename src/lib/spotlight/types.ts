@@ -28,7 +28,14 @@ export type Annotation =
   | { type: "level"; pair: "shoulders" | "hips"; status: AnnotationStatus; label?: string }
   | { type: "extend"; chain: ChainName; status: AnnotationStatus; label?: string }
   | { type: "callout"; at: LandmarkName; text: string; status: AnnotationStatus }
-  | { type: "arrow"; at: LandmarkName; dir: "up" | "down" | "left" | "right"; text: string; status: AnnotationStatus };
+  | { type: "arrow"; at: LandmarkName; dir: "up" | "down" | "left" | "right"; text: string; status: AnnotationStatus }
+  /**
+   * The corrected limb, drawn translucent next to the real one so the dancer
+   * sees the difference: the chain is straightened and lifted to
+   * `targetElevation` degrees from straight-down (0 = hanging, 90 = horizontal,
+   * 180 = straight up) on the same side of the body it currently sits.
+   */
+  | { type: "ghost"; chain: ChainName; targetElevation: number; status: AnnotationStatus; label?: string };
 
 export interface KeyMoment {
   /** Index into frames[]. */
@@ -73,6 +80,18 @@ export interface SpotlightWeek {
   plan: string[];
 }
 
+/** One line of a real judge's card, as this routine would read on it. */
+export interface JudgesCardLine {
+  category: "technique" | "execution" | "performance" | "choreography" | "presentation" | "overall";
+  name: string;
+  /** Typical weight on a 100-point sheet (e.g. 40, 30, 15, 10, 5). */
+  weight: number;
+  /** Honest 1–10 for this dancer, scaled by the renderer. */
+  score: number;
+  /** The sentence a judge would actually say into the mic. */
+  note: string;
+}
+
 export interface SpotlightReport {
   version: 1;
   dancer: { name: string; style: string; division?: string; level?: string; routine?: string };
@@ -87,6 +106,12 @@ export interface SpotlightReport {
   plan: SpotlightWeek[];
   closing: string;
   glossary: Array<{ term: string; meaning: string }>;
+  /** Optional sections (v1.1 reports). */
+  judgesCard?: JudgesCardLine[];
+  /** "Next time on stage" — competition-day cues written to the dancer. */
+  onStage?: Array<{ moment: "walk-on" | "first-8" | "the-hard-part" | "recovery" | "finish" | "after"; title: string; cue: string }>;
+  /** Short, plain notes for the parent — what to say and when. */
+  forParent?: string[];
 }
 
 export type SpotlightStatus = "processing" | "ready" | "error";

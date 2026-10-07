@@ -15,7 +15,9 @@ export type Primitive =
   | { kind: "arc"; c: Pt; r: number; start: number; end: number; status: AnnotationStatus }
   | { kind: "dot"; p: Pt; status: AnnotationStatus; r?: number }
   | { kind: "label"; p: Pt; text: string; status: AnnotationStatus; anchor?: "start" | "middle" | "end"; dy?: number }
-  | { kind: "arrow"; a: Pt; b: Pt; status: AnnotationStatus };
+  | { kind: "arrow"; a: Pt; b: Pt; status: AnnotationStatus }
+  /** Translucent corrected limb. */
+  | { kind: "ghost"; pts: Pt[]; status: AnnotationStatus };
 
 export const STATUS_COLOR: Record<AnnotationStatus, string> = {
   good: "#FBBF24", // gold — what is working
@@ -131,6 +133,25 @@ export function annotationPrimitives(pose: Pose, a: Annotation, aspect: number):
       out.push({ kind: "dot", p: P, status: a.status, r: 4 });
       out.push({ kind: "line", a: P, b: { x: P.x + ax(0.07), y: P.y - 0.07 }, status: a.status, width: 1.4 });
       out.push({ kind: "label", p: { x: P.x + ax(0.075), y: P.y - 0.075 }, text: a.text, status: a.status });
+      break;
+    }
+    case "ghost": {
+      const names = CHAINS[a.chain] as readonly (LandmarkName | "hip_center" | "shoulder_center")[];
+      const pts = names.map((n) => resolve(pose, n));
+      const root = pts[0], end = pts[pts.length - 1];
+      // true length of the chain in pixel-ish space (aspect-corrected)
+      let len = 0;
+      for (let i = 0; i < pts.length - 1; i++) len += Math.hypot((pts[i + 1].x - pts[i].x) * aspect, pts[i + 1].y - pts[i].y);
+      const side = (end.x - root.x) * aspect >= 0 ? 1 : -1; // keep the limb on the side it already sits
+      const theta = (Math.max(0, Math.min(180, a.targetElevation)) * Math.PI) / 180; // 0 = straight down
+      const gEnd = { x: root.x + (side * Math.sin(theta) * len) / aspect, y: root.y + Math.cos(theta) * len };
+      const gMid = { x: root.x + (gEnd.x - root.x) * 0.5, y: root.y + (gEnd.y - root.y) * 0.5 };
+      out.push({ kind: "ghost", pts: [root, gMid, gEnd], status: a.status });
+      // the current limb, for contrast
+      for (let i = 0; i < pts.length - 1; i++) out.push({ kind: "line", a: pts[i], b: pts[i + 1], status: "fix", width: 2.2 });
+      out.push({ kind: "arrow", a: end, b: { x: end.x + (gEnd.x - end.x) * 0.85, y: end.y + (gEnd.y - end.y) * 0.85 }, status: a.status });
+      const cur = Math.round(elevationFromDown(root, end));
+      out.push({ kind: "label", p: { x: gEnd.x + ax(off), y: gEnd.y - 0.02 }, text: a.label ?? `${cur}° now → ${Math.round(a.targetElevation)}° here`, status: a.status });
       break;
     }
     case "arrow": {

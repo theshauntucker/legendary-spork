@@ -30,6 +30,18 @@ export default function AnnotatedFrame({
               return <circle key={i} cx={p.p.x * W} cy={p.p.y * H} r={(p.r ?? 3) * sw} fill={col} opacity={p.status === "note" ? 0.7 : 1} />;
             case "arc":
               return <path key={i} d={arcPath(p.c.x * W, p.c.y * H, p.r * H, p.start, p.end)} stroke={col} strokeWidth={2 * sw} fill="none" />;
+            case "ghost": {
+              const d = p.pts.map((q, k) => `${k === 0 ? "M" : "L"} ${(q.x * W).toFixed(1)} ${(q.y * H).toFixed(1)}`).join(" ");
+              const e = p.pts[p.pts.length - 1];
+              return (
+                <g key={i}>
+                  <path d={d} stroke={col} strokeWidth={9 * sw} strokeLinecap="round" strokeLinejoin="round" fill="none" opacity={0.22} />
+                  <path d={d} stroke={col} strokeWidth={2.2 * sw} strokeLinecap="round" strokeDasharray={`${6 * sw} ${5 * sw}`} fill="none" opacity={0.95} />
+                  <circle cx={e.x * W} cy={e.y * H} r={6 * sw} fill={col} opacity={0.28} />
+                  <circle cx={e.x * W} cy={e.y * H} r={3 * sw} fill={col} />
+                </g>
+              );
+            }
             case "arrow": {
               const ax = p.a.x * W, ay = p.a.y * H, bx = p.b.x * W, by = p.b.y * H;
               const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, hd = 7 * sw;

@@ -25,6 +25,9 @@ export const metadata: Metadata = {
 const INCLUDED = [
   ["Key moments, drawn on", "12–16 frames a coach would freeze on — the apex of the jump, the top of the extension, the landing, the turn — each with the lines, angles and corrections drawn directly on her."],
   ["Measured, not described", "Every angle comes from on-device pose tracking on her own body. 161° at the supporting knee is 161°, not “a little soft.”"],
+  ["The difference, drawn", "On the moments that matter, the corrected limb is drawn translucent beside hers — same frame, knee finished, leg where it should be — so she sees exactly what to change."],
+  ["How it reads on a judge's card", "Technique, performance, choreography, presentation, overall — weighted the way real sheets are, with the sentence each judge would say into the mic."],
+  ["Next time on stage", "Competition-day cues written to her, in order: the walk-on, the first eight, the hard part, recovering a wobble, the finish. Plain words, nothing corny. Plus three lines for you about the car ride home."],
   ["Seven category scores", "Lines and extension, alignment, jumps and landings, turns and balance, arms, feet and turnout, presence. Honest numbers with the evidence."],
   ["Priorities with the cause", "Not “work on landings” — what in the preparation is making the landing heavy, and the one cue she says to herself to fix it."],
   ["Drills with doses", "Five to eight no-equipment drills tied to the priorities, with sets, reps, days a week and a cue."],

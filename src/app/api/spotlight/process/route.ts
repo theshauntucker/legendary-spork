@@ -174,5 +174,10 @@ function sanitize(input: Partial<SpotlightReport>, row: SpotlightRow, validFrame
     plan: input.plan ?? [],
     closing: input.closing ?? "",
     glossary: input.glossary ?? [],
+    judgesCard: Array.isArray(input.judgesCard)
+      ? input.judgesCard.slice(0, 6).map((j) => ({ ...j, weight: Math.max(1, Math.min(60, Math.round(Number(j.weight) || 10))), score: Math.max(1, Math.min(10, Math.round(Number(j.score) * 10) / 10)) }))
+      : undefined,
+    onStage: Array.isArray(input.onStage) ? input.onStage.slice(0, 6) : undefined,
+    forParent: Array.isArray(input.forParent) ? input.forParent.slice(0, 5) : undefined,
   };
 }
