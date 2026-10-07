@@ -1,25 +1,22 @@
 import type { Metadata } from "next";
-import Pricing from "@/components/Pricing";
-import Footer from "@/components/Footer";
+import StagePricing from "@/components/stage/StagePricing";
+import StageFAQ from "@/components/stage/StageFAQ";
+import FinalCurtain from "@/components/stage/FinalCurtain";
 
 export const metadata: Metadata = {
-  title: "Pricing",
+  title: "Pricing — 99¢ first analysis, Spotlight breakdowns $14.99",
   description:
-    "RoutineX pricing: first analysis free, second analysis 99¢. Single analysis $1.99, BOGO 2 for $2.99, Competition Pack 5 for $9.99, or Season Member $4.99/mo for 4 analyses.",
-  alternates: {
-    canonical: "/pricing",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
+    "RoutineX pricing: first routine analysis 99¢, then $1.99 each or $4.99/mo for four as a Season Member. RoutineX Spotlight, the frame-by-frame technique breakdown of one dancer, is $14.99.",
+  alternates: { canonical: "/pricing" },
+  robots: { index: true, follow: true },
 };
 
 export default function PricingPage() {
   return (
-    <main>
-      <Pricing />
-      <Footer />
+    <main data-stage-page className="pt-10">
+      <StagePricing />
+      <StageFAQ />
+      <FinalCurtain />
     </main>
   );
 }
