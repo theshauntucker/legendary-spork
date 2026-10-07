@@ -27,25 +27,25 @@ export default function StickyBottomCTA() {
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className="fixed bottom-0 left-0 right-0 z-50 p-3 sm:p-4"
         >
-          <div className="mx-auto max-w-lg lux-card rounded-2xl px-4 py-3 flex items-center justify-between gap-3 backdrop-blur-xl">
+          <div className="mx-auto max-w-lg rounded-2xl border border-white/10 bg-[#121214]/90 px-4 py-3 flex items-center justify-between gap-3 backdrop-blur-xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)]">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-[#221A29] truncate">
-                First analysis — free
+              <p className="text-sm font-bold text-white truncate">
+                Spotlight — one dancer, every frame, $14.99
               </p>
-              <p className="text-xs text-[#7A7284] truncate">
-                The full judge report, in under 5 minutes.
+              <p className="text-xs text-zinc-400 truncate">
+                Or score a routine — first one is 99¢.
               </p>
             </div>
             <a
-              href="/signup"
-              className="btn-sunset shrink-0 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold"
+              href="/spotlight"
+              className="st-btn st-btn-sunset shrink-0 !px-4 !py-2 !text-sm"
             >
-              Get started
+              See it
               <ArrowRight className="h-3.5 w-3.5" />
             </a>
             <button
               onClick={() => setDismissed(true)}
-              className="shrink-0 p-1 rounded-full hover:bg-[#221A29]/[0.05] transition-colors text-[#8B8492]"
+              className="shrink-0 p-1 rounded-full hover:bg-white/10 transition-colors text-zinc-400"
               aria-label="Dismiss"
             >
               <X className="h-4 w-4" />

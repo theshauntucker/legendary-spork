@@ -1,33 +1,39 @@
 import type { Metadata } from "next";
-import Hero from "@/components/Hero";
-import HowItWorks from "@/components/HowItWorks";
-import SampleAnalysis from "@/components/SampleAnalysis";
-import Features from "@/components/Features";
-import PrivacyTrust from "@/components/PrivacyTrust";
-import Testimonials from "@/components/Testimonials";
-import Pricing from "@/components/Pricing";
-import FAQ from "@/components/FAQ";
-import Footer from "@/components/Footer";
+import StageHero from "@/components/stage/StageHero";
+import ReviewStrip from "@/components/stage/ReviewStrip";
+import TwoWays from "@/components/stage/TwoWays";
+import SpotlightShowcase from "@/components/stage/SpotlightShowcase";
+import HowSpotlightWorks from "@/components/stage/HowSpotlightWorks";
+import StagePricing from "@/components/stage/StagePricing";
+import PrivacyStage from "@/components/stage/PrivacyStage";
+import StageFAQ, { FAQ_ITEMS } from "@/components/stage/StageFAQ";
+import FinalCurtain from "@/components/stage/FinalCurtain";
 import StickyBottomCTA from "@/components/StickyBottomCTA";
+import { HERO_IMAGE } from "@/lib/stage-assets";
 
 export const metadata: Metadata = {
-  alternates: {
-    canonical: "/",
-  },
+  alternates: { canonical: "/" },
+};
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ_ITEMS.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
 };
 
 export default function Home() {
   return (
-    <div data-bright-page>
-      <Hero />
-      <HowItWorks />
-      <SampleAnalysis />
-      <Features />
-      <PrivacyTrust />
-      <Testimonials />
-      <Pricing />
-      <FAQ />
-      <Footer />
+    <div data-stage-page>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <StageHero image={HERO_IMAGE} />
+      <ReviewStrip />
+      <TwoWays />
+      <SpotlightShowcase />
+      <HowSpotlightWorks />
+      <StagePricing />
+      <PrivacyStage />
+      <StageFAQ />
+      <FinalCurtain />
       <StickyBottomCTA />
     </div>
   );

@@ -26,6 +26,7 @@ import {
 import RoutineXLogo from "@/components/RoutineXLogo";
 import RateReportPrompt from "@/components/RateReportPrompt";
 import AppStoreReviewLink from "@/components/AppStoreReviewLink";
+import SpotlightUpsell from "@/components/spotlight/SpotlightUpsell";
 import MilestoneCelebration, { type Milestone } from "@/components/MilestoneCelebration";
 
 interface JudgeScore {
@@ -1000,6 +1001,11 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
                 <p className="text-xs text-surface-200">See your full score history &amp; progression</p>
               </a>
             </div>
+          </div>
+
+          {/* Spotlight — go deeper on one dancer */}
+          <div className="mt-8">
+            <SpotlightUpsell dancerName={analysis.dancerName} compact />
           </div>
 
           {/* Always-visible App Store review link */}

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 
-type CtaKey = "signup" | "sample" | "pricing" | "upload" | "season" | "studio" | "founder";
+type CtaKey = "signup" | "spotlight" | "sample" | "pricing" | "upload" | "season" | "studio" | "founder";
 
 interface Message {
   role: "user" | "assistant";
@@ -11,9 +11,25 @@ interface Message {
   cta?: CtaKey | null;
 }
 
+/** Stable per-browser key so a chat is saved as one conversation (and linked to the account when signed in). */
+function baydaSessionKey(): string {
+  try {
+    const k = "rx_bayda_session";
+    let v = window.localStorage.getItem(k);
+    if (!v || !/^[A-Za-z0-9_-]{8,64}$/.test(v)) {
+      v = Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => "abcdefghijklmnopqrstuvwxyz0123456789"[b % 36]).join("");
+      window.localStorage.setItem(k, v);
+    }
+    return v;
+  } catch {
+    return "";
+  }
+}
+
 /* ── Conversion buttons Bayda can attach to a reply ─────────────────────── */
 const CTAS: Record<CtaKey, { label: string; href: string }> = {
-  signup: { label: "Get my free analysis →", href: "/signup?utm_source=bayda" },
+  signup: { label: "Get my first analysis — 99¢ →", href: "/signup?utm_source=bayda" },
+  spotlight: { label: "Get the Spotlight breakdown — $14.99 →", href: "/spotlight?utm_source=bayda" },
   sample: { label: "See a sample report →", href: "/sample-analysis" },
   pricing: { label: "See plans & pricing →", href: "/pricing" },
   upload: { label: "Upload a routine →", href: "/upload" },
@@ -30,8 +46,8 @@ const WELCOMES: Message[] = [
   {
     role: "assistant",
     content:
-      "Hi, I'm Bayda ✨ I can walk you through RoutineX, explain how your competition scores, or help with anything in the app.\n\nAnd **your first analysis is free.** What are you working on?",
-    chips: ["How does RoutineX work?", "Is the first one really free?", "We have a comp coming up"],
+      "Hi, I'm Bayda ✨ I can walk you through RoutineX, explain how your competition scores, or help with anything in the app.\n\nAnd **your first analysis is 99¢.** What are you working on?",
+    chips: ["How does RoutineX work?", "What is Spotlight?", "We have a comp coming up"],
   },
   {
     role: "assistant",
@@ -55,8 +71,9 @@ const LOADING_LINES = [
 ];
 
 const TEASERS = [
-  "Your first analysis is free — want the quick tour?",
+  "Your first analysis is 99¢ — want the quick tour?",
   "Comp coming up? Ask me anything ✨",
+  "Curious what a $14.99 Spotlight breakdown includes? Ask me.",
   "Need help with the app? I'm right here.",
 ];
 
@@ -200,18 +217,39 @@ export default function BaydaWidget() {
       /* private mode etc. */
     }
     if (seen) return;
-    const t = setTimeout(() => {
-      setTeaser(TEASERS[Math.floor(Math.random() * TEASERS.length)]);
-      try {
-        sessionStorage.setItem("bayda_teaser", "1");
-      } catch {
-        /* ignore */
-      }
-    }, 7000);
-    const hide = setTimeout(() => setTeaser(null), 7000 + 12000);
+    // On the marketing pages the hero CTAs own the first screen — the nudge
+    // waits until the visitor has scrolled past them, then a short beat.
+    const marketing = typeof window !== "undefined" && (window.location.pathname === "/" || window.location.pathname.startsWith("/spotlight") || window.location.pathname === "/pricing");
+    let t: ReturnType<typeof setTimeout> | null = null;
+    let hide: ReturnType<typeof setTimeout> | null = null;
+    const fire = (delay: number) => {
+      t = setTimeout(() => {
+        setTeaser(TEASERS[Math.floor(Math.random() * TEASERS.length)]);
+        try {
+          sessionStorage.setItem("bayda_teaser", "1");
+        } catch {
+          /* ignore */
+        }
+        hide = setTimeout(() => setTeaser(null), 12000);
+      }, delay);
+    };
+    let onScroll: (() => void) | null = null;
+    if (marketing) {
+      onScroll = () => {
+        if (window.scrollY > 480 && onScroll) {
+          window.removeEventListener("scroll", onScroll);
+          onScroll = null;
+          fire(4000);
+        }
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+    } else {
+      fire(7000);
+    }
     return () => {
-      clearTimeout(t);
-      clearTimeout(hide);
+      if (t) clearTimeout(t);
+      if (hide) clearTimeout(hide);
+      if (onScroll) window.removeEventListener("scroll", onScroll);
     };
   }, []);
 
@@ -267,6 +305,7 @@ export default function BaydaWidget() {
             messages: apiMessages.map((m) => ({ role: m.role, content: m.content })),
             isFirstMessage: isFirstUserMessage,
             page: typeof window !== "undefined" ? window.location.pathname : undefined,
+            sessionKey: baydaSessionKey(),
           }),
         });
 

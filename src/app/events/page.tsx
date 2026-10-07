@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     "Hollywood Vibe dance", "Monsters of Hip Hop", "dance nationals 2026",
     "dance competition schedule", "dance mom competition calendar",
   ],
+  alternates: { canonical: "/events" },
   openGraph: {
     title: "Dance Competition & Convention Calendar 2026 | RoutineX",
     description: "Find every major dance competition and convention near you. Updated for the 2025–2026 season.",

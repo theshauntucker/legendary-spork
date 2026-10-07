@@ -378,12 +378,12 @@ function UploadPageInner() {
             >
               <p className="text-sm font-bold text-white">
                 {creditInfo.introEligible
-                  ? "Your next analysis is just 99¢."
+                  ? "Your first analysis is 99¢."
                   : "You're out of analyses."}
               </p>
               <p className="mt-1 text-xs text-surface-200 leading-relaxed">
                 {creditInfo.introEligible
-                  ? "Your free one is used — grab the one-time 99¢ welcome price, then come right back and upload."
+                  ? "A one-time welcome price for the full judge sheet — score, award level, timestamped notes. Grab it, then come right back and upload."
                   : "Add one for $1.99, or see packs and Season Member ($4.99/mo for 4)."}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -402,14 +402,14 @@ function UploadPageInner() {
               {buyError && <p className="mt-2 text-xs text-red-300">{buyError}</p>}
             </motion.div>
           )}
-          {searchParams.get("welcome") === "free" && creditInfo?.hasCredits !== false && (
+          {searchParams.get("welcome") === "free" && creditInfo?.hasCredits === true && (
             <motion.div
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.15 }}
               className="mt-6 mx-auto max-w-md rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-5 py-4 text-left"
             >
-              <p className="text-sm font-bold text-white">✨ Your first analysis is on us.</p>
+              <p className="text-sm font-bold text-white">✨ You have an analysis ready to use.</p>
               <p className="mt-1 text-xs text-emerald-200/80 leading-relaxed">
-                One free credit is already on your account. Pick a routine, hit analyze, and the full judge sheet is yours in a couple of minutes.
+                A credit is on your account. Pick a routine, hit analyze, and the full judge sheet is yours in a couple of minutes.
               </p>
             </motion.div>
           )}

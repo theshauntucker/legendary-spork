@@ -440,3 +440,11 @@ body:has([data-bright-page]) ::selection {
 
 /* Never advertise the App Store inside the native iOS shell. */
 [data-native-shell="ios"] .appstore-badge { display: none !important; }
+
+/* ── Spotlight report ───────────────────────────────────────────────── */
+.sl-report { background: #09090B; }
+.sl-eyebrow { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; color: #C084FC; }
+.sl-h2 { margin-top: 0.4rem; font-family: var(--font-display); font-size: clamp(1.75rem, 3.5vw, 2.5rem); font-weight: 700; line-height: 1.1; letter-spacing: -0.01em; }
+.sl-card { border-radius: 1rem; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); padding: 1.1rem 1.25rem; }
+
+@import "./stage.css";

@@ -25,6 +25,11 @@ export const dynamic = "force-dynamic";
  * Idempotent — safe to call multiple times.
  */
 export async function POST(request: NextRequest) {
+  // Oct 2026: the first analysis is 99¢, not free. The route stays so old
+  // clients don't 404, but it grants nothing unless explicitly re-enabled.
+  if (process.env.FREE_FIRST_ANALYSIS !== "1") {
+    return NextResponse.json({ success: true, granted: 0, alreadyGranted: true, disabled: true });
+  }
   try {
     const limit = rateLimit(clientKey(request, "free-credit"), {
       max: 10,
