@@ -5,7 +5,7 @@ import HowSpotlightWorks from "@/components/stage/HowSpotlightWorks";
 import PrivacyStage from "@/components/stage/PrivacyStage";
 import FinalCurtain from "@/components/stage/FinalCurtain";
 import ReviewStrip from "@/components/stage/ReviewStrip";
-import { SPOTLIGHT_IMAGE } from "@/lib/stage-assets";
+import { ARABESQUE_IMAGE, SPOTLIGHT_IMAGE } from "@/lib/stage-assets";
 import StageImage from "@/components/stage/StageImage";
 import { SAMPLE } from "@/lib/spotlight/sample";
 
@@ -38,9 +38,9 @@ export default function SpotlightPage() {
     <div data-stage-page>
       <section className="relative isolate overflow-hidden pt-28 pb-16 sm:pt-36 sm:pb-24">
         <div className="absolute inset-0 -z-20">
-          <StageImage asset={SPOTLIGHT_IMAGE} priority sizes="100vw" className="h-full w-full object-cover object-[68%_35%]" />
+          <StageImage asset={SPOTLIGHT_IMAGE} portrait={ARABESQUE_IMAGE} priority sizes="100vw" className="h-full w-full object-cover object-[50%_30%] lg:object-[68%_35%]" />
         </div>
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(9,9,11,0.92)_0%,rgba(9,9,11,0.7)_40%,rgba(9,9,11,0.15)_100%),linear-gradient(180deg,rgba(9,9,11,0.35),rgba(9,9,11,0.2)_60%,#09090B_100%)]" />
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(9,9,11,0.45)_0%,rgba(9,9,11,0.25)_30%,rgba(9,9,11,0.7)_60%,#09090B_100%)] lg:bg-[linear-gradient(90deg,rgba(9,9,11,0.92)_0%,rgba(9,9,11,0.7)_40%,rgba(9,9,11,0.15)_100%),linear-gradient(180deg,rgba(9,9,11,0.35),rgba(9,9,11,0.2)_60%,#09090B_100%)]" />
         <div className="st-wrap">
           <p className="st-runner">RoutineX Spotlight</p>
           <h1 className="st-display mt-4 max-w-4xl text-[2.9rem] sm:text-6xl lg:text-7xl">One dancer. Every frame. Drawn on.</h1>
