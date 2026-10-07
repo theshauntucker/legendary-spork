@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { startCheckout, type CheckoutType } from "@/lib/checkout";
+import SpotlightUpsell from "@/components/spotlight/SpotlightUpsell";
 import { Guarantee } from "@/components/Guarantee";
 
 interface DashProgression {
@@ -716,6 +717,10 @@ export default function DashboardClient({
         ) : (
           <PurchaseBlock introEligible={introEligible} />
         )}
+
+        {/* Spotlight — the premium one-dancer breakdown. Shown to everyone;
+            analysis credits don't cover it, so it's always a live offer. */}
+        <SpotlightUpsell dancerName={videos.find((v) => v.dancer_name)?.dancer_name ?? null} />
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">

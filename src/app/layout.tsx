@@ -44,11 +44,11 @@ export const metadata: Metadata = {
     appId: "6763345348",
   },
   title: {
-    default: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
+    default: "RoutineX — AI Dance & Cheer Video Analysis and Spotlight Technique Breakdowns",
     template: "%s | RoutineX",
   },
   description:
-    "Get competition-standard scoring and actionable feedback on every routine. Upload your video, receive detailed AI analysis of technique, performance, choreography & more. Built for competitive dancers, cheer teams, parents & coaches.",
+    "Upload a routine from your phone. RoutineX scores it like a competition panel in minutes, and Spotlight breaks one dancer down frame by frame with the corrections drawn on her own frames. Built for competitive dance and cheer families.",
   keywords: [
     "dance competition",
     "cheer competition",
@@ -74,12 +74,17 @@ export const metadata: Metadata = {
     "dance coach tools",
     "routine improvement",
     "dance score calculator",
+    "dance technique analysis",
+    "dance video breakdown",
+    "private dance lesson alternative",
+    "dance coaching report",
+    "cheer technique analysis",
   ],
   alternates: {},
   openGraph: {
-    title: "RoutineX — AI-Powered Dance & Cheer Video Analysis",
+    title: "RoutineX — See exactly what the judges see",
     description:
-      "Competition-standard scoring and feedback for every routine. Upload your video and get detailed AI analysis in under 5 minutes.",
+      "Competition-style scoring for every routine, and Spotlight: a frame-by-frame technique breakdown of one dancer with the corrections drawn on her. From your phone, in minutes.",
     type: "website",
     siteName: "RoutineX",
     url: BASE_URL,
@@ -146,9 +151,9 @@ const jsonLd = {
         {
           "@type": "Offer",
           name: "First Analysis",
-          price: "0",
+          price: "0.99",
           priceCurrency: "USD",
-          description: "Your first AI-powered competition-standard dance or cheer routine analysis is free",
+          description: "Your first AI-powered competition-standard dance or cheer routine analysis — one-time welcome price",
         },
         {
           "@type": "Offer",
@@ -165,6 +170,22 @@ const jsonLd = {
           description: "5 AI-powered dance or cheer routine analyses that never expire",
         },
       ],
+    },
+    {
+      "@type": "Product",
+      name: "RoutineX Spotlight",
+      url: `${BASE_URL}/spotlight`,
+      image: `${BASE_URL}/spotlight-sample/og.jpg`,
+      description:
+        "A private, in-depth technique breakdown of one competitive dancer: 60–80 frames tracked on-device, coaching lines and measured angles drawn on her own frames, priorities, drills, a four-week plan, delivered on the web and as a PDF.",
+      brand: { "@type": "Brand", name: "RoutineX" },
+      offers: {
+        "@type": "Offer",
+        price: "14.99",
+        priceCurrency: "USD",
+        availability: "https://schema.org/InStock",
+        url: `${BASE_URL}/spotlight`,
+      },
     },
     {
       "@type": "Organization",

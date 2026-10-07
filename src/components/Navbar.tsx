@@ -10,8 +10,8 @@ import { NotificationBell } from "@/components/NotificationBell";
 import RoutineXLogo from "@/components/RoutineXLogo";
 
 const navLinks = [
+  { label: "Spotlight", href: "/spotlight" },
   { label: "How it works", href: "/#how-it-works" },
-  { label: "Sample report", href: "/#sample-analysis" },
   { label: "Pricing", href: "/#pricing" },
   { label: "FAQ", href: "/#faq" },
   { label: "For Studios", href: "/studio/signup" },
@@ -26,9 +26,10 @@ export default function Navbar() {
   >(null);
 
   const pathname = usePathname();
-  // Bright editorial chrome on the marketing homepage; dark glass on
-  // every app surface (dashboard, upload, analysis, studio, …).
-  const bright = pathname === "/";
+  // Oct 2026: the marketing site is a dark stage, so the navbar is dark
+  // glass everywhere. (The bright variant is kept for any page that still
+  // sets data-bright-page.)
+  const bright = false && pathname === "/";
 
   useEffect(() => {
     const supabase = createClient();

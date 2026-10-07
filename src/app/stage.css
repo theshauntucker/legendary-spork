@@ -1,0 +1,45 @@
+/* ── Stage design system (Oct 2026 redesign) ───────────────────────────
+ * Backstage black, one warm spotlight. The sunset gradient is used as
+ * LIGHT (pools, rims, a single gradient button per view), never as
+ * decoration. Serif display, sentence case, left-aligned.
+ */
+[data-stage-page] {
+  --stage: #09090B;
+  --wings: #121214;
+  --haze: #1B1920;
+  --chalk: #F4F2F7;
+  --smoke: #A1A1AA;
+  --ash: #6B6B74;
+  --gel-pink: #EC4899;
+  --gel-orange: #F97316;
+  --spot-gold: #FBBF24;
+  --orchid: #C084FC;
+  background: var(--stage);
+  color: var(--chalk);
+}
+.st-wrap { margin-inline: auto; width: 100%; max-width: 76rem; padding-inline: 1.25rem; }
+@media (min-width: 640px) { .st-wrap { padding-inline: 2rem; } }
+.st-display { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.015em; line-height: 1.02; }
+.st-h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.012em; line-height: 1.08; font-size: clamp(2rem, 4.4vw, 3.4rem); }
+.st-runner { font-family: var(--font-display); font-style: italic; font-weight: 400; font-size: 1.05rem; color: var(--orchid); }
+.st-lede { font-size: clamp(1.05rem, 1.4vw, 1.25rem); line-height: 1.55; color: var(--smoke); max-width: 36rem; }
+.st-btn { display: inline-flex; align-items: center; gap: .5rem; border-radius: 999px; padding: .95rem 1.6rem; font-weight: 700; font-size: 1rem; color: #fff; transition: transform .15s ease, box-shadow .2s ease; }
+.st-btn:active { transform: scale(.985); }
+.st-btn-sunset { background: linear-gradient(100deg, #9333EA 0%, #EC4899 50%, #F59E0B 100%); box-shadow: 0 14px 40px -14px rgba(236,72,153,.55), inset 0 1px 0 rgba(255,255,255,.25); }
+.st-btn-sunset:hover { box-shadow: 0 18px 46px -12px rgba(236,72,153,.7), inset 0 1px 0 rgba(255,255,255,.3); }
+.st-btn-ghost { border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.03); }
+.st-btn-ghost:hover { background: rgba(255,255,255,.07); }
+.st-hairline { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent); }
+.st-pool { position: absolute; pointer-events: none; border-radius: 50%; filter: blur(70px); }
+.st-frame { border-radius: 1.25rem; overflow: hidden; border: 1px solid rgba(255,255,255,.08); background: #000; box-shadow: 0 40px 100px -40px rgba(0,0,0,.9); }
+.st-marquee { display: flex; gap: 3rem; width: max-content; animation: stMarquee 60s linear infinite; }
+.st-marquee:hover { animation-play-state: paused; }
+@keyframes stMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .st-marquee { animation: none; } }
+.st-fade-x { -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+.st-rail { display: flex; gap: 1.25rem; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: .75rem; scrollbar-width: none; }
+.st-rail::-webkit-scrollbar { display: none; }
+.st-rail > * { scroll-snap-align: start; flex: 0 0 auto; }
+.st-kicker { display: inline-flex; align-items: center; gap: .55rem; font-size: .85rem; color: var(--smoke); }
+.st-kicker::before { content: ""; width: 1.5rem; height: 1px; background: var(--spot-gold); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--spot-gold); outline-offset: 3px; }
