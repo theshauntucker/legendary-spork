@@ -6,8 +6,8 @@ import RoutineXLogo from "@/components/RoutineXLogo";
 
 const FAQS: { q: string; a: string }[] = [
   {
-    q: "Is my first analysis really free?",
-    a: "Yes. Every new account gets one complete analysis free — no card required. Your second analysis is a one-time 99¢ welcome price. After that it's $1.99 per analysis, 2 for $2.99, 5 for $9.99, or Season Member at $4.99/month for 4 analyses every month.",
+    q: "What does my first analysis cost?",
+    a: "Your first complete analysis is a one-time 99¢ welcome price. After that it's $1.99 per analysis, 2 for $2.99, 5 for $9.99, or Season Member at $4.99/month for 4 analyses every month.",
   },
   {
     q: "How does the video analysis actually work?",

@@ -212,7 +212,7 @@ export default async function GuidePage({
                 href="/signup"
                 className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 px-6 py-3 font-semibold text-white hover:opacity-90 transition-opacity"
               >
-                Try your first analysis — free
+                Try your first analysis — 99¢
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
