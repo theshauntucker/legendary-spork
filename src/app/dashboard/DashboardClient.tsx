@@ -304,7 +304,7 @@ function IntroOfferCard() {
           <h3 className="text-xl sm:text-2xl font-extrabold text-white mb-1">Your first analysis for 99¢</h3>
           <p className="text-sm text-emerald-200/90 font-semibold mb-3">Half the regular price. Just once, just for you.</p>
           <ul className="space-y-1.5 text-sm text-surface-200">
-            {["1 full AI analysis — all three judges, out of 300", "Timestamped notes + Coach's Playbook", "Never expires", "Money-back guarantee"].map((f) => (
+            {["1 full AI analysis — all three judges, out of 300", "Timestamped notes + Coach's Playbook", "Never expires", "Email us what was off and we credit your account."].map((f) => (
               <li key={f} className="flex items-center gap-2"><span className="text-emerald-400 font-bold">✓</span>{f}</li>
             ))}
           </ul>

@@ -253,7 +253,7 @@ export async function notifyReportFeedback(p: {
       ${p.analysisId ? `<p><strong>Report:</strong> <a href="https://routinex.org/analysis/${p.analysisId}">routinex.org/analysis/${p.analysisId}</a></p>` : ""}
       <p><strong>What they said:</strong></p>
       <blockquote style="border-left: 3px solid #7c3aed; padding-left: 12px; color: #374151; white-space: pre-wrap;">${safeFeedback}</blockquote>
-      <p style="color:#6b7280;font-size:12px;">Reply to this email and it goes straight to them. If the report missed, the guarantee says credit the account.</p>
+      <p style="color:#6b7280;font-size:12px;">Reply to this email and it goes straight to them. If the report missed, credit the account.</p>
     </div>`;
   const result = await resend.emails.send({
     from: "RoutineX Alerts <notifications@routinex.org>",
@@ -1370,7 +1370,7 @@ export async function sendThankYouCreditEmail(
           </div>
         </td></tr>
         <tr><td style="padding:24px 34px 0 34px;font-size:16px;line-height:1.65;color:#E4E4E7;">
-          <p style="margin:0 0 14px 0;">And if a report ever misses the mark, just reply to this email. I answer these myself, and if it didn&rsquo;t give you something you can use, I credit your account. That&rsquo;s the guarantee.</p>
+          <p style="margin:0 0 14px 0;">And if a report ever misses the mark, just reply to this email. I answer these myself. Email us what was off and we credit your account.</p>
           <p style="margin:0 0 4px 0;">Good luck this season.</p>
           <p style="margin:0;color:#ffffff;font-weight:700;">Shaun Tucker</p>
           <p style="margin:2px 0 0 0;font-size:13px;color:#A1A1AA;">Founder, RoutineX &middot; <a href="mailto:shaun@routinex.org" style="color:#C084FC;text-decoration:none;">shaun@routinex.org</a></p>
@@ -1554,7 +1554,7 @@ export async function notifyFeedbackNote(p: {
       <blockquote style="border-left: 3px solid #7c3aed; padding-left: 12px; color: #374151; white-space: pre-wrap;">${safeBody}</blockquote>
       <p style="color:#6b7280;font-size:12px;">
         ${p.creditGranted ? "A free analysis was credited to this account for the note." : "No credit issued (already claimed, or the note was too short)."}
-        ${isMiss ? " This one missed — the guarantee says credit the account." : ""}
+        ${isMiss ? " This one missed — credit the account." : ""}
         Reply to this email and it goes straight to them.
       </p>
     </div>`;

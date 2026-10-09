@@ -37,9 +37,9 @@ export default function TermsPage() {
             You must be at least 13 years old to create an account. If you are under 18, a parent or guardian must agree to these terms on your behalf. You are responsible for maintaining the security of your account credentials.
           </p>
 
-          <h2 className="text-lg font-semibold text-white">4. Payments & Refunds</h2>
+          <h2 className="text-lg font-semibold text-white">4. Payments & Account Credit</h2>
           <p>
-            We currently offer: a single analysis for $1.99 USD, a Buy-One-Get-One (2 analyses) for $2.99 USD, and a Competition Pack (5 analyses) for $9.99 USD. A Season Member subscription is $4.99/month for 4 analyses. All payments are processed through Stripe. Season Member subscriptions renew monthly and can be canceled at any time online from your dashboard (or through your Apple ID subscription settings for purchases made in the iOS app); cancellation takes effect at the end of the current billing period. Refunds are handled on a case-by-case basis — contact us at the email below.
+            We currently offer: a first analysis for $0.99 USD (99¢, one time per account), a single analysis for $1.99 USD, a Buy-One-Get-One (2 analyses) for $2.99 USD, a Competition Pack (5 analyses) for $9.99 USD, and RoutineX Spotlight for $14.99 USD one-time. A Season Member subscription is $4.99/month for 4 analyses. The Studio plan is $99/month. A practice plan is $4.99 (included for Season Members). All payments are processed through Stripe. Season Member subscriptions renew monthly and can be canceled at any time online from your dashboard (or through your Apple ID subscription settings for purchases made in the iOS app); cancellation takes effect at the end of the current billing period. If an analysis was off, email us what was off and we credit your account.
           </p>
 
           <h2 className="text-lg font-semibold text-white">5. User Content</h2>
