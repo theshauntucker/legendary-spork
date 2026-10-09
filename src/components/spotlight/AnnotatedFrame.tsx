@@ -1,16 +1,25 @@
+import { useId } from "react";
 import { STATUS_COLOR, arcPath, momentPrimitives, type Primitive } from "@/lib/spotlight/annotations";
 import type { Annotation } from "@/lib/spotlight/types";
 import type { Pose } from "@/lib/spotlight/landmarks";
 
 /**
- * A frame with the coaching lines drawn on it. Pure SVG over an <img>, so it
+ * A frame with the measured lines drawn on it. Pure SVG over an <img>, so it
  * scales to any width and prints crisp. Works in server components.
+ *
+ * `silhouette` flattens a photoreal demo figure to a faceless shape (no face,
+ * skin, or costume detail) while the gold/pink/dashed marks stay on top.
+ * The CSS class is the fallback if the SVG filter cannot bind.
  */
 export default function AnnotatedFrame({
-  src, pose, annotations, w, h, className, skeleton = true, alt = "",
+  src, pose, annotations, w, h, className, skeleton = true, alt = "", silhouette = false, demoLabel,
 }: {
   src: string; pose: Pose | null; annotations: Annotation[]; w: number; h: number; className?: string; skeleton?: boolean; alt?: string;
+  silhouette?: boolean;
+  demoLabel?: string;
 }) {
+  const filterId = `rxsil${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
+  const frameAlt = demoLabel && !alt.includes("AI-generated") ? `${alt}. ${demoLabel}` : alt;
   const W = w || 1024, H = h || Math.round((w || 1024) * 9 / 16);
   const aspect = W / H;
   const prims: Primitive[] = pose ? momentPrimitives(pose, annotations, aspect, skeleton) : [];
@@ -18,8 +27,38 @@ export default function AnnotatedFrame({
   const sw = W / 520;
   return (
     <div className={`relative overflow-hidden bg-black ${className ?? ""}`} style={{ aspectRatio: `${W} / ${H}` }}>
+      {silhouette && (
+        <svg width="0" height="0" className="absolute" aria-hidden>
+          <filter id={filterId} x="-2%" y="-2%" width="104%" height="104%" colorInterpolationFilters="sRGB">
+            <feColorMatrix type="matrix" values="0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0 0 0 1 0" result="gray" />
+            <feComponentTransfer in="gray" result="mask">
+              <feFuncR type="discrete" tableValues="0 1 1 1" />
+              <feFuncG type="discrete" tableValues="0 1 1 1" />
+              <feFuncB type="discrete" tableValues="0 1 1 1" />
+            </feComponentTransfer>
+            <feMorphology in="mask" operator="dilate" radius="3" result="big" />
+            <feMorphology in="big" operator="erode" radius="2" result="body" />
+            <feMorphology in="body" operator="dilate" radius="3" result="rimSrc" />
+            <feComposite in="rimSrc" in2="body" operator="out" result="edge" />
+            <feFlood floodColor="#241C2E" result="fillColor" />
+            <feComposite in="fillColor" in2="body" operator="in" result="fill" />
+            <feFlood floodColor="#6B5E78" result="edgeColor" />
+            <feComposite in="edgeColor" in2="edge" operator="in" result="rim" />
+            <feMerge>
+              <feMergeNode in="fill" />
+              <feMergeNode in="rim" />
+            </feMerge>
+          </filter>
+        </svg>
+      )}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={alt} className="absolute inset-0 h-full w-full object-cover" draggable={false} />
+      <img
+        src={src}
+        alt={frameAlt}
+        className={`absolute inset-0 h-full w-full object-cover${silhouette ? " rx-demo-figure" : ""}`}
+        style={silhouette ? { filter: `url(#${filterId})` } : undefined}
+        draggable={false}
+      />
       <svg viewBox={`0 0 ${W} ${H}`} className="absolute inset-0 h-full w-full" preserveAspectRatio="none" aria-hidden>
         {prims.map((p, i) => {
           const col = STATUS_COLOR[p.status];
@@ -68,6 +107,11 @@ export default function AnnotatedFrame({
           }
         })}
       </svg>
+      {demoLabel && (
+        <p className="pointer-events-none absolute left-3 top-3 z-10 max-w-[calc(100%-1.5rem)] rounded-lg bg-black/88 px-2.5 py-1.5 text-[11px] font-semibold leading-snug tracking-wide text-white ring-1 ring-white/25">
+          {demoLabel}
+        </p>
+      )}
     </div>
   );
 }

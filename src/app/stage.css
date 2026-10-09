@@ -32,6 +32,8 @@
 .st-hairline { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent); }
 .st-pool { position: absolute; pointer-events: none; border-radius: 50%; filter: blur(70px); }
 .st-frame { border-radius: 1.25rem; overflow: hidden; border: 1px solid rgba(255,255,255,.08); background: #000; box-shadow: 0 40px 100px -40px rgba(0,0,0,.9); }
+/* Fallback if the SVG silhouette filter cannot bind: crush face, skin, and costume detail. */
+.rx-demo-figure { filter: grayscale(1) contrast(4.5) brightness(0.16); }
 .st-marquee { display: flex; gap: 3rem; width: max-content; animation: stMarquee 60s linear infinite; }
 .st-marquee:hover { animation-play-state: paused; }
 @keyframes stMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }

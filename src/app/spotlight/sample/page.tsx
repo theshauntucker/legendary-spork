@@ -7,7 +7,7 @@ import { SAMPLE } from "@/lib/spotlight/sample";
 export const metadata: Metadata = {
   title: "Sample Spotlight report — what a $14.99 RoutineX breakdown looks like",
   description:
-    "Read a full RoutineX Spotlight report: key moments with coaching lines drawn on the dancer's frames, measured angles, seven category scores, priorities, drills and a four-week plan.",
+    "Read a sample RoutineX Spotlight report: an AI breakdown with measured angles drawn on the frames, seven category scores, priorities, drills and a four-week plan. A practice tool, not an official score.",
   alternates: { canonical: "/spotlight/sample" },
 };
 
