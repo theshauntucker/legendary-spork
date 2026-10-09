@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 const STAGES = [
   "Reading every tracked frame",
   "Measuring lines, angles and balance",
-  "Choosing the moments a coach would freeze on",
+  "Choosing the moments worth freezing on",
   "Writing the breakdown",
   "Drawing on the frames",
   "Building the PDF",

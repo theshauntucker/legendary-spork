@@ -39,7 +39,7 @@ const features = [
     icon: Trophy,
     title: "Competition context",
     description:
-      "Every score comes with benchmarks: the regional average, the top 10% line, and exactly how many points sit between your dancer and the next award level.",
+      "The score lands on the same 300-point scale the report uses — Gold, High Gold, Platinum, Diamond — so you can see where this routine sits. It is an AI estimate for practice, not a competition average or a percentile.",
   },
   {
     icon: ShieldCheck,

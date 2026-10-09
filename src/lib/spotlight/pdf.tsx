@@ -17,6 +17,11 @@ import { STATUS_COLOR, arcPath, momentPrimitives, type Primitive } from "./annot
 import { formatTime } from "./landmarks";
 import type { SpotlightFrame, SpotlightReport, SpotlightRow } from "./types";
 
+/** Drop a trailing "Coach" sign-off. The template signs the note itself. */
+function presentClosing(closing: string): string {
+  return closing.replace(/(?:\s*[—–,\-]\s*)?Coach\.?\s*$/i, "").trim();
+}
+
 // ── Fonts ────────────────────────────────────────────────────────────────────
 let fontsReady = false;
 function registerFonts() {
@@ -184,7 +189,7 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
           <Text style={s.muted}>{date}</Text>
         </View>
         <View style={{ marginTop: 44 }}>
-          <Text style={s.eyebrow}>Private technique breakdown · {report.dancer.style}{report.dancer.division ? ` · ${report.dancer.division}` : ""}</Text>
+          <Text style={s.eyebrow}>AI breakdown · {report.dancer.style}{report.dancer.division ? ` · ${report.dancer.division}` : ""}</Text>
           <Text style={[s.h1, { fontSize: 44, marginTop: 10 }]}>{report.dancer.name}</Text>
           {report.dancer.routine ? <Text style={[s.muted, { marginTop: 4, fontSize: 11 }]}>“{report.dancer.routine}”</Text> : null}
           <View style={{ marginTop: 14 }}><GradBar width={96} /></View>
@@ -204,8 +209,8 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
 
       {/* Overview */}
       <Page size="LETTER" style={s.page}>
-        <Text style={s.eyebrow}>What I watched</Text>
-        <Text style={s.h2}>Coach&apos;s overview</Text>
+        <Text style={s.eyebrow}>The read</Text>
+        <Text style={s.h2}>AI breakdown</Text>
         <View style={{ marginTop: 12 }}>
           {report.opening.split(/\n+/).filter(Boolean).map((p, i) => <Text key={i} style={[s.body, { marginBottom: 8 }]}>{p}</Text>)}
         </View>
@@ -340,7 +345,7 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
             <View>
               <Text style={s.eyebrow}>From the judges&apos; table</Text>
               <Text style={s.h2}>How this reads on a judge&apos;s card</Text>
-              <Text style={[s.muted, { marginTop: 6 }]}>Competition sheets weight technique first, then performance, choreography, presentation and overall impression — and the judge talks into a mic while {first} dances. This is what that tape would say.</Text>
+              <Text style={[s.muted, { marginTop: 6 }]}>A practice read across technique, performance, choreography, presentation, and overall impression — the kind of note a judge might say into the mic while {first} dances. Not an official scoresheet.</Text>
               <View style={[s.card, { marginTop: 12, padding: 0 }]}>
                 {report.judgesCard.map((j, i) => {
                   const pts = Math.round((j.score / 10) * j.weight * 10) / 10;
@@ -348,7 +353,7 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
                     <View key={i} style={{ flexDirection: "row", gap: 10, paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: i ? 1 : 0, borderTopColor: C.line, alignItems: "flex-start" }} wrap={false}>
                       <View style={{ width: 120 }}>
                         <Text style={{ fontSize: 10, fontWeight: 700 }}>{j.name}</Text>
-                        <Text style={[s.muted, { fontSize: 8 }]}>{j.weight} pts on the sheet</Text>
+                        <Text style={[s.muted, { fontSize: 8 }]}>{j.weight} pts in this estimate</Text>
                       </View>
                       <Text style={[s.body, { flex: 1, fontSize: 9.8 }]}>“{j.note}”</Text>
                       <View style={{ width: 54, alignItems: "flex-end" }}>
@@ -361,11 +366,11 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
                   );
                 })}
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: 1, borderTopColor: C.line, backgroundColor: C.panel2 }}>
-                  <Text style={s.muted}>Projected, one judge, 100-point sheet</Text>
+                  <Text style={s.muted}>AI estimate, practice scale out of 100</Text>
                   <Text style={{ fontFamily: "Playfair", fontSize: 20 }}>{Math.round(report.judgesCard.reduce((a, j) => a + (j.score / 10) * j.weight, 0))}<Text style={{ fontSize: 9, color: C.faint }}>/100</Text></Text>
                 </View>
               </View>
-              <Text style={[s.footText, { marginTop: 6 }]}>Weights follow the most common competition sheet (technique 40 · performance 30 · choreography 15 · presentation 10 · overall 5). Your circuit&apos;s card may split differently; the notes carry over.</Text>
+              <Text style={[s.footText, { marginTop: 6 }]}>The split is RoutineX&apos;s practice scale (technique 40 · performance 30 · choreography 15 · presentation 10 · overall 5), not an official competition sheet. Your circuit&apos;s card may differ; the notes are the part to use.</Text>
             </View>
           )}
           {report.onStage && report.onStage.length > 0 && (
@@ -409,14 +414,15 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
         </View>
         <View style={[s.card, { marginTop: 16, backgroundColor: "#141018", borderColor: "#3b2a4a" }]}>
           <Text style={s.eyebrow}>A note for {first}</Text>
-          <Text style={[s.body, { marginTop: 8, fontFamily: "Playfair", fontSize: 12, lineHeight: 1.5, color: C.text }]}>{report.closing}</Text>
+          <Text style={[s.body, { marginTop: 8, fontFamily: "Playfair", fontSize: 12, lineHeight: 1.5, color: C.text }]}>{presentClosing(report.closing)}</Text>
+          <Text style={[s.muted, { marginTop: 8 }]}>— RoutineX · AI breakdown</Text>
         </View>
         <View style={s.rule} />
         <Text style={s.eyebrow}>Glossary</Text>
         <View style={{ marginTop: 8, gap: 3 }}>
           {report.glossary.map((g, i) => <Text key={i} style={[s.muted, { fontSize: 9.5 }]}><Text style={{ color: C.text, fontWeight: 600 }}>{g.term}</Text> — {g.meaning}</Text>)}
         </View>
-        <Text style={[s.footText, { marginTop: 16, lineHeight: 1.5 }]}>How to read the numbers: every angle and line in this report is measured from the frames of this video using on-device pose tracking, projected from the camera&apos;s point of view. A different camera angle will read slightly differently; trends across moments matter more than any single degree. Frames the report doesn&apos;t use are deleted after it is built. Questions: reply to the email this came with.</Text>
+        <Text style={[s.footText, { marginTop: 16, lineHeight: 1.5 }]}>This is an AI breakdown from RoutineX, not a note from a human coach. How to read the numbers: every angle and line in this report is measured from the frames of this video using on-device pose tracking, projected from the camera&apos;s point of view. A different camera angle will read slightly differently; trends across moments matter more than any single degree. Frames the report doesn&apos;t use are deleted after it is built. Questions: reply to the email this came with.</Text>
         <Footer dancer={report.dancer.name} page="Plan" />
       </Page>
     </Document>

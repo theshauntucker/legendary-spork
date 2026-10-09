@@ -18,15 +18,6 @@ const categories = [
   { label: "Overall Impression", score: 9.0, max: 10 },
 ];
 
-const competitions = [
-  "Star Power",
-  "JUMP",
-  "NUVO",
-  "NexStar",
-  "Revolution",
-  "UCA",
-];
-
 export default function Hero() {
   return (
     <section className="relative overflow-hidden pt-6 sm:pt-14 pb-16 sm:pb-24">
@@ -200,20 +191,9 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 0.45 }}
           className="mt-14 text-center"
         >
-          <p className="eyebrow text-[#9A93A5] mb-4">
-            Calibrated to the rubrics used at
+          <p className="eyebrow text-[#9A93A5]">
+            AI estimate, practice tool — dance and cheer
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2.5">
-            {competitions.map((c) => (
-              <span
-                key={c}
-                className="text-sm sm:text-base font-semibold tracking-wide text-[#7A7284]"
-              >
-                {c}
-              </span>
-            ))}
-            <span className="text-sm text-[#9A93A5]">&amp; more</span>
-          </div>
         </motion.div>
       </div>
     </section>

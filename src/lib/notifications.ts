@@ -560,7 +560,7 @@ export async function sendWelcomeEmail(
                     <span style="display:inline-block;width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#EC4899,#F97316,#FBBF24);line-height:32px;text-align:center;font-size:16px;">💬</span>
                   </td>
                   <td style="padding:14px 0 14px 16px;border-bottom:1px solid rgba(255,255,255,0.08);vertical-align:top;">
-                    <div style="font-weight:700;color:#ffffff;font-size:15px;margin-bottom:4px;">Bayda — your AI coach</div>
+                    <div style="font-weight:700;color:#ffffff;font-size:15px;margin-bottom:4px;">Bayda — RoutineX&apos;s AI assistant</div>
                     <div style="color:#d1d5db;font-size:14px;line-height:1.5;">Ask anything about your score, about technique, or about competition prep. She's on every page.</div>
                   </td>
                 </tr>
@@ -627,7 +627,7 @@ export async function sendWelcomeEmail(
           <tr>
             <td style="padding:8px 40px 40px 40px;">
               <p style="margin:0 0 12px 0;font-size:15px;line-height:1.7;color:#d1d5db;">
-                Questions along the way? Tap <strong style="color:#F472B6;">Bayda</strong>, the coach widget in the bottom-right of every page on RoutineX. She's trained on the scoring rubric and ready 24/7.
+                Questions along the way? Tap <strong style="color:#F472B6;">Bayda</strong>, the AI assistant in the bottom-right of every page on RoutineX. She can walk you through the app, 24/7.
               </p>
               <p style="margin:16px 0 0 0;font-size:16px;line-height:1.7;color:#ffffff;font-weight:700;">— The RoutineX Team</p>
             </td>
@@ -823,7 +823,7 @@ export async function sendCodaLaunchEmail(
           <tr>
             <td style="padding:24px 40px 40px 40px;">
               <p style="margin:0 0 12px 0;font-size:15px;line-height:1.7;color:#d1d5db;">
-                Questions? <strong style="color:#F472B6;">Bayda</strong>, our AI coach, lives in the bottom-right on every page and knows every inch of Coda, the Studio Center, and the scoring rubric.
+                Questions? <strong style="color:#F472B6;">Bayda</strong>, our AI assistant, lives in the bottom-right on every page and can walk you through Coda and the Studio Center.
               </p>
               <p style="margin:16px 0 0 0;font-size:16px;line-height:1.7;color:#ffffff;font-weight:700;">— The RoutineX Team</p>
             </td>
@@ -980,7 +980,7 @@ export async function sendCodaWelcomeEmail(
           <tr>
             <td style="padding:24px 40px 40px 40px;">
               <p style="margin:0 0 12px 0;font-size:15px;line-height:1.7;color:#d1d5db;">
-                Stuck anywhere? Tap <strong style="color:#F472B6;">Bayda</strong> — she's the coach widget in the bottom-right corner and she knows every corner of Coda.
+                Stuck anywhere? Tap <strong style="color:#F472B6;">Bayda</strong> — the AI assistant in the bottom-right corner. She can walk you through Coda.
               </p>
               <p style="margin:16px 0 0 0;font-size:16px;line-height:1.7;color:#ffffff;font-weight:700;">— The RoutineX Team</p>
             </td>
@@ -1591,7 +1591,7 @@ export async function sendSpotlightReadyEmail(
         <p style="margin:0 0 10px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C084FC;font-weight:700;">RoutineX Spotlight</p>
         <h1 style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.2;font-weight:700;color:#FFFFFF;">${escapeHtml(first)}'s breakdown is ready.</h1>
         <p style="margin:0 0 22px;font-size:16px;line-height:1.6;color:#A1A1AA;">${escapeHtml(p.headline)}</p>
-        <p style="margin:0 0 26px;font-size:15px;line-height:1.6;color:#D4D4D8;">Every page is built from ${escapeHtml(first)}'s own frames — the lines, the angles and the coaching notes are drawn on her, not described in the abstract. Open it on your phone, or download the PDF and send it to her teacher.</p>
+        <p style="margin:0 0 26px;font-size:15px;line-height:1.6;color:#D4D4D8;">This is an AI breakdown from ${escapeHtml(first)}'s own frames — measured lines and angles, drawn on her, not a note from a human coach. Open it on your phone, or download the PDF and send it to her teacher.</p>
         <table role="presentation" cellpadding="0" cellspacing="0"><tr>
           <td style="border-radius:999px;background:linear-gradient(90deg,#9333EA,#EC4899,#F59E0B);"><a href="${url}" style="display:inline-block;padding:14px 26px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:999px;">Open the report</a></td>
           <td style="width:12px;"></td>

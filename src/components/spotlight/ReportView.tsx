@@ -3,6 +3,11 @@ import AnnotatedFrame from "./AnnotatedFrame";
 import { formatTime } from "@/lib/spotlight/landmarks";
 import type { SpotlightFrame, SpotlightReport } from "@/lib/spotlight/types";
 
+/** Drop a trailing "Coach" sign-off. The template signs the note itself. */
+function presentClosing(closing: string): string {
+  return closing.replace(/(?:\s*[—–,\-]\s*)?Coach\.?\s*$/i, "").trim();
+}
+
 /**
  * The Spotlight report on the web. Server-renderable so the public sample
  * is indexable; the private report page wraps it with auth.
@@ -29,7 +34,7 @@ export default function ReportView({
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgba(236,72,153,0.18),transparent_70%)]" />
         <div className="mx-auto max-w-5xl px-5 pt-12 pb-8 sm:px-8 sm:pt-16">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <p className="sl-eyebrow">RoutineX Spotlight · {report.dancer.style}{report.dancer.division ? ` · ${report.dancer.division}` : ""}</p>
+            <p className="sl-eyebrow">RoutineX Spotlight · AI breakdown · {report.dancer.style}{report.dancer.division ? ` · ${report.dancer.division}` : ""}</p>
             <p className="text-xs text-zinc-500">{meta.date}</p>
           </div>
           <h1 className="mt-4 font-[family-name:var(--font-display)] text-5xl font-bold leading-[1.02] tracking-tight sm:text-7xl">{report.dancer.name}</h1>
@@ -51,8 +56,8 @@ export default function ReportView({
 
       {/* ── Overview ───────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-5xl px-5 py-14 sm:px-8">
-        <p className="sl-eyebrow">What I watched</p>
-        <h2 className="sl-h2">Coach&apos;s overview</h2>
+        <p className="sl-eyebrow">The read</p>
+        <h2 className="sl-h2">AI breakdown</h2>
         <div className="mt-6 grid gap-10 lg:grid-cols-[1.4fr_1fr]">
           <div className="space-y-4 text-[17px] leading-relaxed text-zinc-300">
             {report.opening.split(/\n+/).filter(Boolean).map((p, i) => <p key={i}>{p}</p>)}
@@ -136,7 +141,7 @@ export default function ReportView({
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="sl-eyebrow">Frame by frame</p>
-              <h2 className="sl-h2">{report.moments.length} moments a coach would freeze on</h2>
+              <h2 className="sl-h2">{report.moments.length} moments worth freezing on</h2>
             </div>
             <ul className="flex flex-wrap gap-3 text-xs text-zinc-400">
               <li className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-amber-300" />working</li>
@@ -212,7 +217,7 @@ export default function ReportView({
           <div className="mx-auto max-w-5xl px-5 py-14 sm:px-8">
             <p className="sl-eyebrow">From the judges&apos; table</p>
             <h2 className="sl-h2">How this reads on a judge&apos;s card</h2>
-            <p className="mt-2 max-w-2xl text-zinc-400">Competition sheets weight technique first, then performance, choreography, presentation and overall impression — and the judge talks into a mic while {first} dances. This is what that tape would say.</p>
+            <p className="mt-2 max-w-2xl text-zinc-400">A practice read across technique, performance, choreography, presentation, and overall impression — the kind of note a judge might say into the mic while {first} dances. Not an official scoresheet.</p>
             <div className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-[#0C0B10]">
               {report.judgesCard.map((j, i) => {
                 const pts = Math.round((j.score / 10) * j.weight * 10) / 10;
@@ -220,7 +225,7 @@ export default function ReportView({
                   <div key={i} className={`grid gap-3 px-5 py-5 sm:grid-cols-[11rem_1fr_6rem] sm:items-start sm:px-7 ${i > 0 ? "border-t border-white/[0.06]" : ""}`}>
                     <div>
                       <p className="font-semibold">{j.name}</p>
-                      <p className="mt-0.5 text-xs text-zinc-500">{j.weight} pts on the sheet</p>
+                      <p className="mt-0.5 text-xs text-zinc-500">{j.weight} pts in this estimate</p>
                     </div>
                     <p className="text-[15px] leading-relaxed text-zinc-300">“{j.note}”</p>
                     <div className="sm:text-right">
@@ -231,11 +236,11 @@ export default function ReportView({
                 );
               })}
               <div className="flex items-baseline justify-between border-t border-white/10 bg-white/[0.03] px-5 py-4 sm:px-7">
-                <p className="text-sm text-zinc-400">Projected, one judge, 100-point sheet</p>
+                <p className="text-sm text-zinc-400">AI estimate, practice scale out of 100</p>
                 <p className="font-[family-name:var(--font-display)] text-3xl text-white">{Math.round(report.judgesCard.reduce((a, j) => a + (j.score / 10) * j.weight, 0))}<span className="text-base text-zinc-500">/100</span></p>
               </div>
             </div>
-            <p className="mt-3 text-xs text-zinc-500">Weights follow the most common competition sheet (technique 40 · performance 30 · choreography 15 · presentation 10 · overall 5). Your circuit&apos;s card may split differently; the notes carry over.</p>
+            <p className="mt-3 text-xs text-zinc-500">The split is RoutineX&apos;s practice scale (technique 40 · performance 30 · choreography 15 · presentation 10 · overall 5), not an official competition sheet. Your circuit&apos;s card may differ; the notes are the part to use.</p>
           </div>
         </section>
       )}
@@ -284,7 +289,8 @@ export default function ReportView({
         </div>
         <div className="mt-10 rounded-2xl border border-purple-400/20 bg-[linear-gradient(135deg,rgba(147,51,234,0.12),rgba(236,72,153,0.08),rgba(245,158,11,0.06))] p-7 sm:p-9">
           <p className="sl-eyebrow">A note for {first}</p>
-          <p className="mt-4 font-[family-name:var(--font-display)] text-xl leading-relaxed text-zinc-100 sm:text-2xl">{report.closing}</p>
+          <p className="mt-4 font-[family-name:var(--font-display)] text-xl leading-relaxed text-zinc-100 sm:text-2xl">{presentClosing(report.closing)}</p>
+          <p className="mt-5 text-sm tracking-wide text-zinc-400">— RoutineX · AI breakdown</p>
         </div>
         <div className="mt-12 grid gap-8 md:grid-cols-[1fr_1fr]">
           <div>
@@ -295,7 +301,7 @@ export default function ReportView({
           </div>
           <div>
             <p className="sl-eyebrow">How to read the numbers</p>
-            <p className="mt-3 text-sm leading-relaxed text-zinc-500">Every angle and line here is measured from the frames of this video using on-device pose tracking, projected from the camera&apos;s point of view. A different camera angle reads slightly differently; trends across moments matter more than any single degree. {sample ? "This sample was produced from generated footage so no real dancer appears on the public site." : "Frames the report doesn't use are deleted after it is built."}</p>
+            <p className="mt-3 text-sm leading-relaxed text-zinc-500">This is an AI breakdown from RoutineX, not a note from a human coach. Every angle and line here is measured from the frames of this video using on-device pose tracking, projected from the camera&apos;s point of view. A different camera angle reads slightly differently; trends across moments matter more than any single degree. {sample ? "This sample was produced from generated footage so no real dancer appears on the public site." : "Frames the report doesn't use are deleted after it is built."}</p>
             {sample && (
               <Link href="/spotlight" className="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 via-pink-500 to-amber-500 px-5 py-2.5 text-sm font-bold text-white">Get {`a report like this for your dancer`} — $14.99</Link>
             )}
