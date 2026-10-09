@@ -57,9 +57,9 @@ export default function PrivacyPage() {
             We retain your account data and analysis results for as long as your account is active. You may request deletion of your account and all associated data at any time by contacting us. Extracted video frames are retained for a maximum of 24 hours after analysis, then permanently deleted; all other account data is deleted upon account deletion or request.
           </p>
 
-          <h2 className="text-lg font-semibold text-white">6. Children&apos;s Privacy &amp; COPPA Compliance</h2>
+          <h2 className="text-lg font-semibold text-white">6. Children&apos;s Privacy</h2>
           <p>
-            RoutineX processes videos of competitive dancers, many of whom are minors. We take children&apos;s privacy seriously and comply with the Children&apos;s Online Privacy Protection Act (COPPA).
+            RoutineX processes videos of competitive dancers, many of whom are minors. We take children&apos;s privacy seriously.
           </p>
           <p>
             <strong>How we protect minors:</strong>

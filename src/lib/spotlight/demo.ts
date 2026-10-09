@@ -1,9 +1,9 @@
 /**
- * Three generated stage photographs (Google Flow — no real dancer) run
- * through the real on-device pose tracker, with the annotations a coach
- * would draw. Every number printed on them is measured by landmarks.ts from
- * the detected pose, exactly as a paid report is. Used on the marketing
- * pages until — and beside — the full public sample report.
+ * Generated stage figures (no real dancer), rendered as faceless silhouettes
+ * and run through the real on-device pose tracker. Every number printed on
+ * them is measured by landmarks.ts from the detected pose, exactly as a paid
+ * report is. Used on the marketing pages until — and beside — the full
+ * public sample report.
  */
 import type { Pose } from "./landmarks";
 import type { Annotation } from "./types";

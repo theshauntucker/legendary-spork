@@ -15,9 +15,9 @@ export const ARABESQUE_IMAGE = asset("/stage/arabesque", [1000, 1600], "Silhouet
 export const ARABESQUE_2_IMAGE = asset("/stage/arabesque-2", [1000, 1600], "Silhouette of a dancer in arabesque under a spotlight");
 /** Six-dancer formation under one spotlight — the routine, as a whole. */
 export const GROUP_IMAGE = asset("/stage/group", [1000, 1600], "Six dancers in formation on a dark competition stage");
-/** Lit (non-silhouette) frames for the Spotlight explainer. */
-export const DEVELOPPE_IMAGE = asset("/stage/developpe", [1200], "A dancer holding a développé on stage");
-export const LEAP_IMAGE = asset("/stage/leap", [1200], "A dancer mid-leap on stage");
+/** Silhouette frames for the Spotlight explainer. Pose measurements stay; face, skin, and costume detail do not. */
+export const DEVELOPPE_IMAGE = asset("/stage/developpe", [1200], "Silhouette of a dancer holding a développé on stage");
+export const LEAP_IMAGE = asset("/stage/leap", [1200], "Silhouette of a dancer mid-leap on stage");
 export const STAGE_1_IMAGE = asset("/stage/stage-1", [1600], "A dancer alone on a dark stage under one spotlight");
 export const STAGE_2_IMAGE = asset("/stage/stage-2", [1600], "A dancer under a spotlight, haze in the air");
 

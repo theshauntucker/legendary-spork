@@ -39,9 +39,8 @@ export default function OurApproachPage() {
             <p>
               That&apos;s exactly why we built RoutineX. Not as some tech gimmick,
               but because we saw a real problem: <span className="text-white font-medium">detailed
-              feedback is expensive, hard to get, and usually only happens on
-              competition day.</span> Private coaching sessions run $75–$150 an hour.
-              Competition entry fees pile up. And between events, you&apos;re often
+              feedback is hard to get, and usually only happens on
+              competition day.</span> Between events, you&apos;re often
               left guessing what to work on.
             </p>
           </div>
@@ -49,14 +48,13 @@ export default function OurApproachPage() {
           <div className="glass rounded-2xl p-6 sm:p-8">
             <div className="flex items-center gap-3 mb-4">
               <DollarSign className="h-6 w-6 text-green-400 shrink-0" />
-              <h2 className="text-xl font-bold text-white">Under $9 for What Used to Cost $100+</h2>
+              <h2 className="text-xl font-bold text-white">A full breakdown, between competitions</h2>
             </div>
             <p className="mb-4">
               Here&apos;s the thing — for the price of a coffee, RoutineX gives
               your dancer a full breakdown of their routine: technique scores,
               timestamped notes on what to fix, and a prioritized improvement
-              plan. That&apos;s feedback that would normally require a private
-              session or a competition weekend.
+              plan. You can run it between competitions, on a practice video you already have.
             </p>
             <p>
               Is it as good as having a world-class coach sitting next to you?

@@ -26,7 +26,7 @@ export default function VideoDemo() {
             Watch How RoutineX Works
           </h2>
           <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
-            See how our AI breaks down a routine in real-time with competition-standard scoring.
+            See how the AI breaks down a routine — an estimate for practice, not an official score.
           </p>
         </motion.div>
 
