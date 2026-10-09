@@ -344,7 +344,7 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
           {report.judgesCard && report.judgesCard.length > 0 && (
             <View>
               <Text style={s.eyebrow}>From the judges&apos; table</Text>
-              <Text style={s.h2}>How this reads on a judge&apos;s card</Text>
+              <Text style={s.h2}>How it might read on a judge&apos;s card</Text>
               <Text style={[s.muted, { marginTop: 6 }]}>A practice read across technique, performance, choreography, presentation, and overall impression — the kind of note a judge might say into the mic while {first} dances. Not an official scoresheet.</Text>
               <View style={[s.card, { marginTop: 12, padding: 0 }]}>
                 {report.judgesCard.map((j, i) => {

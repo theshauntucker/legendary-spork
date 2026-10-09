@@ -216,7 +216,7 @@ export default function ReportView({
         <section className="border-t border-white/[0.06]">
           <div className="mx-auto max-w-5xl px-5 py-14 sm:px-8">
             <p className="sl-eyebrow">From the judges&apos; table</p>
-            <h2 className="sl-h2">How this reads on a judge&apos;s card</h2>
+            <h2 className="sl-h2">How it might read on a judge&apos;s card</h2>
             <p className="mt-2 max-w-2xl text-zinc-400">A practice read across technique, performance, choreography, presentation, and overall impression — the kind of note a judge might say into the mic while {first} dances. Not an official scoresheet.</p>
             <div className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-[#0C0B10]">
               {report.judgesCard.map((j, i) => {

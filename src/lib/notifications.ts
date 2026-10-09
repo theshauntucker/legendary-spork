@@ -1356,7 +1356,7 @@ export async function sendThankYouCreditEmail(
         </td></tr>
         <tr><td style="padding:24px 34px 0 34px;font-size:16px;line-height:1.65;color:#E4E4E7;">
           <p style="margin:0 0 14px 0;"><strong style="color:#ffffff;">Two things that changed based on your feedback:</strong></p>
-          <p style="margin:0 0 10px 0;">&#10024; <strong style="color:#ffffff;">Every new account now starts with a free analysis.</strong> Then the second one is just 99&cent;, and regular pricing after that. If you&rsquo;ve been meaning to tell a teammate or your studio about RoutineX, this is the moment &mdash; they can try it for nothing.</p>
+          <p style="margin:0 0 10px 0;">&#10024; <strong style="color:#ffffff;">Every new account&rsquo;s first analysis is 99&cent;.</strong> Then it&rsquo;s $1.99 each. If you&rsquo;ve been meaning to tell a teammate or your studio about RoutineX, this is the moment.</p>
           <p style="margin:0 0 14px 0;">&#128241; <strong style="color:#ffffff;">The RoutineX app is on the App Store.</strong> Uploading straight from your camera roll is the easiest way to use it &mdash; and your video never leaves your phone, only still frames are analyzed.</p>
         </td></tr>
         <tr><td align="center" style="padding:6px 34px 0 34px;">
