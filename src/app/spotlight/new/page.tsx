@@ -191,7 +191,7 @@ function SpotlightNewInner() {
         {step === "buy" && (
           <div className="mt-4">
             <h1 className="font-[family-name:var(--font-display)] text-4xl font-bold leading-tight sm:text-5xl">One dancer. Every frame. Drawn on.</h1>
-            <p className="mt-4 text-lg text-zinc-300">A private technique breakdown built from 60–80 frames of her own routine — lines and angles measured on her body, the moments a coach would freeze on, priorities, drills and a four-week plan. Delivered as a PDF you can hand to her teacher.</p>
+            <p className="mt-4 text-lg text-zinc-300">An AI technique breakdown built from 60–80 frames of her own routine — lines and angles measured on her body, the moments worth freezing, priorities, drills and a four-week plan. Delivered as a PDF you can hand to her teacher. A practice tool, not an official score.</p>
             <ul className="mt-6 space-y-2 text-zinc-300">
               {["12–16 annotated frames with coaching marks drawn on", "Seven category scores, honest, with the evidence", "Top priorities with the cause, not just the symptom", "5–8 no-equipment drills with sets, reps and cues", "Four-week plan: foundation → strength → integration → performance", "Group video? Tap your dancer — everyone else is blurred"].map((t) => (
                 <li key={t} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />{t}</li>
@@ -204,7 +204,7 @@ function SpotlightNewInner() {
               <p className="text-sm text-zinc-500">One-time. Money-back guarantee.</p>
             </div>
             {err && <p className="mt-4 text-sm text-pink-300">{err}</p>}
-            <p className="mt-8 text-sm text-zinc-500">Compare: a single private lesson runs $75–150 and the notes live in someone&apos;s head. This lives on her fridge.</p>
+            <p className="mt-8 text-sm text-zinc-500">The report stays on her account, and the PDF is hers to print or send to her teacher.</p>
           </div>
         )}
 

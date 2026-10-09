@@ -99,7 +99,7 @@ export async function GET() {
 
           {/* Subheadline */}
           <div style={{ fontSize: "24px", color: "#a1a1aa", marginTop: "24px", fontFamily: "Arial, sans-serif" }}>
-            AI-powered video analysis with competition-standard scoring.
+            AI video analysis. An estimate and a practice tool.
           </div>
           <div style={{ fontSize: "24px", color: "#a1a1aa", marginTop: "4px", fontFamily: "Arial, sans-serif" }}>
             Upload any routine. Get detailed feedback in under 5 minutes.
