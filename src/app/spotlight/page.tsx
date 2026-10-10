@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import SpotlightShowcase from "@/components/stage/SpotlightShowcase";
+import SpotlightTour from "@/components/stage/SpotlightTour";
 import HowSpotlightWorks from "@/components/stage/HowSpotlightWorks";
 import PrivacyStage from "@/components/stage/PrivacyStage";
 import FinalCurtain from "@/components/stage/FinalCurtain";
@@ -12,7 +12,7 @@ import { SAMPLE } from "@/lib/spotlight/sample";
 export const metadata: Metadata = {
   title: "RoutineX Spotlight — a frame-by-frame technique breakdown of one dancer, $14.99",
   description:
-    "Spotlight tracks 60–80 frames of your dancer's routine on your phone, measures her lines and angles, and sends back a coach's breakdown with the corrections drawn on her own frames — priorities, drills, a four-week plan, and a PDF for her teacher. $14.99, one dancer.",
+    "Spotlight tracks up to 80 frames of your dancer's routine on your phone, measures her lines and angles, and sends back a coach's breakdown with the corrections drawn on her own frames — priorities, drills, a four-week plan, and a PDF for her teacher. $14.99, one dancer.",
   alternates: { canonical: "/spotlight" },
   openGraph: {
     title: "RoutineX Spotlight — coaching, drawn on her",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 const INCLUDED = [
-  ["Key moments, drawn on", "12–16 frames a coach would freeze on — the apex of the jump, the top of the extension, the landing, the turn — each with the lines, angles and corrections drawn directly on her."],
+  ["Key moments, drawn on", "Up to 14 frames a coach would freeze on — the apex of the jump, the top of the extension, the landing, the turn — each with the lines, angles and corrections drawn directly on her."],
   ["Measured, not described", "Every angle comes from on-device pose tracking on her own body. 161° at the supporting knee is 161°, not “a little soft.”"],
   ["The difference, drawn", "On the moments that matter, the corrected limb is drawn translucent beside hers — same frame, knee finished, leg where it should be — so she sees exactly what to change."],
   ["How it reads on a judge's card", "Technique, performance, choreography, presentation, overall — weighted the way real sheets are, with the sentence each judge would say into the mic."],
@@ -58,7 +58,7 @@ export default function SpotlightPage() {
         </div>
       </section>
 
-      <SpotlightShowcase />
+      <SpotlightTour id="tour" />
 
       <section className="relative py-20 sm:py-28">
         <div className="st-wrap">
