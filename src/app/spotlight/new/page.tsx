@@ -9,6 +9,7 @@ import { startCheckout } from "@/lib/checkout";
 import {
   loadPoseLandmarker, extractAndDetect, trackDancer, blurOthersAndEncode, blobToImage, spotlightFrameCount,
   type DenseFrame,
+  loadVideoMetadata,
 } from "@/lib/spotlight/pose-client";
 import { poseBox } from "@/lib/spotlight/landmarks";
 
@@ -78,6 +79,7 @@ function SpotlightNewInner() {
   };
 
   const canStart = !!file && dancerName.trim().length > 0 && !!style && consent;
+  const finishRef = useRef<(refIndex: number, seed: number) => Promise<void>>(async () => {});
 
   // ── Step 1: extract + track on device ─────────────────────────────────
   const run = useCallback(async () => {
@@ -89,7 +91,7 @@ function SpotlightNewInner() {
       const landmarker = await loadPoseLandmarker();
       const probe = document.createElement("video");
       probe.preload = "metadata"; probe.muted = true; probe.src = URL.createObjectURL(file);
-      await new Promise<void>((res, rej) => { probe.onloadedmetadata = () => res(); probe.onerror = () => rej(new Error("Couldn't read this video.")); });
+      await loadVideoMetadata(probe, "Couldn't read this video.");
       const count = spotlightFrameCount(probe.duration);
       URL.revokeObjectURL(probe.src);
       const { frames, duration } = await extractAndDetect(file, count, landmarker, (done, total) =>
@@ -109,7 +111,7 @@ function SpotlightNewInner() {
         return;
       }
       const ref = withPose[Math.floor(withPose.length / 2)];
-      await finish(ref.index, 0);
+      await finishRef.current(ref.index, 0);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Something went wrong reading the video.");
       setStep("error");
@@ -118,6 +120,10 @@ function SpotlightNewInner() {
   }, [file, dancerName]);
 
   // ── Step 2: track the chosen dancer, blur others, upload ──────────────
+  // run() reaches this through finishRef so it always sees the CURRENT form
+  // values. Calling finish directly from run() captured the version from
+  // when the name was typed, and style / division / level / the focus note
+  // filled in afterwards were silently dropped ("Other", blank note).
   const finish = useCallback(async (refIndex: number, seed: number) => {
     setStep("upload");
     const frames = framesRef.current;
@@ -166,6 +172,7 @@ function SpotlightNewInner() {
       setStep("error");
     }
   }, [dancerName, routineName, style, division, level, focusNote, router]);
+  finishRef.current = finish;
 
   const pickBoxes = useMemo(() => {
     if (!pickFrame) return [];
@@ -258,7 +265,7 @@ function SpotlightNewInner() {
         {(step === "extract" || step === "upload") && (
           <div className="mt-4">
             <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold sm:text-4xl">{step === "extract" ? "Tracking every frame." : "Securing the frames."}</h1>
-            <p className="mt-3 text-zinc-400">Keep this tab open. {step === "extract" ? "We're reading the routine and finding her in each frame — on this device." : "Only still frames go up, and anyone else in the shot is blurred first."}</p>
+            <p className="mt-3 text-zinc-400">Keep this tab open and on screen. {step === "extract" ? "We're reading the routine and finding her in each frame — on this device." : "Only still frames go up, and anyone else in the shot is blurred first."}</p>
             <div className="mt-8 h-1.5 overflow-hidden rounded-full bg-white/10">
               <motion.div className="h-full rounded-full bg-gradient-to-r from-pink-500 via-orange-400 to-amber-300" animate={{ width: `${Math.round((progress.done / Math.max(1, progress.total)) * 100)}%` }} transition={{ ease: "linear", duration: 0.3 }} />
             </div>

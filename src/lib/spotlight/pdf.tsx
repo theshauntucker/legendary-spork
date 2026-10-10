@@ -161,7 +161,7 @@ const Stars = ({ score }: { score: number }) => {
 function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: SpotlightReport; imgs: Map<number, string> }) {
   const frames = row.frames;
   const first = report.dancer.name.split(" ")[0];
-  const date = new Date(row.ready_at || row.created_at || Date.now()).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const date = new Date(row.ready_at || row.created_at || Date.now()).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "America/Chicago" });
   const heroMoment = report.moments.find((m) => imgs.has(m.frame)) ?? report.moments[0];
   const primsFor = (m: { frame: number; annotations: SpotlightReport["moments"][number]["annotations"] }) => {
     const f = frames[m.frame];
