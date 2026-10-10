@@ -10,11 +10,11 @@ const STEPS = [
   {
     n: "2",
     title: "Every frame gets measured",
-    body: "Sixty to eighty frames are tracked on your device: knees, hips, shoulders, lines, lean, balance. From those we pick the moments a coach would freeze on — the apex of the jump, the top of the extension, the landing, the turn.",
+    body: "Up to eighty frames are tracked on your device: knees, hips, shoulders, lines, lean, balance. From those we pick the moments a coach would freeze on — the apex of the jump, the top of the extension, the landing, the turn.",
   },
   {
     n: "3",
-    title: "A coach writes it up",
+    title: "It is written up like a private lesson",
     body: "What is working and why it scores. What to change, with the cause behind it. The marks drawn on her frames, drills with cues, a four-week plan. Two to three minutes later it is on your screen and in your inbox as a PDF.",
   },
 ];

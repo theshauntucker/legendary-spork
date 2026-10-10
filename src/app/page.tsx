@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import StageHero from "@/components/stage/StageHero";
 import ReviewStrip from "@/components/stage/ReviewStrip";
 import TwoWays from "@/components/stage/TwoWays";
-import SpotlightShowcase from "@/components/stage/SpotlightShowcase";
+import SpotlightTour from "@/components/stage/SpotlightTour";
 import HowSpotlightWorks from "@/components/stage/HowSpotlightWorks";
 import StagePricing from "@/components/stage/StagePricing";
 import PrivacyStage from "@/components/stage/PrivacyStage";
@@ -27,9 +27,9 @@ export default function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <StageHero image={HERO_IMAGE} />
       <ReviewStrip />
-      <TwoWays />
-      <SpotlightShowcase />
+      <SpotlightTour />
       <HowSpotlightWorks />
+      <TwoWays />
       <StagePricing />
       <PrivacyStage />
       <StageFAQ />

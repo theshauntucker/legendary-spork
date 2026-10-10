@@ -34,7 +34,7 @@ export default function StageHero({ image }: { image?: StageAsset }) {
         )}
       </motion.div>
       {/* Haze + vignette so type always sits on black */}
-      <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(9,9,11,0.45)_0%,rgba(9,9,11,0.05)_22%,rgba(9,9,11,0.55)_40%,rgba(9,9,11,0.94)_53%,#09090B_59%)] lg:bg-[linear-gradient(180deg,rgba(9,9,11,0.45)_0%,rgba(9,9,11,0.08)_35%,rgba(9,9,11,0.78)_80%,#09090B_100%)]" />
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(9,9,11,0.45)_0%,rgba(9,9,11,0.05)_14%,rgba(9,9,11,0.6)_30%,rgba(9,9,11,0.94)_44%,#09090B_52%)] lg:bg-[linear-gradient(180deg,rgba(9,9,11,0.45)_0%,rgba(9,9,11,0.08)_35%,rgba(9,9,11,0.78)_80%,#09090B_100%)]" />
       <div className="absolute inset-0 -z-10 hidden bg-[linear-gradient(90deg,rgba(9,9,11,0.8)_0%,rgba(9,9,11,0.28)_42%,rgba(9,9,11,0)_70%)] lg:block" />
       <motion.div style={{ y: poolY, opacity: fade }} className="st-pool -z-10 left-[55%] top-[5%] h-[60vh] w-[60vw] bg-[radial-gradient(closest-side,rgba(251,191,36,0.22),rgba(249,115,22,0.1),transparent)]" />
 
@@ -43,21 +43,24 @@ export default function StageHero({ image }: { image?: StageAsset }) {
           <HeroMark />
         </motion.div>
 
-        <motion.div style={{ opacity: fade }} initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.35, ease: [0.16, 1, 0.3, 1] }} className="mt-auto max-w-[44rem]">
-          <p className="st-runner">AI video analysis for competitive dance and cheer</p>
-          <h1 className="st-display mt-4 text-[2.9rem] sm:text-6xl lg:text-[4.9rem]">
-            See exactly what the judges see.
+        <motion.div style={{ opacity: fade }} initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.35, ease: [0.16, 1, 0.3, 1] }} className="mt-auto max-w-[46rem]">
+          <p className="st-new !bg-black/55 backdrop-blur-sm">New · RoutineX Spotlight</p>
+          <h1 className="st-display mt-5 text-[2.6rem] [text-shadow:0_2px_28px_rgba(9,9,11,0.85)] sm:text-6xl lg:text-[4.9rem]">
+            See exactly what to fix. <span className="block">Drawn on her.</span>
           </h1>
           <p className="st-lede mt-6">
-            Upload a routine from your phone. RoutineX scores it like a competition panel in minutes — and Spotlight breaks one dancer down frame by frame, with the corrections drawn on her.
+            One routine video from your phone. About three minutes later, a private technique breakdown of your dancer: every key moment measured and marked up. For competitive dance and cheer.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link href="/spotlight" className="st-btn st-btn-sunset">See a Spotlight breakdown</Link>
-            <Link href="/signup" className="st-btn st-btn-ghost">Score a routine — first one is 99¢</Link>
+            <Link href="/spotlight/new" className="st-btn st-btn-sunset">Get her breakdown — $14.99</Link>
+            <Link href="/spotlight/sample" className="st-btn st-btn-ghost">See a real report</Link>
           </div>
+          <p className="mt-5 text-sm text-zinc-400">
+            Or <Link href="/signup" className="font-semibold text-zinc-200 underline underline-offset-4 hover:text-white">score a whole routine</Link> like a judging panel. First one is 99¢.
+          </p>
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-zinc-400">
             <span className="inline-flex items-center gap-2"><span aria-hidden className="text-amber-300">★★★★★</span> 5.0 on the App Store</span>
-            <span>Your video never leaves your phone</span>
+            <span className="hidden sm:inline">Your video never leaves your phone</span>
             <AppStoreBadge variant="white" height={36} />
           </div>
         </motion.div>

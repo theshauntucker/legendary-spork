@@ -19,7 +19,7 @@ export default function AnnotatedFrame({
   return (
     <div className={`relative overflow-hidden bg-black ${className ?? ""}`} style={{ aspectRatio: `${W} / ${H}` }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={alt} className="absolute inset-0 h-full w-full object-cover" draggable={false} />
+      <img src={src} alt={alt} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
       <svg viewBox={`0 0 ${W} ${H}`} className="absolute inset-0 h-full w-full" preserveAspectRatio="none" aria-hidden>
         {prims.map((p, i) => {
           const col = STATUS_COLOR[p.status];

@@ -27,7 +27,7 @@ export default function SpotlightShowcase() {
               Every angle on these frames is measured from the dancer&apos;s own body. Gold marks what is working. Pink marks what to change. The dashed line is where the line should be.
             </p>
             <ul className="mt-6 space-y-2 text-[15px] text-zinc-400">
-              <li>12–16 key moments, chosen from 60–80 tracked frames</li>
+              <li>12–14 key moments, chosen from 60–80 tracked frames</li>
               <li>The corrected limb drawn beside hers, so she sees the difference</li>
               <li>Seven category scores and how it reads on a judge&apos;s card</li>
               <li>Priorities with the cause, drills with sets, reps and a cue</li>

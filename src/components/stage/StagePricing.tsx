@@ -34,7 +34,7 @@ export default function StagePricing() {
             </div>
             <ul className="mt-6 space-y-2 text-[15.5px] text-zinc-200">
               <li>60–80 frames tracked on your phone</li>
-              <li>12–16 key moments with lines, angles and corrections drawn on her</li>
+              <li>12–14 key moments with lines, angles and corrections drawn on her</li>
               <li>The corrected limb drawn beside hers, so she sees the difference</li>
               <li>Seven category scores, plus how it reads on a judge&apos;s card</li>
               <li>Priorities with the cause, drills with cues, competition-day cues, a four-week plan</li>
