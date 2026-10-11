@@ -208,7 +208,7 @@ function SpotlightNewInner() {
               <button onClick={buy} disabled={buying} className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 via-pink-500 to-amber-500 px-7 py-3.5 text-base font-bold shadow-lg shadow-pink-500/20 disabled:opacity-60">
                 {buying ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />} Get the Spotlight report — $14.99
               </button>
-              <p className="text-sm text-zinc-500">One-time. Money-back guarantee.</p>
+              <p className="text-sm text-zinc-500">One-time. Email us what was off and we credit your account.</p>
             </div>
             {err && <p className="mt-4 text-sm text-pink-300">{err}</p>}
             <p className="mt-8 text-sm text-zinc-500">Compare: a single private lesson runs $75–150 and the notes live in someone&apos;s head. This lives on her fridge.</p>
