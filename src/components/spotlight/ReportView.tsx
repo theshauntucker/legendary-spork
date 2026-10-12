@@ -29,7 +29,7 @@ export default function ReportView({
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_0%,rgba(236,72,153,0.18),transparent_70%)]" />
         <div className="mx-auto max-w-5xl px-5 pt-12 pb-8 sm:px-8 sm:pt-16">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <p className="sl-eyebrow">RoutineX Spotlight · {report.dancer.style}{report.dancer.division ? ` · ${report.dancer.division}` : ""}</p>
+            <p className="sl-eyebrow">AI breakdown · practice tool · {report.dancer.style}{report.dancer.division ? ` · ${report.dancer.division}` : ""}</p>
             <p className="text-xs text-zinc-500">{meta.date}</p>
           </div>
           <h1 className="mt-4 font-[family-name:var(--font-display)] text-5xl font-bold leading-[1.02] tracking-tight sm:text-7xl">{report.dancer.name}</h1>
@@ -38,7 +38,7 @@ export default function ReportView({
           <p className="mt-6 max-w-3xl font-[family-name:var(--font-display)] text-2xl leading-snug text-zinc-100 sm:text-3xl">{report.headline}</p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             {actions}
-            <p className="text-xs text-zinc-500">{meta.frameCount} frames tracked · {report.moments.length} key moments · {report.drills.length} drills · 4-week plan</p>
+            <p className="text-xs text-zinc-500">{meta.frameCount} frames tracked · {report.moments.length} key moments · {report.drills.length} drills · 4-week plan · AI breakdown, not an official score</p>
           </div>
         </div>
         {hero && urls[hero.frame] && (
@@ -51,8 +51,8 @@ export default function ReportView({
 
       {/* ── Overview ───────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-5xl px-5 py-14 sm:px-8">
-        <p className="sl-eyebrow">What I watched</p>
-        <h2 className="sl-h2">Coach&apos;s overview</h2>
+        <p className="sl-eyebrow">What the frames show</p>
+        <h2 className="sl-h2">AI breakdown</h2>
         <div className="mt-6 grid gap-10 lg:grid-cols-[1.4fr_1fr]">
           <div className="space-y-4 text-[17px] leading-relaxed text-zinc-300">
             {report.opening.split(/\n+/).filter(Boolean).map((p, i) => <p key={i}>{p}</p>)}
@@ -210,9 +210,9 @@ export default function ReportView({
       {report.judgesCard && report.judgesCard.length > 0 && (
         <section className="border-t border-white/[0.06]">
           <div className="mx-auto max-w-5xl px-5 py-14 sm:px-8">
-            <p className="sl-eyebrow">From the judges&apos; table</p>
-            <h2 className="sl-h2">How this reads on a judge&apos;s card</h2>
-            <p className="mt-2 max-w-2xl text-zinc-400">Competition sheets weight technique first, then performance, choreography, presentation and overall impression — and the judge talks into a mic while {first} dances. This is what that tape would say.</p>
+            <p className="sl-eyebrow">Practice read</p>
+            <h2 className="sl-h2">How this might read</h2>
+            <p className="mt-2 max-w-2xl text-zinc-400">An illustrative split — technique, performance, choreography, presentation, overall — with a practical note for each line. An AI estimate, not an official sheet and not weighted to a specific competition.</p>
             <div className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-[#0C0B10]">
               {report.judgesCard.map((j, i) => {
                 const pts = Math.round((j.score / 10) * j.weight * 10) / 10;
@@ -220,7 +220,7 @@ export default function ReportView({
                   <div key={i} className={`grid gap-3 px-5 py-5 sm:grid-cols-[11rem_1fr_6rem] sm:items-start sm:px-7 ${i > 0 ? "border-t border-white/[0.06]" : ""}`}>
                     <div>
                       <p className="font-semibold">{j.name}</p>
-                      <p className="mt-0.5 text-xs text-zinc-500">{j.weight} pts on the sheet</p>
+                      <p className="mt-0.5 text-xs text-zinc-500">{j.weight} pts in this split</p>
                     </div>
                     <p className="text-[15px] leading-relaxed text-zinc-300">“{j.note}”</p>
                     <div className="sm:text-right">
@@ -231,11 +231,11 @@ export default function ReportView({
                 );
               })}
               <div className="flex items-baseline justify-between border-t border-white/10 bg-white/[0.03] px-5 py-4 sm:px-7">
-                <p className="text-sm text-zinc-400">Projected, one judge, 100-point sheet</p>
+                <p className="text-sm text-zinc-400">Illustrative total on a 100-point practice split</p>
                 <p className="font-[family-name:var(--font-display)] text-3xl text-white">{Math.round(report.judgesCard.reduce((a, j) => a + (j.score / 10) * j.weight, 0))}<span className="text-base text-zinc-500">/100</span></p>
               </div>
             </div>
-            <p className="mt-3 text-xs text-zinc-500">Weights follow the most common competition sheet (technique 40 · performance 30 · choreography 15 · presentation 10 · overall 5). Your circuit&apos;s card may split differently; the notes carry over.</p>
+            <p className="mt-3 text-xs text-zinc-500">These weights are an illustration for this AI breakdown (technique 40 · performance 30 · choreography 15 · presentation 10 · overall 5), not a claim about how any competition prints its sheet. The notes are the part to practice.</p>
           </div>
         </section>
       )}
@@ -295,7 +295,7 @@ export default function ReportView({
           </div>
           <div>
             <p className="sl-eyebrow">How to read the numbers</p>
-            <p className="mt-3 text-sm leading-relaxed text-zinc-500">Every angle and line here is measured from the frames of this video using on-device pose tracking, projected from the camera&apos;s point of view. A different camera angle reads slightly differently; trends across moments matter more than any single degree. {sample ? "This sample was produced from generated footage so no real dancer appears on the public site." : "Frames the report doesn't use are deleted after it is built."}</p>
+            <p className="mt-3 text-sm leading-relaxed text-zinc-500">This is an AI breakdown from RoutineX, not a note from a human coach and not an official score. Every angle and line here is measured from the frames of this video using on-device pose tracking, projected from the camera&apos;s point of view. A different camera angle reads slightly differently; trends across moments matter more than any single degree. {sample ? "This sample was produced from generated footage so no real dancer appears on the public site." : "Frames the report doesn't use are deleted after it is built."}</p>
             {sample && (
               <Link href="/spotlight" className="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 via-pink-500 to-amber-500 px-5 py-2.5 text-sm font-bold text-white">Get {`a report like this for your dancer`} — $14.99</Link>
             )}

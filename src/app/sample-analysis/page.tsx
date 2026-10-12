@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 export const metadata: Metadata = {
   title: "Sample Analysis Report",
   description:
-    "See exactly what a RoutineX analysis looks like: 3-judge scoring breakdown, timestamped performance notes, improvement priorities, and competition benchmarks.",
+    "A sample RoutineX analysis: 3-judge scoring breakdown, timestamped performance notes, and improvement priorities. Illustrative only — not a real dancer's result.",
   alternates: {
     canonical: "/sample-analysis",
   },

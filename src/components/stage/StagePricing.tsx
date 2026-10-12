@@ -22,7 +22,7 @@ export default function StagePricing() {
     <section id="pricing" className="relative py-20 sm:py-28">
       <div className="st-wrap">
         <p className="st-runner">Pricing</p>
-        <h2 className="st-h2 mt-3">Less than one private lesson. Notes that last all season.</h2>
+        <h2 className="st-h2 mt-3">One-time credits stay. Season Member credits reset monthly.</h2>
 
         <div className="mt-12 grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
           <div className="relative overflow-hidden rounded-3xl border border-amber-300/25 bg-[linear-gradient(160deg,rgba(251,191,36,0.08),rgba(236,72,153,0.06)_50%,transparent)] p-7 sm:p-9">

@@ -11,11 +11,11 @@ const faqs = [
   },
   {
     q: "How does the AI analysis work?",
-    a: "RoutineX uses AI trained on real competition judging rubrics from major organizations. When you upload a video, three AI judges evaluate technique, performance quality, choreography, and overall impression — the same categories on a real scoresheet — and generate a detailed scorecard with actionable feedback in under 5 minutes.",
+    a: "RoutineX is an AI estimate and a practice tool. When you upload a video, three simulated judges comment on technique, performance quality, choreography, and overall impression and generate a scorecard with notes you can use in practice. It is not an official score.",
   },
   {
     q: "How accurate is the scoring compared to real judges?",
-    a: "The AI is calibrated on thousands of real competition scores and judging rubrics. While no AI replaces the nuance of a live judge, RoutineX provides consistent, unbiased feedback that closely mirrors competition scoring — users report their RoutineX scores typically land within 5–8 points of their actual competition results.",
+    a: "RoutineX is an AI estimate and a practice tool, not a prediction of what a live panel will award. Use the notes to decide what to work on. Your dancer's competition score can be higher or lower.",
   },
   {
     q: "Is this a replacement for judges or coaching?",
@@ -27,7 +27,7 @@ const faqs = [
   },
   {
     q: "What does it cost?",
-    a: "Your first analysis is free — no card required. Your second is just 99¢. From there, a single analysis is $1.99, and most families choose Season Member — $4.99/month for four analyses every month plus the season dashboard. Competition week? The Competition Pack is five analyses for $9.99, and credits never expire. Studios have their own plan with a shared analysis pool.",
+    a: "Your first analysis is 99¢. After that a single analysis is $1.99. Season Member is $4.99/month for four analyses every month plus the season dashboard — those credits reset each month. The Competition Pack is five analyses for $9.99, and those one-time credits don't expire. Studios have their own plan with a shared analysis pool.",
   },
   {
     q: "Can I get a refund?",

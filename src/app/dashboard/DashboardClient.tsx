@@ -386,7 +386,7 @@ function PurchaseBlock({ introEligible }: { introEligible: boolean }) {
           tagline="Just need one score before the next comp? This is it."
           features={[
             "1 full AI analysis",
-            "Competition-standard scoring (out of 300)",
+            "AI estimate on a 300-point practice scale",
             "Timestamped judge feedback",
             "Never expires",
           ]}
@@ -402,7 +402,7 @@ function PurchaseBlock({ introEligible }: { introEligible: boolean }) {
           tagline="Perfect for a single competition day or trying us out."
           features={[
             "2 full AI analyses",
-            "Competition-standard scoring (out of 300)",
+            "AI estimate on a 300-point practice scale",
             "Timestamped judge feedback",
             "Never expire",
           ]}
@@ -785,7 +785,7 @@ export default function DashboardClient({
                 title="BOGO — 2 Analyses"
                 price="$2.99"
                 description="Buy one analysis, get one free."
-                features={["2 full AI analyses", "Competition-standard scoring", "Timestamped judge notes"]}
+                features={["2 full AI analyses", "AI estimate on a 300-point practice scale", "Timestamped judge notes"]}
                 buttonText="Get 2 Analyses — $2.99"
                 buttonStyle="border border-gold-500/60 hover:bg-gold-500/10"
                 type="bogo"

@@ -37,9 +37,9 @@ const features = [
   },
   {
     icon: Trophy,
-    title: "Competition context",
+    title: "Award context",
     description:
-      "Every score comes with benchmarks: the regional average, the top 10% line, and exactly how many points sit between your dancer and the next award level.",
+      "The report shows RoutineX's own award band for the score — Gold, High Gold, Platinum, or Diamond — so you can see which band the estimate landed in.",
   },
   {
     icon: ShieldCheck,

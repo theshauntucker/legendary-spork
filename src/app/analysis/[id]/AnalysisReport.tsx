@@ -740,41 +740,6 @@ export default function AnalysisReport({ analysis }: { analysis: AnalysisData })
               </table>
             </div>
 
-            {/* Competition Comparison */}
-            <div className="mt-8 rounded-2xl bg-white/5 p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <TrendingUp className="h-4 w-4 text-gold-400" />
-                <h3 className="font-bold text-sm">How You Compare</h3>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-xs text-surface-200">Your Score</p>
-                  <p className="text-2xl font-bold text-white">{analysis.competitionComparison.yourScore}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-surface-200">Regional Avg.</p>
-                  <p className="text-2xl font-bold text-surface-200">{analysis.competitionComparison.avgRegional}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-surface-200">Top 10%</p>
-                  <p className="text-2xl font-bold text-gold-400">{analysis.competitionComparison.top10Threshold}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-surface-200">Top 5%</p>
-                  <p className="text-2xl font-bold text-primary-400">{analysis.competitionComparison.top5Threshold}</p>
-                </div>
-              </div>
-              {analysis.competitionComparison.benchmarkContext && (
-                <p className="mt-3 text-xs text-surface-200 leading-relaxed">
-                  {analysis.competitionComparison.benchmarkContext}
-                </p>
-              )}
-              {analysis.competitionComparison.ageStyleNote && (
-                <p className="mt-1 text-xs text-primary-300/80 italic">
-                  {analysis.competitionComparison.ageStyleNote}
-                </p>
-              )}
-            </div>
           </div>
 
           {/* Detailed Feedback */}

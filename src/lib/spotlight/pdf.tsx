@@ -184,7 +184,7 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
           <Text style={s.muted}>{date}</Text>
         </View>
         <View style={{ marginTop: 44 }}>
-          <Text style={s.eyebrow}>Private technique breakdown · {report.dancer.style}{report.dancer.division ? ` · ${report.dancer.division}` : ""}</Text>
+          <Text style={s.eyebrow}>AI breakdown · practice tool · {report.dancer.style}{report.dancer.division ? ` · ${report.dancer.division}` : ""}</Text>
           <Text style={[s.h1, { fontSize: 44, marginTop: 10 }]}>{report.dancer.name}</Text>
           {report.dancer.routine ? <Text style={[s.muted, { marginTop: 4, fontSize: 11 }]}>“{report.dancer.routine}”</Text> : null}
           <View style={{ marginTop: 14 }}><GradBar width={96} /></View>
@@ -197,15 +197,15 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
           </View>
         ) : null}
         <View style={{ position: "absolute", bottom: 60, left: M, right: M, flexDirection: "row", justifyContent: "space-between" }}>
-          <Text style={s.footText}>{row.frame_count} frames tracked · {report.moments.length} key moments · {report.drills.length} drills · 4-week plan</Text>
+          <Text style={s.footText}>AI breakdown · not an official score · {row.frame_count} frames</Text>
           <Text style={s.footText}>routinex.org/spotlight</Text>
         </View>
       </Page>
 
       {/* Overview */}
       <Page size="LETTER" style={s.page}>
-        <Text style={s.eyebrow}>What I watched</Text>
-        <Text style={s.h2}>Coach&apos;s overview</Text>
+        <Text style={s.eyebrow}>What the frames show</Text>
+        <Text style={s.h2}>AI breakdown</Text>
         <View style={{ marginTop: 12 }}>
           {report.opening.split(/\n+/).filter(Boolean).map((p, i) => <Text key={i} style={[s.body, { marginBottom: 8 }]}>{p}</Text>)}
         </View>
@@ -338,9 +338,9 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
         <Page size="LETTER" style={s.page}>
           {report.judgesCard && report.judgesCard.length > 0 && (
             <View>
-              <Text style={s.eyebrow}>From the judges&apos; table</Text>
-              <Text style={s.h2}>How this reads on a judge&apos;s card</Text>
-              <Text style={[s.muted, { marginTop: 6 }]}>Competition sheets weight technique first, then performance, choreography, presentation and overall impression — and the judge talks into a mic while {first} dances. This is what that tape would say.</Text>
+              <Text style={s.eyebrow}>Practice read</Text>
+              <Text style={s.h2}>How this might read</Text>
+              <Text style={[s.muted, { marginTop: 6 }]}>An illustrative split — technique, performance, choreography, presentation, overall — with a practical note for each line. An AI estimate, not an official sheet and not weighted to a specific competition.</Text>
               <View style={[s.card, { marginTop: 12, padding: 0 }]}>
                 {report.judgesCard.map((j, i) => {
                   const pts = Math.round((j.score / 10) * j.weight * 10) / 10;
@@ -348,7 +348,7 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
                     <View key={i} style={{ flexDirection: "row", gap: 10, paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: i ? 1 : 0, borderTopColor: C.line, alignItems: "flex-start" }} wrap={false}>
                       <View style={{ width: 120 }}>
                         <Text style={{ fontSize: 10, fontWeight: 700 }}>{j.name}</Text>
-                        <Text style={[s.muted, { fontSize: 8 }]}>{j.weight} pts on the sheet</Text>
+                        <Text style={[s.muted, { fontSize: 8 }]}>{j.weight} pts in this split</Text>
                       </View>
                       <Text style={[s.body, { flex: 1, fontSize: 9.8 }]}>“{j.note}”</Text>
                       <View style={{ width: 54, alignItems: "flex-end" }}>
@@ -361,11 +361,11 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
                   );
                 })}
                 <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: 1, borderTopColor: C.line, backgroundColor: C.panel2 }}>
-                  <Text style={s.muted}>Projected, one judge, 100-point sheet</Text>
+                  <Text style={s.muted}>Illustrative total on a 100-point practice split</Text>
                   <Text style={{ fontFamily: "Playfair", fontSize: 20 }}>{Math.round(report.judgesCard.reduce((a, j) => a + (j.score / 10) * j.weight, 0))}<Text style={{ fontSize: 9, color: C.faint }}>/100</Text></Text>
                 </View>
               </View>
-              <Text style={[s.footText, { marginTop: 6 }]}>Weights follow the most common competition sheet (technique 40 · performance 30 · choreography 15 · presentation 10 · overall 5). Your circuit&apos;s card may split differently; the notes carry over.</Text>
+              <Text style={[s.footText, { marginTop: 6 }]}>These weights are an illustration for this AI breakdown (technique 40 · performance 30 · choreography 15 · presentation 10 · overall 5), not a claim about how any competition prints its sheet. The notes are the part to practice.</Text>
             </View>
           )}
           {report.onStage && report.onStage.length > 0 && (
@@ -416,7 +416,7 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
         <View style={{ marginTop: 8, gap: 3 }}>
           {report.glossary.map((g, i) => <Text key={i} style={[s.muted, { fontSize: 9.5 }]}><Text style={{ color: C.text, fontWeight: 600 }}>{g.term}</Text> — {g.meaning}</Text>)}
         </View>
-        <Text style={[s.footText, { marginTop: 16, lineHeight: 1.5 }]}>How to read the numbers: every angle and line in this report is measured from the frames of this video using on-device pose tracking, projected from the camera&apos;s point of view. A different camera angle will read slightly differently; trends across moments matter more than any single degree. Frames the report doesn&apos;t use are deleted after it is built. Questions: reply to the email this came with.</Text>
+        <Text style={[s.footText, { marginTop: 16, lineHeight: 1.5 }]}>How to read the numbers: this is an AI breakdown from RoutineX, not a note from a human coach and not an official score. Every angle and line in this report is measured from the frames of this video using on-device pose tracking, projected from the camera&apos;s point of view. A different camera angle will read slightly differently; trends across moments matter more than any single degree. Frames the report doesn&apos;t use are deleted after it is built. Questions: reply to the email this came with.</Text>
         <Footer dancer={report.dancer.name} page="Plan" />
       </Page>
     </Document>

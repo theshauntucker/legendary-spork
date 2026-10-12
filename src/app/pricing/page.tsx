@@ -16,8 +16,8 @@ export default function PricingPage() {
     <main data-stage-page className="pt-10">
       <div className="st-wrap pt-20 sm:pt-24">
         <p className="st-runner">Pricing</p>
-        <h1 className="st-display mt-3 text-4xl sm:text-6xl">Less than one private lesson.</h1>
-        <p className="st-lede mt-5">Score a routine for 99¢. Put one dancer under the Spotlight for $14.99. No subscriptions required, credits never expire.</p>
+        <h1 className="st-display mt-3 text-4xl sm:text-6xl">Score a routine. Spotlight one dancer.</h1>
+        <p className="st-lede mt-5">Score a routine for 99¢. Put one dancer under the Spotlight for $14.99. Single, BOGO, and Competition Pack credits don&apos;t expire. Season Member credits reset each month.</p>
       </div>
       <StagePricing />
       <StageFAQ />
