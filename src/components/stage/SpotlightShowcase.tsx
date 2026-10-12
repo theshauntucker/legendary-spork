@@ -22,9 +22,9 @@ export default function SpotlightShowcase() {
         <div className="grid gap-10 lg:grid-cols-[minmax(0,22rem)_1fr] lg:gap-14">
           <div className="lg:sticky lg:top-28 lg:self-start">
             <p className="st-runner">RoutineX Spotlight</p>
-            <h2 className="st-h2 mt-3">Coaching, drawn on her.</h2>
+            <h2 className="st-h2 mt-3">The breakdown, drawn on her.</h2>
             <p className="mt-5 text-[17px] leading-relaxed text-zinc-300">
-              Every angle on these frames is measured from the dancer&apos;s own body. Gold marks what is working. Pink marks what to change. The dashed line is where the line should be.
+              Every angle on these frames is measured from the figure&apos;s pose. Gold marks what is working. Pink marks what to change. The dashed line is where the line should be.
             </p>
             <ul className="mt-6 space-y-2 text-[15px] text-zinc-400">
               <li>12–16 key moments, chosen from 60–80 tracked frames</li>
@@ -37,13 +37,20 @@ export default function SpotlightShowcase() {
               <Link href="/spotlight/new" className="st-btn st-btn-sunset">Get her breakdown — $14.99</Link>
               {report && <Link href="/spotlight/sample" className="st-btn st-btn-ghost">Read the full sample</Link>}
             </div>
-            {!report && <p className="mt-4 text-xs text-zinc-500">Frames shown are generated stage photographs run through the same tracker — no real dancer appears on this site.</p>}
+            {!report && <p className="mt-4 text-xs text-zinc-400">Demo · AI-generated figure · real pose measurements</p>}
           </div>
           <div className="min-w-0">
             <div className="st-rail -mr-5 pr-5 sm:-mr-8 sm:pr-8">
               {cards.map((c) => (
                 <figure key={c.key} className="w-[82vw] max-w-[640px] sm:w-[560px]">
-                  <AnnotatedFrame src={c.src} pose={c.pose} annotations={c.annotations} w={c.w} h={c.h} className="st-frame" alt={c.title} />
+                  <div className="relative">
+                    <AnnotatedFrame src={c.src} pose={c.pose} annotations={c.annotations} w={c.w} h={c.h} className="st-frame" alt={c.title} />
+                    {!report && (
+                      <p className="pointer-events-none absolute left-3 top-3 max-w-[calc(100%-1.5rem)] rounded-full bg-black/80 px-3 py-1.5 text-[11px] font-medium leading-snug tracking-wide text-zinc-100 ring-1 ring-white/20">
+                        Demo · AI-generated figure · real pose measurements
+                      </p>
+                    )}
+                  </div>
                   <figcaption className="mt-3 flex items-baseline justify-between gap-4 text-sm">
                     <span className="font-[family-name:var(--font-display)] text-lg text-zinc-100">{c.title}</span>
                     {c.time && <span className="text-zinc-500">{c.time}</span>}
