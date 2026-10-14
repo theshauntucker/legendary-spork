@@ -1,17 +1,15 @@
 import { ShieldCheck } from "lucide-react";
 
 /**
- * The RoutineX guarantee.
+ * Account-credit note shown near checkout.
  *
- * Every purchase is backed by it: if a report doesn't deliver, the parent
- * emails us and we credit the account — no forms, no arguing, no waiting on a
- * refund window. This is deliberately the LAST thing a parent reads before
- * they pay, because the price is small and the only real objection is
- * "what if it's junk."
+ * If a report doesn't deliver, the parent emails us and we credit the
+ * account. This is deliberately the LAST thing a parent reads before they
+ * pay, because the price is small and the only real objection is "what if
+ * it's junk."
  *
  * Support routes to danceroutinex@gmail.com and the /support form, both of
- * which land in the founder's inbox. Do not use this copy anywhere the promise
- * can't actually be honored.
+ * which land in the founder's inbox. Do not promise cash refunds here.
  */
 export function Guarantee({
   variant = "full",
@@ -33,13 +31,13 @@ export function Guarantee({
           </div>
           <div>
             <h3 className="font-semibold text-[#221A29] text-base sm:text-lg mb-1.5">
-              Our money-back guarantee
+              Email us what was off and we credit your account.
             </h3>
             <p className="text-sm text-[#5D5565] leading-relaxed">
               We&apos;re a dance family, not a faceless company. If a report doesn&apos;t
               give you something you can actually use, just reach out with your
               feedback — we&apos;ll credit your account immediately. No forms, no
-              runaround, no waiting on a refund window.
+              runaround.
             </p>
             <a
               href="/support"
@@ -57,7 +55,7 @@ export function Guarantee({
     return (
       <p className={`text-xs text-surface-200 ${className}`}>
         <ShieldCheck className="inline h-3.5 w-3.5 text-emerald-400 mr-1 -mt-0.5" />
-        Backed by our guarantee — not happy, tell us and we credit your account.
+        Email us what was off and we credit your account.
       </p>
     );
   }
@@ -69,9 +67,7 @@ export function Guarantee({
       >
         <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
         <p className="text-sm text-surface-100 leading-relaxed">
-          <span className="font-semibold text-white">Money-back guarantee.</span>{" "}
-          If your report misses the mark, email us your feedback and we&apos;ll credit
-          your account immediately.
+          Email us what was off and we credit your account.
         </p>
       </div>
     );
@@ -87,13 +83,12 @@ export function Guarantee({
         </div>
         <div>
           <h3 className="font-bold text-white text-base sm:text-lg mb-1.5">
-            Our money-back guarantee
+            Email us what was off and we credit your account.
           </h3>
           <p className="text-sm text-surface-200 leading-relaxed">
             We&apos;re a dance family, not a faceless company. If a report doesn&apos;t give
             you something you can actually use, just reach out with your feedback —
-            we&apos;ll credit your account immediately. No forms, no runaround, no
-            waiting on a refund window.
+            we&apos;ll credit your account immediately. No forms, no runaround.
           </p>
           <a
             href="/support"

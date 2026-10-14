@@ -30,8 +30,8 @@ const faqs = [
     a: "Your first analysis is free — no card required. Your second is just 99¢. From there, a single analysis is $1.99, and most families choose Season Member — $4.99/month for four analyses every month plus the season dashboard. Competition week? The Competition Pack is five analyses for $9.99, and credits never expire. Studios have their own plan with a shared analysis pool.",
   },
   {
-    q: "Can I get a refund?",
-    a: "If you're not satisfied with your experience, reach out through the Contact page and we'll work with you. We want every dancer to get real value from RoutineX.",
+    q: "What if the report misses the mark?",
+    a: "Email us what was off and we credit your account.",
   },
 ];
 
