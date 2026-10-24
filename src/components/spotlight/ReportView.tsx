@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AnnotatedFrame from "./AnnotatedFrame";
+import { practiceScale } from "@/lib/spotlight/judges-card";
 import { formatTime } from "@/lib/spotlight/landmarks";
 import type { SpotlightFrame, SpotlightReport } from "@/lib/spotlight/types";
 
@@ -213,36 +214,7 @@ export default function ReportView({
 
       {/* ── Judge's card ───────────────────────────────────────────────── */}
       {report.judgesCard && report.judgesCard.length > 0 && (
-        <section className="border-t border-white/[0.06]">
-          <div className="mx-auto max-w-5xl px-5 py-14 sm:px-8">
-            <p className="sl-eyebrow">From the judges&apos; table</p>
-            <h2 className="sl-h2">How it might read on a judge&apos;s card</h2>
-            <p className="mt-2 max-w-2xl text-zinc-400">A practice read across technique, performance, choreography, presentation, and overall impression — the kind of note a judge might say into the mic while {first} dances. Not an official scoresheet.</p>
-            <div className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-[#0C0B10]">
-              {report.judgesCard.map((j, i) => {
-                const pts = Math.round((j.score / 10) * j.weight * 10) / 10;
-                return (
-                  <div key={i} className={`grid gap-3 px-5 py-5 sm:grid-cols-[11rem_1fr_6rem] sm:items-start sm:px-7 ${i > 0 ? "border-t border-white/[0.06]" : ""}`}>
-                    <div>
-                      <p className="font-semibold">{j.name}</p>
-                      <p className="mt-0.5 text-xs text-zinc-500">{j.weight} pts in this estimate</p>
-                    </div>
-                    <p className="text-[15px] leading-relaxed text-zinc-300">“{j.note}”</p>
-                    <div className="sm:text-right">
-                      <p className="font-[family-name:var(--font-display)] text-2xl text-amber-200">{pts}<span className="text-sm text-zinc-500">/{j.weight}</span></p>
-                      <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-white/10 sm:ml-auto"><div className="h-full rounded-full bg-gradient-to-r from-pink-500 to-amber-300" style={{ width: `${Math.round((j.score / 10) * 100)}%` }} /></div>
-                    </div>
-                  </div>
-                );
-              })}
-              <div className="flex items-baseline justify-between border-t border-white/10 bg-white/[0.03] px-5 py-4 sm:px-7">
-                <p className="text-sm text-zinc-400">AI estimate, practice scale out of 100</p>
-                <p className="font-[family-name:var(--font-display)] text-3xl text-white">{Math.round(report.judgesCard.reduce((a, j) => a + (j.score / 10) * j.weight, 0))}<span className="text-base text-zinc-500">/100</span></p>
-              </div>
-            </div>
-            <p className="mt-3 text-xs text-zinc-500">The split is RoutineX&apos;s practice scale (technique 40 · performance 30 · choreography 15 · presentation 10 · overall 5), not an official competition sheet. Your circuit&apos;s card may differ; the notes are the part to use.</p>
-          </div>
-        </section>
+        <JudgesCard report={report} first={first} />
       )}
 
       {/* ── Next time on stage ─────────────────────────────────────────── */}
@@ -309,6 +281,45 @@ export default function ReportView({
         </div>
       </section>
     </article>
+  );
+}
+
+function JudgesCard({ report, first }: { report: SpotlightReport; first: string }) {
+  const card = report.judgesCard ?? [];
+  const scale = practiceScale(card);
+  const outOf = scale?.outOf ?? "100";
+  const earned = Math.round(card.reduce((a, j) => a + (j.score / 10) * j.weight, 0));
+  return (
+    <section id="judges-card" className="border-t border-white/[0.06]">
+      <div className="mx-auto max-w-5xl px-5 py-14 sm:px-8">
+        <p className="sl-eyebrow">From the judges&apos; table</p>
+        <h2 className="sl-h2">How it might read on a judge&apos;s card</h2>
+        <p className="mt-2 max-w-2xl text-zinc-400">A practice read across technique, performance, choreography, presentation, and overall impression — the kind of note a judge might say into the mic while {first} dances. Not an official scoresheet.</p>
+        <div className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-[#0C0B10]">
+          {card.map((j, i) => {
+            const pts = Math.round((j.score / 10) * j.weight * 10) / 10;
+            return (
+              <div key={i} className={`grid gap-3 px-5 py-5 sm:grid-cols-[11rem_1fr_6rem] sm:items-start sm:px-7 ${i > 0 ? "border-t border-white/[0.06]" : ""}`}>
+                <div>
+                  <p className="font-semibold">{j.name}</p>
+                  <p className="mt-0.5 text-xs text-zinc-500">{j.weight} pts in this estimate</p>
+                </div>
+                <p className="text-[15px] leading-relaxed text-zinc-300">“{j.note}”</p>
+                <div className="sm:text-right">
+                  <p className="font-[family-name:var(--font-display)] text-2xl text-amber-200">{pts}<span className="text-sm text-zinc-500">/{j.weight}</span></p>
+                  <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-white/10 sm:ml-auto"><div className="h-full rounded-full bg-gradient-to-r from-pink-500 to-amber-300" style={{ width: `${Math.round((j.score / 10) * 100)}%` }} /></div>
+                </div>
+              </div>
+            );
+          })}
+          <div className="flex items-baseline justify-between border-t border-white/10 bg-white/[0.03] px-5 py-4 sm:px-7">
+            <p className="text-sm text-zinc-400">AI estimate, practice scale out of {outOf}</p>
+            <p className="font-[family-name:var(--font-display)] text-3xl text-white">{earned}<span className="text-base text-zinc-500">/{outOf}</span></p>
+          </div>
+        </div>
+        {scale ? <p className="mt-3 text-xs text-zinc-500">{scale.note}</p> : null}
+      </div>
+    </section>
   );
 }
 

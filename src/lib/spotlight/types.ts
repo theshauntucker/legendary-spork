@@ -84,7 +84,7 @@ export interface SpotlightWeek {
 export interface JudgesCardLine {
   category: "technique" | "execution" | "performance" | "choreography" | "presentation" | "overall";
   name: string;
-  /** Typical weight on a 100-point sheet (e.g. 40, 30, 15, 10, 5). */
+  /** Points this line is worth on this report's practice scale. Stored per report — a card may be 40/30/15/10/5 or technique 25 plus execution 15, and each line is clamped to 1–60 when the report is saved. */
   weight: number;
   /** Honest 1–10 for this dancer, scaled by the renderer. */
   score: number;
