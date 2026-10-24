@@ -45,7 +45,7 @@ export default function StagePricing() {
               <button onClick={() => buy("spotlight")} disabled={busy !== null} className="st-btn st-btn-sunset disabled:opacity-60">{busy === "spotlight" ? "Opening checkout…" : "Get the Spotlight report"}</button>
               <Link href="/spotlight/sample" className="text-sm text-zinc-300 underline-offset-4 hover:underline">Read the sample first</Link>
             </div>
-            <p className="mt-4 text-xs text-zinc-500">One-time. Money-back guarantee.</p>
+            <p className="mt-4 text-xs text-zinc-500">One-time. Email us what was off and we credit your account.</p>
           </div>
 
           <div>

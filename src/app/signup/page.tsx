@@ -154,8 +154,7 @@ function SignupForm() {
               Your first analysis is 99¢. Taking you to the upload screen...
             </p>
             <p className="mt-3 text-xs text-emerald-300/90 leading-relaxed">
-              Backed by our money-back guarantee — if the report misses the mark,
-              email us and we credit your account immediately.
+              Email us what was off and we credit your account.
             </p>
           </motion.div>
         ) : (

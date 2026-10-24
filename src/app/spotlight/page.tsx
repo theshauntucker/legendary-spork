@@ -54,7 +54,7 @@ export default function SpotlightPage() {
             <Link href="/spotlight/new" className="st-btn st-btn-sunset">Get her breakdown — $14.99</Link>
             {SAMPLE.report && <Link href="/spotlight/sample" className="st-btn st-btn-ghost">Read the full sample</Link>}
           </div>
-          <p className="mt-5 text-sm text-zinc-500">One-time. Two to three minutes. Money-back guarantee.</p>
+          <p className="mt-5 text-sm text-zinc-500">One-time. Two to three minutes. Email us what was off and we credit your account.</p>
         </div>
       </section>
 
