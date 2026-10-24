@@ -14,6 +14,7 @@ import {
   Document, Page, View, Text, Image, Svg, Line, Circle, Path, Rect, Text as SvgText, Font, renderToBuffer, StyleSheet,
 } from "@react-pdf/renderer";
 import { STATUS_COLOR, arcPath, momentPrimitives, type Primitive } from "./annotations";
+import { practiceScale } from "./judges-card";
 import { formatTime } from "./landmarks";
 import type { SpotlightFrame, SpotlightReport, SpotlightRow } from "./types";
 
@@ -342,36 +343,7 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
       {(report.judgesCard?.length || report.onStage?.length) ? (
         <Page size="LETTER" style={s.page}>
           {report.judgesCard && report.judgesCard.length > 0 && (
-            <View>
-              <Text style={s.eyebrow}>From the judges&apos; table</Text>
-              <Text style={s.h2}>How it might read on a judge&apos;s card</Text>
-              <Text style={[s.muted, { marginTop: 6 }]}>A practice read across technique, performance, choreography, presentation, and overall impression — the kind of note a judge might say into the mic while {first} dances. Not an official scoresheet.</Text>
-              <View style={[s.card, { marginTop: 12, padding: 0 }]}>
-                {report.judgesCard.map((j, i) => {
-                  const pts = Math.round((j.score / 10) * j.weight * 10) / 10;
-                  return (
-                    <View key={i} style={{ flexDirection: "row", gap: 10, paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: i ? 1 : 0, borderTopColor: C.line, alignItems: "flex-start" }} wrap={false}>
-                      <View style={{ width: 120 }}>
-                        <Text style={{ fontSize: 10, fontWeight: 700 }}>{j.name}</Text>
-                        <Text style={[s.muted, { fontSize: 8 }]}>{j.weight} pts in this estimate</Text>
-                      </View>
-                      <Text style={[s.body, { flex: 1, fontSize: 9.8 }]}>“{j.note}”</Text>
-                      <View style={{ width: 54, alignItems: "flex-end" }}>
-                        <Text style={{ fontFamily: "Playfair", fontSize: 15, color: C.gold }}>{pts}<Text style={{ fontSize: 8, color: C.faint }}>/{j.weight}</Text></Text>
-                        <View style={{ marginTop: 3, width: 54, height: 3, borderRadius: 2, backgroundColor: C.panel2 }}>
-                          <View style={{ width: Math.round((j.score / 10) * 54), height: 3, borderRadius: 2, backgroundColor: C.pink }} />
-                        </View>
-                      </View>
-                    </View>
-                  );
-                })}
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: 1, borderTopColor: C.line, backgroundColor: C.panel2 }}>
-                  <Text style={s.muted}>AI estimate, practice scale out of 100</Text>
-                  <Text style={{ fontFamily: "Playfair", fontSize: 20 }}>{Math.round(report.judgesCard.reduce((a, j) => a + (j.score / 10) * j.weight, 0))}<Text style={{ fontSize: 9, color: C.faint }}>/100</Text></Text>
-                </View>
-              </View>
-              <Text style={[s.footText, { marginTop: 6 }]}>The split is RoutineX&apos;s practice scale (technique 40 · performance 30 · choreography 15 · presentation 10 · overall 5), not an official competition sheet. Your circuit&apos;s card may differ; the notes are the part to use.</Text>
-            </View>
+            <JudgesCardPdf report={report} first={first} />
           )}
           {report.onStage && report.onStage.length > 0 && (
             <View style={{ marginTop: 18 }}>
@@ -426,6 +398,45 @@ function SpotlightDoc({ row, report, imgs }: { row: SpotlightRow; report: Spotli
         <Footer dancer={report.dancer.name} page="Plan" />
       </Page>
     </Document>
+  );
+}
+
+function JudgesCardPdf({ report, first }: { report: SpotlightReport; first: string }) {
+  const card = report.judgesCard ?? [];
+  const scale = practiceScale(card);
+  const outOf = scale?.outOf ?? "100";
+  const earned = Math.round(card.reduce((a, j) => a + (j.score / 10) * j.weight, 0));
+  return (
+    <View>
+      <Text style={s.eyebrow}>From the judges&apos; table</Text>
+      <Text style={s.h2}>How it might read on a judge&apos;s card</Text>
+      <Text style={[s.muted, { marginTop: 6 }]}>A practice read across technique, performance, choreography, presentation, and overall impression — the kind of note a judge might say into the mic while {first} dances. Not an official scoresheet.</Text>
+      <View style={[s.card, { marginTop: 12, padding: 0 }]}>
+        {card.map((j, i) => {
+          const pts = Math.round((j.score / 10) * j.weight * 10) / 10;
+          return (
+            <View key={i} style={{ flexDirection: "row", gap: 10, paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: i ? 1 : 0, borderTopColor: C.line, alignItems: "flex-start" }} wrap={false}>
+              <View style={{ width: 120 }}>
+                <Text style={{ fontSize: 10, fontWeight: 700 }}>{j.name}</Text>
+                <Text style={[s.muted, { fontSize: 8 }]}>{j.weight} pts in this estimate</Text>
+              </View>
+              <Text style={[s.body, { flex: 1, fontSize: 9.8 }]}>“{j.note}”</Text>
+              <View style={{ width: 54, alignItems: "flex-end" }}>
+                <Text style={{ fontFamily: "Playfair", fontSize: 15, color: C.gold }}>{pts}<Text style={{ fontSize: 8, color: C.faint }}>/{j.weight}</Text></Text>
+                <View style={{ marginTop: 3, width: 54, height: 3, borderRadius: 2, backgroundColor: C.panel2 }}>
+                  <View style={{ width: Math.round((j.score / 10) * 54), height: 3, borderRadius: 2, backgroundColor: C.pink }} />
+                </View>
+              </View>
+            </View>
+          );
+        })}
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: 1, borderTopColor: C.line, backgroundColor: C.panel2 }}>
+          <Text style={s.muted}>AI estimate, practice scale out of {outOf}</Text>
+          <Text style={{ fontFamily: "Playfair", fontSize: 20 }}>{earned}<Text style={{ fontSize: 9, color: C.faint }}>/{outOf}</Text></Text>
+        </View>
+      </View>
+      {scale ? <Text style={[s.footText, { marginTop: 6 }]}>{scale.note}</Text> : null}
+    </View>
   );
 }
 
