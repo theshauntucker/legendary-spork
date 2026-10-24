@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import {
   Trophy,
   Target,
-  TrendingUp,
   Clock,
   CheckCircle,
   AlertCircle,
@@ -135,13 +134,14 @@ export default function SampleAnalysis() {
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <p className="eyebrow text-[#B0356B] mb-4">The report</p>
+          <p className="eyebrow text-[#B0356B] mb-4">Sample report</p>
           <h2 className="text-4xl sm:text-5xl font-semibold tracking-tight font-[family-name:var(--font-display)] text-[#221A29]">
-            Judge-level detail, on every upload.
+            What a RoutineX analysis looks like.
           </h2>
           <p className="mt-5 text-lg text-[#5D5565] max-w-xl mx-auto">
-            This is a real sample analysis — the same depth every routine
-            receives.
+            This is a sample, not a real dancer&apos;s score. The same kind of
+            report every routine receives: three AI judges, category notes, and
+            timestamped priorities.
           </p>
         </motion.div>
 
@@ -160,7 +160,7 @@ export default function SampleAnalysis() {
                 <div className="flex items-center gap-2 mb-1">
                   <Trophy className="h-5 w-5 text-gold-400" />
                   <span className="text-sm font-semibold text-gold-400 uppercase tracking-wider">
-                    RoutineX Analysis Report
+                    Sample · RoutineX Analysis Report
                   </span>
                 </div>
                 <h3 className="text-2xl font-bold">
@@ -283,49 +283,7 @@ export default function SampleAnalysis() {
               </table>
             </div>
 
-            {/* Competition Comparison */}
-            <div className="mt-8 rounded-2xl bg-white/5 p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <TrendingUp className="h-4 w-4 text-gold-400" />
-                <h5 className="font-bold text-sm">
-                  How This Compares
-                </h5>
-              </div>
-              <div className="grid sm:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-xs text-surface-200">
-                    Your Score
-                  </p>
-                  <p className="text-2xl font-bold text-white">274</p>
-                </div>
-                <div>
-                  <p className="text-xs text-surface-200">
-                    Avg. at Star Power Regionals
-                  </p>
-                  <p className="text-2xl font-bold text-surface-200">
-                    261
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-surface-200">
-                    Top 10% Threshold
-                  </p>
-                  <p className="text-2xl font-bold text-gold-400">282</p>
-                </div>
-              </div>
-              <p className="mt-3 text-xs text-surface-200">
-                Your score is{" "}
-                <span className="text-primary-400 font-semibold">
-                  13 points above average
-                </span>{" "}
-                and{" "}
-                <span className="text-gold-400 font-semibold">
-                  8 points from the top 10%
-                </span>
-                . Focus on the improvement priorities below to close the gap.
-              </p>
             </div>
-          </div>
 
           {/* Detailed Feedback */}
           <div className="px-6 sm:px-8 pb-6 sm:pb-8">

@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ eventId: 
   const title = event.name.length > 40
     ? `${event.name} ${year}: Guide, Scoring & Prep`
     : `${event.name} ${year}: ${cheer ? "Cheer" : "Dance"} ${kind[0].toUpperCase() + kind.slice(1)} Guide, Scoring & Prep`;
-  const description = `${event.name}${when ? `, typically ${when}` : ""}: what to expect, how routines are scored, and how to prep your ${cheer ? "athlete" : "dancer"} with competition-calibrated AI analysis before you go.`;
+  const description = `${event.name}${when ? `, typically ${when}` : ""}: what to expect, how routines are scored, and how to prep your ${cheer ? "athlete" : "dancer"} with an AI practice score before you go.`;
   return {
     title,
     description,
@@ -81,7 +81,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         mainEntity: [
           { "@type": "Question", name: `When is ${event.name}?`, acceptedAnswer: { "@type": "Answer", text: when ? `${event.name} typically runs ${when}. Exact city dates are posted on the official site (${event.website}) a few months out.` : `${event.name} dates vary by season; check ${event.website}.` } },
           { "@type": "Question", name: `How is ${event.name} scored?`, acceptedAnswer: { "@type": "Answer", text: cheer ? "Cheer panels score difficulty and execution per skill category (stunts, tumbling, jumps, dance), apply deductions for falls and safety violations, and the team that 'hits zero' with the highest raw score wins the division." : "A panel of three judges scores each routine on technique, performance, choreography and overall impression, usually out of 100 each for a 300-point total, and routines earn an adjudication award level (Gold, High Gold, Platinum, Diamond or the circuit's equivalent) plus overall placements." } },
-          { "@type": "Question", name: `How do I prepare my ${who} for ${event.name}?`, acceptedAnswer: { "@type": "Answer", text: `Film a full run-through two to three weeks out, get it scored on a competition-calibrated rubric, and fix the top two priorities before you travel. RoutineX scores a routine in minutes (first one is 99¢) and Spotlight gives one ${who} a frame-by-frame technique breakdown for $14.99.` } },
+          { "@type": "Question", name: `How do I prepare my ${who} for ${event.name}?`, acceptedAnswer: { "@type": "Answer", text: `Film a full run-through two to three weeks out, get an AI practice score, and fix the top two priorities before you travel. RoutineX scores a routine in minutes (first one is 99¢) and Spotlight gives one ${who} a frame-by-frame technique breakdown for $14.99. The score is an estimate for practice, not an official result.` } },
         ],
       },
     ],
@@ -136,7 +136,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
             <p className="st-runner">Prep</p>
             <h2 className="st-h2 mt-3 text-3xl sm:text-4xl">Three things to do before {event.name}</h2>
             <ol className="mt-6 grid gap-4 sm:grid-cols-3">
-              <li className="rounded-2xl border border-white/10 p-5"><p className="text-xs uppercase tracking-[0.18em] text-zinc-500">1 · Two to three weeks out</p><p className="mt-2 text-[15.5px] leading-relaxed text-zinc-300">Film a full run-through from the front, the way the panel sees it. Score it on a competition-calibrated rubric so the first time you see a number isn&apos;t at awards.</p></li>
+              <li className="rounded-2xl border border-white/10 p-5"><p className="text-xs uppercase tracking-[0.18em] text-zinc-500">1 · Two to three weeks out</p><p className="mt-2 text-[15.5px] leading-relaxed text-zinc-300">Film a full run-through from the front, the way the panel sees it. Get an AI practice score so the first time you see a number isn&apos;t at awards. It&apos;s an estimate, not an official result.</p></li>
               <li className="rounded-2xl border border-white/10 p-5"><p className="text-xs uppercase tracking-[0.18em] text-zinc-500">2 · The week before</p><p className="mt-2 text-[15.5px] leading-relaxed text-zinc-300">Fix the top two priorities only. {cheer ? "Clean execution on the skills already in the routine beats adding one more." : "A finished knee and a held landing earn more than a new trick."}</p></li>
               <li className="rounded-2xl border border-white/10 p-5"><p className="text-xs uppercase tracking-[0.18em] text-zinc-500">3 · The night before</p><p className="mt-2 text-[15.5px] leading-relaxed text-zinc-300">Walk the opening eight counts and the hardest moment in the hotel room. Decide where the eyes go on the walk-on. Then stop.</p></li>
             </ol>

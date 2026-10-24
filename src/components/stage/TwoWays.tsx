@@ -44,11 +44,11 @@ export default function TwoWays() {
               <p className="text-sm text-amber-200/80">One dancer</p>
               <h3 className="st-display mt-2 text-3xl sm:text-4xl">RoutineX Spotlight</h3>
               <p className="mt-4 max-w-md text-[17px] leading-relaxed text-zinc-300">
-                Sixty to eighty frames of her routine, tracked on your phone. The moments a coach would freeze on, with the lines, angles and corrections drawn on her own frames. Priorities, drills, a four-week plan. A PDF you can hand to her teacher.
+                Sixty to eighty frames of her routine, tracked on your phone. The moments worth freezing on, with the lines, angles and corrections drawn on her own frames. An AI breakdown: priorities, drills, a four-week plan, and a PDF you can hand to her teacher.
               </p>
               <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
                 <div><dt className="text-zinc-500">One dancer, one routine</dt><dd className="text-xl font-semibold">$14.99</dd></div>
-                <div><dt className="text-zinc-500">A private lesson</dt><dd className="text-xl font-semibold text-zinc-500 line-through decoration-zinc-600">$75–150</dd></div>
+                <div><dt className="text-zinc-500">Delivery</dt><dd className="text-xl font-semibold">Web report + PDF</dd></div>
               </dl>
               <Link href="/spotlight" className="st-btn st-btn-sunset mt-7">See a Spotlight breakdown</Link>
             </div>

@@ -60,11 +60,6 @@ export const metadata: Metadata = {
     "dance routine scoring",
     "cheer routine analysis",
     "dance judge scoring",
-    "Star Power dance",
-    "JUMP dance convention",
-    "NUVO dance convention",
-    "UCA cheer",
-    "NCA cheer",
     "dance competition prep",
     "dance technique feedback",
     "dance parent tools",
@@ -76,7 +71,6 @@ export const metadata: Metadata = {
     "dance score calculator",
     "dance technique analysis",
     "dance video breakdown",
-    "private dance lesson alternative",
     "dance coaching report",
     "cheer technique analysis",
   ],
@@ -131,7 +125,7 @@ const jsonLd = {
       name: "RoutineX",
       url: BASE_URL,
       description:
-        "AI-powered dance and cheer video analysis with competition-standard scoring.",
+        "AI-powered dance and cheer video analysis. An estimate for practice, not an official score.",
       potentialAction: {
         "@type": "SearchAction",
         target: `${BASE_URL}/?q={search_term_string}`,
@@ -146,21 +140,21 @@ const jsonLd = {
       installUrl:
         "https://apps.apple.com/us/app/routinex-dance-cheer-ai/id6763345348",
       description:
-        "Upload any dance or cheer routine and get competition-standard scoring with detailed, actionable feedback powered by AI trained on real judging rubrics.",
+        "Upload any dance or cheer routine and get an AI practice score with practical notes. An estimate for practice, not an official result.",
       offers: [
         {
           "@type": "Offer",
           name: "First Analysis",
           price: "0.99",
           priceCurrency: "USD",
-          description: "Your first AI-powered competition-standard dance or cheer routine analysis — one-time welcome price",
+          description: "Your first AI practice score for a dance or cheer routine — one-time welcome price",
         },
         {
           "@type": "Offer",
           name: "Single Analysis",
           price: "1.99",
           priceCurrency: "USD",
-          description: "One AI-powered competition-standard dance or cheer routine analysis",
+          description: "One AI practice score for a dance or cheer routine",
         },
         {
           "@type": "Offer",

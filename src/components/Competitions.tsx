@@ -1,22 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Shield, Music, Users } from "lucide-react";
-
-const competitions = [
-  "Star Power",
-  "JUMP",
-  "NUVO",
-  "24 Seven",
-  "NexStar",
-  "Revolution",
-  "UCA",
-  "NCA",
-  "Applause",
-  "Turn It Up",
-  "Platinum",
-  "RADIX",
-];
+import { Music, Users } from "lucide-react";
 
 const ageGroups = [
   { name: "Mini", ages: "5–6", color: "from-pink-400 to-pink-600" },
@@ -57,41 +42,11 @@ export default function Competitions() {
             Universal Coverage
           </p>
           <h2 className="mt-3 text-4xl sm:text-5xl font-bold font-[family-name:var(--font-display)]">
-            Works With Every Major Competition
+            Dance and cheer, any competition
           </h2>
           <p className="mt-4 text-lg text-surface-200 max-w-2xl mx-auto">
-            Our AI is trained on competition-standard scoring rubrics. No matter where your dancer or cheer athlete competes, RoutineX speaks the same language as the judges.
+            An AI estimate for practice, for dance and cheer. It looks at the kinds of things panels watch — technique, performance, choreography, overall — and it is not an official score for any competition.
           </p>
-        </motion.div>
-
-        {/* Competition logos/badges */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-16"
-        >
-          <div className="flex items-center gap-2 justify-center mb-6">
-            <Shield className="h-5 w-5 text-primary-400" />
-            <h3 className="font-semibold text-sm uppercase tracking-wider text-surface-200">
-              Competition-Ready Scoring For
-            </h3>
-          </div>
-          <div className="flex flex-wrap justify-center gap-3">
-            {competitions.map((comp, i) => (
-              <motion.div
-                key={comp}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.3, delay: i * 0.05 }}
-                className="glass rounded-xl px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors cursor-default"
-              >
-                {comp}
-              </motion.div>
-            ))}
-          </div>
         </motion.div>
 
         {/* Age Divisions & Styles */}
