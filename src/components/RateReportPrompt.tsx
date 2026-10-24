@@ -15,7 +15,7 @@ import Confetti from "@/components/Confetti";
  *                     write-review sheet; web says "get the free app, then
  *                     rate it" (Apple only counts reviews from downloads).
  *                     A typed testimonial is the secondary option.
- *   1–3 stars       → a private note straight to Shaun, plus the guarantee
+ *   1–3 stars       → a private note straight to Shaun, plus the credit line
  *
  * Any written note earns a free analysis, once per account. Every outcome is
  * recorded via /api/review-prompt so the prompt never nags again; localStorage
@@ -315,8 +315,7 @@ export default function RateReportPrompt({ analysisId }: { analysisId: string })
                 </p>
                 <h3 className="mt-1 pr-6 text-base font-bold text-white">What missed the mark?</h3>
                 <p className="mt-1 text-xs leading-relaxed text-[#A1A1AA]">
-                  Shaun reads every one of these personally. If the report didn&rsquo;t give you
-                  something you can use, we credit your account — that&rsquo;s the guarantee.
+                  Shaun reads every one of these personally. Email us what was off and we credit your account.
                 </p>
                 {rewardBadge}
                 <textarea

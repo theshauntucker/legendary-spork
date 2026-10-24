@@ -259,6 +259,11 @@ export async function grantFreeCreditIfNew(
   userId: string,
   userEmail?: string
 ): Promise<boolean> {
+  // Oct 2026: the first analysis is 99¢. The gate lives HERE, not only in
+  // /api/free-credit — the dashboard, /api/credits and /api/analyze all call
+  // this as a "safety net" and were still handing every new account a free
+  // analysis. Set FREE_FIRST_ANALYSIS=1 in Vercel to bring the free one back.
+  if (process.env.FREE_FIRST_ANALYSIS !== "1") return false;
   if (isAdmin(userEmail)) return false;
 
   const { data: existing } = await serviceClient

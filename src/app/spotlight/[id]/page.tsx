@@ -35,7 +35,7 @@ export default async function SpotlightReportPage({ params }: { params: Promise<
     const { data: signed } = await svc.storage.from("videos").createSignedUrl(f.path, 60 * 60 * 6);
     if (signed?.signedUrl) urls[i] = signed.signedUrl;
   }
-  const date = new Date(row.ready_at || row.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const date = new Date(row.ready_at || row.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "America/Chicago" });
 
   return (
     <main className="min-h-screen bg-[#09090B] pt-16">

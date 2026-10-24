@@ -149,6 +149,36 @@ export function spotlightFrameCount(duration: number): number {
   return 80;
 }
 
+/** Resolves once the tab is on screen. Browsers stop loading and decoding video in hidden tabs. */
+export function whenVisible(): Promise<void> {
+  if (typeof document === "undefined" || !document.hidden) return Promise.resolve();
+  return new Promise((res) => {
+    const h = () => { if (!document.hidden) { document.removeEventListener("visibilitychange", h); res(); } };
+    document.addEventListener("visibilitychange", h);
+  });
+}
+
+/**
+ * Wait for a <video>'s metadata without hanging forever. A hidden tab defers
+ * media loading, so on a timeout we wait for the tab to come back and reload
+ * instead of leaving the family on a progress bar that never moves.
+ */
+export async function loadVideoMetadata(video: HTMLVideoElement, failMessage: string): Promise<void> {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    await whenVisible();
+    const result = await new Promise<"ok" | "timeout" | "error">((res) => {
+      if (video.readyState >= 1) return res("ok");
+      const to = setTimeout(() => res("timeout"), 12000);
+      video.onloadedmetadata = () => { clearTimeout(to); res("ok"); };
+      video.onerror = () => { clearTimeout(to); res("error"); };
+    });
+    if (result === "ok") return;
+    if (result === "error") throw new Error(failMessage);
+    video.load();
+  }
+  throw new Error(failMessage);
+}
+
 export interface DenseFrame {
   index: number;
   timestamp: number;
@@ -174,7 +204,7 @@ export async function extractAndDetect(
   video.preload = "auto"; video.muted = true; video.playsInline = true;
   const url = URL.createObjectURL(file);
   video.src = url;
-  await new Promise<void>((res, rej) => { video.onloadedmetadata = () => res(); video.onerror = () => rej(new Error("Couldn't read this video. Try an MP4 or MOV.")); });
+  await loadVideoMetadata(video, "Couldn't read this video. Try an MP4 or MOV.");
   const duration = video.duration;
   if (!duration || !isFinite(duration)) throw new Error("Couldn't read the video length.");
   const scale = Math.min(1, 1024 / Math.max(video.videoWidth, video.videoHeight));
@@ -186,12 +216,19 @@ export async function extractAndDetect(
   const frames: DenseFrame[] = [];
   for (let i = 0; i < count; i++) {
     const t = start + ((end - start) * i) / Math.max(1, count - 1);
-    await new Promise<void>((res, rej) => {
-      const to = setTimeout(() => rej(new Error("Video seek timed out")), 8000);
-      video.onseeked = () => { clearTimeout(to); res(); };
-      video.onerror = () => { clearTimeout(to); rej(new Error("Video decode error")); };
-      video.currentTime = t;
-    });
+    // A seek can stall while the tab is hidden: wait for it to come back and
+    // try the same frame again rather than failing the whole upload.
+    for (let attempt = 0; ; attempt++) {
+      await whenVisible();
+      const ok = await new Promise<boolean>((res, rej) => {
+        const to = setTimeout(() => res(false), 8000);
+        video.onseeked = () => { clearTimeout(to); res(true); };
+        video.onerror = () => { clearTimeout(to); rej(new Error("Video decode error")); };
+        video.currentTime = t + (attempt ? 0.001 * attempt : 0);
+      });
+      if (ok) break;
+      if (attempt >= 3) throw new Error("We couldn't read part of this video. Keep this tab on screen and try again.");
+    }
     ctx.drawImage(video, 0, 0, w, h);
     let poses: Pose[] = [];
     try { poses = await detectPoses(landmarker, canvas); } catch { poses = []; }
