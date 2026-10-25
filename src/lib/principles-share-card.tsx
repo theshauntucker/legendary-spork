@@ -50,9 +50,8 @@ export function PrinciplesShareCard() {
           fontFamily: "sans-serif",
         }}
       >
-        Posts are not given a minimum audience. The feed helper lists
-        achievements from people you follow and your studio, newest first. No
-        page calls it.
+        Posts aren&apos;t given a guaranteed audience. The feed shows
+        achievements from people you follow and your studio, newest first.
       </div>
     </div>
   );

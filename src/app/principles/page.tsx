@@ -5,9 +5,9 @@ import { GradientText } from "@/components/ui/GradientText";
 const TITLE = "How posts get seen";
 const SOCIAL_TITLE = "How posts get seen | RoutineX";
 const DESCRIPTION =
-  "RoutineX does not give posts a minimum audience. The feed helper lists achievements from people you follow and your studio, newest first, and no page calls it.";
+  "Posts aren't given a guaranteed audience. The feed shows achievements from people you follow and your studio, newest first.";
 const IMAGE_ALT =
-  "How posts get seen. RoutineX does not give posts a minimum audience.";
+  "How posts get seen. Posts aren't given a guaranteed audience.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -49,50 +49,21 @@ export default function PrinciplesPage() {
         How posts get <GradientText gradient="sunsetText">seen</GradientText>
       </h1>
       <p style={{ fontSize: 17, opacity: 0.8, marginTop: 20, lineHeight: 1.6 }}>
-        RoutineX does not give a dance or cheer post a minimum audience. Nothing
-        running on the site places a post into other people&apos;s feeds because it
-        has not been seen enough.
+        Posts aren&apos;t given a guaranteed audience. A dance or cheer post isn&apos;t
+        added to other people&apos;s feeds just because few people have seen it.
       </p>
 
       <Glass style={{ padding: 24, marginTop: 32 }}>
         <h2 style={{ fontSize: 22, fontWeight: 700 }}>How posts get seen</h2>
         <p style={{ fontSize: 15, opacity: 0.85, marginTop: 10, lineHeight: 1.6 }}>
-          There is no live step that keeps showing a post until a set number of
-          people have seen it. The product does not pick viewers by age tier,
-          studio, competition region, or style in order to fill an audience.
+          The feed shows achievements from people you follow and your studio, newest
+          first. If you don&apos;t follow anyone and you aren&apos;t in a studio, you see
+          recent achievements, still newest first. Those aren&apos;t chosen by style or
+          region.
         </p>
         <p style={{ fontSize: 15, opacity: 0.85, marginTop: 10, lineHeight: 1.6 }}>
-          The only feed helper in the app is not connected to a page or an API
-          route, so it is not choosing what anyone sees.
-        </p>
-      </Glass>
-
-      <Glass style={{ padding: 24, marginTop: 16 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 700 }}>What that helper does</h2>
-        <p style={{ fontSize: 15, opacity: 0.85, marginTop: 10, lineHeight: 1.6 }}>
-          If it is called, it lists achievements, newest first.
-        </p>
-        <ul style={{ paddingLeft: 20, marginTop: 10, lineHeight: 1.8, fontSize: 15 }}>
-          <li>
-            When you follow someone, or you belong to a studio, the list is
-            limited to those accounts. People you follow are tagged follow.
-            Studio mates you do not follow are tagged studio.
-          </li>
-          <li>
-            When you follow no one and have no studio, the list is recent
-            achievements, tagged discovery. They are not chosen by style or region.
-          </li>
-          <li>The same person appears at most three times.</li>
-          <li>
-            Accounts flagged as test data are left out, unless the viewer is on
-            the admin ghost list.
-          </li>
-        </ul>
-        <p style={{ fontSize: 15, opacity: 0.85, marginTop: 10, lineHeight: 1.6 }}>
-          A weight table in that helper is not used to sort or fill the list. The
-          helper does not read event check-ins, dance bonds, or a queue of posts
-          that still need viewers. It does not move older posts down. It does not
-          filter by public, followers, studio, or private. It has no paid placement.
+          The same person shows up at most three times. Posts aren&apos;t paid
+          placements, and older ones aren&apos;t pushed down the list.
         </p>
       </Glass>
     </main>
