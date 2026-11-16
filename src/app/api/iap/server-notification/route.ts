@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { X509Certificate, createPublicKey, createVerify } from "node:crypto";
+import { X509Certificate, createVerify } from "node:crypto";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getIapProduct } from "@/lib/iap-products";
 import {
@@ -199,7 +199,10 @@ function verifyAppleJws<T>(jws: string): T | null {
     verifier.end();
     const ok = verifier.verify(
       {
-        key: createPublicKey(certs[0].publicKey),
+        // X509Certificate.publicKey is already a public KeyObject. Wrapping it in
+        // createPublicKey() threw ERR_CRYPTO_INVALID_KEY_OBJECT_TYPE and rejected
+        // every genuine Apple notification, so iOS buyers got no credits.
+        key: certs[0].publicKey,
         dsaEncoding: "ieee-p1363",
       },
       signature
