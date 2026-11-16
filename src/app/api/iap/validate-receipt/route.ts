@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { fulfillSpotlightPurchase } from "@/lib/spotlight/fulfill";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getIapProduct } from "@/lib/iap-products";
+import { verifyAppleJws, type SignedTransactionInfo } from "@/lib/apple-jws";
 import {
   grantCredits,
   grantSubscriptionCycle,
@@ -129,14 +130,16 @@ export async function POST(request: NextRequest) {
 
   // ── Input validation ──────────────────────────────────────────────────────
   const body = await request.json().catch(() => ({}));
-  const { receipt, transactionId, productId } = body as {
+  const { receipt, jws, transactionId, productId } = body as {
     receipt?: string;
+    /** StoreKit 2 signed transaction (jwsRepresentation). Preferred over receipt. */
+    jws?: string;
     transactionId?: string;
     productId?: string;
   };
-  if (!receipt || !transactionId || !productId) {
+  if ((!receipt && !jws) || !transactionId || !productId) {
     return NextResponse.json(
-      { error: "receipt, transactionId, and productId are required" },
+      { error: "receipt or jws, plus transactionId and productId, are required" },
       { status: 400 }
     );
   }
@@ -184,58 +187,92 @@ export async function POST(request: NextRequest) {
   }
 
   // ── Verify with Apple ─────────────────────────────────────────────────────
-  let appleResponse: AppleReceiptResponse;
-  try {
-    appleResponse = await verifyReceiptWithApple(receipt);
-  } catch (err) {
-    console.error("validate-receipt: Apple verifyReceipt threw", err);
-    return NextResponse.json(
-      { error: "Could not reach Apple — try again" },
-      { status: 502 }
-    );
-  }
+  // StoreKit 2 (what the capacitor-plugin-cdv-purchase native side uses)
+  // does not produce the legacy app receipt, so before Nov 16 2026 the
+  // client never had anything to send and this route never ran. The app
+  // now sends the Apple-signed transaction JWS, which we verify locally
+  // with the same chain + signature checks as the server-notification
+  // route. The legacy receipt path stays as a fallback.
+  let matchingPurchase: AppleInAppPurchase | undefined;
 
-  if (appleResponse.status !== 0) {
-    console.error(
-      `validate-receipt: Apple rejected receipt with status ${appleResponse.status} for user ${user.id} product ${productId}`
-    );
-    return NextResponse.json(
-      { error: `Apple rejected the receipt (status ${appleResponse.status})` },
-      { status: 402 }
-    );
-  }
+  if (jws) {
+    const txn = verifyAppleJws<SignedTransactionInfo>(jws);
+    if (!txn) {
+      console.error(`validate-receipt: JWS failed verification for user ${user.id} txn ${transactionId}`);
+      return NextResponse.json({ error: "Apple signature could not be verified" }, { status: 402 });
+    }
+    if (txn.bundleId && txn.bundleId !== EXPECTED_BUNDLE_ID) {
+      console.error(`validate-receipt: JWS bundleId mismatch (got ${txn.bundleId})`);
+      return NextResponse.json({ error: "Receipt is for a different app" }, { status: 400 });
+    }
+    if (String(txn.transactionId) !== String(transactionId) || txn.productId !== productId) {
+      console.error(
+        `validate-receipt: JWS mismatch — claimed txn ${transactionId}/${productId}, signed ${txn.transactionId}/${txn.productId}`
+      );
+      return NextResponse.json({ error: "Transaction not found in receipt — possible tampering" }, { status: 402 });
+    }
+    if (txn.appAccountToken && txn.appAccountToken.toLowerCase() !== user.id.toLowerCase()) {
+      console.error(
+        `validate-receipt: JWS appAccountToken ${txn.appAccountToken} does not belong to user ${user.id}`
+      );
+      return NextResponse.json({ error: "This purchase belongs to a different account" }, { status: 403 });
+    }
+    matchingPurchase = {
+      transaction_id: String(txn.transactionId),
+      original_transaction_id: String(txn.originalTransactionId ?? txn.transactionId),
+      product_id: txn.productId!,
+      purchase_date_ms: String(txn.purchaseDate ?? Date.now()),
+      ...(txn.expiresDate ? { expires_date_ms: String(txn.expiresDate) } : {}),
+    };
+  } else {
+    let appleResponse: AppleReceiptResponse;
+    try {
+      appleResponse = await verifyReceiptWithApple(receipt!);
+    } catch (err) {
+      console.error("validate-receipt: Apple verifyReceipt threw", err);
+      return NextResponse.json(
+        { error: "Could not reach Apple — try again" },
+        { status: 502 }
+      );
+    }
 
-  // Bundle id sanity check — defends against receipts from other apps being
-  // replayed against our endpoint.
-  const bundleId = appleResponse.receipt?.bundle_id;
-  if (bundleId && bundleId !== EXPECTED_BUNDLE_ID) {
-    console.error(
-      `validate-receipt: bundle_id mismatch (got ${bundleId}, expected ${EXPECTED_BUNDLE_ID})`
-    );
-    return NextResponse.json(
-      { error: "Receipt is for a different app" },
-      { status: 400 }
-    );
-  }
+    if (appleResponse.status !== 0) {
+      console.error(
+        `validate-receipt: Apple rejected receipt with status ${appleResponse.status} for user ${user.id} product ${productId}`
+      );
+      return NextResponse.json(
+        { error: `Apple rejected the receipt (status ${appleResponse.status})` },
+        { status: 402 }
+      );
+    }
 
-  // Verify the productId in the request matches what's actually in the receipt.
-  // This catches a malicious client that hands us a routinex_pack receipt and
-  // claims it's a routinex_studio purchase to get more credits.
-  const purchasesInReceipt = [
-    ...(appleResponse.latest_receipt_info ?? []),
-    ...(appleResponse.receipt?.in_app ?? []),
-  ];
-  const matchingPurchase = purchasesInReceipt.find(
-    (p) => p.transaction_id === transactionId && p.product_id === productId
-  );
-  if (!matchingPurchase) {
-    console.error(
-      `validate-receipt: transactionId ${transactionId} not found in receipt for productId ${productId}`
+    const bundleId = appleResponse.receipt?.bundle_id;
+    if (bundleId && bundleId !== EXPECTED_BUNDLE_ID) {
+      console.error(
+        `validate-receipt: bundle_id mismatch (got ${bundleId}, expected ${EXPECTED_BUNDLE_ID})`
+      );
+      return NextResponse.json(
+        { error: "Receipt is for a different app" },
+        { status: 400 }
+      );
+    }
+
+    const purchasesInReceipt = [
+      ...(appleResponse.latest_receipt_info ?? []),
+      ...(appleResponse.receipt?.in_app ?? []),
+    ];
+    matchingPurchase = purchasesInReceipt.find(
+      (p) => p.transaction_id === transactionId && p.product_id === productId
     );
-    return NextResponse.json(
-      { error: "Transaction not found in receipt — possible tampering" },
-      { status: 402 }
-    );
+    if (!matchingPurchase) {
+      console.error(
+        `validate-receipt: transactionId ${transactionId} not found in receipt for productId ${productId}`
+      );
+      return NextResponse.json(
+        { error: "Transaction not found in receipt — possible tampering" },
+        { status: 402 }
+      );
+    }
   }
 
   // ── Fulfillment ───────────────────────────────────────────────────────────

@@ -82,7 +82,7 @@ export function isIosShell(): boolean {
 
 /** Outcome of a native IAP purchase attempt. */
 export type IapPurchaseResult =
-  | { ok: true; receipt: string; transactionId: string; productId: string }
+  | { ok: true; receipt: string; jws: string; transactionId: string; productId: string }
   | { ok: false; error: string; cancelled: boolean };
 
 /** Outcome of a native IAP restore attempt. */
@@ -185,6 +185,25 @@ function extractTransactionReceipt(transaction: any, store: any): string {
   return "";
 }
 
+/**
+ * StoreKit 2 signed transaction (JWS). The capacitor-plugin-cdv-purchase
+ * native side runs StoreKit 2, which never produces the legacy app
+ * receipt that extractTransactionReceipt looks for, so on real devices
+ * that came back "" and no purchase ever reached the server. The plugin
+ * does attach Apple's signed transaction as `jwsRepresentation`; the
+ * server verifies it directly (src/lib/apple-jws.ts).
+ */
+function extractTransactionJws(transaction: any): string {
+  const candidates = [
+    transaction?.jwsRepresentation,
+    transaction?.nativeData?.jwsRepresentation,
+  ];
+  for (const c of candidates) {
+    if (typeof c === "string" && c.split(".").length === 3) return c;
+  }
+  return "";
+}
+
 /** Pull a transaction id out of whatever shape the plugin hands us. */
 function extractTransactionId(transaction: any): string {
   const candidates = [
@@ -252,6 +271,8 @@ interface PendingPurchase {
   /** Base64 app receipt. May be "" if we couldn't read it at queue time —
    *  the boot sweep re-reads it from store.localReceipts on retry. */
   receipt: string;
+  /** StoreKit 2 signed transaction — the path that actually works on SK2. */
+  jws?: string;
   queuedAtMs: number;
 }
 
@@ -288,6 +309,7 @@ function queuePendingPurchase(entry: Omit<PendingPurchase, "queuedAtMs">): void 
   if (existing >= 0) {
     // Keep the better receipt if we now have one.
     record.receipt = entry.receipt || queue[existing].receipt;
+    record.jws = entry.jws || queue[existing].jws;
     record.queuedAtMs = queue[existing].queuedAtMs;
     queue[existing] = record;
   } else {
@@ -665,13 +687,14 @@ export async function purchaseNative(
             transaction.products?.[0]?.id === productId
           ) {
             const receipt = extractTransactionReceipt(transaction, store);
+            const jws = extractTransactionJws(transaction);
             const txnId = extractTransactionId(transaction);
 
             // The customer has been charged by this point. Persist the
             // transaction locally BEFORE anything else so that even if
             // the app is killed on the next line, the boot sweep will
             // fulfil it. Money must never depend on the happy path.
-            queuePendingPurchase({ transactionId: txnId, productId, receipt });
+            queuePendingPurchase({ transactionId: txnId, productId, receipt, jws });
 
             if (!txnId) {
               // No id at all means we can't dedupe or reconcile. Leave the
@@ -688,7 +711,7 @@ export async function purchaseNative(
               return;
             }
 
-            if (!receipt) {
+            if (!receipt && !jws) {
               // Charged, id known, receipt not readable yet. Do NOT finish
               // the transaction — Apple re-delivers unfinished transactions
               // on every launch and by then store.localReceipts is
@@ -710,6 +733,7 @@ export async function purchaseNative(
             safeResolve({
               ok: true,
               receipt,
+              jws,
               transactionId: txnId,
               productId,
             });
@@ -750,6 +774,13 @@ export async function purchaseNative(
       // requires a UUID, which Supabase user ids already are. If the
       // adapter version ignores the field this is a harmless no-op.
       const appAccountToken = await getCurrentUserId();
+      // The Apple adapter ignores additionalData.applicationUsername and
+      // only reads store.applicationUsername (cdv-purchase v13,
+      // AppleAppStore.Adapter.order). Without this, every purchase reached
+      // Apple with no appAccountToken and server notifications could not
+      // be mapped to an account. The native side turns a UUID string into
+      // Product.PurchaseOption.appAccountToken.
+      store.applicationUsername = appAccountToken ?? undefined;
       await offer.order(
         appAccountToken ? { applicationUsername: appAccountToken } : undefined
       );
@@ -805,6 +836,7 @@ export async function finishTransaction(transactionId: string): Promise<void> {
  */
 export async function submitReceiptToServer(args: {
   receipt: string;
+  jws?: string;
   transactionId: string;
   productId: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -912,11 +944,13 @@ export async function recoverPendingPurchases(): Promise<number> {
       if (!IAP_PRODUCTS[productId]) continue;
 
       const receipt = extractTransactionReceipt(txn, store);
+      const jws = extractTransactionJws(txn);
       const existing = byTxnId.get(transactionId);
       byTxnId.set(transactionId, {
         transactionId,
         productId,
         receipt: receipt || existing?.receipt || "",
+        jws: jws || existing?.jws || "",
         queuedAtMs: existing?.queuedAtMs ?? Date.now(),
       });
     }
@@ -933,7 +967,8 @@ export async function recoverPendingPurchases(): Promise<number> {
     // now — the device-wide app receipt is available once the store has
     // initialized, and it covers every transaction on the device.
     const receipt = pending.receipt || extractTransactionReceipt({}, store);
-    if (!receipt) {
+    const jws = pending.jws || "";
+    if (!receipt && !jws) {
       console.warn(
         "[native-iap] recovery: still no receipt for",
         pending.transactionId,
@@ -944,6 +979,7 @@ export async function recoverPendingPurchases(): Promise<number> {
 
     const result = await submitReceiptToServer({
       receipt,
+      jws,
       transactionId: pending.transactionId,
       productId: pending.productId,
     });
@@ -1047,16 +1083,18 @@ export async function restoreNativePurchases(): Promise<IapRestoreResult> {
         // so Restore Purchases silently restored nothing.
         const productId = extractProductId(transaction);
         const receipt = extractTransactionReceipt(transaction, store);
+        const jws = extractTransactionJws(transaction);
         const txnId = extractTransactionId(transaction);
         if (!productId || !txnId) return;
 
-        queuePendingPurchase({ transactionId: txnId, productId, receipt });
-        if (!receipt) return;
+        queuePendingPurchase({ transactionId: txnId, productId, receipt, jws });
+        if (!receipt && !jws) return;
 
         // Server-side validate-receipt is idempotent — duplicates short
         // out via the apple_transaction_id unique constraint.
         const result = await submitReceiptToServer({
           receipt,
+          jws,
           transactionId: txnId,
           productId,
         });

@@ -54,6 +54,7 @@ export async function startCheckout(
     }
     const fulfilled = await submitReceiptToServer({
       receipt: purchase.receipt,
+      jws: purchase.jws,
       transactionId: purchase.transactionId,
       productId: purchase.productId,
     });
