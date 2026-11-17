@@ -25,11 +25,24 @@ export async function GET(request: NextRequest) {
     // Find videos that are analyzed and older than 24 hours with frames still present
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-    const { data: videos, error } = await serviceClient
-      .from("videos")
-      .select("id, preprocessing_metadata")
-      .eq("status", "analyzed")
-      .lt("updated_at", cutoff);
+    // Analyzed videos: 24h after the report. Failed or stuck uploads: 24h after
+    // upload (retry-errored only retries inside that window). Until Nov 17 2026
+    // only analyzed videos were swept, so frames from failed uploads were kept
+    // forever — breaking the "deleted within 24 hours" promise.
+    const [analyzed, failed] = await Promise.all([
+      serviceClient
+        .from("videos")
+        .select("id, preprocessing_metadata")
+        .eq("status", "analyzed")
+        .lt("updated_at", cutoff),
+      serviceClient
+        .from("videos")
+        .select("id, preprocessing_metadata")
+        .in("status", ["error", "processing"])
+        .lt("created_at", cutoff),
+    ]);
+    const error = analyzed.error || failed.error;
+    const videos = [...(analyzed.data || []), ...(failed.data || [])];
 
     if (error) {
       console.error("Cleanup query error:", error);
