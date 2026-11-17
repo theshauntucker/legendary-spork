@@ -129,6 +129,15 @@ export async function POST(request: NextRequest) {
             const d = minHammingAcrossFrames(cleanPhashes, rowHashes);
             if (d <= DHASH_DUPLICATE_THRESHOLD) {
               const sameOwner = row.user_id === user.id;
+              // Nov 17 2026: a near-match against ANOTHER member's video used to
+              // block the upload, which stopped paying first-time customers cold
+              // (teammates film the same routine; dark stages look alike). Only
+              // the uploader's own re-submissions are blocked now — a cross-user
+              // match is logged and the upload goes through.
+              if (!sameOwner) {
+                console.warn(`[analyze] cross-user dHash match d=${d} user=${user.id} matched=${row.id} — allowed`);
+                break;
+              }
               return NextResponse.json({
                 error: "DUPLICATE_VIDEO",
                 code: "DUPLICATE_VIDEO",

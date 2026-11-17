@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { rateLimit, clientKey } from "@/lib/internal-auth";
+import { rateLimit, clientKey, escapeHtml } from "@/lib/internal-auth";
+import { Resend } from "resend";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -225,6 +226,12 @@ There is no social feed or messaging in RoutineX.
 === STUDIO OWNERS (highest value — slow down and qualify) ===
 Ask how many competitive routines and choreographers they have. Pitch the 30-day free trial (no card, 100-analysis pool) at routinex.org/studio/signup. Lead with time saved and every routine scored before comp, then the Music Hub (song collisions between routines are a real headache) and the Team Board. White-glove onboarding → "email danceroutinex@gmail.com and the team gets back within a business day." Never promise a call yourself.
 
+=== SOMETHING'S BROKEN → HAND IT TO SHAUN ===
+If someone paid and has no credits, is blocked from uploading (duplicate warning, greyed-out button, stuck processing, error), was charged wrong, or is otherwise stuck after one quick troubleshooting tip:
+- Drop the pitch. Say Shaun, the founder, fixes these personally and fast.
+- Ask for the email on their RoutineX account in one short line ("What's the email on your account? I'll get it straight to Shaun.").
+- When they give an email, confirm: "Got it — Shaun has your message and will fix it today. You can also reach him at danceroutinex@gmail.com." and put <<handoff>> on its own line before the chips. Use <<handoff>> only in the reply right after they give their email, never otherwise.
+
 === CREDITS, PAYMENTS, SUPPORT ===
 - Single, BOGO and Pack credits never expire. Season Member and Studio credits reset monthly.
 - If an analysis was off, they email danceroutinex@gmail.com and we credit their account.
@@ -306,6 +313,37 @@ async function saveConversation(p: { sessionKey?: string; page?: string; message
     },
     { onConflict: "session_key" }
   );
+}
+
+const EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
+const handedOff = new Set<string>();
+
+/** Bayda flagged a stuck customer and they gave their account email — email Shaun the whole chat. */
+async function sendHandoffAlert(p: { email: string; messages: InMsg[]; reply: string; page?: string; request: NextRequest; sessionKey?: string }) {
+  const dedupe = `${p.sessionKey || ""}|${p.email.toLowerCase()}`;
+  if (handedOff.has(dedupe)) return;
+  handedOff.add(dedupe);
+  const key = process.env.RESEND_API_KEY;
+  const to = process.env.OWNER_EMAIL || process.env.ADMIN_EMAIL;
+  if (!key || !to) {
+    console.warn("[bayda] handoff alert skipped — RESEND_API_KEY or OWNER_EMAIL/ADMIN_EMAIL not set");
+    return;
+  }
+  const ua = p.request.headers.get("user-agent") || "";
+  const platform = /RoutineXiOS/.test(ua) ? "iPhone app" : "web";
+  const transcript = [...p.messages, { role: "assistant" as const, content: p.reply }]
+    .map((m) => `<p style="margin:6px 0"><strong>${m.role === "user" ? "Customer" : "Bayda"}:</strong> ${escapeHtml(m.content.slice(0, 1500))}</p>`)
+    .join("");
+  await new Resend(key).emails.send({
+    from: "RoutineX Alerts <notifications@routinex.org>",
+    to,
+    subject: `Fix needed: ${p.email} (Bayda handoff)`,
+    html: `<div style="font-family:sans-serif;max-width:560px">
+      <h2 style="color:#DB2777;margin:0 0 8px">A customer needs you</h2>
+      <p><strong>Account email:</strong> ${escapeHtml(p.email)}<br/><strong>Where:</strong> ${platform} · ${escapeHtml(String(p.page || "").slice(0, 120))}<br/><strong>Time:</strong> ${new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" })}</p>
+      <div style="background:#f3f4f6;padding:12px 16px;border-radius:8px">${transcript}</div>
+    </div>`,
+  });
 }
 
 async function notifyChatStarted(firstMessage: string) {
@@ -530,6 +568,18 @@ export async function POST(request: NextRequest) {
     }
 
     const { reply, chips, cta } = parseReply(raw);
+
+    // Support handoff: Bayda marks the reply right after a stuck customer
+    // gives their account email. Email Shaun the full chat so he can fix it.
+    if (/<<\s*handoff\s*>>/i.test(raw)) {
+      const email = [...trimmed].reverse().find((m) => m.role === "user" && EMAIL_RE.test(m.content))?.content.match(EMAIL_RE)?.[0];
+      if (email) {
+        // Awaited: a fire-and-forget send can be cut off when the function returns.
+        await sendHandoffAlert({ email, messages: trimmed, reply, page, request, sessionKey }).catch((err) =>
+          console.error("[bayda] handoff alert failed", err)
+        );
+      }
+    }
 
     // Save the conversation to the account (or anonymously by session) so we
     // can follow up with the families who asked about progress. Never blocks

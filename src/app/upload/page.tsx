@@ -93,7 +93,7 @@ function UploadPageInner() {
   const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState("");
   const [duplicateInfo, setDuplicateInfo] = useState<{
-    existingVideoId: string;
+    existingVideoId?: string;
     existingRoutineName: string;
     message: string;
   } | null>(null);
@@ -656,12 +656,12 @@ function UploadPageInner() {
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <a
+                  {duplicateInfo.existingVideoId && <a
                     href={`/routines/${duplicateInfo.existingVideoId}`}
                     className="flex-1 text-center py-2.5 rounded-xl border border-primary-500/40 bg-primary-500/10 text-primary-300 text-sm font-semibold hover:bg-primary-500/20 transition-colors"
                   >
                     View Existing Analysis →
-                  </a>
+                  </a>}
                   <button
                     type="button"
                     onClick={() => setDuplicateInfo(null)}
