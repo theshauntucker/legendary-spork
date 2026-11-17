@@ -171,6 +171,20 @@ TROUBLESHOOTING
 - Button greyed out → a required field (Routine Name, Age Division, Style, Entry Type) or the consent box is missing.
 - Anything else → danceroutinex@gmail.com. Shaun and the team answer.
 
+=== COACHES & "WRITE IT OUT FOR ME" REQUESTS — QUICK, PROVEN, THEN ROUTE ===
+Coaches and parents will ask for things RoutineX doesn't make: motions written out by 8-count, a count sheet "from the video," formation ideas, cleaning drills, stretches. Be genuinely useful in a few lines, then send them to the product that fits.
+- You cannot see their video or their report. If they ask for something "from the video," say that in one short clause (no apology) and give them the useful version anyway.
+- Answer from your own knowledge — do NOT web_search for choreography, motions or drills.
+- Proven basics only. Cheer motions: high V, low V, T, broken T, touchdown, low touchdown, punch, diagonal, L, K, daggers, buckets, candlesticks, blades, clasp, clap. A count sheet is a compact list like "1-2 high V · 3-4 low V · 5-6 R punch · 7-8 clasp." Ideas that make 10 athletes look sharp: repeat a strong 8-count, ripples/level changes, a formation change on a big accent, everyone hitting the same final pose.
+- HARD CAP: under about 170 words. At most 2–4 eight-counts — a starter they can build on, never a full routine, full season plan or long document. If they want more, give one more chunk, then route.
+- Safety: never teach stunts, tosses, pyramids or tumbling progressions — "that one belongs with a certified coach on a mat."
+- ALWAYS end by routing to what fits, with the link:
+  - Sharpness and placement of motions (wrists breaking, arms low, fists not bladed) for one athlete → RoutineX Spotlight, routinex.org/spotlight — lines and measured angles drawn on her own frames, count by count. <<cta: spotlight>>
+  - They're teaching it now → "once they've got it, film a full-out from the judges' angle and upload it — the score catches sync, sharpness and spacing before you're on the mat." <<cta: upload>> (or signup if new)
+  - A school or club coach with a whole team → Studio plan, 30-day free trial, routinex.org/studio/signup. <<cta: studio>>
+  - Something we don't offer yet (a motion spreadsheet feature, custom choreography) → "Email danceroutinex@gmail.com — Shaun reads and answers those himself." <<cta: founder>>
+Example — "can I get a spreadsheet of motions used in the video for all 8 counts": say you can't see the video, give a two-8-count sheet in the compact format as a template to fill in, then point to Spotlight for checking each motion's placement on her actual frames (routinex.org/spotlight) and to uploading the full-out before the comp.
+
 === YOU ARE AN ACTIVE HELPER, NOT A REFUSER ===
 
 You have a web_search tool. If someone asks you to FIND, LOOK UP, CHECK or GET something that lives online — comp dates, schedules, results, a regional comp you don't know, dress codes, song trends — search FIRST, then answer. Never say "I don't have access" or "check their website" without trying.
@@ -258,6 +272,7 @@ const TOPIC_RULES: Array<[string, RegExp]> = [
   ["support", /\b(login|password|can't|cannot|broken|error|refund|charged|not working)/i],
   ["group", /\b(group|team|large group|small group|line)\b/i],
   ["studio", /\b(studio|choreograph|owner|my dancers|roster)/i],
+  ["choreo", /\b(motions?|8[- ]?counts?|eight[- ]?counts?|count sheet|spread ?sheet|choreo|formations?)\b/i],
 ];
 
 async function saveConversation(p: { sessionKey?: string; page?: string; messages: InMsg[]; reply: string; request: NextRequest }) {
@@ -471,26 +486,58 @@ export async function POST(request: NextRequest) {
 
     // Concatenate all text blocks (the API interleaves search blocks with the
     // final answer — we only forward the text).
-    const raw = response.content
-      .filter((b) => b.type === "text")
-      .map((b) => (b.type === "text" ? b.text : ""))
-      .join("")
-      .trim();
+    const textOf = (m: Anthropic.Messages.Message) =>
+      m.content
+        .filter((b) => b.type === "text")
+        .map((b) => (b.type === "text" ? b.text : ""))
+        .join("")
+        .trim();
+    let raw = textOf(response);
+
+    // Nov 17 2026: some turns came back with NO text at all (searches=0), so a
+    // paying coach saw "Sorry — I lost that one." twice. When that happens,
+    // log why, then ask again on the next model without web search — short and
+    // cheap — instead of giving up.
+    if (!parseReply(raw).reply) {
+      console.error(
+        `[bayda] empty reply model=${usedModel} stop=${response.stop_reason} blocks=${response.content.map((b) => b.type).join(",")}`
+      );
+      for (const model of BAYDA_MODELS.filter((m) => m !== usedModel).concat(usedModel)) {
+        try {
+          const retry = await client.messages.create(
+            { model, max_tokens: 900, system, messages: trimmed },
+            { timeout: 25_000, maxRetries: 0 }
+          );
+          const retryRaw = textOf(retry);
+          if (parseReply(retryRaw).reply) {
+            raw = retryRaw;
+            usedModel = model;
+            break;
+          }
+          console.error(`[bayda] retry empty model=${model} stop=${retry.stop_reason}`);
+        } catch (err) {
+          console.error(`[bayda] retry model ${model} failed`, err);
+          if (err instanceof Anthropic.APIConnectionTimeoutError) break;
+        }
+      }
+    }
 
     const { reply, chips, cta } = parseReply(raw);
 
     // Save the conversation to the account (or anonymously by session) so we
     // can follow up with the families who asked about progress. Never blocks
     // the reply.
-    saveConversation({ sessionKey, page, messages: trimmed, reply, request }).catch((err) =>
+    const finalReply =
+      reply ||
+      "Sorry — I lost that one. Mind asking again? If it keeps happening, email danceroutinex@gmail.com and a real person will help.";
+
+    saveConversation({ sessionKey, page, messages: trimmed, reply: finalReply, request }).catch((err) =>
       console.error("[bayda] save failed", err)
     );
 
     return NextResponse.json(
       {
-        reply:
-          reply ||
-          "Sorry — I lost that one. Mind asking again? If it keeps happening, email danceroutinex@gmail.com and a real person will help.",
+        reply: finalReply,
         chips: chips.length ? chips : ["How does it work?", "What's in a Spotlight report?", "Show me a sample report"],
         cta,
       },
